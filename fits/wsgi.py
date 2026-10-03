@@ -28,9 +28,10 @@ def needs_migration(path):
         with sqlite3.connect(str(path)) as conn:
             cur = conn.cursor()
             cur.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='base_employeeshiftschedule';"
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('base_company', 'auth_user', 'django_session', 'employee_employee');"
             )
-            return cur.fetchone() is None
+            count = cur.fetchone()[0]
+            return count < 4
     except Exception:
         return True
 
