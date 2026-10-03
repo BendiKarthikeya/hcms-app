@@ -7,6 +7,8 @@ django-simple-history
 django-filter
 django-widget-tweaks
 django-mathfilters
+django-auditlog
+django-notifications-hq
 djangorestframework
 djangorestframework-simplejwt
 drf-yasg
@@ -23,5 +25,5 @@ certifi
 urllib3
 idna
 charset-normalizer
-APScheduler
+apscheduler
 django-apscheduler
