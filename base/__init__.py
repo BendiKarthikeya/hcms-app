@@ -1,1 +1,4 @@
-from . import scheduler
+try:
+    from . import scheduler
+except Exception:
+    pass

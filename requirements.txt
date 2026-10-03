@@ -23,3 +23,5 @@ certifi
 urllib3
 idna
 charset-normalizer
+APScheduler
+django-apscheduler
