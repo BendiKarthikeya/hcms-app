@@ -1,7 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
-from geopy.geocoders import Nominatim
+try:
+    from geopy.geocoders import Nominatim
+except ImportError:
+    Nominatim = None
 
 
 class GeoFencing(models.Model):

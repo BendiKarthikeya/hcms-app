@@ -17,7 +17,7 @@ tmp_db = Path("/tmp/db.sqlite3")
 src_db = BASE_DIR / "db.sqlite3"
 
 # On Vercel, ensure SQLite database exists in writable /tmp directory
-if os.environ.get("VERCEL") and src_db.exists() and not tmp_db.exists():
+if os.environ.get("VERCEL") and src_db.exists() and (not tmp_db.exists() or tmp_db.stat().st_size == 0):
     try:
         shutil.copyfile(src_db, tmp_db)
     except Exception as e:
