@@ -27,7 +27,11 @@ django.setup()
 
 if os.environ.get("VERCEL"):
     try:
-        if tmp_db.stat().st_size == 0:
+        if tmp_db.exists() and tmp_db.stat().st_size == 0:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("PRAGMA journal_mode = OFF;")
+                cursor.execute("PRAGMA synchronous = OFF;")
             from django.core.management import call_command
             call_command("migrate", interactive=False, verbosity=0)
     except Exception as e:
