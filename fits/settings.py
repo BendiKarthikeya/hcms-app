@@ -130,10 +130,13 @@ WSGI_APPLICATION = "fits.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+SUPABASE_DEFAULT_DB_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres.iaahzdewzqzkrcqacosn:06nO7j8ENcpvI9vJ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
+)
+
 DATABASES = {
-    "default": env.db(
-        default=f"sqlite:///{BASE_DIR}/db.sqlite3"
-    ),
+    "default": env.db("DATABASE_URL", default=SUPABASE_DEFAULT_DB_URL),
 }
 
 if DATABASES["default"]["ENGINE"] != "django.db.backends.sqlite3":
@@ -309,7 +312,7 @@ USE_TZ = True
 # Production settings
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = not bool(os.environ.get("VERCEL"))
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
