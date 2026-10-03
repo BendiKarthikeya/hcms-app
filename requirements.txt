@@ -28,3 +28,4 @@ charset-normalizer
 apscheduler
 django-apscheduler
 setuptools
+beautifulsoup4

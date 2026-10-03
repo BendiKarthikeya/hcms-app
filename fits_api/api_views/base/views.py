@@ -1307,7 +1307,10 @@ class CheckUserLevel(APIView):
 
 from datetime import datetime, timedelta
 
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from django.db.models import Q
 
 from base.models import Announcement, AnnouncementExpire

@@ -9,7 +9,10 @@ from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext_lazy as _
 

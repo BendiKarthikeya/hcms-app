@@ -9,7 +9,10 @@ import threading
 import time
 import types
 
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from django import template
 from django.core.mail import EmailMessage
 from django.db import models

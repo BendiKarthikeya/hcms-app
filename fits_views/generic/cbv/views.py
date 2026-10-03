@@ -13,7 +13,10 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from django import forms
 from django.contrib import messages
 from django.core.cache import cache as CACHE
