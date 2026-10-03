@@ -130,13 +130,13 @@ WSGI_APPLICATION = "fits.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-SUPABASE_DEFAULT_DB_URL = os.environ.get(
+DEFAULT_DB_URL = os.environ.get(
     "DATABASE_URL",
     "postgresql://postgres.iaahzdewzqzkrcqacosn:06nO7j8ENcpvI9vJ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
 )
 
 DATABASES = {
-    "default": env.db("DATABASE_URL", default=SUPABASE_DEFAULT_DB_URL),
+    "default": env.db("DATABASE_URL", default=DEFAULT_DB_URL),
 }
 
 if DATABASES["default"]["ENGINE"] != "django.db.backends.sqlite3":
