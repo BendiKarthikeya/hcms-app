@@ -14,7 +14,10 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-import pdfkit
+try:
+    import pdfkit
+except ImportError:
+    pdfkit = None
 from django.contrib import messages
 from django.db.models import ProtectedError, Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse

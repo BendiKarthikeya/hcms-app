@@ -1,5 +1,6 @@
 Django==4.2.23
 swapper
+pdfkit
 django-cors-headers
 django-environ
 django-filter

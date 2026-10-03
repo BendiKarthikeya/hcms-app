@@ -9,7 +9,10 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-import pdfkit
+try:
+    import pdfkit
+except ImportError:
+    pdfkit = None
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group
