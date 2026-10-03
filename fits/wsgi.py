@@ -33,7 +33,10 @@ _django_app = get_wsgi_application()
 
 
 def application(environ, start_response):
-    is_db_ready()
+    try:
+        is_db_ready()
+    except Exception as e:
+        print("Lazy DB init exception:", e)
     return _django_app(environ, start_response)
 
 
