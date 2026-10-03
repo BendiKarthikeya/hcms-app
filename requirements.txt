@@ -27,3 +27,4 @@ idna
 charset-normalizer
 apscheduler
 django-apscheduler
+setuptools
