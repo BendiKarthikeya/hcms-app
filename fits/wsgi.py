@@ -29,7 +29,14 @@ if os.environ.get("VERCEL"):
                 conn.execute("PRAGMA journal_mode = OFF;")
                 conn.execute("PRAGMA synchronous = OFF;")
                 if schema_sql.exists():
-                    conn.executescript(schema_sql.read_text(encoding="utf-8"))
+                    sql_text = schema_sql.read_text(encoding="utf-8")
+                    for stmt in sql_text.split(";\n"):
+                        stmt = stmt.strip()
+                        if stmt and not stmt.startswith("BEGIN") and not stmt.startswith("COMMIT"):
+                            try:
+                                conn.execute(stmt)
+                            except Exception:
+                                pass
         except Exception as e:
             print(f"Error seeding /tmp/db.sqlite3: {e}")
 
