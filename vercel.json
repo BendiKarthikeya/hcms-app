@@ -1,23 +1,29 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "fits/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.10"
-      }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "app": {
+      "root": ".",
+      "framework": "django",
+      "entrypoint": "fits/wsgi.py"
+    },
+    "ionicons": {
+      "root": "static/images/ionicons",
+      "buildCommand": null,
+      "installCommand": null
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "source": "/static/images/ionicons/(.*)",
+      "destination": {
+        "service": "ionicons"
+      }
     },
     {
-      "src": "/(.*)",
-      "dest": "fits/wsgi.py"
+      "source": "/(.*)",
+      "destination": {
+        "service": "app"
+      }
     }
   ]
 }
