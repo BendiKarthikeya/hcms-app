@@ -53,7 +53,7 @@ class CompanyMiddleware:
                     return getattr(
                         request.user.employee_get.employee_work_info, "company_id", None
                     )
-            except AttributeError:
+            except Exception:
                 pass
         return None
 

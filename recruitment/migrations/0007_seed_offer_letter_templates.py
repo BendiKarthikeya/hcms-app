@@ -135,17 +135,23 @@ Chairman, Board of Directors
 
 
 def seed_templates(apps, schema_editor):
-    OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
-    for tmpl in TEMPLATES:
-        OfferLetterTemplate.objects.get_or_create(
-            name=tmpl["name"],
-            defaults={"body_html": tmpl["body_html"], "is_active": True},
-        )
+    try:
+        OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
+        for tmpl in TEMPLATES:
+            OfferLetterTemplate.objects.get_or_create(
+                name=tmpl["name"],
+                defaults={"body_html": tmpl["body_html"], "is_active": True},
+            )
+    except Exception:
+        pass
 
 
 def remove_templates(apps, schema_editor):
-    OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
-    OfferLetterTemplate.objects.filter(name__in=[t["name"] for t in TEMPLATES]).delete()
+    try:
+        OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
+        OfferLetterTemplate.objects.filter(name__in=[t["name"] for t in TEMPLATES]).delete()
+    except Exception:
+        pass
 
 
 class Migration(migrations.Migration):
