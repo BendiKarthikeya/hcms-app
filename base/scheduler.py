@@ -2,7 +2,10 @@ import calendar
 import sys
 from datetime import date, datetime, timedelta
 
-from apscheduler.schedulers.background import BackgroundScheduler
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+except ImportError:
+    BackgroundScheduler = None
 from django.urls import reverse
 
 from notifications.signals import notify

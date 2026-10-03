@@ -1,7 +1,10 @@
 import sys
 from datetime import datetime
 
-from apscheduler.schedulers.background import BackgroundScheduler
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+except ImportError:
+    BackgroundScheduler = None
 
 
 def leave_reset():
