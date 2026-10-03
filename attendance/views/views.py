@@ -27,7 +27,10 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 from urllib.parse import parse_qs
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.validators import validate_ipv46_address

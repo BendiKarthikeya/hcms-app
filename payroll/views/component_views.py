@@ -11,7 +11,10 @@ from datetime import date, datetime, timedelta
 from itertools import groupby
 from urllib.parse import parse_qs
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.apps import apps
 from django.contrib import messages
 from django.db.models import Sum

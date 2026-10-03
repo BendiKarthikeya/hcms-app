@@ -1,7 +1,10 @@
 import calendar
 from datetime import date, datetime, timedelta
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.apps import apps
 from django.db.models import Q
 

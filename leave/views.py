@@ -10,7 +10,10 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 from urllib.parse import parse_qs, unquote
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.apps import apps
 from django.contrib import messages
 from django.core.paginator import Paginator

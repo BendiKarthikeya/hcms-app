@@ -7,7 +7,10 @@ from Excel files and saving it to a database.
 
 from datetime import datetime
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 from attendance.models import Attendance
 from base.models import EmployeeShift, WorkType

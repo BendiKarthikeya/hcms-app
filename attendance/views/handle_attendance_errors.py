@@ -2,7 +2,10 @@
 
 import uuid
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.http import HttpResponse
 
 from fits.fits_settings import DYNAMIC_URL_PATTERNS

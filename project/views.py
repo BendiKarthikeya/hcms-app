@@ -5,7 +5,10 @@ import logging
 from collections import defaultdict
 from urllib.parse import parse_qs, urlparse
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.contrib import messages
 from django.core import serializers
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse

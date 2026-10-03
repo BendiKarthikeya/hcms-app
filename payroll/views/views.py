@@ -10,7 +10,10 @@ from datetime import datetime
 from itertools import groupby
 from urllib.parse import parse_qs
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 import pdfkit
 from django.contrib import messages
 from django.db.models import ProtectedError, Q

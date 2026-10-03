@@ -9,7 +9,10 @@ import os
 from datetime import date, datetime
 from urllib.parse import parse_qs
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage

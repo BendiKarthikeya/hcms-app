@@ -5,7 +5,10 @@ import os
 import random
 from datetime import date, datetime, time, timedelta
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 import pdfkit
 from django.apps import apps
 from django.conf import settings

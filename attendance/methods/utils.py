@@ -7,7 +7,10 @@ This module is used write custom methods
 import calendar
 from datetime import datetime, time, timedelta
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import models
