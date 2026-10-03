@@ -1,7 +1,12 @@
-from PyPDF2 import PdfReader
+try:
+    from PyPDF2 import PdfReader
+except ImportError:
+    PdfReader = None
 
 def extract_resume_text(file_path):
     text = ""
+    if not PdfReader:
+        return text
     try:
         reader = PdfReader(file_path)
         for page in reader.pages:
