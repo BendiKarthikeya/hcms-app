@@ -24,7 +24,10 @@ from zoneinfo import ZoneInfo
 from itertools import chain, groupby
 from urllib.parse import parse_qs
 from django.http import FileResponse
-import fitz  # type: ignore
+try:
+    import fitz  # type: ignore
+except ImportError:
+    fitz = None
 from django import template
 from django.conf import settings
 from django.contrib import messages
