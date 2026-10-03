@@ -13,1362 +13,590 @@ CREATE TABLE "asset_assetlot_company_id" ("id" integer NOT NULL PRIMARY KEY AUTO
 CREATE TABLE "asset_assetreport" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(255) NULL, "asset_id_id" bigint NOT NULL REFERENCES "asset_asset" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "asset_assetrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "asset_request_date" date NOT NULL, "description" text NULL, "asset_request_status" varchar(30) NULL, "asset_category_id_id" bigint NOT NULL REFERENCES "asset_assetcategory" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "requested_employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "asset_returnimages" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "image" varchar(100) NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendance" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "attendance_date" date NOT NULL, "attendance_clock_in_date" date NULL, "attendance_clock_in" time NULL, "attendance_clock_out_date" date NULL, "attendance_clock_out" time NULL, "attendance_worked_hour" varchar(10) NULL, "minimum_hour" varchar(10) NOT NULL, "attendance_overtime" varchar(10) NOT NULL, "attendance_overtime_approve" bool NOT NULL, "attendance_validated" bool NOT NULL, "at_work_second" integer NULL, "overtime_second" integer NULL, "approved_overtime_second" integer NOT NULL, "is_validate_request" bool NOT NULL, "is_bulk_request" bool NOT NULL, "is_validate_request_approved" bool NOT NULL, "request_description" text NULL, "request_type" varchar(18) NULL, "is_holiday" bool NOT NULL, "requested_data" text NULL CHECK ((JSON_VALID("requested_data") OR "requested_data" IS NULL)), "approved_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "attendance_day_id" bigint NULL REFERENCES "base_employeeshiftday" ("id") DEFERRABLE INITIALLY DEFERRED, "batch_attendance_id_id" bigint NULL REFERENCES "attendance_batchattendance" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "shift_id_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED, "work_type_id_id" bigint NULL REFERENCES "base_worktype" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendanceactivity" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "attendance_date" date NULL, "in_datetime" datetime NULL, "clock_in_date" date NULL, "clock_in" time NOT NULL, "clock_out_date" date NULL, "out_datetime" datetime NULL, "clock_out" time NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "shift_day_id" bigint NULL REFERENCES "base_employeeshiftday" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancegeneralsetting" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "time_runner" bool NOT NULL, "enable_check_in" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancelatecomeearlyout" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_active" bool NOT NULL, "type" varchar(20) NOT NULL, "created_at" datetime NULL, "attendance_id_id" bigint NOT NULL REFERENCES "attendance_attendance" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendanceovertime" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "month" varchar(10) NOT NULL, "month_sequence" smallint unsigned NOT NULL CHECK ("month_sequence" >= 0), "year" varchar(10) NULL, "worked_hours" varchar(10) NULL, "pending_hours" varchar(10) NULL, "overtime" varchar(20) NOT NULL, "hour_account_second" integer NULL, "hour_pending_second" integer NULL, "overtime_second" integer NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancerequestcomment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "comment" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "request_id_id" bigint NOT NULL REFERENCES "attendance_attendance" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancerequestcomment_files" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "attendancerequestcomment_id" bigint NOT NULL REFERENCES "attendance_attendancerequestcomment" ("id") DEFERRABLE INITIALLY DEFERRED, "attendancerequestfile_id" bigint NOT NULL REFERENCES "attendance_attendancerequestfile" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancerequestfile" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "file" varchar(100) NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancevalidationcondition" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "validation_at_work" varchar(10) NOT NULL, "minimum_overtime_to_approve" varchar(10) NULL, "overtime_cutoff" varchar(10) NULL, "auto_approve_ot" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_attendancevalidationcondition_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "attendancevalidationcondition_id" bigint NOT NULL REFERENCES "attendance_attendancevalidationcondition" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_batchattendance" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(150) NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_gracetime" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "allowed_time" varchar(10) NOT NULL, "allowed_time_in_secs" integer NOT NULL, "allowed_clock_in" bool NOT NULL, "allowed_clock_out" bool NOT NULL, "is_default" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_gracetime_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "gracetime_id" bigint NOT NULL REFERENCES "attendance_gracetime" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_historicalattendance" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "attendance_date" date NOT NULL, "attendance_clock_in_date" date NULL, "attendance_clock_in" time NULL, "attendance_clock_out_date" date NULL, "attendance_clock_out" time NULL, "attendance_worked_hour" varchar(10) NULL, "minimum_hour" varchar(10) NOT NULL, "attendance_overtime" varchar(10) NOT NULL, "attendance_overtime_approve" bool NOT NULL, "attendance_validated" bool NOT NULL, "at_work_second" integer NULL, "overtime_second" integer NULL, "approved_overtime_second" integer NOT NULL, "is_validate_request" bool NOT NULL, "is_bulk_request" bool NOT NULL, "is_validate_request_approved" bool NOT NULL, "request_description" text NULL, "request_type" varchar(18) NULL, "is_holiday" bool NOT NULL, "requested_data" text NULL CHECK ((JSON_VALID("requested_data") OR "requested_data" IS NULL)), "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "approved_by_id" bigint NULL, "attendance_day_id" bigint NULL, "batch_attendance_id_id" bigint NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL, "shift_id_id" bigint NULL, "work_type_id_id" bigint NULL);
-CREATE TABLE "attendance_historicalattendance_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalattendance_id" integer NOT NULL REFERENCES "attendance_historicalattendance" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "attendance_workrecords" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "record_name" varchar(250) NULL, "work_record_type" varchar(10) NULL, "date" date NULL, "at_work" varchar(10) NULL, "min_hour" varchar(10) NULL, "at_work_second" integer NULL, "min_hour_second" integer NULL, "note" text NOT NULL, "message" varchar(30) NULL, "is_attendance_record" bool NOT NULL, "is_leave_record" bool NOT NULL, "day_percentage" real NOT NULL, "last_update" datetime NULL, "attendance_id_id" bigint NULL REFERENCES "attendance_attendance" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_request_id_id" bigint NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "shift_id_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "attendance_attendancegeneralsetting" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "time_runner" bool NOT NULL);
+CREATE TABLE "attendance_attendancelatecomeearlyout" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT);
+CREATE TABLE "attendance_gracetime" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "allowed_time" bigint NOT NULL);
 CREATE TABLE "auditlog_logentry" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "object_pk" varchar(255) NOT NULL, "object_id" bigint NULL, "object_repr" text NOT NULL, "action" smallint unsigned NOT NULL CHECK ("action" >= 0), "timestamp" datetime NOT NULL, "actor_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "content_type_id" integer NOT NULL REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED, "remote_addr" char(39) NULL, "additional_data" text NULL CHECK ((JSON_VALID("additional_data") OR "additional_data" IS NULL)), "serialized_data" text NULL CHECK ((JSON_VALID("serialized_data") OR "serialized_data" IS NULL)), "cid" varchar(255) NULL, "changes_text" text NOT NULL, "changes" text NULL CHECK ((JSON_VALID("changes") OR "changes" IS NULL)), "remote_port" integer unsigned NULL CHECK ("remote_port" >= 0), "actor_email" varchar(254) NULL);
-INSERT INTO "auditlog_logentry" VALUES(1,'2',2,'contenttypes | content type',0,'2026-10-03 20:19:58.920204',NULL,2,NULL,NULL,NULL,NULL,'','{"notify_actor": ["None", "notifications.Notification.None"], "notify_target": ["None", "notifications.Notification.None"], "notify_action_object": ["None", "notifications.Notification.None"], "model": ["None", "contenttype"], "app_label": ["None", "contenttypes"], "id": ["None", "2"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(2,'1',1,'leave | employee past leave restrict',0,'2026-10-03 20:19:58.922636',NULL,2,NULL,NULL,NULL,NULL,'','{"notify_actor": ["None", "notifications.Notification.None"], "notify_target": ["None", "notifications.Notification.None"], "notify_action_object": ["None", "notifications.Notification.None"], "model": ["None", "employeepastleaverestrict"], "app_label": ["None", "leave"], "id": ["None", "1"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(3,'1',1,'EmployeePastLeaveRestrict object (1)',0,'2026-10-03 20:19:58.923685',NULL,1,NULL,NULL,NULL,NULL,'','{"id": ["None", "1"], "is_active": ["None", "True"], "enabled": ["None", "True"], "created_at": ["None", "2026-10-03 20:19:58.916955"], "created_by": ["None", "None"], "modified_by": ["None", "None"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(4,'3',3,'base | biometric attendance',0,'2026-10-03 20:22:44.701562',NULL,2,'127.0.0.1',NULL,NULL,NULL,'','{"notify_target": ["None", "notifications.Notification.None"], "notify_actor": ["None", "notifications.Notification.None"], "app_label": ["None", "base"], "model": ["None", "biometricattendance"], "notify_action_object": ["None", "notifications.Notification.None"], "id": ["None", "3"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(5,'1',1,'False',0,'2026-10-03 20:22:44.702323',NULL,3,'127.0.0.1',NULL,NULL,NULL,'','{"id": ["None", "1"], "is_installed": ["None", "False"], "company_id": ["None", "None"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(6,'4',4,'auth | user',0,'2026-10-03 20:23:24.888355',NULL,2,NULL,NULL,NULL,NULL,'','{"notify_actor": ["None", "notifications.Notification.None"], "notify_target": ["None", "notifications.Notification.None"], "app_label": ["None", "auth"], "model": ["None", "user"], "notify_action_object": ["None", "notifications.Notification.None"], "id": ["None", "4"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(7,'2',2,'admin',0,'2026-10-03 20:23:24.889077',NULL,4,NULL,NULL,NULL,NULL,'','{"recruitmentgeneralsetting_modified_by": ["None", "recruitment.RecruitmentGeneralSetting.None"], "leaveallocationrequest_modified_by": ["None", "leave.LeaveAllocationRequest.None"], "password": ["None", "pbkdf2_sha256$600000$VPNXl54Tfa1TYpklD9Mzag$X5Db6A591PefFDn/o+d/bDWJH8Q2PINOHOIEH26WSOQ="], "pipmilestone_modified_by": ["None", "pms.PIPMilestone.None"], "last_login": ["None", "None"], "period_modified_by": ["None", "pms.Period.None"], "candidaterating_modified_by": ["None", "recruitment.CandidateRating.None"], "is_superuser": ["None", "True"], "username": ["None", "admin"], "first_name": ["None", ""], "last_name": ["None", ""], "email": ["None", "admin@example.com"], "is_staff": ["None", "True"], "is_active": ["None", "True"], "companyleaves_modified_by": ["None", "base.CompanyLeaves.None"], "date_joined": ["None", "2026-10-03 20:23:24.813294"], "recruitmentapproval_modified_by": ["None", "recruitment.RecruitmentApproval.None"], "taxbracket_modified_by": ["None", "payroll.TaxBracket.None"], "exitreason_modified_by": ["None", "offboarding.ExitReason.None"], "compensatoryleaverequestcomment_modified_by": ["None", "leave.CompensatoryLeaverequestComment.None"], "bonuspoint_modified_by": ["None", "employee.BonusPoint.None"], "leavegeneralsetting_modified_by": ["None", "leave.LeaveGeneralSetting.None"], "payrollsettings_modified_by": ["None", "payroll.PayrollSettings.None"], "approvalrule_modified_by": ["None", "recruitment.ApprovalRule.None"], "stagefiles_modified_by": ["None", "recruitment.StageFiles.None"], "claimrequest_modified_by": ["None", "helpdesk.ClaimRequest.None"], "recruitment_modified_by": ["None", "recruitment.Recruitment.None"], "attendancegeneralsetting_modified_by": ["None", "attendance.AttendanceGeneralSetting.None"], "jobposition_modified_by": ["None", "base.JobPosition.None"], "leaveencashment_modified_by": ["None", "payroll.LeaveEncashment.None"], "assetrequest_modified_by": ["None", "asset.AssetRequest.None"], "candidatestage_modified_by": ["None", "onboarding.CandidateStage.None"], "attendanceactivity_modified_by": ["None", "attendance.AttendanceActivity.None"], "activetab_modified_by": ["None", "fits_views.ActiveTab.None"], "assetdocuments_modified_by": ["None", "asset.AssetDocuments.None"], "availableleave_modified_by": ["None", "leave.AvailableLeave.None"], "candidate_modified_by": ["None", "recruitment.Candidate.None"], "onboardingportal_modified_by": ["None", "onboarding.OnboardingPortal.None"], "interviewevaluation_modified_by": ["None", "recruitment.InterviewEvaluation.None"], "omanilabourlawconfig_modified_by": ["None", "omani_compliance.OmaniLabourLawConfig.None"], "resignationletter_modified_by": ["None", "offboarding.ResignationLetter.None"], "activeview_modified_by": ["None", "fits_views.ActiveView.None"], "company_modified_by": ["None", "base.Company.None"], "offboardingstagemultiplefile_modified_by": ["None", "offboarding.OffboardingStageMultipleFile.None"], "mailbox_integrations": ["None", "base.MailboxIntegration.None"], "employeetask_modified_by": ["None", "offboarding.EmployeeTask.None"], "togglecolumn_modified_by": ["None", "fits_views.ToggleColumn.None"], "skillzonecandidate_modified_by": ["None", "recruitment.SkillZoneCandidate.None"], "holiday_modified_by": ["None", "leave.Holiday.None"], "candidatetask_modified_by": ["None", "onboarding.CandidateTask.None"], "department_modified_by": ["None", "base.Department.None"], "rotatingworktypeassign_modified_by": ["None", "base.RotatingWorkTypeAssign.None"], "stagenote_modified_by": ["None", "recruitment.StageNote.None"], "notifications": ["None", "notifications.Notification.None"], "candidaterankingscore_modified_by": ["None", "recruitment.CandidateRankingScore.None"], "filingstatus_modified_by": ["None", "payroll.FilingStatus.None"], "holidays_modified_by": ["None", "base.Holidays.None"], "disciplinaryaction_modified_by": ["None", "employee.DisciplinaryAction.None"], "glmapping_modified_by": ["None", "payroll.GLMapping.None"], "attendancelatecomeearlyout_modified_by": ["None", "attendance.AttendanceLateComeEarlyOut.None"], "candidatedocument_modified_by": ["None", "recruitment.CandidateDocument.None"], "offerletter_modified_by": ["None", "recruitment.OfferLetter.None"], "loanaccount_modified_by": ["None", "payroll.LoanAccount.None"], "skillzone_modified_by": ["None", "recruitment.SkillZone.None"], "pipreview_modified_by": ["None", "pms.PIPReview.None"], "departmentmanager_modified_by": ["None", "helpdesk.DepartmentManager.None"], "rotatingworktype_modified_by": ["None", "base.RotatingWorkType.None"], "stage_modified_by": ["None", "recruitment.Stage.None"], "is_new_employee": ["None", "False"], "employeetag_modified_by": ["None", "employee.EmployeeTag.None"], "worktype_modified_by": ["None", "base.WorkType.None"], "wpsperiodicfile_modified_by": ["None", "payroll.WPSPeriodicFile.None"], "savedfilter_modified_by": ["None", "fits_views.SavedFilter.None"], "performanceimprovementplan_modified_by": ["None", "pms.PerformanceImprovementPlan.None"], "batchattendance_modified_by": ["None", "attendance.BatchAttendance.None"], "faq_modified_by": ["None", "helpdesk.FAQ.None"], "projectstage_modified_by": ["None", "project.ProjectStage.None"], "questionordering_modified_by": ["None", "recruitment.QuestionOrdering.None"], "candidatedocumentrequest_modified_by": ["None", "recruitment.CandidateDocumentRequest.None"], "companyleave_modified_by": ["None", "leave.CompanyLeave.None"], "attendance_modified_by": ["None", "attendance.Attendance.None"], "omanicomplianceaudit_modified_by": ["None", "omani_compliance.OmaniComplianceAudit.None"], "biometricdevices_modified_by": ["None", "biometric.BiometricDevices.None"], "leavetype_modified_by": ["None", "leave.LeaveType.None"], "profileeditfeature_modified_by": ["None", "employee.ProfileEditFeature.None"], "approvalslaalert_modified_by": ["None", "leave.ApprovalSLAAlert.None"], "offboardingnote_modified_by": ["None", "offboarding.OffboardingNote.None"], "offboarding_modified_by": ["None", "offboarding.Offboarding.None"], "approvalstep_modified_by": ["None", "recruitment.ApprovalStep.None"], "policymultiplefile_modified_by": ["None", "employee.PolicyMultipleFile.None"], "leaveallocationrequestcomment_modified_by": ["None", "leave.LeaveallocationrequestComment.None"], "reimbursement_modified_by": ["None", "payroll.Reimbursement.None"], "gracetime_modified_by": ["None", "attendance.GraceTime.None"], "actiontype_modified_by": ["None", "employee.Actiontype.None"], "dynamicemailconfiguration_modified_by": ["None", "base.DynamicEmailConfiguration.None"], "faqcategory_modified_by": ["None", "helpdesk.FAQCategory.None"], "offboardinggeneralsetting_modified_by": ["None", "offboarding.OffboardingGeneralSetting.None"], "employmentproposal_modified_by": ["None", "recruitment.EmploymentProposal.None"], "compensatoryleaverequest_modified_by": ["None", "leave.CompensatoryLeaveRequest.None"], "objective_modified_by": ["None", "pms.Objective.None"], "employeetype_modified_by": ["None", "base.EmployeeType.None"], "attendancevalidationcondition_modified_by": ["None", "attendance.AttendanceValidationCondition.None"], "feedback_modified_by": ["None", "pms.Feedback.None"], "attendancerequestfile_modified_by": ["None", "attendance.AttendanceRequestFile.None"], "offboardingemployee_modified_by": ["None", "offboarding.OffboardingEmployee.None"], "documentrequest_modified_by": ["None", "fits_documents.DocumentRequest.None"], "project_modified_by": ["None", "project.Project.None"], "announcementcomment_modified_by": ["None", "base.AnnouncementComment.None"], "leaverequestcomment_modified_by": ["None", "leave.LeaverequestComment.None"], "talentcalibration_modified_by": ["None", "pms.TalentCalibration.None"], "employeebankdetails_modified_by": ["None", "employee.EmployeeBankDetails.None"], "employeebonuspoint_modified_by": ["None", "pms.EmployeeBonusPoint.None"], "defaultaccessibility_modified_by": ["None", "accessibility.DefaultAccessibility.None"], "piptemplate_modified_by": ["None", "pms.PIPTemplate.None"], "meetings_modified_by": ["None", "pms.Meetings.None"], "recruitmentsurveyanswer_modified_by": ["None", "recruitment.RecruitmentSurveyAnswer.None"], "attendancerequestcomment_modified_by": ["None", "attendance.AttendanceRequestComment.None"], "attachment_modified_by": ["None", "helpdesk.Attachment.None"], "adobesign_accounts": ["None", "base.AdobeSignAccount.None"], "assetcategory_modified_by": ["None", "asset.AssetCategory.None"], "announcement_modified_by": ["None", "base.Announcement.None"], "allowance_modified_by": ["None", "payroll.Allowance.None"], "skill_modified_by": ["None", "recruitment.Skill.None"], "ticket_modified_by": ["None", "helpdesk.Ticket.None"], "jobrole_modified_by": ["None", "base.JobRole.None"], "policy_modified_by": ["None", "employee.Policy.None"], "omanitaxcalculation_modified_by": ["None", "omani_compliance.OmaniTaxCalculation.None"], "glaccount_modified_by": ["None", "payroll.GLAccount.None"], "asset_modified_by": ["None", "asset.Asset.None"], "employeeshift_modified_by": ["None", "base.EmployeeShift.None"], "historytrackingfields_modified_by": ["None", "fits_audit.HistoryTrackingFields.None"], "activegroup_modified_by": ["None", "fits_views.ActiveGroup.None"], "calibrationrating_modified_by": ["None", "pms.CalibrationRating.None"], "onboardingstage_modified_by": ["None", "onboarding.OnboardingStage.None"], "keyresult_modified_by": ["None", "pms.KeyResult.None"], "offboardingtask_modified_by": ["None", "offboarding.OffboardingTask.None"], "docusign_accounts": ["None", "base.DocusignAccount.None"], "payslip_modified_by": ["None", "payroll.Payslip.None"], "returnimages_modified_by": ["None", "asset.ReturnImages.None"], "onboardingtask_modified_by": ["None", "onboarding.OnboardingTask.None"], "linkedinaccount_modified_by": ["None", "recruitment.LinkedInAccount.None"], "performancerating_modified_by": ["None", "pms.PerformanceRating.None"], "proposal_status_logs": ["None", "recruitment.ProposalStatusLog.None"], "surveytemplate_modified_by": ["None", "recruitment.SurveyTemplate.None"], "rejectedcandidate_modified_by": ["None", "recruitment.RejectedCandidate.None"], "serviceaward_modified_by": ["None", "payroll.ServiceAward.None"], "questionoptions_modified_by": ["None", "pms.QuestionOptions.None"], "task_modified_by": ["None", "project.Task.None"], "assetlot_modified_by": ["None", "asset.AssetLot.None"], "question_modified_by": ["None", "pms.Question.None"], "contract_modified_by": ["None", "payroll.Contract.None"], "salaryrevision_modified_by": ["None", "payroll.SalaryRevision.None"], "attendanceovertime_modified_by": ["None", "attendance.AttendanceOverTime.None"], "comment_modified_by": ["None", "helpdesk.Comment.None"], "employeeobjective_modified_by": ["None", "pms.EmployeeObjective.None"], "restrictleave_modified_by": ["None", "leave.RestrictLeave.None"], "questiontemplate_modified_by": ["None", "pms.QuestionTemplate.None"], "tracklatecomeearlyout_modified_by": ["None", "base.TrackLateComeEarlyOut.None"], "dashboardemployeecharts_modified_by": ["None", "base.DashboardEmployeeCharts.None"], "leaverequest_modified_by": ["None", "leave.LeaveRequest.None"], "offboardingstage_modified_by": ["None", "offboarding.OffboardingStage.None"], "approvaloverride_modified_by": ["None", "leave.ApprovalOverride.None"], "recruitmentapprovaldelegation_modified_by": ["None", "recruitment.RecruitmentApprovalDelegation.None"], "user_excluded_column": ["None", "fits_views.ToggleColumn.None"], "parsedcvdata_modified_by": ["None", "recruitment.ParsedCVData.None"], "endofservicebenefit_modified_by": ["None", "payroll.EndOfServiceBenefit.None"], "employeeshiftschedule_modified_by": ["None", "base.EmployeeShiftSchedule.None"], "shiftrequestcomment_modified_by": ["None", "base.ShiftRequestComment.None"], "document_modified_by": ["None", "fits_documents.Document.None"], "approvaldelegation_modified_by": ["None", "leave.ApprovalDelegation.None"], "approvalrequest_modified_by": ["None", "leave.ApprovalRequest.None"], "rejectreason_modified_by": ["None", "recruitment.RejectReason.None"], "shiftrequest_modified_by": ["None", "base.ShiftRequest.None"], "employeegeneralsetting_modified_by": ["None", "employee.EmployeeGeneralSetting.None"], "worktyperequestcomment_modified_by": ["None", "base.WorkTypeRequestComment.None"], "tags_modified_by": ["None", "base.Tags.None"], "bulkrequestline_modified_by": ["None", "recruitment.BulkRequestLine.None"], "rotatingshiftassign_modified_by": ["None", "base.RotatingShiftAssign.None"], "employeepastleaverestrict_modified_by": ["None", "leave.EmployeePastLeaveRestrict.None"], "reimbursementrequestcomment_modified_by": ["None", "payroll.ReimbursementrequestComment.None"], "candidateskillmatch_modified_by": ["None", "recruitment.CandidateSkillMatch.None"], "mailautomation_modified_by": ["None", "fits_automations.MailAutomation.None"], "icbsconfig_modified_by": ["None", "payroll.ICBSConfig.None"], "recruitmentsurvey_modified_by": ["None", "recruitment.RecruitmentSurvey.None"], "rotatingshift_modified_by": ["None", "base.RotatingShift.None"], "timesheet_modified_by": ["None", "project.TimeSheet.None"], "interviewschedule_modified_by": ["None", "recruitment.InterviewSchedule.None"], "tickettype_modified_by": ["None", "helpdesk.TicketType.None"], "multipleapprovalcondition_modified_by": ["None", "base.MultipleApprovalCondition.None"], "assetreport_modified_by": ["None", "asset.AssetReport.None"], "accountblockunblock_modified_by": ["None", "fits_audit.AccountBlockUnblock.None"], "approvalpolicy_modified_by": ["None", "leave.ApprovalPolicy.None"], "penaltyaccounts_modified_by": ["None", "base.PenaltyAccounts.None"], "employeenote_modified_by": ["None", "employee.EmployeeNote.None"], "worktyperequest_modified_by": ["None", "base.WorkTypeRequest.None"], "deduction_modified_by": ["None", "payroll.Deduction.None"], "assetassignment_modified_by": ["None", "asset.AssetAssignment.None"], "notefiles_modified_by": ["None", "employee.NoteFiles.None"], "fitsmailtemplate_modified_by": ["None", "base.FitsMailTemplate.None"], "manpowerrequest_modified_by": ["None", "recruitment.ManpowerRequest.None"], "id": ["None", "2"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(8,'5',5,'payroll | Payroll Settings',0,'2026-10-03 20:23:24.925115',NULL,2,'127.0.0.1',NULL,NULL,NULL,'','{"notify_actor": ["None", "notifications.Notification.None"], "notify_target": ["None", "notifications.Notification.None"], "app_label": ["None", "payroll"], "model": ["None", "payrollsettings"], "notify_action_object": ["None", "notifications.Notification.None"], "id": ["None", "5"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(9,'1',1,'Payroll Settings $',0,'2026-10-03 20:23:24.925562',NULL,5,'127.0.0.1',NULL,NULL,NULL,'','{"is_active": ["None", "True"], "currency_symbol": ["None", "$"], "position": ["None", "prefix"], "company_id": ["None", "None"], "id": ["None", "1"], "created_at": ["None", "2026-10-03 20:23:24.923975"], "created_by": ["None", "None"], "modified_by": ["None", "None"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(10,'0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu',NULL,'0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu',0,'2026-10-03 20:23:49.538851',NULL,9,NULL,NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 20:23:49.538147"], "session_key": ["None", "0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXL0ktLilOLSpLLdJX0lHKS8xNBcq5eYYEK3g4-wYDhdLyS_NSlKxKikpTa3Vway7NRNJfmonQmJaYU0xIZ05-emYekn4wH83uWCA3M6cktSg1JT41tyAnvzI1FeQfw9haAAI5TUo:1xD6Gr:o97t12tnJOyyLQzBBem6NptfbtvAjR-kKaDs0USFvKg"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(11,'z2dtobvqr6pxn4rpmzij5eoapewgeo4p',NULL,'z2dtobvqr6pxn4rpmzij5eoapewgeo4p',0,'2026-10-03 20:23:49.590962',NULL,9,'127.0.0.1',NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 20:23:49.590558"], "session_key": ["None", "z2dtobvqr6pxn4rpmzij5eoapewgeo4p"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXL0ktLilOLSpLLdJX0lHKS8xNBcq5eYYEK3g4-wYDhdLyS_NSlKxKikpTa3Vway7NRNJfmonQmJaYU0xIZ05-emYekn4wH83uWCA3M6cktSg1JT41tyAnvzI1FeQfw9haAAI5TUo:1xD6Gr:o97t12tnJOyyLQzBBem6NptfbtvAjR-kKaDs0USFvKg"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(12,'0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu',NULL,'0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu',2,'2026-10-03 20:23:49.592122',NULL,9,'127.0.0.1',NULL,NULL,NULL,'','{"expire_date": ["2026-10-17 20:23:49.538147", "None"], "session_key": ["0rigmwyjrlqj3jhmemhgkl0vdv3lmbsu", "None"], "session_data": [".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXL0ktLilOLSpLLdJX0lHKS8xNBcq5eYYEK3g4-wYDhdLyS_NSlKxKikpTa3Vway7NRNJfmonQmJaYU0xIZ05-emYekn4wH83uWCA3M6cktSg1JT41tyAnvzI1FeQfw9haAAI5TUo:1xD6Gr:o97t12tnJOyyLQzBBem6NptfbtvAjR-kKaDs0USFvKg", "None"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(13,'2',2,'admin',1,'2026-10-03 20:23:49.593213',NULL,4,'127.0.0.1',NULL,NULL,NULL,'','{"last_login": ["None", "2026-10-03 20:23:49.592728"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(14,'2',2,'admin',1,'2026-10-03 20:23:49.595373',NULL,4,NULL,NULL,NULL,NULL,'','{"last_login": ["2026-10-03 20:23:49.592728", "2026-10-03 20:23:49.595104"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(15,'1z3apxufujh73m5fxztc6n2urlqhvmt1',NULL,'1z3apxufujh73m5fxztc6n2urlqhvmt1',0,'2026-10-03 20:35:34.646822',NULL,9,NULL,NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 20:35:34.645888"], "session_key": ["None", "1z3apxufujh73m5fxztc6n2urlqhvmt1"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD6SE:LkHGAknm9GYwhEqKYsest_yirxPdosIcPWXBvFUXet8"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(16,'550r47bu0omyquhdmux8hbz855of6zk1',NULL,'550r47bu0omyquhdmux8hbz855of6zk1',0,'2026-10-03 21:23:36.130885',NULL,9,NULL,NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 21:23:36.129633"], "session_key": ["None", "550r47bu0omyquhdmux8hbz855of6zk1"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7Ci:9uKchsPQuabnlDeYz60Kd5Btr1e5Pc8vAkxoH9HWNCA"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(17,'v5hjppnm6wp775bqt4t5s75srys20asa',NULL,'v5hjppnm6wp775bqt4t5s75srys20asa',0,'2026-10-03 21:23:40.089613',NULL,9,NULL,NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 21:23:40.089172"], "session_key": ["None", "v5hjppnm6wp775bqt4t5s75srys20asa"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7Cm:eYYUjg8xDgAJJizVBVPNn4Z9T2EL1NkFsIBSN51WsyU"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(18,'on2fyyh52j4d8ag3vij2swrnwgh120ex',NULL,'on2fyyh52j4d8ag3vij2swrnwgh120ex',0,'2026-10-03 21:23:54.662233',NULL,9,NULL,NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 21:23:54.661220"], "session_key": ["None", "on2fyyh52j4d8ag3vij2swrnwgh120ex"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7D0:YWaDiLs-nZBvrQyudY8RUi-dz4y_0JDJq84mP_wkRvo"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(19,'92kgy971ojk1ijpzzkpgbqm0kcb0rx9o',NULL,'92kgy971ojk1ijpzzkpgbqm0kcb0rx9o',0,'2026-10-03 21:24:05.809184',NULL,9,'127.0.0.1',NULL,NULL,NULL,'','{"expire_date": ["None", "2026-10-17 21:24:05.808709"], "session_key": ["None", "92kgy971ojk1ijpzzkpgbqm0kcb0rx9o"], "session_data": ["None", ".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7DB:_lMklLYOecr_wNqQJDDARSlLIFAhnL_lgapNG_uOaPU"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(20,'on2fyyh52j4d8ag3vij2swrnwgh120ex',NULL,'on2fyyh52j4d8ag3vij2swrnwgh120ex',2,'2026-10-03 21:24:05.810783',NULL,9,'127.0.0.1',NULL,NULL,NULL,'','{"expire_date": ["2026-10-17 21:23:55.342482", "None"], "session_key": ["on2fyyh52j4d8ag3vij2swrnwgh120ex", "None"], "session_data": [".eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7D1:o_K8zTsKyqhYelPpoWoh9MflHZvZCyayR1SIW1Gn_tY", "None"]}',NULL,NULL);
-INSERT INTO "auditlog_logentry" VALUES(21,'2',2,'admin',1,'2026-10-03 21:24:05.812150',NULL,4,'127.0.0.1',NULL,NULL,NULL,'','{"last_login": ["2026-10-03 20:23:49.595104", "2026-10-03 21:24:05.811364"]}',NULL,NULL);
+INSERT INTO "auditlog_logentry" VALUES(1,'2',2,'karthikeya',0,'2026-05-29 10:18:28.588446',NULL,4,NULL,NULL,NULL,NULL,'','{"shiftrequestcomment_modified_by": ["None", "base.ShiftRequestComment.None"], "rejectedcandidate_modified_by": ["None", "recruitment.RejectedCandidate.None"], "rotatingworktypeassign_modified_by": ["None", "base.RotatingWorkTypeAssign.None"], "announcementcomment_modified_by": ["None", "base.AnnouncementComment.None"], "password": ["None", "!2i63aq1FAs35q0YZmXEQBoLjG92ahR0IfNVmluiw"], "last_login": ["None", "None"], "is_superuser": ["None", "True"], "username": ["None", "karthikeya"], "first_name": ["None", ""], "last_name": ["None", ""], "email": ["None", "karthikeya@fits.one"], "is_staff": ["None", "True"], "is_active": ["None", "True"], "date_joined": ["None", "2026-05-29 10:18:28.581530"], "recruitmentsurvey_modified_by": ["None", "recruitment.RecruitmentSurvey.None"], "recruitmentapproval_modified_by": ["None", "recruitment.RecruitmentApproval.None"], "employmentproposal_modified_by": ["None", "recruitment.EmploymentProposal.None"], "skillzone_modified_by": ["None", "recruitment.SkillZone.None"], "employeeshiftschedule_modified_by": ["None", "base.EmployeeShiftSchedule.None"], "actiontype_modified_by": ["None", "employee.Actiontype.None"], "approvalstep_modified_by": ["None", "recruitment.ApprovalStep.None"], "savedfilter_modified_by": ["None", "fits_views.SavedFilter.None"], "linkedinaccount_modified_by": ["None", "recruitment.LinkedInAccount.None"], "employeegeneralsetting_modified_by": ["None", "employee.EmployeeGeneralSetting.None"], "recruitmentapprovaldelegation_modified_by": ["None", "recruitment.RecruitmentApprovalDelegation.None"], "policy_modified_by": ["None", "employee.Policy.None"], "notefiles_modified_by": ["None", "employee.NoteFiles.None"], "candidaterating_modified_by": ["None", "recruitment.CandidateRating.None"], "interviewschedule_modified_by": ["None", "recruitment.InterviewSchedule.None"], "jobposition_modified_by": ["None", "base.JobPosition.None"], "interviewevaluation_modified_by": ["None", "recruitment.InterviewEvaluation.None"], "surveytemplate_modified_by": ["None", "recruitment.SurveyTemplate.None"], "togglecolumn_modified_by": ["None", "fits_views.ToggleColumn.None"], "mailbox_integrations": ["None", "base.MailboxIntegration.None"], "candidatedocument_modified_by": ["None", "recruitment.CandidateDocument.None"], "skillzonecandidate_modified_by": ["None", "recruitment.SkillZoneCandidate.None"], "recruitmentsurveyanswer_modified_by": ["None", "recruitment.RecruitmentSurveyAnswer.None"], "questionordering_modified_by": ["None", "recruitment.QuestionOrdering.None"], "skill_modified_by": ["None", "recruitment.Skill.None"], "recruitmentgeneralsetting_modified_by": ["None", "recruitment.RecruitmentGeneralSetting.None"], "rotatingworktype_modified_by": ["None", "base.RotatingWorkType.None"], "manpowerrequest_modified_by": ["None", "recruitment.ManpowerRequest.None"], "employeeshift_modified_by": ["None", "base.EmployeeShift.None"], "rejectreason_modified_by": ["None", "recruitment.RejectReason.None"], "dashboardemployeecharts_modified_by": ["None", "base.DashboardEmployeeCharts.None"], "candidatedocumentrequest_modified_by": ["None", "recruitment.CandidateDocumentRequest.None"], "user_excluded_column": ["None", "fits_views.ToggleColumn.None"], "fitsmailtemplate_modified_by": ["None", "base.FitsMailTemplate.None"], "worktype_modified_by": ["None", "base.WorkType.None"], "accountblockunblock_modified_by": ["None", "fits_audit.AccountBlockUnblock.None"], "bonuspoint_modified_by": ["None", "employee.BonusPoint.None"], "stagefiles_modified_by": ["None", "recruitment.StageFiles.None"], "activegroup_modified_by": ["None", "fits_views.ActiveGroup.None"], "department_modified_by": ["None", "base.Department.None"], "approvalrule_modified_by": ["None", "recruitment.ApprovalRule.None"], "shiftrequest_modified_by": ["None", "base.ShiftRequest.None"], "policymultiplefile_modified_by": ["None", "employee.PolicyMultipleFile.None"], "historytrackingfields_modified_by": ["None", "fits_audit.HistoryTrackingFields.None"], "stagenote_modified_by": ["None", "recruitment.StageNote.None"], "penaltyaccounts_modified_by": ["None", "base.PenaltyAccounts.None"], "activeview_modified_by": ["None", "fits_views.ActiveView.None"], "worktyperequest_modified_by": ["None", "base.WorkTypeRequest.None"], "disciplinaryaction_modified_by": ["None", "employee.DisciplinaryAction.None"], "dynamicemailconfiguration_modified_by": ["None", "base.DynamicEmailConfiguration.None"], "notifications": ["None", "notifications.Notification.None"], "company_modified_by": ["None", "base.Company.None"], "employeebankdetails_modified_by": ["None", "employee.EmployeeBankDetails.None"], "holidays_modified_by": ["None", "base.Holidays.None"], "companyleaves_modified_by": ["None", "base.CompanyLeaves.None"], "is_new_employee": ["None", "False"], "offerletter_modified_by": ["None", "recruitment.OfferLetter.None"], "rotatingshiftassign_modified_by": ["None", "base.RotatingShiftAssign.None"], "profileeditfeature_modified_by": ["None", "employee.ProfileEditFeature.None"], "worktyperequestcomment_modified_by": ["None", "base.WorkTypeRequestComment.None"], "multipleapprovalcondition_modified_by": ["None", "base.MultipleApprovalCondition.None"], "tracklatecomeearlyout_modified_by": ["None", "base.TrackLateComeEarlyOut.None"], "candidate_modified_by": ["None", "recruitment.Candidate.None"], "employeetype_modified_by": ["None", "base.EmployeeType.None"], "employeenote_modified_by": ["None", "employee.EmployeeNote.None"], "activetab_modified_by": ["None", "fits_views.ActiveTab.None"], "rotatingshift_modified_by": ["None", "base.RotatingShift.None"], "jobrole_modified_by": ["None", "base.JobRole.None"], "documentrequest_modified_by": ["None", "fits_documents.DocumentRequest.None"], "recruitment_modified_by": ["None", "recruitment.Recruitment.None"], "stage_modified_by": ["None", "recruitment.Stage.None"], "employeetag_modified_by": ["None", "employee.EmployeeTag.None"], "proposal_status_logs": ["None", "recruitment.ProposalStatusLog.None"], "announcement_modified_by": ["None", "base.Announcement.None"], "tags_modified_by": ["None", "base.Tags.None"], "id": ["None", "2"], "document_modified_by": ["None", "fits_documents.Document.None"]}',NULL,NULL);
+INSERT INTO "auditlog_logentry" VALUES(2,'2',2,'karthikeya',1,'2026-05-29 10:18:36.784820',NULL,4,NULL,NULL,NULL,NULL,'','{"password": ["!2i63aq1FAs35q0YZmXEQBoLjG92ahR0IfNVmluiw", "pbkdf2_sha256$600000$uggtVu3v4q0B3r06HhtlQ6$6ENtdvh7esnDlVZiw+kUqhxGwoCpm6yZlXEpTb72UgQ="]}',NULL,NULL);
+INSERT INTO "auditlog_logentry" VALUES(3,'2a29vjtrq4ermab8fs34i7sokfqpiwnz',NULL,'2a29vjtrq4ermab8fs34i7sokfqpiwnz',0,'2026-05-29 12:05:38.046466',NULL,6,'127.0.0.1',NULL,NULL,NULL,'','{"expire_date": ["None", "2026-06-12 12:05:38.045424"], "session_key": ["None", "2a29vjtrq4ermab8fs34i7sokfqpiwnz"], "session_data": ["None", "e30:1wSvy6:zrvVFgpL7WRgiTEpf-Af_Nt39QYKoG8VTHKk45tHNGA"]}',NULL,NULL);
+INSERT INTO "auditlog_logentry" VALUES(4,'1',1,'hr@fits.com',1,'2026-05-29 12:05:38.047788',NULL,4,'127.0.0.1',NULL,NULL,NULL,'','{"last_login": ["None", "2026-05-29 12:05:38.047165"]}',NULL,NULL);
 CREATE TABLE "auth_group" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(150) NOT NULL UNIQUE);
 CREATE TABLE "auth_group_permissions" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "group_id" integer NOT NULL REFERENCES "auth_group" ("id") DEFERRABLE INITIALLY DEFERRED, "permission_id" integer NOT NULL REFERENCES "auth_permission" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "auth_permission" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "content_type_id" integer NOT NULL REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED, "codename" varchar(100) NOT NULL, "name" varchar(255) NOT NULL);
-INSERT INTO "auth_permission" VALUES(1,6,'add_logentry','Can add log entry');
-INSERT INTO "auth_permission" VALUES(2,6,'change_logentry','Can change log entry');
-INSERT INTO "auth_permission" VALUES(3,6,'delete_logentry','Can delete log entry');
-INSERT INTO "auth_permission" VALUES(4,6,'view_logentry','Can view log entry');
-INSERT INTO "auth_permission" VALUES(5,7,'add_permission','Can add permission');
-INSERT INTO "auth_permission" VALUES(6,7,'change_permission','Can change permission');
-INSERT INTO "auth_permission" VALUES(7,7,'delete_permission','Can delete permission');
-INSERT INTO "auth_permission" VALUES(8,7,'view_permission','Can view permission');
-INSERT INTO "auth_permission" VALUES(9,8,'add_group','Can add group');
-INSERT INTO "auth_permission" VALUES(10,8,'change_group','Can change group');
-INSERT INTO "auth_permission" VALUES(11,8,'delete_group','Can delete group');
-INSERT INTO "auth_permission" VALUES(12,8,'view_group','Can view group');
+INSERT INTO "auth_permission" VALUES(1,1,'add_logentry','Can add log entry');
+INSERT INTO "auth_permission" VALUES(2,1,'change_logentry','Can change log entry');
+INSERT INTO "auth_permission" VALUES(3,1,'delete_logentry','Can delete log entry');
+INSERT INTO "auth_permission" VALUES(4,1,'view_logentry','Can view log entry');
+INSERT INTO "auth_permission" VALUES(5,2,'add_permission','Can add permission');
+INSERT INTO "auth_permission" VALUES(6,2,'change_permission','Can change permission');
+INSERT INTO "auth_permission" VALUES(7,2,'delete_permission','Can delete permission');
+INSERT INTO "auth_permission" VALUES(8,2,'view_permission','Can view permission');
+INSERT INTO "auth_permission" VALUES(9,3,'add_group','Can add group');
+INSERT INTO "auth_permission" VALUES(10,3,'change_group','Can change group');
+INSERT INTO "auth_permission" VALUES(11,3,'delete_group','Can delete group');
+INSERT INTO "auth_permission" VALUES(12,3,'view_group','Can view group');
 INSERT INTO "auth_permission" VALUES(13,4,'add_user','Can add user');
 INSERT INTO "auth_permission" VALUES(14,4,'change_user','Can change user');
 INSERT INTO "auth_permission" VALUES(15,4,'delete_user','Can delete user');
 INSERT INTO "auth_permission" VALUES(16,4,'view_user','Can view user');
-INSERT INTO "auth_permission" VALUES(17,2,'add_contenttype','Can add content type');
-INSERT INTO "auth_permission" VALUES(18,2,'change_contenttype','Can change content type');
-INSERT INTO "auth_permission" VALUES(19,2,'delete_contenttype','Can delete content type');
-INSERT INTO "auth_permission" VALUES(20,2,'view_contenttype','Can view content type');
-INSERT INTO "auth_permission" VALUES(21,9,'add_session','Can add session');
-INSERT INTO "auth_permission" VALUES(22,9,'change_session','Can change session');
-INSERT INTO "auth_permission" VALUES(23,9,'delete_session','Can delete session');
-INSERT INTO "auth_permission" VALUES(24,9,'view_session','Can view session');
-INSERT INTO "auth_permission" VALUES(25,10,'add_notification','Can add notification');
-INSERT INTO "auth_permission" VALUES(26,10,'change_notification','Can change notification');
-INSERT INTO "auth_permission" VALUES(27,10,'delete_notification','Can delete notification');
-INSERT INTO "auth_permission" VALUES(28,10,'view_notification','Can view notification');
-INSERT INTO "auth_permission" VALUES(29,11,'add_audittag','Can add audit tag');
-INSERT INTO "auth_permission" VALUES(30,11,'change_audittag','Can change audit tag');
-INSERT INTO "auth_permission" VALUES(31,11,'delete_audittag','Can delete audit tag');
-INSERT INTO "auth_permission" VALUES(32,11,'view_audittag','Can view audit tag');
-INSERT INTO "auth_permission" VALUES(33,12,'add_historytrackingfields','Can add history tracking fields');
-INSERT INTO "auth_permission" VALUES(34,12,'change_historytrackingfields','Can change history tracking fields');
-INSERT INTO "auth_permission" VALUES(35,12,'delete_historytrackingfields','Can delete history tracking fields');
-INSERT INTO "auth_permission" VALUES(36,12,'view_historytrackingfields','Can view history tracking fields');
-INSERT INTO "auth_permission" VALUES(37,13,'add_accountblockunblock','Can add account block unblock');
-INSERT INTO "auth_permission" VALUES(38,13,'change_accountblockunblock','Can change account block unblock');
-INSERT INTO "auth_permission" VALUES(39,13,'delete_accountblockunblock','Can delete account block unblock');
-INSERT INTO "auth_permission" VALUES(40,13,'view_accountblockunblock','Can view account block unblock');
-INSERT INTO "auth_permission" VALUES(41,14,'add_announcement','Can add Announcement');
-INSERT INTO "auth_permission" VALUES(42,14,'change_announcement','Can change Announcement');
-INSERT INTO "auth_permission" VALUES(43,14,'delete_announcement','Can delete Announcement');
-INSERT INTO "auth_permission" VALUES(44,14,'view_announcement','Can view Announcement');
-INSERT INTO "auth_permission" VALUES(45,15,'add_announcementcomment','Can add announcement comment');
-INSERT INTO "auth_permission" VALUES(46,15,'change_announcementcomment','Can change announcement comment');
-INSERT INTO "auth_permission" VALUES(47,15,'delete_announcementcomment','Can delete announcement comment');
-INSERT INTO "auth_permission" VALUES(48,15,'view_announcementcomment','Can view announcement comment');
-INSERT INTO "auth_permission" VALUES(49,16,'add_announcementexpire','Can add announcement expire');
-INSERT INTO "auth_permission" VALUES(50,16,'change_announcementexpire','Can change announcement expire');
-INSERT INTO "auth_permission" VALUES(51,16,'delete_announcementexpire','Can delete announcement expire');
-INSERT INTO "auth_permission" VALUES(52,16,'view_announcementexpire','Can view announcement expire');
-INSERT INTO "auth_permission" VALUES(53,17,'add_announcementview','Can add announcement view');
-INSERT INTO "auth_permission" VALUES(54,17,'change_announcementview','Can change announcement view');
-INSERT INTO "auth_permission" VALUES(55,17,'delete_announcementview','Can delete announcement view');
-INSERT INTO "auth_permission" VALUES(56,17,'view_announcementview','Can view announcement view');
-INSERT INTO "auth_permission" VALUES(57,18,'add_attachment','Can add attachment');
-INSERT INTO "auth_permission" VALUES(58,18,'change_attachment','Can change attachment');
-INSERT INTO "auth_permission" VALUES(59,18,'delete_attachment','Can delete attachment');
-INSERT INTO "auth_permission" VALUES(60,18,'view_attachment','Can view attachment');
-INSERT INTO "auth_permission" VALUES(61,19,'add_attendanceallowedip','Can add attendance allowed ip');
-INSERT INTO "auth_permission" VALUES(62,19,'change_attendanceallowedip','Can change attendance allowed ip');
-INSERT INTO "auth_permission" VALUES(63,19,'delete_attendanceallowedip','Can delete attendance allowed ip');
-INSERT INTO "auth_permission" VALUES(64,19,'view_attendanceallowedip','Can view attendance allowed ip');
-INSERT INTO "auth_permission" VALUES(65,20,'add_baserequestfile','Can add baserequest file');
-INSERT INTO "auth_permission" VALUES(66,20,'change_baserequestfile','Can change baserequest file');
-INSERT INTO "auth_permission" VALUES(67,20,'delete_baserequestfile','Can delete baserequest file');
-INSERT INTO "auth_permission" VALUES(68,20,'view_baserequestfile','Can view baserequest file');
-INSERT INTO "auth_permission" VALUES(69,3,'add_biometricattendance','Can add biometric attendance');
-INSERT INTO "auth_permission" VALUES(70,3,'change_biometricattendance','Can change biometric attendance');
-INSERT INTO "auth_permission" VALUES(71,3,'delete_biometricattendance','Can delete biometric attendance');
-INSERT INTO "auth_permission" VALUES(72,3,'view_biometricattendance','Can view biometric attendance');
-INSERT INTO "auth_permission" VALUES(73,21,'add_company','Can add Company');
-INSERT INTO "auth_permission" VALUES(74,21,'change_company','Can change Company');
-INSERT INTO "auth_permission" VALUES(75,21,'delete_company','Can delete Company');
-INSERT INTO "auth_permission" VALUES(76,21,'view_company','Can view Company');
-INSERT INTO "auth_permission" VALUES(77,22,'add_companyleaves','Can add Company Leave');
-INSERT INTO "auth_permission" VALUES(78,22,'change_companyleaves','Can change Company Leave');
-INSERT INTO "auth_permission" VALUES(79,22,'delete_companyleaves','Can delete Company Leave');
-INSERT INTO "auth_permission" VALUES(80,22,'view_companyleaves','Can view Company Leave');
-INSERT INTO "auth_permission" VALUES(81,23,'add_dashboardemployeecharts','Can add Dashboard Employee Charts');
-INSERT INTO "auth_permission" VALUES(82,23,'change_dashboardemployeecharts','Can change Dashboard Employee Charts');
-INSERT INTO "auth_permission" VALUES(83,23,'delete_dashboardemployeecharts','Can delete Dashboard Employee Charts');
-INSERT INTO "auth_permission" VALUES(84,23,'view_dashboardemployeecharts','Can view Dashboard Employee Charts');
-INSERT INTO "auth_permission" VALUES(85,24,'add_department','Can add Department');
-INSERT INTO "auth_permission" VALUES(86,24,'change_department','Can change Department');
-INSERT INTO "auth_permission" VALUES(87,24,'delete_department','Can delete Department');
-INSERT INTO "auth_permission" VALUES(88,24,'view_department','Can view Department');
-INSERT INTO "auth_permission" VALUES(89,25,'add_driverviewed','Can add driver viewed');
-INSERT INTO "auth_permission" VALUES(90,25,'change_driverviewed','Can change driver viewed');
-INSERT INTO "auth_permission" VALUES(91,25,'delete_driverviewed','Can delete driver viewed');
-INSERT INTO "auth_permission" VALUES(92,25,'view_driverviewed','Can view driver viewed');
-INSERT INTO "auth_permission" VALUES(93,26,'add_dynamicemailconfiguration','Can add Email Configuration');
-INSERT INTO "auth_permission" VALUES(94,26,'change_dynamicemailconfiguration','Can change Email Configuration');
-INSERT INTO "auth_permission" VALUES(95,26,'delete_dynamicemailconfiguration','Can delete Email Configuration');
-INSERT INTO "auth_permission" VALUES(96,26,'view_dynamicemailconfiguration','Can view Email Configuration');
-INSERT INTO "auth_permission" VALUES(97,27,'add_dynamicpagination','Can add dynamic pagination');
-INSERT INTO "auth_permission" VALUES(98,27,'change_dynamicpagination','Can change dynamic pagination');
-INSERT INTO "auth_permission" VALUES(99,27,'delete_dynamicpagination','Can delete dynamic pagination');
-INSERT INTO "auth_permission" VALUES(100,27,'view_dynamicpagination','Can view dynamic pagination');
-INSERT INTO "auth_permission" VALUES(101,28,'add_emaillog','Can add email log');
-INSERT INTO "auth_permission" VALUES(102,28,'change_emaillog','Can change email log');
-INSERT INTO "auth_permission" VALUES(103,28,'delete_emaillog','Can delete email log');
-INSERT INTO "auth_permission" VALUES(104,28,'view_emaillog','Can view email log');
-INSERT INTO "auth_permission" VALUES(105,29,'add_employeeshift','Can add Employee Shift');
-INSERT INTO "auth_permission" VALUES(106,29,'change_employeeshift','Can change Employee Shift');
-INSERT INTO "auth_permission" VALUES(107,29,'delete_employeeshift','Can delete Employee Shift');
-INSERT INTO "auth_permission" VALUES(108,29,'view_employeeshift','Can view Employee Shift');
-INSERT INTO "auth_permission" VALUES(109,30,'add_employeeshiftday','Can add Employee Shift Day');
-INSERT INTO "auth_permission" VALUES(110,30,'change_employeeshiftday','Can change Employee Shift Day');
-INSERT INTO "auth_permission" VALUES(111,30,'delete_employeeshiftday','Can delete Employee Shift Day');
-INSERT INTO "auth_permission" VALUES(112,30,'view_employeeshiftday','Can view Employee Shift Day');
-INSERT INTO "auth_permission" VALUES(113,31,'add_employeeshiftschedule','Can add Employee Shift Schedule');
-INSERT INTO "auth_permission" VALUES(114,31,'change_employeeshiftschedule','Can change Employee Shift Schedule');
-INSERT INTO "auth_permission" VALUES(115,31,'delete_employeeshiftschedule','Can delete Employee Shift Schedule');
-INSERT INTO "auth_permission" VALUES(116,31,'view_employeeshiftschedule','Can view Employee Shift Schedule');
-INSERT INTO "auth_permission" VALUES(117,32,'add_employeetype','Can add Employee Type');
-INSERT INTO "auth_permission" VALUES(118,32,'change_employeetype','Can change Employee Type');
-INSERT INTO "auth_permission" VALUES(119,32,'delete_employeetype','Can delete Employee Type');
-INSERT INTO "auth_permission" VALUES(120,32,'view_employeetype','Can view Employee Type');
-INSERT INTO "auth_permission" VALUES(121,33,'add_fitsmailtemplate','Can add fits mail template');
-INSERT INTO "auth_permission" VALUES(122,33,'change_fitsmailtemplate','Can change fits mail template');
-INSERT INTO "auth_permission" VALUES(123,33,'delete_fitsmailtemplate','Can delete fits mail template');
-INSERT INTO "auth_permission" VALUES(124,33,'view_fitsmailtemplate','Can view fits mail template');
-INSERT INTO "auth_permission" VALUES(125,34,'add_historicalrotatingshiftassign','Can add historical Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(126,34,'change_historicalrotatingshiftassign','Can change historical Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(127,34,'delete_historicalrotatingshiftassign','Can delete historical Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(128,34,'view_historicalrotatingshiftassign','Can view historical Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(129,35,'add_historicalrotatingworktypeassign','Can add historical Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(130,35,'change_historicalrotatingworktypeassign','Can change historical Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(131,35,'delete_historicalrotatingworktypeassign','Can delete historical Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(132,35,'view_historicalrotatingworktypeassign','Can view historical Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(133,36,'add_historicalshiftrequest','Can add historical Shift Request');
-INSERT INTO "auth_permission" VALUES(134,36,'change_historicalshiftrequest','Can change historical Shift Request');
-INSERT INTO "auth_permission" VALUES(135,36,'delete_historicalshiftrequest','Can delete historical Shift Request');
-INSERT INTO "auth_permission" VALUES(136,36,'view_historicalshiftrequest','Can view historical Shift Request');
-INSERT INTO "auth_permission" VALUES(137,37,'add_historicalworktyperequest','Can add historical Work Type Request');
-INSERT INTO "auth_permission" VALUES(138,37,'change_historicalworktyperequest','Can change historical Work Type Request');
-INSERT INTO "auth_permission" VALUES(139,37,'delete_historicalworktyperequest','Can delete historical Work Type Request');
-INSERT INTO "auth_permission" VALUES(140,37,'view_historicalworktyperequest','Can view historical Work Type Request');
-INSERT INTO "auth_permission" VALUES(141,38,'add_holidays','Can add Holiday');
-INSERT INTO "auth_permission" VALUES(142,38,'change_holidays','Can change Holiday');
-INSERT INTO "auth_permission" VALUES(143,38,'delete_holidays','Can delete Holiday');
-INSERT INTO "auth_permission" VALUES(144,38,'view_holidays','Can view Holiday');
-INSERT INTO "auth_permission" VALUES(145,39,'add_hruser','Can add HR User');
-INSERT INTO "auth_permission" VALUES(146,39,'change_hruser','Can change HR User');
-INSERT INTO "auth_permission" VALUES(147,39,'delete_hruser','Can delete HR User');
-INSERT INTO "auth_permission" VALUES(148,39,'view_hruser','Can view HR User');
-INSERT INTO "auth_permission" VALUES(149,40,'add_jobposition','Can add Job Position');
-INSERT INTO "auth_permission" VALUES(150,40,'change_jobposition','Can change Job Position');
-INSERT INTO "auth_permission" VALUES(151,40,'delete_jobposition','Can delete Job Position');
-INSERT INTO "auth_permission" VALUES(152,40,'view_jobposition','Can view Job Position');
-INSERT INTO "auth_permission" VALUES(153,41,'add_jobrole','Can add Job Role');
-INSERT INTO "auth_permission" VALUES(154,41,'change_jobrole','Can change Job Role');
-INSERT INTO "auth_permission" VALUES(155,41,'delete_jobrole','Can delete Job Role');
-INSERT INTO "auth_permission" VALUES(156,41,'view_jobrole','Can view Job Role');
-INSERT INTO "auth_permission" VALUES(157,42,'add_multipleapprovalcondition','Can add multiple approval condition');
-INSERT INTO "auth_permission" VALUES(158,42,'change_multipleapprovalcondition','Can change multiple approval condition');
-INSERT INTO "auth_permission" VALUES(159,42,'delete_multipleapprovalcondition','Can delete multiple approval condition');
-INSERT INTO "auth_permission" VALUES(160,42,'view_multipleapprovalcondition','Can view multiple approval condition');
-INSERT INTO "auth_permission" VALUES(161,43,'add_multipleapprovalmanagers','Can add Multiple Approval Managers');
-INSERT INTO "auth_permission" VALUES(162,43,'change_multipleapprovalmanagers','Can change Multiple Approval Managers');
-INSERT INTO "auth_permission" VALUES(163,43,'delete_multipleapprovalmanagers','Can delete Multiple Approval Managers');
-INSERT INTO "auth_permission" VALUES(164,43,'view_multipleapprovalmanagers','Can view Multiple Approval Managers');
-INSERT INTO "auth_permission" VALUES(165,44,'add_notificationsound','Can add notification sound');
-INSERT INTO "auth_permission" VALUES(166,44,'change_notificationsound','Can change notification sound');
-INSERT INTO "auth_permission" VALUES(167,44,'delete_notificationsound','Can delete notification sound');
-INSERT INTO "auth_permission" VALUES(168,44,'view_notificationsound','Can view notification sound');
-INSERT INTO "auth_permission" VALUES(169,45,'add_penaltyaccounts','Can add Penalty Account');
-INSERT INTO "auth_permission" VALUES(170,45,'change_penaltyaccounts','Can change Penalty Account');
-INSERT INTO "auth_permission" VALUES(171,45,'delete_penaltyaccounts','Can delete Penalty Account');
-INSERT INTO "auth_permission" VALUES(172,45,'view_penaltyaccounts','Can view Penalty Account');
-INSERT INTO "auth_permission" VALUES(173,46,'add_rotatingshift','Can add Rotating Shift');
-INSERT INTO "auth_permission" VALUES(174,46,'change_rotatingshift','Can change Rotating Shift');
-INSERT INTO "auth_permission" VALUES(175,46,'delete_rotatingshift','Can delete Rotating Shift');
-INSERT INTO "auth_permission" VALUES(176,46,'view_rotatingshift','Can view Rotating Shift');
-INSERT INTO "auth_permission" VALUES(177,47,'add_rotatingshiftassign','Can add Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(178,47,'change_rotatingshiftassign','Can change Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(179,47,'delete_rotatingshiftassign','Can delete Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(180,47,'view_rotatingshiftassign','Can view Rotating Shift Assign');
-INSERT INTO "auth_permission" VALUES(181,48,'add_rotatingworktype','Can add Rotating Work Type');
-INSERT INTO "auth_permission" VALUES(182,48,'change_rotatingworktype','Can change Rotating Work Type');
-INSERT INTO "auth_permission" VALUES(183,48,'delete_rotatingworktype','Can delete Rotating Work Type');
-INSERT INTO "auth_permission" VALUES(184,48,'view_rotatingworktype','Can view Rotating Work Type');
-INSERT INTO "auth_permission" VALUES(185,49,'add_rotatingworktypeassign','Can add Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(186,49,'change_rotatingworktypeassign','Can change Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(187,49,'delete_rotatingworktypeassign','Can delete Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(188,49,'view_rotatingworktypeassign','Can view Rotating Work Type Assign');
-INSERT INTO "auth_permission" VALUES(189,50,'add_shiftrequest','Can add Shift Request');
-INSERT INTO "auth_permission" VALUES(190,50,'change_shiftrequest','Can change Shift Request');
-INSERT INTO "auth_permission" VALUES(191,50,'delete_shiftrequest','Can delete Shift Request');
-INSERT INTO "auth_permission" VALUES(192,50,'view_shiftrequest','Can view Shift Request');
-INSERT INTO "auth_permission" VALUES(193,50,'approve_shiftrequest','Approve Shift Request');
-INSERT INTO "auth_permission" VALUES(194,50,'cancel_shiftrequest','Cancel Shift Request');
-INSERT INTO "auth_permission" VALUES(195,51,'add_shiftrequestcomment','Can add shift request comment');
-INSERT INTO "auth_permission" VALUES(196,51,'change_shiftrequestcomment','Can change shift request comment');
-INSERT INTO "auth_permission" VALUES(197,51,'delete_shiftrequestcomment','Can delete shift request comment');
-INSERT INTO "auth_permission" VALUES(198,51,'view_shiftrequestcomment','Can view shift request comment');
-INSERT INTO "auth_permission" VALUES(199,52,'add_tags','Can add Tag');
-INSERT INTO "auth_permission" VALUES(200,52,'change_tags','Can change Tag');
-INSERT INTO "auth_permission" VALUES(201,52,'delete_tags','Can delete Tag');
-INSERT INTO "auth_permission" VALUES(202,52,'view_tags','Can view Tag');
-INSERT INTO "auth_permission" VALUES(203,53,'add_tracklatecomeearlyout','Can add Track Late Come Early Out');
-INSERT INTO "auth_permission" VALUES(204,53,'change_tracklatecomeearlyout','Can change Track Late Come Early Out');
-INSERT INTO "auth_permission" VALUES(205,53,'delete_tracklatecomeearlyout','Can delete Track Late Come Early Out');
-INSERT INTO "auth_permission" VALUES(206,53,'view_tracklatecomeearlyout','Can view Track Late Come Early Out');
-INSERT INTO "auth_permission" VALUES(207,54,'add_worktype','Can add Work Type');
-INSERT INTO "auth_permission" VALUES(208,54,'change_worktype','Can change Work Type');
-INSERT INTO "auth_permission" VALUES(209,54,'delete_worktype','Can delete Work Type');
-INSERT INTO "auth_permission" VALUES(210,54,'view_worktype','Can view Work Type');
-INSERT INTO "auth_permission" VALUES(211,55,'add_worktyperequest','Can add Work Type Request');
-INSERT INTO "auth_permission" VALUES(212,55,'change_worktyperequest','Can change Work Type Request');
-INSERT INTO "auth_permission" VALUES(213,55,'delete_worktyperequest','Can delete Work Type Request');
-INSERT INTO "auth_permission" VALUES(214,55,'view_worktyperequest','Can view Work Type Request');
-INSERT INTO "auth_permission" VALUES(215,55,'approve_worktyperequest','Approve Work Type Request');
-INSERT INTO "auth_permission" VALUES(216,55,'cancel_worktyperequest','Cancel Work Type Request');
-INSERT INTO "auth_permission" VALUES(217,56,'add_worktyperequestcomment','Can add work type request comment');
-INSERT INTO "auth_permission" VALUES(218,56,'change_worktyperequestcomment','Can change work type request comment');
-INSERT INTO "auth_permission" VALUES(219,56,'delete_worktyperequestcomment','Can delete work type request comment');
-INSERT INTO "auth_permission" VALUES(220,56,'view_worktyperequestcomment','Can view work type request comment');
-INSERT INTO "auth_permission" VALUES(221,57,'add_mailboxintegration','Can add Mailbox Integration');
-INSERT INTO "auth_permission" VALUES(222,57,'change_mailboxintegration','Can change Mailbox Integration');
-INSERT INTO "auth_permission" VALUES(223,57,'delete_mailboxintegration','Can delete Mailbox Integration');
-INSERT INTO "auth_permission" VALUES(224,57,'view_mailboxintegration','Can view Mailbox Integration');
-INSERT INTO "auth_permission" VALUES(225,58,'add_docusignaccount','Can add DocuSign Account');
-INSERT INTO "auth_permission" VALUES(226,58,'change_docusignaccount','Can change DocuSign Account');
-INSERT INTO "auth_permission" VALUES(227,58,'delete_docusignaccount','Can delete DocuSign Account');
-INSERT INTO "auth_permission" VALUES(228,58,'view_docusignaccount','Can view DocuSign Account');
-INSERT INTO "auth_permission" VALUES(229,59,'add_adobesignaccount','Can add Adobe Sign Account');
-INSERT INTO "auth_permission" VALUES(230,59,'change_adobesignaccount','Can change Adobe Sign Account');
-INSERT INTO "auth_permission" VALUES(231,59,'delete_adobesignaccount','Can delete Adobe Sign Account');
-INSERT INTO "auth_permission" VALUES(232,59,'view_adobesignaccount','Can view Adobe Sign Account');
-INSERT INTO "auth_permission" VALUES(233,60,'add_actiontype','Can add Action Type');
-INSERT INTO "auth_permission" VALUES(234,60,'change_actiontype','Can change Action Type');
-INSERT INTO "auth_permission" VALUES(235,60,'delete_actiontype','Can delete Action Type');
-INSERT INTO "auth_permission" VALUES(236,60,'view_actiontype','Can view Action Type');
-INSERT INTO "auth_permission" VALUES(237,61,'add_bonuspoint','Can add bonus point');
-INSERT INTO "auth_permission" VALUES(238,61,'change_bonuspoint','Can change bonus point');
-INSERT INTO "auth_permission" VALUES(239,61,'delete_bonuspoint','Can delete bonus point');
-INSERT INTO "auth_permission" VALUES(240,61,'view_bonuspoint','Can view bonus point');
-INSERT INTO "auth_permission" VALUES(241,62,'add_employee','Can add employee');
-INSERT INTO "auth_permission" VALUES(242,62,'change_employee','Can change employee');
-INSERT INTO "auth_permission" VALUES(243,62,'delete_employee','Can delete employee');
-INSERT INTO "auth_permission" VALUES(244,62,'view_employee','Can view employee');
-INSERT INTO "auth_permission" VALUES(245,62,'change_ownprofile','Update own profile');
-INSERT INTO "auth_permission" VALUES(246,62,'view_ownprofile','View Own Profile');
-INSERT INTO "auth_permission" VALUES(247,63,'add_employeetag','Can add employee tag');
-INSERT INTO "auth_permission" VALUES(248,63,'change_employeetag','Can change employee tag');
-INSERT INTO "auth_permission" VALUES(249,63,'delete_employeetag','Can delete employee tag');
-INSERT INTO "auth_permission" VALUES(250,63,'view_employeetag','Can view employee tag');
-INSERT INTO "auth_permission" VALUES(251,64,'add_employeeworkinformation','Can add employee work information');
-INSERT INTO "auth_permission" VALUES(252,64,'change_employeeworkinformation','Can change employee work information');
-INSERT INTO "auth_permission" VALUES(253,64,'delete_employeeworkinformation','Can delete employee work information');
-INSERT INTO "auth_permission" VALUES(254,64,'view_employeeworkinformation','Can view employee work information');
-INSERT INTO "auth_permission" VALUES(255,65,'add_profileeditfeature','Can add profile edit feature');
-INSERT INTO "auth_permission" VALUES(256,65,'change_profileeditfeature','Can change profile edit feature');
-INSERT INTO "auth_permission" VALUES(257,65,'delete_profileeditfeature','Can delete profile edit feature');
-INSERT INTO "auth_permission" VALUES(258,65,'view_profileeditfeature','Can view profile edit feature');
-INSERT INTO "auth_permission" VALUES(259,66,'add_policymultiplefile','Can add policy multiple file');
-INSERT INTO "auth_permission" VALUES(260,66,'change_policymultiplefile','Can change policy multiple file');
-INSERT INTO "auth_permission" VALUES(261,66,'delete_policymultiplefile','Can delete policy multiple file');
-INSERT INTO "auth_permission" VALUES(262,66,'view_policymultiplefile','Can view policy multiple file');
-INSERT INTO "auth_permission" VALUES(263,67,'add_policy','Can add Policy');
-INSERT INTO "auth_permission" VALUES(264,67,'change_policy','Can change Policy');
-INSERT INTO "auth_permission" VALUES(265,67,'delete_policy','Can delete Policy');
-INSERT INTO "auth_permission" VALUES(266,67,'view_policy','Can view Policy');
-INSERT INTO "auth_permission" VALUES(267,68,'add_notefiles','Can add note files');
-INSERT INTO "auth_permission" VALUES(268,68,'change_notefiles','Can change note files');
-INSERT INTO "auth_permission" VALUES(269,68,'delete_notefiles','Can delete note files');
-INSERT INTO "auth_permission" VALUES(270,68,'view_notefiles','Can view note files');
-INSERT INTO "auth_permission" VALUES(271,69,'add_historicalemployeeworkinformation','Can add historical employee work information');
-INSERT INTO "auth_permission" VALUES(272,69,'change_historicalemployeeworkinformation','Can change historical employee work information');
-INSERT INTO "auth_permission" VALUES(273,69,'delete_historicalemployeeworkinformation','Can delete historical employee work information');
-INSERT INTO "auth_permission" VALUES(274,69,'view_historicalemployeeworkinformation','Can view historical employee work information');
-INSERT INTO "auth_permission" VALUES(275,70,'add_historicalbonuspoint','Can add historical bonus point');
-INSERT INTO "auth_permission" VALUES(276,70,'change_historicalbonuspoint','Can change historical bonus point');
-INSERT INTO "auth_permission" VALUES(277,70,'delete_historicalbonuspoint','Can delete historical bonus point');
-INSERT INTO "auth_permission" VALUES(278,70,'view_historicalbonuspoint','Can view historical bonus point');
-INSERT INTO "auth_permission" VALUES(279,71,'add_employeesalaryhistory','Can add Salary History');
-INSERT INTO "auth_permission" VALUES(280,71,'change_employeesalaryhistory','Can change Salary History');
-INSERT INTO "auth_permission" VALUES(281,71,'delete_employeesalaryhistory','Can delete Salary History');
-INSERT INTO "auth_permission" VALUES(282,71,'view_employeesalaryhistory','Can view Salary History');
-INSERT INTO "auth_permission" VALUES(283,72,'add_employeenote','Can add employee note');
-INSERT INTO "auth_permission" VALUES(284,72,'change_employeenote','Can change employee note');
-INSERT INTO "auth_permission" VALUES(285,72,'delete_employeenote','Can delete employee note');
-INSERT INTO "auth_permission" VALUES(286,72,'view_employeenote','Can view employee note');
-INSERT INTO "auth_permission" VALUES(287,73,'add_employeegeneralsetting','Can add employee general setting');
-INSERT INTO "auth_permission" VALUES(288,73,'change_employeegeneralsetting','Can change employee general setting');
-INSERT INTO "auth_permission" VALUES(289,73,'delete_employeegeneralsetting','Can delete employee general setting');
-INSERT INTO "auth_permission" VALUES(290,73,'view_employeegeneralsetting','Can view employee general setting');
-INSERT INTO "auth_permission" VALUES(291,74,'add_employeebankdetails','Can add Employee Bank Details');
-INSERT INTO "auth_permission" VALUES(292,74,'change_employeebankdetails','Can change Employee Bank Details');
-INSERT INTO "auth_permission" VALUES(293,74,'delete_employeebankdetails','Can delete Employee Bank Details');
-INSERT INTO "auth_permission" VALUES(294,74,'view_employeebankdetails','Can view Employee Bank Details');
-INSERT INTO "auth_permission" VALUES(295,75,'add_disciplinaryaction','Can add disciplinary action');
-INSERT INTO "auth_permission" VALUES(296,75,'change_disciplinaryaction','Can change disciplinary action');
-INSERT INTO "auth_permission" VALUES(297,75,'delete_disciplinaryaction','Can delete disciplinary action');
-INSERT INTO "auth_permission" VALUES(298,75,'view_disciplinaryaction','Can view disciplinary action');
-INSERT INTO "auth_permission" VALUES(299,76,'add_approvalrule','Can add Approval Rule');
-INSERT INTO "auth_permission" VALUES(300,76,'change_approvalrule','Can change Approval Rule');
-INSERT INTO "auth_permission" VALUES(301,76,'delete_approvalrule','Can delete Approval Rule');
-INSERT INTO "auth_permission" VALUES(302,76,'view_approvalrule','Can view Approval Rule');
-INSERT INTO "auth_permission" VALUES(303,77,'add_approvalstep','Can add Approval Step');
-INSERT INTO "auth_permission" VALUES(304,77,'change_approvalstep','Can change Approval Step');
-INSERT INTO "auth_permission" VALUES(305,77,'delete_approvalstep','Can delete Approval Step');
-INSERT INTO "auth_permission" VALUES(306,77,'view_approvalstep','Can view Approval Step');
-INSERT INTO "auth_permission" VALUES(307,78,'add_candidate','Can add Candidate');
-INSERT INTO "auth_permission" VALUES(308,78,'change_candidate','Can change Candidate');
-INSERT INTO "auth_permission" VALUES(309,78,'delete_candidate','Can delete Candidate');
-INSERT INTO "auth_permission" VALUES(310,78,'view_candidate','Can view Candidate');
-INSERT INTO "auth_permission" VALUES(311,78,'view_history','View Candidate History');
-INSERT INTO "auth_permission" VALUES(312,78,'archive_candidate','Archive Candidate');
-INSERT INTO "auth_permission" VALUES(313,79,'add_evaluationcriteria','Can add Evaluation Criteria');
-INSERT INTO "auth_permission" VALUES(314,79,'change_evaluationcriteria','Can change Evaluation Criteria');
-INSERT INTO "auth_permission" VALUES(315,79,'delete_evaluationcriteria','Can delete Evaluation Criteria');
-INSERT INTO "auth_permission" VALUES(316,79,'view_evaluationcriteria','Can view Evaluation Criteria');
-INSERT INTO "auth_permission" VALUES(317,80,'add_jobemailtemplate','Can add job email template');
-INSERT INTO "auth_permission" VALUES(318,80,'change_jobemailtemplate','Can change job email template');
-INSERT INTO "auth_permission" VALUES(319,80,'delete_jobemailtemplate','Can delete job email template');
-INSERT INTO "auth_permission" VALUES(320,80,'view_jobemailtemplate','Can view job email template');
-INSERT INTO "auth_permission" VALUES(321,81,'add_linkedinaccount','Can add LinkedIn Account');
-INSERT INTO "auth_permission" VALUES(322,81,'change_linkedinaccount','Can change LinkedIn Account');
-INSERT INTO "auth_permission" VALUES(323,81,'delete_linkedinaccount','Can delete LinkedIn Account');
-INSERT INTO "auth_permission" VALUES(324,81,'view_linkedinaccount','Can view LinkedIn Account');
-INSERT INTO "auth_permission" VALUES(325,82,'add_manpowerrequest','Can add Manpower Request');
-INSERT INTO "auth_permission" VALUES(326,82,'change_manpowerrequest','Can change Manpower Request');
-INSERT INTO "auth_permission" VALUES(327,82,'delete_manpowerrequest','Can delete Manpower Request');
-INSERT INTO "auth_permission" VALUES(328,82,'view_manpowerrequest','Can view Manpower Request');
-INSERT INTO "auth_permission" VALUES(329,83,'add_offerlettertemplate','Can add Offer Letter Template');
-INSERT INTO "auth_permission" VALUES(330,83,'change_offerlettertemplate','Can change Offer Letter Template');
-INSERT INTO "auth_permission" VALUES(331,83,'delete_offerlettertemplate','Can delete Offer Letter Template');
-INSERT INTO "auth_permission" VALUES(332,83,'view_offerlettertemplate','Can view Offer Letter Template');
-INSERT INTO "auth_permission" VALUES(333,84,'add_recruitment','Can add Recruitment');
-INSERT INTO "auth_permission" VALUES(334,84,'change_recruitment','Can change Recruitment');
-INSERT INTO "auth_permission" VALUES(335,84,'delete_recruitment','Can delete Recruitment');
-INSERT INTO "auth_permission" VALUES(336,84,'view_recruitment','Can view Recruitment');
-INSERT INTO "auth_permission" VALUES(337,84,'archive_recruitment','Archive Recruitment');
-INSERT INTO "auth_permission" VALUES(338,85,'add_skillzone','Can add Skill Zone');
-INSERT INTO "auth_permission" VALUES(339,85,'change_skillzone','Can change Skill Zone');
-INSERT INTO "auth_permission" VALUES(340,85,'delete_skillzone','Can delete Skill Zone');
-INSERT INTO "auth_permission" VALUES(341,85,'view_skillzone','Can view Skill Zone');
-INSERT INTO "auth_permission" VALUES(342,86,'add_stage','Can add Stage');
-INSERT INTO "auth_permission" VALUES(343,86,'change_stage','Can change Stage');
-INSERT INTO "auth_permission" VALUES(344,86,'delete_stage','Can delete Stage');
-INSERT INTO "auth_permission" VALUES(345,86,'view_stage','Can view Stage');
-INSERT INTO "auth_permission" VALUES(346,86,'archive_Stage','Archive Stage');
-INSERT INTO "auth_permission" VALUES(347,87,'add_stagefiles','Can add stage files');
-INSERT INTO "auth_permission" VALUES(348,87,'change_stagefiles','Can change stage files');
-INSERT INTO "auth_permission" VALUES(349,87,'delete_stagefiles','Can delete stage files');
-INSERT INTO "auth_permission" VALUES(350,87,'view_stagefiles','Can view stage files');
-INSERT INTO "auth_permission" VALUES(351,88,'add_surveytemplate','Can add Survey Template');
-INSERT INTO "auth_permission" VALUES(352,88,'change_surveytemplate','Can change Survey Template');
-INSERT INTO "auth_permission" VALUES(353,88,'delete_surveytemplate','Can delete Survey Template');
-INSERT INTO "auth_permission" VALUES(354,88,'view_surveytemplate','Can view Survey Template');
-INSERT INTO "auth_permission" VALUES(355,89,'add_stagenote','Can add stage note');
-INSERT INTO "auth_permission" VALUES(356,89,'change_stagenote','Can change stage note');
-INSERT INTO "auth_permission" VALUES(357,89,'delete_stagenote','Can delete stage note');
-INSERT INTO "auth_permission" VALUES(358,89,'view_stagenote','Can view stage note');
-INSERT INTO "auth_permission" VALUES(359,90,'add_skillzonecandidate','Can add skill zone candidate');
-INSERT INTO "auth_permission" VALUES(360,90,'change_skillzonecandidate','Can change skill zone candidate');
-INSERT INTO "auth_permission" VALUES(361,90,'delete_skillzonecandidate','Can delete skill zone candidate');
-INSERT INTO "auth_permission" VALUES(362,90,'view_skillzonecandidate','Can view skill zone candidate');
-INSERT INTO "auth_permission" VALUES(363,91,'add_skill','Can add Skill');
-INSERT INTO "auth_permission" VALUES(364,91,'change_skill','Can change Skill');
-INSERT INTO "auth_permission" VALUES(365,91,'delete_skill','Can delete Skill');
-INSERT INTO "auth_permission" VALUES(366,91,'view_skill','Can view Skill');
-INSERT INTO "auth_permission" VALUES(367,92,'add_resume','Can add resume');
-INSERT INTO "auth_permission" VALUES(368,92,'change_resume','Can change resume');
-INSERT INTO "auth_permission" VALUES(369,92,'delete_resume','Can delete resume');
-INSERT INTO "auth_permission" VALUES(370,92,'view_resume','Can view resume');
-INSERT INTO "auth_permission" VALUES(371,93,'add_rejectreason','Can add Reject Reason');
-INSERT INTO "auth_permission" VALUES(372,93,'change_rejectreason','Can change Reject Reason');
-INSERT INTO "auth_permission" VALUES(373,93,'delete_rejectreason','Can delete Reject Reason');
-INSERT INTO "auth_permission" VALUES(374,93,'view_rejectreason','Can view Reject Reason');
-INSERT INTO "auth_permission" VALUES(375,94,'add_rejectedcandidate','Can add Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(376,94,'change_rejectedcandidate','Can change Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(377,94,'delete_rejectedcandidate','Can delete Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(378,94,'view_rejectedcandidate','Can view Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(379,95,'add_recruitmentsurveyanswer','Can add recruitment survey answer');
-INSERT INTO "auth_permission" VALUES(380,95,'change_recruitmentsurveyanswer','Can change recruitment survey answer');
-INSERT INTO "auth_permission" VALUES(381,95,'delete_recruitmentsurveyanswer','Can delete recruitment survey answer');
-INSERT INTO "auth_permission" VALUES(382,95,'view_recruitmentsurveyanswer','Can view recruitment survey answer');
-INSERT INTO "auth_permission" VALUES(383,96,'add_recruitmentsurvey','Can add recruitment survey');
-INSERT INTO "auth_permission" VALUES(384,96,'change_recruitmentsurvey','Can change recruitment survey');
-INSERT INTO "auth_permission" VALUES(385,96,'delete_recruitmentsurvey','Can delete recruitment survey');
-INSERT INTO "auth_permission" VALUES(386,96,'view_recruitmentsurvey','Can view recruitment survey');
-INSERT INTO "auth_permission" VALUES(387,97,'add_recruitmentgeneralsetting','Can add recruitment general setting');
-INSERT INTO "auth_permission" VALUES(388,97,'change_recruitmentgeneralsetting','Can change recruitment general setting');
-INSERT INTO "auth_permission" VALUES(389,97,'delete_recruitmentgeneralsetting','Can delete recruitment general setting');
-INSERT INTO "auth_permission" VALUES(390,97,'view_recruitmentgeneralsetting','Can view recruitment general setting');
-INSERT INTO "auth_permission" VALUES(391,98,'add_recruitmentapprovaldelegation','Can add Approval Delegation');
-INSERT INTO "auth_permission" VALUES(392,98,'change_recruitmentapprovaldelegation','Can change Approval Delegation');
-INSERT INTO "auth_permission" VALUES(393,98,'delete_recruitmentapprovaldelegation','Can delete Approval Delegation');
-INSERT INTO "auth_permission" VALUES(394,98,'view_recruitmentapprovaldelegation','Can view Approval Delegation');
-INSERT INTO "auth_permission" VALUES(395,99,'add_recruitmentapproval','Can add Recruitment Approval');
-INSERT INTO "auth_permission" VALUES(396,99,'change_recruitmentapproval','Can change Recruitment Approval');
-INSERT INTO "auth_permission" VALUES(397,99,'delete_recruitmentapproval','Can delete Recruitment Approval');
-INSERT INTO "auth_permission" VALUES(398,99,'view_recruitmentapproval','Can view Recruitment Approval');
-INSERT INTO "auth_permission" VALUES(399,100,'add_questionordering','Can add question ordering');
-INSERT INTO "auth_permission" VALUES(400,100,'change_questionordering','Can change question ordering');
-INSERT INTO "auth_permission" VALUES(401,100,'delete_questionordering','Can delete question ordering');
-INSERT INTO "auth_permission" VALUES(402,100,'view_questionordering','Can view question ordering');
-INSERT INTO "auth_permission" VALUES(403,101,'add_parsedcvdata','Can add Parsed CV Data');
-INSERT INTO "auth_permission" VALUES(404,101,'change_parsedcvdata','Can change Parsed CV Data');
-INSERT INTO "auth_permission" VALUES(405,101,'delete_parsedcvdata','Can delete Parsed CV Data');
-INSERT INTO "auth_permission" VALUES(406,101,'view_parsedcvdata','Can view Parsed CV Data');
-INSERT INTO "auth_permission" VALUES(407,102,'add_offerletter','Can add Offer Letter');
-INSERT INTO "auth_permission" VALUES(408,102,'change_offerletter','Can change Offer Letter');
-INSERT INTO "auth_permission" VALUES(409,102,'delete_offerletter','Can delete Offer Letter');
-INSERT INTO "auth_permission" VALUES(410,102,'view_offerletter','Can view Offer Letter');
-INSERT INTO "auth_permission" VALUES(411,103,'add_offerapproval','Can add Offer Approval');
-INSERT INTO "auth_permission" VALUES(412,103,'change_offerapproval','Can change Offer Approval');
-INSERT INTO "auth_permission" VALUES(413,103,'delete_offerapproval','Can delete Offer Approval');
-INSERT INTO "auth_permission" VALUES(414,103,'view_offerapproval','Can view Offer Approval');
-INSERT INTO "auth_permission" VALUES(415,104,'add_manpowerrequeststatuslog','Can add Status Log');
-INSERT INTO "auth_permission" VALUES(416,104,'change_manpowerrequeststatuslog','Can change Status Log');
-INSERT INTO "auth_permission" VALUES(417,104,'delete_manpowerrequeststatuslog','Can delete Status Log');
-INSERT INTO "auth_permission" VALUES(418,104,'view_manpowerrequeststatuslog','Can view Status Log');
-INSERT INTO "auth_permission" VALUES(419,105,'add_manpowerapproval','Can add Manpower Approval');
-INSERT INTO "auth_permission" VALUES(420,105,'change_manpowerapproval','Can change Manpower Approval');
-INSERT INTO "auth_permission" VALUES(421,105,'delete_manpowerapproval','Can delete Manpower Approval');
-INSERT INTO "auth_permission" VALUES(422,105,'view_manpowerapproval','Can view Manpower Approval');
-INSERT INTO "auth_permission" VALUES(423,106,'add_jobapplication','Can add job application');
-INSERT INTO "auth_permission" VALUES(424,106,'change_jobapplication','Can change job application');
-INSERT INTO "auth_permission" VALUES(425,106,'delete_jobapplication','Can delete job application');
-INSERT INTO "auth_permission" VALUES(426,106,'view_jobapplication','Can view job application');
-INSERT INTO "auth_permission" VALUES(427,107,'add_interviewschedule','Can add Schedule Interview');
-INSERT INTO "auth_permission" VALUES(428,107,'change_interviewschedule','Can change Schedule Interview');
-INSERT INTO "auth_permission" VALUES(429,107,'delete_interviewschedule','Can delete Schedule Interview');
-INSERT INTO "auth_permission" VALUES(430,107,'view_interviewschedule','Can view Schedule Interview');
-INSERT INTO "auth_permission" VALUES(431,108,'add_interviewevaluation','Can add Interview Evaluation');
-INSERT INTO "auth_permission" VALUES(432,108,'change_interviewevaluation','Can change Interview Evaluation');
-INSERT INTO "auth_permission" VALUES(433,108,'delete_interviewevaluation','Can delete Interview Evaluation');
-INSERT INTO "auth_permission" VALUES(434,108,'view_interviewevaluation','Can view Interview Evaluation');
-INSERT INTO "auth_permission" VALUES(435,109,'add_historicalrejectedcandidate','Can add historical Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(436,109,'change_historicalrejectedcandidate','Can change historical Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(437,109,'delete_historicalrejectedcandidate','Can delete historical Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(438,109,'view_historicalrejectedcandidate','Can view historical Rejected Candidate');
-INSERT INTO "auth_permission" VALUES(439,110,'add_historicalcandidate','Can add historical Candidate');
-INSERT INTO "auth_permission" VALUES(440,110,'change_historicalcandidate','Can change historical Candidate');
-INSERT INTO "auth_permission" VALUES(441,110,'delete_historicalcandidate','Can delete historical Candidate');
-INSERT INTO "auth_permission" VALUES(442,110,'view_historicalcandidate','Can view historical Candidate');
-INSERT INTO "auth_permission" VALUES(443,111,'add_cvscreeninglog','Can add CV Screening Log');
-INSERT INTO "auth_permission" VALUES(444,111,'change_cvscreeninglog','Can change CV Screening Log');
-INSERT INTO "auth_permission" VALUES(445,111,'delete_cvscreeninglog','Can delete CV Screening Log');
-INSERT INTO "auth_permission" VALUES(446,111,'view_cvscreeninglog','Can view CV Screening Log');
-INSERT INTO "auth_permission" VALUES(447,112,'add_cvparsingsettings','Can add CV Parsing Settings');
-INSERT INTO "auth_permission" VALUES(448,112,'change_cvparsingsettings','Can change CV Parsing Settings');
-INSERT INTO "auth_permission" VALUES(449,112,'delete_cvparsingsettings','Can delete CV Parsing Settings');
-INSERT INTO "auth_permission" VALUES(450,112,'view_cvparsingsettings','Can view CV Parsing Settings');
-INSERT INTO "auth_permission" VALUES(451,113,'add_candidatescreeningprofile','Can add candidate screening profile');
-INSERT INTO "auth_permission" VALUES(452,113,'change_candidatescreeningprofile','Can change candidate screening profile');
-INSERT INTO "auth_permission" VALUES(453,113,'delete_candidatescreeningprofile','Can delete candidate screening profile');
-INSERT INTO "auth_permission" VALUES(454,113,'view_candidatescreeningprofile','Can view candidate screening profile');
-INSERT INTO "auth_permission" VALUES(455,114,'add_candidatedocumentrequest','Can add candidate document request');
-INSERT INTO "auth_permission" VALUES(456,114,'change_candidatedocumentrequest','Can change candidate document request');
-INSERT INTO "auth_permission" VALUES(457,114,'delete_candidatedocumentrequest','Can delete candidate document request');
-INSERT INTO "auth_permission" VALUES(458,114,'view_candidatedocumentrequest','Can view candidate document request');
-INSERT INTO "auth_permission" VALUES(459,115,'add_candidatedocument','Can add candidate document');
-INSERT INTO "auth_permission" VALUES(460,115,'change_candidatedocument','Can change candidate document');
-INSERT INTO "auth_permission" VALUES(461,115,'delete_candidatedocument','Can delete candidate document');
-INSERT INTO "auth_permission" VALUES(462,115,'view_candidatedocument','Can view candidate document');
-INSERT INTO "auth_permission" VALUES(463,116,'add_evaluationscore','Can add evaluation score');
-INSERT INTO "auth_permission" VALUES(464,116,'change_evaluationscore','Can change evaluation score');
-INSERT INTO "auth_permission" VALUES(465,116,'delete_evaluationscore','Can delete evaluation score');
-INSERT INTO "auth_permission" VALUES(466,116,'view_evaluationscore','Can view evaluation score');
-INSERT INTO "auth_permission" VALUES(467,117,'add_candidateskillmatch','Can add Candidate Skill Match');
-INSERT INTO "auth_permission" VALUES(468,117,'change_candidateskillmatch','Can change Candidate Skill Match');
-INSERT INTO "auth_permission" VALUES(469,117,'delete_candidateskillmatch','Can delete Candidate Skill Match');
-INSERT INTO "auth_permission" VALUES(470,117,'view_candidateskillmatch','Can view Candidate Skill Match');
-INSERT INTO "auth_permission" VALUES(471,118,'add_candidaterating','Can add candidate rating');
-INSERT INTO "auth_permission" VALUES(472,118,'change_candidaterating','Can change candidate rating');
-INSERT INTO "auth_permission" VALUES(473,118,'delete_candidaterating','Can delete candidate rating');
-INSERT INTO "auth_permission" VALUES(474,118,'view_candidaterating','Can view candidate rating');
-INSERT INTO "auth_permission" VALUES(475,119,'add_candidaterankingscore','Can add Candidate Ranking Score');
-INSERT INTO "auth_permission" VALUES(476,119,'change_candidaterankingscore','Can change Candidate Ranking Score');
-INSERT INTO "auth_permission" VALUES(477,119,'delete_candidaterankingscore','Can delete Candidate Ranking Score');
-INSERT INTO "auth_permission" VALUES(478,119,'view_candidaterankingscore','Can view Candidate Ranking Score');
-INSERT INTO "auth_permission" VALUES(479,120,'add_offerletterapproval','Can add Offer Letter Approval');
-INSERT INTO "auth_permission" VALUES(480,120,'change_offerletterapproval','Can change Offer Letter Approval');
-INSERT INTO "auth_permission" VALUES(481,120,'delete_offerletterapproval','Can delete Offer Letter Approval');
-INSERT INTO "auth_permission" VALUES(482,120,'view_offerletterapproval','Can view Offer Letter Approval');
-INSERT INTO "auth_permission" VALUES(483,121,'add_interviewround','Can add Interview Round');
-INSERT INTO "auth_permission" VALUES(484,121,'change_interviewround','Can change Interview Round');
-INSERT INTO "auth_permission" VALUES(485,121,'delete_interviewround','Can delete Interview Round');
-INSERT INTO "auth_permission" VALUES(486,121,'view_interviewround','Can view Interview Round');
-INSERT INTO "auth_permission" VALUES(487,122,'add_medicallettertemplate','Can add Medical Letter Template');
-INSERT INTO "auth_permission" VALUES(488,122,'change_medicallettertemplate','Can change Medical Letter Template');
-INSERT INTO "auth_permission" VALUES(489,122,'delete_medicallettertemplate','Can delete Medical Letter Template');
-INSERT INTO "auth_permission" VALUES(490,122,'view_medicallettertemplate','Can view Medical Letter Template');
-INSERT INTO "auth_permission" VALUES(491,123,'add_visalettertemplate','Can add Visa Letter Template');
-INSERT INTO "auth_permission" VALUES(492,123,'change_visalettertemplate','Can change Visa Letter Template');
-INSERT INTO "auth_permission" VALUES(493,123,'delete_visalettertemplate','Can delete Visa Letter Template');
-INSERT INTO "auth_permission" VALUES(494,123,'view_visalettertemplate','Can view Visa Letter Template');
-INSERT INTO "auth_permission" VALUES(495,124,'add_visaletter','Can add Visa Letter');
-INSERT INTO "auth_permission" VALUES(496,124,'change_visaletter','Can change Visa Letter');
-INSERT INTO "auth_permission" VALUES(497,124,'delete_visaletter','Can delete Visa Letter');
-INSERT INTO "auth_permission" VALUES(498,124,'view_visaletter','Can view Visa Letter');
-INSERT INTO "auth_permission" VALUES(499,125,'add_medicalletter','Can add Medical Letter');
-INSERT INTO "auth_permission" VALUES(500,125,'change_medicalletter','Can change Medical Letter');
-INSERT INTO "auth_permission" VALUES(501,125,'delete_medicalletter','Can delete Medical Letter');
-INSERT INTO "auth_permission" VALUES(502,125,'view_medicalletter','Can view Medical Letter');
-INSERT INTO "auth_permission" VALUES(503,126,'add_offerletterstatuslog','Can add Offer Letter Status Log');
-INSERT INTO "auth_permission" VALUES(504,126,'change_offerletterstatuslog','Can change Offer Letter Status Log');
-INSERT INTO "auth_permission" VALUES(505,126,'delete_offerletterstatuslog','Can delete Offer Letter Status Log');
-INSERT INTO "auth_permission" VALUES(506,126,'view_offerletterstatuslog','Can view Offer Letter Status Log');
-INSERT INTO "auth_permission" VALUES(507,127,'add_medicalletterstatuslog','Can add Medical Letter Status Log');
-INSERT INTO "auth_permission" VALUES(508,127,'change_medicalletterstatuslog','Can change Medical Letter Status Log');
-INSERT INTO "auth_permission" VALUES(509,127,'delete_medicalletterstatuslog','Can delete Medical Letter Status Log');
-INSERT INTO "auth_permission" VALUES(510,127,'view_medicalletterstatuslog','Can view Medical Letter Status Log');
-INSERT INTO "auth_permission" VALUES(511,128,'add_visaletterstatuslog','Can add Visa Letter Status Log');
-INSERT INTO "auth_permission" VALUES(512,128,'change_visaletterstatuslog','Can change Visa Letter Status Log');
-INSERT INTO "auth_permission" VALUES(513,128,'delete_visaletterstatuslog','Can delete Visa Letter Status Log');
-INSERT INTO "auth_permission" VALUES(514,128,'view_visaletterstatuslog','Can view Visa Letter Status Log');
-INSERT INTO "auth_permission" VALUES(515,129,'add_employmentproposal','Can add Employment Proposal');
-INSERT INTO "auth_permission" VALUES(516,129,'change_employmentproposal','Can change Employment Proposal');
-INSERT INTO "auth_permission" VALUES(517,129,'delete_employmentproposal','Can delete Employment Proposal');
-INSERT INTO "auth_permission" VALUES(518,129,'view_employmentproposal','Can view Employment Proposal');
-INSERT INTO "auth_permission" VALUES(519,130,'add_proposalstatuslog','Can add proposal status log');
-INSERT INTO "auth_permission" VALUES(520,130,'change_proposalstatuslog','Can change proposal status log');
-INSERT INTO "auth_permission" VALUES(521,130,'delete_proposalstatuslog','Can delete proposal status log');
-INSERT INTO "auth_permission" VALUES(522,130,'view_proposalstatuslog','Can view proposal status log');
-INSERT INTO "auth_permission" VALUES(523,131,'add_proposalroleassignment','Can add Proposal Role Assignment');
-INSERT INTO "auth_permission" VALUES(524,131,'change_proposalroleassignment','Can change Proposal Role Assignment');
-INSERT INTO "auth_permission" VALUES(525,131,'delete_proposalroleassignment','Can delete Proposal Role Assignment');
-INSERT INTO "auth_permission" VALUES(526,131,'view_proposalroleassignment','Can view Proposal Role Assignment');
-INSERT INTO "auth_permission" VALUES(527,132,'add_proposalapproval','Can add Proposal Approval');
-INSERT INTO "auth_permission" VALUES(528,132,'change_proposalapproval','Can change Proposal Approval');
-INSERT INTO "auth_permission" VALUES(529,132,'delete_proposalapproval','Can delete Proposal Approval');
-INSERT INTO "auth_permission" VALUES(530,132,'view_proposalapproval','Can view Proposal Approval');
-INSERT INTO "auth_permission" VALUES(531,133,'add_candidateportalupload','Can add Candidate Portal Upload');
-INSERT INTO "auth_permission" VALUES(532,133,'change_candidateportalupload','Can change Candidate Portal Upload');
-INSERT INTO "auth_permission" VALUES(533,133,'delete_candidateportalupload','Can delete Candidate Portal Upload');
-INSERT INTO "auth_permission" VALUES(534,133,'view_candidateportalupload','Can view Candidate Portal Upload');
-INSERT INTO "auth_permission" VALUES(535,134,'add_onboardingdocument','Can add Onboarding Document');
-INSERT INTO "auth_permission" VALUES(536,134,'change_onboardingdocument','Can change Onboarding Document');
-INSERT INTO "auth_permission" VALUES(537,134,'delete_onboardingdocument','Can delete Onboarding Document');
-INSERT INTO "auth_permission" VALUES(538,134,'view_onboardingdocument','Can view Onboarding Document');
-INSERT INTO "auth_permission" VALUES(539,135,'add_bulkrequestline','Can add Bulk Request Line');
-INSERT INTO "auth_permission" VALUES(540,135,'change_bulkrequestline','Can change Bulk Request Line');
-INSERT INTO "auth_permission" VALUES(541,135,'delete_bulkrequestline','Can delete Bulk Request Line');
-INSERT INTO "auth_permission" VALUES(542,135,'view_bulkrequestline','Can view Bulk Request Line');
-INSERT INTO "auth_permission" VALUES(543,136,'add_approvalrequest','Can add Approval Request');
-INSERT INTO "auth_permission" VALUES(544,136,'change_approvalrequest','Can change Approval Request');
-INSERT INTO "auth_permission" VALUES(545,136,'delete_approvalrequest','Can delete Approval Request');
-INSERT INTO "auth_permission" VALUES(546,136,'view_approvalrequest','Can view Approval Request');
-INSERT INTO "auth_permission" VALUES(547,137,'add_availableleave','Can add available leave');
-INSERT INTO "auth_permission" VALUES(548,137,'change_availableleave','Can change available leave');
-INSERT INTO "auth_permission" VALUES(549,137,'delete_availableleave','Can delete available leave');
-INSERT INTO "auth_permission" VALUES(550,137,'view_availableleave','Can view available leave');
-INSERT INTO "auth_permission" VALUES(551,138,'add_compensatoryleaverequest','Can add compensatory leave request');
-INSERT INTO "auth_permission" VALUES(552,138,'change_compensatoryleaverequest','Can change compensatory leave request');
-INSERT INTO "auth_permission" VALUES(553,138,'delete_compensatoryleaverequest','Can delete compensatory leave request');
-INSERT INTO "auth_permission" VALUES(554,138,'view_compensatoryleaverequest','Can view compensatory leave request');
-INSERT INTO "auth_permission" VALUES(555,139,'add_leaveallocationrequest','Can add Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(556,139,'change_leaveallocationrequest','Can change Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(557,139,'delete_leaveallocationrequest','Can delete Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(558,139,'view_leaveallocationrequest','Can view Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(559,140,'add_leaverequest','Can add Leave Request');
-INSERT INTO "auth_permission" VALUES(560,140,'change_leaverequest','Can change Leave Request');
-INSERT INTO "auth_permission" VALUES(561,140,'delete_leaverequest','Can delete Leave Request');
-INSERT INTO "auth_permission" VALUES(562,140,'view_leaverequest','Can view Leave Request');
-INSERT INTO "auth_permission" VALUES(563,141,'add_leaverequestfile','Can add leaverequest file');
-INSERT INTO "auth_permission" VALUES(564,141,'change_leaverequestfile','Can change leaverequest file');
-INSERT INTO "auth_permission" VALUES(565,141,'delete_leaverequestfile','Can delete leaverequest file');
-INSERT INTO "auth_permission" VALUES(566,141,'view_leaverequestfile','Can view leaverequest file');
-INSERT INTO "auth_permission" VALUES(567,142,'add_leavetype','Can add leave type');
-INSERT INTO "auth_permission" VALUES(568,142,'change_leavetype','Can change leave type');
-INSERT INTO "auth_permission" VALUES(569,142,'delete_leavetype','Can delete leave type');
-INSERT INTO "auth_permission" VALUES(570,142,'view_leavetype','Can view leave type');
-INSERT INTO "auth_permission" VALUES(571,143,'add_overrideleaverequests','Can add override leave requests');
-INSERT INTO "auth_permission" VALUES(572,143,'change_overrideleaverequests','Can change override leave requests');
-INSERT INTO "auth_permission" VALUES(573,143,'delete_overrideleaverequests','Can delete override leave requests');
-INSERT INTO "auth_permission" VALUES(574,143,'view_overrideleaverequests','Can view override leave requests');
-INSERT INTO "auth_permission" VALUES(575,144,'add_restrictleave','Can add restrict leave');
-INSERT INTO "auth_permission" VALUES(576,144,'change_restrictleave','Can change restrict leave');
-INSERT INTO "auth_permission" VALUES(577,144,'delete_restrictleave','Can delete restrict leave');
-INSERT INTO "auth_permission" VALUES(578,144,'view_restrictleave','Can view restrict leave');
-INSERT INTO "auth_permission" VALUES(579,145,'add_leaverequestconditionapproval','Can add leave request condition approval');
-INSERT INTO "auth_permission" VALUES(580,145,'change_leaverequestconditionapproval','Can change leave request condition approval');
-INSERT INTO "auth_permission" VALUES(581,145,'delete_leaverequestconditionapproval','Can delete leave request condition approval');
-INSERT INTO "auth_permission" VALUES(582,145,'view_leaverequestconditionapproval','Can view leave request condition approval');
-INSERT INTO "auth_permission" VALUES(583,146,'add_leaverequestcomment','Can add leaverequest comment');
-INSERT INTO "auth_permission" VALUES(584,146,'change_leaverequestcomment','Can change leaverequest comment');
-INSERT INTO "auth_permission" VALUES(585,146,'delete_leaverequestcomment','Can delete leaverequest comment');
-INSERT INTO "auth_permission" VALUES(586,146,'view_leaverequestcomment','Can view leaverequest comment');
-INSERT INTO "auth_permission" VALUES(587,147,'add_leavegeneralsetting','Can add leave general setting');
-INSERT INTO "auth_permission" VALUES(588,147,'change_leavegeneralsetting','Can change leave general setting');
-INSERT INTO "auth_permission" VALUES(589,147,'delete_leavegeneralsetting','Can delete leave general setting');
-INSERT INTO "auth_permission" VALUES(590,147,'view_leavegeneralsetting','Can view leave general setting');
-INSERT INTO "auth_permission" VALUES(591,148,'add_leaveallocationrequestcomment','Can add leaveallocationrequest comment');
-INSERT INTO "auth_permission" VALUES(592,148,'change_leaveallocationrequestcomment','Can change leaveallocationrequest comment');
-INSERT INTO "auth_permission" VALUES(593,148,'delete_leaveallocationrequestcomment','Can delete leaveallocationrequest comment');
-INSERT INTO "auth_permission" VALUES(594,148,'view_leaveallocationrequestcomment','Can view leaveallocationrequest comment');
-INSERT INTO "auth_permission" VALUES(595,149,'add_holiday','Can add holiday');
-INSERT INTO "auth_permission" VALUES(596,149,'change_holiday','Can change holiday');
-INSERT INTO "auth_permission" VALUES(597,149,'delete_holiday','Can delete holiday');
-INSERT INTO "auth_permission" VALUES(598,149,'view_holiday','Can view holiday');
-INSERT INTO "auth_permission" VALUES(599,150,'add_historicalleaverequest','Can add historical Leave Request');
-INSERT INTO "auth_permission" VALUES(600,150,'change_historicalleaverequest','Can change historical Leave Request');
-INSERT INTO "auth_permission" VALUES(601,150,'delete_historicalleaverequest','Can delete historical Leave Request');
-INSERT INTO "auth_permission" VALUES(602,150,'view_historicalleaverequest','Can view historical Leave Request');
-INSERT INTO "auth_permission" VALUES(603,151,'add_historicalleaveallocationrequest','Can add historical Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(604,151,'change_historicalleaveallocationrequest','Can change historical Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(605,151,'delete_historicalleaveallocationrequest','Can delete historical Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(606,151,'view_historicalleaveallocationrequest','Can view historical Leave Allocation Request');
-INSERT INTO "auth_permission" VALUES(607,152,'add_historicalcompensatoryleaverequest','Can add historical compensatory leave request');
-INSERT INTO "auth_permission" VALUES(608,152,'change_historicalcompensatoryleaverequest','Can change historical compensatory leave request');
-INSERT INTO "auth_permission" VALUES(609,152,'delete_historicalcompensatoryleaverequest','Can delete historical compensatory leave request');
-INSERT INTO "auth_permission" VALUES(610,152,'view_historicalcompensatoryleaverequest','Can view historical compensatory leave request');
-INSERT INTO "auth_permission" VALUES(611,153,'add_historicalavailableleave','Can add historical available leave');
-INSERT INTO "auth_permission" VALUES(612,153,'change_historicalavailableleave','Can change historical available leave');
-INSERT INTO "auth_permission" VALUES(613,153,'delete_historicalavailableleave','Can delete historical available leave');
-INSERT INTO "auth_permission" VALUES(614,153,'view_historicalavailableleave','Can view historical available leave');
-INSERT INTO "auth_permission" VALUES(615,1,'add_employeepastleaverestrict','Can add employee past leave restrict');
-INSERT INTO "auth_permission" VALUES(616,1,'change_employeepastleaverestrict','Can change employee past leave restrict');
-INSERT INTO "auth_permission" VALUES(617,1,'delete_employeepastleaverestrict','Can delete employee past leave restrict');
-INSERT INTO "auth_permission" VALUES(618,1,'view_employeepastleaverestrict','Can view employee past leave restrict');
-INSERT INTO "auth_permission" VALUES(619,154,'add_compensatoryleaverequestcomment','Can add compensatory leaverequest comment');
-INSERT INTO "auth_permission" VALUES(620,154,'change_compensatoryleaverequestcomment','Can change compensatory leaverequest comment');
-INSERT INTO "auth_permission" VALUES(621,154,'delete_compensatoryleaverequestcomment','Can delete compensatory leaverequest comment');
-INSERT INTO "auth_permission" VALUES(622,154,'view_compensatoryleaverequestcomment','Can view compensatory leaverequest comment');
-INSERT INTO "auth_permission" VALUES(623,155,'add_approvalslaalert','Can add approval sla alert');
-INSERT INTO "auth_permission" VALUES(624,155,'change_approvalslaalert','Can change approval sla alert');
-INSERT INTO "auth_permission" VALUES(625,155,'delete_approvalslaalert','Can delete approval sla alert');
-INSERT INTO "auth_permission" VALUES(626,155,'view_approvalslaalert','Can view approval sla alert');
-INSERT INTO "auth_permission" VALUES(627,156,'add_approvaloverride','Can add Approval Override');
-INSERT INTO "auth_permission" VALUES(628,156,'change_approvaloverride','Can change Approval Override');
-INSERT INTO "auth_permission" VALUES(629,156,'delete_approvaloverride','Can delete Approval Override');
-INSERT INTO "auth_permission" VALUES(630,156,'view_approvaloverride','Can view Approval Override');
-INSERT INTO "auth_permission" VALUES(631,157,'add_approvaldelegation','Can add Approval Delegation');
-INSERT INTO "auth_permission" VALUES(632,157,'change_approvaldelegation','Can change Approval Delegation');
-INSERT INTO "auth_permission" VALUES(633,157,'delete_approvaldelegation','Can delete Approval Delegation');
-INSERT INTO "auth_permission" VALUES(634,157,'view_approvaldelegation','Can view Approval Delegation');
-INSERT INTO "auth_permission" VALUES(635,158,'add_companyleave','Can add company leave');
-INSERT INTO "auth_permission" VALUES(636,158,'change_companyleave','Can change company leave');
-INSERT INTO "auth_permission" VALUES(637,158,'delete_companyleave','Can delete company leave');
-INSERT INTO "auth_permission" VALUES(638,158,'view_companyleave','Can view company leave');
-INSERT INTO "auth_permission" VALUES(639,159,'add_approvalpolicy','Can add Leave Approval Policy');
-INSERT INTO "auth_permission" VALUES(640,159,'change_approvalpolicy','Can change Leave Approval Policy');
-INSERT INTO "auth_permission" VALUES(641,159,'delete_approvalpolicy','Can delete Leave Approval Policy');
-INSERT INTO "auth_permission" VALUES(642,159,'view_approvalpolicy','Can view Leave Approval Policy');
-INSERT INTO "auth_permission" VALUES(643,160,'add_approvalmetrics','Can add Approval Metrics');
-INSERT INTO "auth_permission" VALUES(644,160,'change_approvalmetrics','Can change Approval Metrics');
-INSERT INTO "auth_permission" VALUES(645,160,'delete_approvalmetrics','Can delete Approval Metrics');
-INSERT INTO "auth_permission" VALUES(646,160,'view_approvalmetrics','Can view Approval Metrics');
-INSERT INTO "auth_permission" VALUES(647,161,'add_bonuspointsetting','Can add bonus point setting');
-INSERT INTO "auth_permission" VALUES(648,161,'change_bonuspointsetting','Can change bonus point setting');
-INSERT INTO "auth_permission" VALUES(649,161,'delete_bonuspointsetting','Can delete bonus point setting');
-INSERT INTO "auth_permission" VALUES(650,161,'view_bonuspointsetting','Can view bonus point setting');
-INSERT INTO "auth_permission" VALUES(651,162,'add_employeekeyresult','Can add employee key result');
-INSERT INTO "auth_permission" VALUES(652,162,'change_employeekeyresult','Can change employee key result');
-INSERT INTO "auth_permission" VALUES(653,162,'delete_employeekeyresult','Can delete employee key result');
-INSERT INTO "auth_permission" VALUES(654,162,'view_employeekeyresult','Can view employee key result');
-INSERT INTO "auth_permission" VALUES(655,163,'add_employeeobjective','Can add employee objective');
-INSERT INTO "auth_permission" VALUES(656,163,'change_employeeobjective','Can change employee objective');
-INSERT INTO "auth_permission" VALUES(657,163,'delete_employeeobjective','Can delete employee objective');
-INSERT INTO "auth_permission" VALUES(658,163,'view_employeeobjective','Can view employee objective');
-INSERT INTO "auth_permission" VALUES(659,164,'add_feedback','Can add Feedback');
-INSERT INTO "auth_permission" VALUES(660,164,'change_feedback','Can change Feedback');
-INSERT INTO "auth_permission" VALUES(661,164,'delete_feedback','Can delete Feedback');
-INSERT INTO "auth_permission" VALUES(662,164,'view_feedback','Can view Feedback');
-INSERT INTO "auth_permission" VALUES(663,165,'add_keyresult','Can add key result');
-INSERT INTO "auth_permission" VALUES(664,165,'change_keyresult','Can change key result');
-INSERT INTO "auth_permission" VALUES(665,165,'delete_keyresult','Can delete key result');
-INSERT INTO "auth_permission" VALUES(666,165,'view_keyresult','Can view key result');
-INSERT INTO "auth_permission" VALUES(667,166,'add_meetings','Can add Meetings');
-INSERT INTO "auth_permission" VALUES(668,166,'change_meetings','Can change Meetings');
-INSERT INTO "auth_permission" VALUES(669,166,'delete_meetings','Can delete Meetings');
-INSERT INTO "auth_permission" VALUES(670,166,'view_meetings','Can view Meetings');
-INSERT INTO "auth_permission" VALUES(671,167,'add_performanceimprovementplan','Can add Performance Improvement Plan');
-INSERT INTO "auth_permission" VALUES(672,167,'change_performanceimprovementplan','Can change Performance Improvement Plan');
-INSERT INTO "auth_permission" VALUES(673,167,'delete_performanceimprovementplan','Can delete Performance Improvement Plan');
-INSERT INTO "auth_permission" VALUES(674,167,'view_performanceimprovementplan','Can view Performance Improvement Plan');
-INSERT INTO "auth_permission" VALUES(675,168,'add_period','Can add period');
-INSERT INTO "auth_permission" VALUES(676,168,'change_period','Can change period');
-INSERT INTO "auth_permission" VALUES(677,168,'delete_period','Can delete period');
-INSERT INTO "auth_permission" VALUES(678,168,'view_period','Can view period');
-INSERT INTO "auth_permission" VALUES(679,169,'add_question','Can add question');
-INSERT INTO "auth_permission" VALUES(680,169,'change_question','Can change question');
-INSERT INTO "auth_permission" VALUES(681,169,'delete_question','Can delete question');
-INSERT INTO "auth_permission" VALUES(682,169,'view_question','Can view question');
-INSERT INTO "auth_permission" VALUES(683,170,'add_talentcalibration','Can add Talent Calibration');
-INSERT INTO "auth_permission" VALUES(684,170,'change_talentcalibration','Can change Talent Calibration');
-INSERT INTO "auth_permission" VALUES(685,170,'delete_talentcalibration','Can delete Talent Calibration');
-INSERT INTO "auth_permission" VALUES(686,170,'view_talentcalibration','Can view Talent Calibration');
-INSERT INTO "auth_permission" VALUES(687,171,'add_questiontemplate','Can add question template');
-INSERT INTO "auth_permission" VALUES(688,171,'change_questiontemplate','Can change question template');
-INSERT INTO "auth_permission" VALUES(689,171,'delete_questiontemplate','Can delete question template');
-INSERT INTO "auth_permission" VALUES(690,171,'view_questiontemplate','Can view question template');
-INSERT INTO "auth_permission" VALUES(691,172,'add_questionoptions','Can add question options');
-INSERT INTO "auth_permission" VALUES(692,172,'change_questionoptions','Can change question options');
-INSERT INTO "auth_permission" VALUES(693,172,'delete_questionoptions','Can delete question options');
-INSERT INTO "auth_permission" VALUES(694,172,'view_questionoptions','Can view question options');
-INSERT INTO "auth_permission" VALUES(695,173,'add_piptemplate','Can add PIP Template');
-INSERT INTO "auth_permission" VALUES(696,173,'change_piptemplate','Can change PIP Template');
-INSERT INTO "auth_permission" VALUES(697,173,'delete_piptemplate','Can delete PIP Template');
-INSERT INTO "auth_permission" VALUES(698,173,'view_piptemplate','Can view PIP Template');
-INSERT INTO "auth_permission" VALUES(699,174,'add_pipreview','Can add PIP Review');
-INSERT INTO "auth_permission" VALUES(700,174,'change_pipreview','Can change PIP Review');
-INSERT INTO "auth_permission" VALUES(701,174,'delete_pipreview','Can delete PIP Review');
-INSERT INTO "auth_permission" VALUES(702,174,'view_pipreview','Can view PIP Review');
-INSERT INTO "auth_permission" VALUES(703,175,'add_pipmilestone','Can add PIP Milestone');
-INSERT INTO "auth_permission" VALUES(704,175,'change_pipmilestone','Can change PIP Milestone');
-INSERT INTO "auth_permission" VALUES(705,175,'delete_pipmilestone','Can delete PIP Milestone');
-INSERT INTO "auth_permission" VALUES(706,175,'view_pipmilestone','Can view PIP Milestone');
-INSERT INTO "auth_permission" VALUES(707,176,'add_pipextension','Can add PIP Extension');
-INSERT INTO "auth_permission" VALUES(708,176,'change_pipextension','Can change PIP Extension');
-INSERT INTO "auth_permission" VALUES(709,176,'delete_pipextension','Can delete PIP Extension');
-INSERT INTO "auth_permission" VALUES(710,176,'view_pipextension','Can view PIP Extension');
-INSERT INTO "auth_permission" VALUES(711,177,'add_objective','Can add objective');
-INSERT INTO "auth_permission" VALUES(712,177,'change_objective','Can change objective');
-INSERT INTO "auth_permission" VALUES(713,177,'delete_objective','Can delete objective');
-INSERT INTO "auth_permission" VALUES(714,177,'view_objective','Can view objective');
-INSERT INTO "auth_permission" VALUES(715,178,'add_meetingsanswer','Can add meetings answer');
-INSERT INTO "auth_permission" VALUES(716,178,'change_meetingsanswer','Can change meetings answer');
-INSERT INTO "auth_permission" VALUES(717,178,'delete_meetingsanswer','Can delete meetings answer');
-INSERT INTO "auth_permission" VALUES(718,178,'view_meetingsanswer','Can view meetings answer');
-INSERT INTO "auth_permission" VALUES(719,179,'add_keyresultfeedback','Can add key result feedback');
-INSERT INTO "auth_permission" VALUES(720,179,'change_keyresultfeedback','Can change key result feedback');
-INSERT INTO "auth_permission" VALUES(721,179,'delete_keyresultfeedback','Can delete key result feedback');
-INSERT INTO "auth_permission" VALUES(722,179,'view_keyresultfeedback','Can view key result feedback');
-INSERT INTO "auth_permission" VALUES(723,180,'add_historicaltalentcalibration','Can add historical Talent Calibration');
-INSERT INTO "auth_permission" VALUES(724,180,'change_historicaltalentcalibration','Can change historical Talent Calibration');
-INSERT INTO "auth_permission" VALUES(725,180,'delete_historicaltalentcalibration','Can delete historical Talent Calibration');
-INSERT INTO "auth_permission" VALUES(726,180,'view_historicaltalentcalibration','Can view historical Talent Calibration');
-INSERT INTO "auth_permission" VALUES(727,181,'add_historicalperformancerating','Can add historical Performance Rating');
-INSERT INTO "auth_permission" VALUES(728,181,'change_historicalperformancerating','Can change historical Performance Rating');
-INSERT INTO "auth_permission" VALUES(729,181,'delete_historicalperformancerating','Can delete historical Performance Rating');
-INSERT INTO "auth_permission" VALUES(730,181,'view_historicalperformancerating','Can view historical Performance Rating');
-INSERT INTO "auth_permission" VALUES(731,182,'add_historicalobjective','Can add historical objective');
-INSERT INTO "auth_permission" VALUES(732,182,'change_historicalobjective','Can change historical objective');
-INSERT INTO "auth_permission" VALUES(733,182,'delete_historicalobjective','Can delete historical objective');
-INSERT INTO "auth_permission" VALUES(734,182,'view_historicalobjective','Can view historical objective');
-INSERT INTO "auth_permission" VALUES(735,183,'add_historicalkeyresult','Can add historical key result');
-INSERT INTO "auth_permission" VALUES(736,183,'change_historicalkeyresult','Can change historical key result');
-INSERT INTO "auth_permission" VALUES(737,183,'delete_historicalkeyresult','Can delete historical key result');
-INSERT INTO "auth_permission" VALUES(738,183,'view_historicalkeyresult','Can view historical key result');
-INSERT INTO "auth_permission" VALUES(739,184,'add_historicalemployeeobjective','Can add historical employee objective');
-INSERT INTO "auth_permission" VALUES(740,184,'change_historicalemployeeobjective','Can change historical employee objective');
-INSERT INTO "auth_permission" VALUES(741,184,'delete_historicalemployeeobjective','Can delete historical employee objective');
-INSERT INTO "auth_permission" VALUES(742,184,'view_historicalemployeeobjective','Can view historical employee objective');
-INSERT INTO "auth_permission" VALUES(743,185,'add_historicalemployeekeyresult','Can add historical employee key result');
-INSERT INTO "auth_permission" VALUES(744,185,'change_historicalemployeekeyresult','Can change historical employee key result');
-INSERT INTO "auth_permission" VALUES(745,185,'delete_historicalemployeekeyresult','Can delete historical employee key result');
-INSERT INTO "auth_permission" VALUES(746,185,'view_historicalemployeekeyresult','Can view historical employee key result');
-INSERT INTO "auth_permission" VALUES(747,186,'add_historicalcomment','Can add historical comment');
-INSERT INTO "auth_permission" VALUES(748,186,'change_historicalcomment','Can change historical comment');
-INSERT INTO "auth_permission" VALUES(749,186,'delete_historicalcomment','Can delete historical comment');
-INSERT INTO "auth_permission" VALUES(750,186,'view_historicalcomment','Can view historical comment');
-INSERT INTO "auth_permission" VALUES(751,187,'add_historicalcalibrationrating','Can add historical Calibration Rating');
-INSERT INTO "auth_permission" VALUES(752,187,'change_historicalcalibrationrating','Can change historical Calibration Rating');
-INSERT INTO "auth_permission" VALUES(753,187,'delete_historicalcalibrationrating','Can delete historical Calibration Rating');
-INSERT INTO "auth_permission" VALUES(754,187,'view_historicalcalibrationrating','Can view historical Calibration Rating');
-INSERT INTO "auth_permission" VALUES(755,188,'add_employeebonuspoint','Can add employee bonus point');
-INSERT INTO "auth_permission" VALUES(756,188,'change_employeebonuspoint','Can change employee bonus point');
-INSERT INTO "auth_permission" VALUES(757,188,'delete_employeebonuspoint','Can delete employee bonus point');
-INSERT INTO "auth_permission" VALUES(758,188,'view_employeebonuspoint','Can view employee bonus point');
-INSERT INTO "auth_permission" VALUES(759,189,'add_comment','Can add comment');
-INSERT INTO "auth_permission" VALUES(760,189,'change_comment','Can change comment');
-INSERT INTO "auth_permission" VALUES(761,189,'delete_comment','Can delete comment');
-INSERT INTO "auth_permission" VALUES(762,189,'view_comment','Can view comment');
-INSERT INTO "auth_permission" VALUES(763,190,'add_calibrationrating','Can add Calibration Rating');
-INSERT INTO "auth_permission" VALUES(764,190,'change_calibrationrating','Can change Calibration Rating');
-INSERT INTO "auth_permission" VALUES(765,190,'delete_calibrationrating','Can delete Calibration Rating');
-INSERT INTO "auth_permission" VALUES(766,190,'view_calibrationrating','Can view Calibration Rating');
-INSERT INTO "auth_permission" VALUES(767,191,'add_answer','Can add answer');
-INSERT INTO "auth_permission" VALUES(768,191,'change_answer','Can change answer');
-INSERT INTO "auth_permission" VALUES(769,191,'delete_answer','Can delete answer');
-INSERT INTO "auth_permission" VALUES(770,191,'view_answer','Can view answer');
-INSERT INTO "auth_permission" VALUES(771,192,'add_anonymousfeedback','Can add anonymous feedback');
-INSERT INTO "auth_permission" VALUES(772,192,'change_anonymousfeedback','Can change anonymous feedback');
-INSERT INTO "auth_permission" VALUES(773,192,'delete_anonymousfeedback','Can delete anonymous feedback');
-INSERT INTO "auth_permission" VALUES(774,192,'view_anonymousfeedback','Can view anonymous feedback');
-INSERT INTO "auth_permission" VALUES(775,193,'add_performancerating','Can add Performance Rating');
-INSERT INTO "auth_permission" VALUES(776,193,'change_performancerating','Can change Performance Rating');
-INSERT INTO "auth_permission" VALUES(777,193,'delete_performancerating','Can delete Performance Rating');
-INSERT INTO "auth_permission" VALUES(778,193,'view_performancerating','Can view Performance Rating');
-INSERT INTO "auth_permission" VALUES(779,194,'add_candidatetask','Can add Onboarding Task');
-INSERT INTO "auth_permission" VALUES(780,194,'change_candidatetask','Can change Onboarding Task');
-INSERT INTO "auth_permission" VALUES(781,194,'delete_candidatetask','Can delete Onboarding Task');
-INSERT INTO "auth_permission" VALUES(782,194,'view_candidatetask','Can view Onboarding Task');
-INSERT INTO "auth_permission" VALUES(783,195,'add_onboardingstage','Can add Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(784,195,'change_onboardingstage','Can change Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(785,195,'delete_onboardingstage','Can delete Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(786,195,'view_onboardingstage','Can view Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(787,196,'add_onboardingcandidate','Can add Onboarding Candidate');
-INSERT INTO "auth_permission" VALUES(788,196,'change_onboardingcandidate','Can change Onboarding Candidate');
-INSERT INTO "auth_permission" VALUES(789,196,'delete_onboardingcandidate','Can delete Onboarding Candidate');
-INSERT INTO "auth_permission" VALUES(790,196,'view_onboardingcandidate','Can view Onboarding Candidate');
-INSERT INTO "auth_permission" VALUES(791,197,'add_onboardingtask','Can add Onboarding Task');
-INSERT INTO "auth_permission" VALUES(792,197,'change_onboardingtask','Can change Onboarding Task');
-INSERT INTO "auth_permission" VALUES(793,197,'delete_onboardingtask','Can delete Onboarding Task');
-INSERT INTO "auth_permission" VALUES(794,197,'view_onboardingtask','Can view Onboarding Task');
-INSERT INTO "auth_permission" VALUES(795,198,'add_onboardingportal','Can add onboarding portal');
-INSERT INTO "auth_permission" VALUES(796,198,'change_onboardingportal','Can change onboarding portal');
-INSERT INTO "auth_permission" VALUES(797,198,'delete_onboardingportal','Can delete onboarding portal');
-INSERT INTO "auth_permission" VALUES(798,198,'view_onboardingportal','Can view onboarding portal');
-INSERT INTO "auth_permission" VALUES(799,199,'add_historicalcandidatetask','Can add historical Onboarding Task');
-INSERT INTO "auth_permission" VALUES(800,199,'change_historicalcandidatetask','Can change historical Onboarding Task');
-INSERT INTO "auth_permission" VALUES(801,199,'delete_historicalcandidatetask','Can delete historical Onboarding Task');
-INSERT INTO "auth_permission" VALUES(802,199,'view_historicalcandidatetask','Can view historical Onboarding Task');
-INSERT INTO "auth_permission" VALUES(803,200,'add_candidatestage','Can add Candidate Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(804,200,'change_candidatestage','Can change Candidate Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(805,200,'delete_candidatestage','Can delete Candidate Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(806,200,'view_candidatestage','Can view Candidate Onboarding Stage');
-INSERT INTO "auth_permission" VALUES(807,201,'add_asset','Can add Asset');
-INSERT INTO "auth_permission" VALUES(808,201,'change_asset','Can change Asset');
-INSERT INTO "auth_permission" VALUES(809,201,'delete_asset','Can delete Asset');
-INSERT INTO "auth_permission" VALUES(810,201,'view_asset','Can view Asset');
-INSERT INTO "auth_permission" VALUES(811,202,'add_assetcategory','Can add Asset Category');
-INSERT INTO "auth_permission" VALUES(812,202,'change_assetcategory','Can change Asset Category');
-INSERT INTO "auth_permission" VALUES(813,202,'delete_assetcategory','Can delete Asset Category');
-INSERT INTO "auth_permission" VALUES(814,202,'view_assetcategory','Can view Asset Category');
-INSERT INTO "auth_permission" VALUES(815,203,'add_returnimages','Can add return images');
-INSERT INTO "auth_permission" VALUES(816,203,'change_returnimages','Can change return images');
-INSERT INTO "auth_permission" VALUES(817,203,'delete_returnimages','Can delete return images');
-INSERT INTO "auth_permission" VALUES(818,203,'view_returnimages','Can view return images');
-INSERT INTO "auth_permission" VALUES(819,204,'add_assetrequest','Can add Asset Request');
-INSERT INTO "auth_permission" VALUES(820,204,'change_assetrequest','Can change Asset Request');
-INSERT INTO "auth_permission" VALUES(821,204,'delete_assetrequest','Can delete Asset Request');
-INSERT INTO "auth_permission" VALUES(822,204,'view_assetrequest','Can view Asset Request');
-INSERT INTO "auth_permission" VALUES(823,205,'add_assetreport','Can add asset report');
-INSERT INTO "auth_permission" VALUES(824,205,'change_assetreport','Can change asset report');
-INSERT INTO "auth_permission" VALUES(825,205,'delete_assetreport','Can delete asset report');
-INSERT INTO "auth_permission" VALUES(826,205,'view_assetreport','Can view asset report');
-INSERT INTO "auth_permission" VALUES(827,206,'add_assetlot','Can add Asset Batch');
-INSERT INTO "auth_permission" VALUES(828,206,'change_assetlot','Can change Asset Batch');
-INSERT INTO "auth_permission" VALUES(829,206,'delete_assetlot','Can delete Asset Batch');
-INSERT INTO "auth_permission" VALUES(830,206,'view_assetlot','Can view Asset Batch');
-INSERT INTO "auth_permission" VALUES(831,207,'add_assetdocuments','Can add Asset Document');
-INSERT INTO "auth_permission" VALUES(832,207,'change_assetdocuments','Can change Asset Document');
-INSERT INTO "auth_permission" VALUES(833,207,'delete_assetdocuments','Can delete Asset Document');
-INSERT INTO "auth_permission" VALUES(834,207,'view_assetdocuments','Can view Asset Document');
-INSERT INTO "auth_permission" VALUES(835,208,'add_assetassignment','Can add Asset Allocation');
-INSERT INTO "auth_permission" VALUES(836,208,'change_assetassignment','Can change Asset Allocation');
-INSERT INTO "auth_permission" VALUES(837,208,'delete_assetassignment','Can delete Asset Allocation');
-INSERT INTO "auth_permission" VALUES(838,208,'view_assetassignment','Can view Asset Allocation');
-INSERT INTO "auth_permission" VALUES(839,209,'add_attendance','Can add Attendance');
-INSERT INTO "auth_permission" VALUES(840,209,'change_attendance','Can change Attendance');
-INSERT INTO "auth_permission" VALUES(841,209,'delete_attendance','Can delete Attendance');
-INSERT INTO "auth_permission" VALUES(842,209,'view_attendance','Can view Attendance');
-INSERT INTO "auth_permission" VALUES(843,209,'change_validateattendance','Validate Attendance');
-INSERT INTO "auth_permission" VALUES(844,209,'change_approveovertime','Change Approve Overtime');
-INSERT INTO "auth_permission" VALUES(845,210,'add_attendanceactivity','Can add attendance activity');
-INSERT INTO "auth_permission" VALUES(846,210,'change_attendanceactivity','Can change attendance activity');
-INSERT INTO "auth_permission" VALUES(847,210,'delete_attendanceactivity','Can delete attendance activity');
-INSERT INTO "auth_permission" VALUES(848,210,'view_attendanceactivity','Can view attendance activity');
-INSERT INTO "auth_permission" VALUES(849,211,'add_attendancegeneralsetting','Can add attendance general setting');
-INSERT INTO "auth_permission" VALUES(850,211,'change_attendancegeneralsetting','Can change attendance general setting');
-INSERT INTO "auth_permission" VALUES(851,211,'delete_attendancegeneralsetting','Can delete attendance general setting');
-INSERT INTO "auth_permission" VALUES(852,211,'view_attendancegeneralsetting','Can view attendance general setting');
-INSERT INTO "auth_permission" VALUES(853,212,'add_attendancelatecomeearlyout','Can add attendance late come early out');
-INSERT INTO "auth_permission" VALUES(854,212,'change_attendancelatecomeearlyout','Can change attendance late come early out');
-INSERT INTO "auth_permission" VALUES(855,212,'delete_attendancelatecomeearlyout','Can delete attendance late come early out');
-INSERT INTO "auth_permission" VALUES(856,212,'view_attendancelatecomeearlyout','Can view attendance late come early out');
-INSERT INTO "auth_permission" VALUES(857,213,'add_attendanceovertime','Can add Hour Account');
-INSERT INTO "auth_permission" VALUES(858,213,'change_attendanceovertime','Can change Hour Account');
-INSERT INTO "auth_permission" VALUES(859,213,'delete_attendanceovertime','Can delete Hour Account');
-INSERT INTO "auth_permission" VALUES(860,213,'view_attendanceovertime','Can view Hour Account');
-INSERT INTO "auth_permission" VALUES(861,214,'add_attendancerequestcomment','Can add attendance request comment');
-INSERT INTO "auth_permission" VALUES(862,214,'change_attendancerequestcomment','Can change attendance request comment');
-INSERT INTO "auth_permission" VALUES(863,214,'delete_attendancerequestcomment','Can delete attendance request comment');
-INSERT INTO "auth_permission" VALUES(864,214,'view_attendancerequestcomment','Can view attendance request comment');
-INSERT INTO "auth_permission" VALUES(865,215,'add_attendancerequestfile','Can add attendance request file');
-INSERT INTO "auth_permission" VALUES(866,215,'change_attendancerequestfile','Can change attendance request file');
-INSERT INTO "auth_permission" VALUES(867,215,'delete_attendancerequestfile','Can delete attendance request file');
-INSERT INTO "auth_permission" VALUES(868,215,'view_attendancerequestfile','Can view attendance request file');
-INSERT INTO "auth_permission" VALUES(869,216,'add_attendancevalidationcondition','Can add attendance validation condition');
-INSERT INTO "auth_permission" VALUES(870,216,'change_attendancevalidationcondition','Can change attendance validation condition');
-INSERT INTO "auth_permission" VALUES(871,216,'delete_attendancevalidationcondition','Can delete attendance validation condition');
-INSERT INTO "auth_permission" VALUES(872,216,'view_attendancevalidationcondition','Can view attendance validation condition');
-INSERT INTO "auth_permission" VALUES(873,217,'add_batchattendance','Can add batch attendance');
-INSERT INTO "auth_permission" VALUES(874,217,'change_batchattendance','Can change batch attendance');
-INSERT INTO "auth_permission" VALUES(875,217,'delete_batchattendance','Can delete batch attendance');
-INSERT INTO "auth_permission" VALUES(876,217,'view_batchattendance','Can view batch attendance');
-INSERT INTO "auth_permission" VALUES(877,218,'add_gracetime','Can add grace time');
-INSERT INTO "auth_permission" VALUES(878,218,'change_gracetime','Can change grace time');
-INSERT INTO "auth_permission" VALUES(879,218,'delete_gracetime','Can delete grace time');
-INSERT INTO "auth_permission" VALUES(880,218,'view_gracetime','Can view grace time');
-INSERT INTO "auth_permission" VALUES(881,219,'add_historicalattendance','Can add historical Attendance');
-INSERT INTO "auth_permission" VALUES(882,219,'change_historicalattendance','Can change historical Attendance');
-INSERT INTO "auth_permission" VALUES(883,219,'delete_historicalattendance','Can delete historical Attendance');
-INSERT INTO "auth_permission" VALUES(884,219,'view_historicalattendance','Can view historical Attendance');
-INSERT INTO "auth_permission" VALUES(885,220,'add_workrecords','Can add Work Record');
-INSERT INTO "auth_permission" VALUES(886,220,'change_workrecords','Can change Work Record');
-INSERT INTO "auth_permission" VALUES(887,220,'delete_workrecords','Can delete Work Record');
-INSERT INTO "auth_permission" VALUES(888,220,'view_workrecords','Can view Work Record');
-INSERT INTO "auth_permission" VALUES(889,221,'add_allowance','Can add Allowance');
-INSERT INTO "auth_permission" VALUES(890,221,'change_allowance','Can change Allowance');
-INSERT INTO "auth_permission" VALUES(891,221,'delete_allowance','Can delete Allowance');
-INSERT INTO "auth_permission" VALUES(892,221,'view_allowance','Can view Allowance');
-INSERT INTO "auth_permission" VALUES(893,222,'add_contract','Can add contract');
-INSERT INTO "auth_permission" VALUES(894,222,'change_contract','Can change contract');
-INSERT INTO "auth_permission" VALUES(895,222,'delete_contract','Can delete contract');
-INSERT INTO "auth_permission" VALUES(896,222,'view_contract','Can view contract');
-INSERT INTO "auth_permission" VALUES(897,223,'add_deduction','Can add deduction');
-INSERT INTO "auth_permission" VALUES(898,223,'change_deduction','Can change deduction');
-INSERT INTO "auth_permission" VALUES(899,223,'delete_deduction','Can delete deduction');
-INSERT INTO "auth_permission" VALUES(900,223,'view_deduction','Can view deduction');
-INSERT INTO "auth_permission" VALUES(901,224,'add_encashmentgeneralsettings','Can add encashment general settings');
-INSERT INTO "auth_permission" VALUES(902,224,'change_encashmentgeneralsettings','Can change encashment general settings');
-INSERT INTO "auth_permission" VALUES(903,224,'delete_encashmentgeneralsettings','Can delete encashment general settings');
-INSERT INTO "auth_permission" VALUES(904,224,'view_encashmentgeneralsettings','Can view encashment general settings');
-INSERT INTO "auth_permission" VALUES(905,225,'add_filingstatus','Can add Filing Status');
-INSERT INTO "auth_permission" VALUES(906,225,'change_filingstatus','Can change Filing Status');
-INSERT INTO "auth_permission" VALUES(907,225,'delete_filingstatus','Can delete Filing Status');
-INSERT INTO "auth_permission" VALUES(908,225,'view_filingstatus','Can view Filing Status');
-INSERT INTO "auth_permission" VALUES(909,226,'add_glaccount','Can add gl account');
-INSERT INTO "auth_permission" VALUES(910,226,'change_glaccount','Can change gl account');
-INSERT INTO "auth_permission" VALUES(911,226,'delete_glaccount','Can delete gl account');
-INSERT INTO "auth_permission" VALUES(912,226,'view_glaccount','Can view gl account');
-INSERT INTO "auth_permission" VALUES(913,227,'add_multiplecondition','Can add multiple condition');
-INSERT INTO "auth_permission" VALUES(914,227,'change_multiplecondition','Can change multiple condition');
-INSERT INTO "auth_permission" VALUES(915,227,'delete_multiplecondition','Can delete multiple condition');
-INSERT INTO "auth_permission" VALUES(916,227,'view_multiplecondition','Can view multiple condition');
-INSERT INTO "auth_permission" VALUES(917,228,'add_overrideattendance','Can add override attendance');
-INSERT INTO "auth_permission" VALUES(918,228,'change_overrideattendance','Can change override attendance');
-INSERT INTO "auth_permission" VALUES(919,228,'delete_overrideattendance','Can delete override attendance');
-INSERT INTO "auth_permission" VALUES(920,228,'view_overrideattendance','Can view override attendance');
-INSERT INTO "auth_permission" VALUES(921,229,'add_overrideleaverequest','Can add override leave request');
-INSERT INTO "auth_permission" VALUES(922,229,'change_overrideleaverequest','Can change override leave request');
-INSERT INTO "auth_permission" VALUES(923,229,'delete_overrideleaverequest','Can delete override leave request');
-INSERT INTO "auth_permission" VALUES(924,229,'view_overrideleaverequest','Can view override leave request');
-INSERT INTO "auth_permission" VALUES(925,230,'add_reimbursement','Can add reimbursement');
-INSERT INTO "auth_permission" VALUES(926,230,'change_reimbursement','Can change reimbursement');
-INSERT INTO "auth_permission" VALUES(927,230,'delete_reimbursement','Can delete reimbursement');
-INSERT INTO "auth_permission" VALUES(928,230,'view_reimbursement','Can view reimbursement');
-INSERT INTO "auth_permission" VALUES(929,231,'add_reimbursementfile','Can add reimbursement file');
-INSERT INTO "auth_permission" VALUES(930,231,'change_reimbursementfile','Can change reimbursement file');
-INSERT INTO "auth_permission" VALUES(931,231,'delete_reimbursementfile','Can delete reimbursement file');
-INSERT INTO "auth_permission" VALUES(932,231,'view_reimbursementfile','Can view reimbursement file');
-INSERT INTO "auth_permission" VALUES(933,232,'add_reimbursementmultipleattachment','Can add reimbursement multiple attachment');
-INSERT INTO "auth_permission" VALUES(934,232,'change_reimbursementmultipleattachment','Can change reimbursement multiple attachment');
-INSERT INTO "auth_permission" VALUES(935,232,'delete_reimbursementmultipleattachment','Can delete reimbursement multiple attachment');
-INSERT INTO "auth_permission" VALUES(936,232,'view_reimbursementmultipleattachment','Can view reimbursement multiple attachment');
-INSERT INTO "auth_permission" VALUES(937,233,'add_wpsperiodicfile','Can add WPS Periodic File');
-INSERT INTO "auth_permission" VALUES(938,233,'change_wpsperiodicfile','Can change WPS Periodic File');
-INSERT INTO "auth_permission" VALUES(939,233,'delete_wpsperiodicfile','Can delete WPS Periodic File');
-INSERT INTO "auth_permission" VALUES(940,233,'view_wpsperiodicfile','Can view WPS Periodic File');
-INSERT INTO "auth_permission" VALUES(941,234,'add_wpspaymentexception','Can add WPS Payment Exception');
-INSERT INTO "auth_permission" VALUES(942,234,'change_wpspaymentexception','Can change WPS Payment Exception');
-INSERT INTO "auth_permission" VALUES(943,234,'delete_wpspaymentexception','Can delete WPS Payment Exception');
-INSERT INTO "auth_permission" VALUES(944,234,'view_wpspaymentexception','Can view WPS Payment Exception');
-INSERT INTO "auth_permission" VALUES(945,235,'add_wpsglobalsettings','Can add WPS Global Settings');
-INSERT INTO "auth_permission" VALUES(946,235,'change_wpsglobalsettings','Can change WPS Global Settings');
-INSERT INTO "auth_permission" VALUES(947,235,'delete_wpsglobalsettings','Can delete WPS Global Settings');
-INSERT INTO "auth_permission" VALUES(948,235,'view_wpsglobalsettings','Can view WPS Global Settings');
-INSERT INTO "auth_permission" VALUES(949,236,'add_wpsauditlog','Can add WPS Audit Log');
-INSERT INTO "auth_permission" VALUES(950,236,'change_wpsauditlog','Can change WPS Audit Log');
-INSERT INTO "auth_permission" VALUES(951,236,'delete_wpsauditlog','Can delete WPS Audit Log');
-INSERT INTO "auth_permission" VALUES(952,236,'view_wpsauditlog','Can view WPS Audit Log');
-INSERT INTO "auth_permission" VALUES(953,237,'add_workrecord','Can add work record');
-INSERT INTO "auth_permission" VALUES(954,237,'change_workrecord','Can change work record');
-INSERT INTO "auth_permission" VALUES(955,237,'delete_workrecord','Can delete work record');
-INSERT INTO "auth_permission" VALUES(956,237,'view_workrecord','Can view work record');
-INSERT INTO "auth_permission" VALUES(957,238,'add_taxbracket','Can add tax bracket');
-INSERT INTO "auth_permission" VALUES(958,238,'change_taxbracket','Can change tax bracket');
-INSERT INTO "auth_permission" VALUES(959,238,'delete_taxbracket','Can delete tax bracket');
-INSERT INTO "auth_permission" VALUES(960,238,'view_taxbracket','Can view tax bracket');
-INSERT INTO "auth_permission" VALUES(961,239,'add_serviceaward','Can add Service Award');
-INSERT INTO "auth_permission" VALUES(962,239,'change_serviceaward','Can change Service Award');
-INSERT INTO "auth_permission" VALUES(963,239,'delete_serviceaward','Can delete Service Award');
-INSERT INTO "auth_permission" VALUES(964,239,'view_serviceaward','Can view Service Award');
-INSERT INTO "auth_permission" VALUES(965,240,'add_salaryrevision','Can add Salary Revision');
-INSERT INTO "auth_permission" VALUES(966,240,'change_salaryrevision','Can change Salary Revision');
-INSERT INTO "auth_permission" VALUES(967,240,'delete_salaryrevision','Can delete Salary Revision');
-INSERT INTO "auth_permission" VALUES(968,240,'view_salaryrevision','Can view Salary Revision');
-INSERT INTO "auth_permission" VALUES(969,241,'add_reimbursementrequestcomment','Can add reimbursementrequest comment');
-INSERT INTO "auth_permission" VALUES(970,241,'change_reimbursementrequestcomment','Can change reimbursementrequest comment');
-INSERT INTO "auth_permission" VALUES(971,241,'delete_reimbursementrequestcomment','Can delete reimbursementrequest comment');
-INSERT INTO "auth_permission" VALUES(972,241,'view_reimbursementrequestcomment','Can view reimbursementrequest comment');
-INSERT INTO "auth_permission" VALUES(973,242,'add_payslipautogenerate','Can add payslip auto generate');
-INSERT INTO "auth_permission" VALUES(974,242,'change_payslipautogenerate','Can change payslip auto generate');
-INSERT INTO "auth_permission" VALUES(975,242,'delete_payslipautogenerate','Can delete payslip auto generate');
-INSERT INTO "auth_permission" VALUES(976,242,'view_payslipautogenerate','Can view payslip auto generate');
-INSERT INTO "auth_permission" VALUES(977,243,'add_payslip','Can add payslip');
-INSERT INTO "auth_permission" VALUES(978,243,'change_payslip','Can change payslip');
-INSERT INTO "auth_permission" VALUES(979,243,'delete_payslip','Can delete payslip');
-INSERT INTO "auth_permission" VALUES(980,243,'view_payslip','Can view payslip');
-INSERT INTO "auth_permission" VALUES(981,5,'add_payrollsettings','Can add Payroll Settings');
-INSERT INTO "auth_permission" VALUES(982,5,'change_payrollsettings','Can change Payroll Settings');
-INSERT INTO "auth_permission" VALUES(983,5,'delete_payrollsettings','Can delete Payroll Settings');
-INSERT INTO "auth_permission" VALUES(984,5,'view_payrollsettings','Can view Payroll Settings');
-INSERT INTO "auth_permission" VALUES(985,244,'add_payrollgeneralsetting','Can add payroll general setting');
-INSERT INTO "auth_permission" VALUES(986,244,'change_payrollgeneralsetting','Can change payroll general setting');
-INSERT INTO "auth_permission" VALUES(987,244,'delete_payrollgeneralsetting','Can delete payroll general setting');
-INSERT INTO "auth_permission" VALUES(988,244,'view_payrollgeneralsetting','Can view payroll general setting');
-INSERT INTO "auth_permission" VALUES(989,245,'add_loanaccount','Can add loan account');
-INSERT INTO "auth_permission" VALUES(990,245,'change_loanaccount','Can change loan account');
-INSERT INTO "auth_permission" VALUES(991,245,'delete_loanaccount','Can delete loan account');
-INSERT INTO "auth_permission" VALUES(992,245,'view_loanaccount','Can view loan account');
-INSERT INTO "auth_permission" VALUES(993,246,'add_leaveencashment','Can add Leave Encashment');
-INSERT INTO "auth_permission" VALUES(994,246,'change_leaveencashment','Can change Leave Encashment');
-INSERT INTO "auth_permission" VALUES(995,246,'delete_leaveencashment','Can delete Leave Encashment');
-INSERT INTO "auth_permission" VALUES(996,246,'view_leaveencashment','Can view Leave Encashment');
-INSERT INTO "auth_permission" VALUES(997,247,'add_icbsconfig','Can add icbs config');
-INSERT INTO "auth_permission" VALUES(998,247,'change_icbsconfig','Can change icbs config');
-INSERT INTO "auth_permission" VALUES(999,247,'delete_icbsconfig','Can delete icbs config');
-INSERT INTO "auth_permission" VALUES(1000,247,'view_icbsconfig','Can view icbs config');
-INSERT INTO "auth_permission" VALUES(1001,248,'add_historicalpayslip','Can add historical payslip');
-INSERT INTO "auth_permission" VALUES(1002,248,'change_historicalpayslip','Can change historical payslip');
-INSERT INTO "auth_permission" VALUES(1003,248,'delete_historicalpayslip','Can delete historical payslip');
-INSERT INTO "auth_permission" VALUES(1004,248,'view_historicalpayslip','Can view historical payslip');
-INSERT INTO "auth_permission" VALUES(1005,249,'add_historicalcontract','Can add historical contract');
-INSERT INTO "auth_permission" VALUES(1006,249,'change_historicalcontract','Can change historical contract');
-INSERT INTO "auth_permission" VALUES(1007,249,'delete_historicalcontract','Can delete historical contract');
-INSERT INTO "auth_permission" VALUES(1008,249,'view_historicalcontract','Can view historical contract');
-INSERT INTO "auth_permission" VALUES(1009,250,'add_glmapping','Can add gl mapping');
-INSERT INTO "auth_permission" VALUES(1010,250,'change_glmapping','Can change gl mapping');
-INSERT INTO "auth_permission" VALUES(1011,250,'delete_glmapping','Can delete gl mapping');
-INSERT INTO "auth_permission" VALUES(1012,250,'view_glmapping','Can view gl mapping');
-INSERT INTO "auth_permission" VALUES(1013,251,'add_eosbgratuitysettings','Can add EOSB Gratuity Settings');
-INSERT INTO "auth_permission" VALUES(1014,251,'change_eosbgratuitysettings','Can change EOSB Gratuity Settings');
-INSERT INTO "auth_permission" VALUES(1015,251,'delete_eosbgratuitysettings','Can delete EOSB Gratuity Settings');
-INSERT INTO "auth_permission" VALUES(1016,251,'view_eosbgratuitysettings','Can view EOSB Gratuity Settings');
-INSERT INTO "auth_permission" VALUES(1017,252,'add_endofservicebenefit','Can add End-of-Service Benefit');
-INSERT INTO "auth_permission" VALUES(1018,252,'change_endofservicebenefit','Can change End-of-Service Benefit');
-INSERT INTO "auth_permission" VALUES(1019,252,'delete_endofservicebenefit','Can delete End-of-Service Benefit');
-INSERT INTO "auth_permission" VALUES(1020,252,'view_endofservicebenefit','Can view End-of-Service Benefit');
-INSERT INTO "auth_permission" VALUES(1021,253,'add_certification','Can add Certification');
-INSERT INTO "auth_permission" VALUES(1022,253,'change_certification','Can change Certification');
-INSERT INTO "auth_permission" VALUES(1023,253,'delete_certification','Can delete Certification');
-INSERT INTO "auth_permission" VALUES(1024,253,'view_certification','Can view Certification');
-INSERT INTO "auth_permission" VALUES(1025,254,'add_coursecategory','Can add Course Category');
-INSERT INTO "auth_permission" VALUES(1026,254,'change_coursecategory','Can change Course Category');
-INSERT INTO "auth_permission" VALUES(1027,254,'delete_coursecategory','Can delete Course Category');
-INSERT INTO "auth_permission" VALUES(1028,254,'view_coursecategory','Can view Course Category');
-INSERT INTO "auth_permission" VALUES(1029,255,'add_learningplan','Can add Learning Plan');
-INSERT INTO "auth_permission" VALUES(1030,255,'change_learningplan','Can change Learning Plan');
-INSERT INTO "auth_permission" VALUES(1031,255,'delete_learningplan','Can delete Learning Plan');
-INSERT INTO "auth_permission" VALUES(1032,255,'view_learningplan','Can view Learning Plan');
-INSERT INTO "auth_permission" VALUES(1033,256,'add_skill','Can add Skill');
-INSERT INTO "auth_permission" VALUES(1034,256,'change_skill','Can change Skill');
-INSERT INTO "auth_permission" VALUES(1035,256,'delete_skill','Can delete Skill');
-INSERT INTO "auth_permission" VALUES(1036,256,'view_skill','Can view Skill');
-INSERT INTO "auth_permission" VALUES(1037,257,'add_trainingcourse','Can add Training Course');
-INSERT INTO "auth_permission" VALUES(1038,257,'change_trainingcourse','Can change Training Course');
-INSERT INTO "auth_permission" VALUES(1039,257,'delete_trainingcourse','Can delete Training Course');
-INSERT INTO "auth_permission" VALUES(1040,257,'view_trainingcourse','Can view Training Course');
-INSERT INTO "auth_permission" VALUES(1041,258,'add_learningplanitem','Can add Learning Plan Item');
-INSERT INTO "auth_permission" VALUES(1042,258,'change_learningplanitem','Can change Learning Plan Item');
-INSERT INTO "auth_permission" VALUES(1043,258,'delete_learningplanitem','Can delete Learning Plan Item');
-INSERT INTO "auth_permission" VALUES(1044,258,'view_learningplanitem','Can view Learning Plan Item');
-INSERT INTO "auth_permission" VALUES(1045,259,'add_employeecertification','Can add Employee Certification');
-INSERT INTO "auth_permission" VALUES(1046,259,'change_employeecertification','Can change Employee Certification');
-INSERT INTO "auth_permission" VALUES(1047,259,'delete_employeecertification','Can delete Employee Certification');
-INSERT INTO "auth_permission" VALUES(1048,259,'view_employeecertification','Can view Employee Certification');
-INSERT INTO "auth_permission" VALUES(1049,260,'add_trainingbudget','Can add Training Budget');
-INSERT INTO "auth_permission" VALUES(1050,260,'change_trainingbudget','Can change Training Budget');
-INSERT INTO "auth_permission" VALUES(1051,260,'delete_trainingbudget','Can delete Training Budget');
-INSERT INTO "auth_permission" VALUES(1052,260,'view_trainingbudget','Can view Training Budget');
-INSERT INTO "auth_permission" VALUES(1053,261,'add_employeeskill','Can add Employee Skill');
-INSERT INTO "auth_permission" VALUES(1054,261,'change_employeeskill','Can change Employee Skill');
-INSERT INTO "auth_permission" VALUES(1055,261,'delete_employeeskill','Can delete Employee Skill');
-INSERT INTO "auth_permission" VALUES(1056,261,'view_employeeskill','Can view Employee Skill');
-INSERT INTO "auth_permission" VALUES(1057,262,'add_courseenrollment','Can add Course Enrollment');
-INSERT INTO "auth_permission" VALUES(1058,262,'change_courseenrollment','Can change Course Enrollment');
-INSERT INTO "auth_permission" VALUES(1059,262,'delete_courseenrollment','Can delete Course Enrollment');
-INSERT INTO "auth_permission" VALUES(1060,262,'view_courseenrollment','Can view Course Enrollment');
-INSERT INTO "auth_permission" VALUES(1061,263,'add_criticalrole','Can add Critical Role');
-INSERT INTO "auth_permission" VALUES(1062,263,'change_criticalrole','Can change Critical Role');
-INSERT INTO "auth_permission" VALUES(1063,263,'delete_criticalrole','Can delete Critical Role');
-INSERT INTO "auth_permission" VALUES(1064,263,'view_criticalrole','Can view Critical Role');
-INSERT INTO "auth_permission" VALUES(1065,264,'add_talentreview','Can add Talent Review');
-INSERT INTO "auth_permission" VALUES(1066,264,'change_talentreview','Can change Talent Review');
-INSERT INTO "auth_permission" VALUES(1067,264,'delete_talentreview','Can delete Talent Review');
-INSERT INTO "auth_permission" VALUES(1068,264,'view_talentreview','Can view Talent Review');
-INSERT INTO "auth_permission" VALUES(1069,265,'add_talentprofile','Can add Talent Profile');
-INSERT INTO "auth_permission" VALUES(1070,265,'change_talentprofile','Can change Talent Profile');
-INSERT INTO "auth_permission" VALUES(1071,265,'delete_talentprofile','Can delete Talent Profile');
-INSERT INTO "auth_permission" VALUES(1072,265,'view_talentprofile','Can view Talent Profile');
-INSERT INTO "auth_permission" VALUES(1073,266,'add_successionplan','Can add Succession Plan');
-INSERT INTO "auth_permission" VALUES(1074,266,'change_successionplan','Can change Succession Plan');
-INSERT INTO "auth_permission" VALUES(1075,266,'delete_successionplan','Can delete Succession Plan');
-INSERT INTO "auth_permission" VALUES(1076,266,'view_successionplan','Can view Succession Plan');
-INSERT INTO "auth_permission" VALUES(1077,267,'add_retentionrisk','Can add Retention Risk');
-INSERT INTO "auth_permission" VALUES(1078,267,'change_retentionrisk','Can change Retention Risk');
-INSERT INTO "auth_permission" VALUES(1079,267,'delete_retentionrisk','Can delete Retention Risk');
-INSERT INTO "auth_permission" VALUES(1080,267,'view_retentionrisk','Can view Retention Risk');
-INSERT INTO "auth_permission" VALUES(1081,268,'add_nineboxmatrix','Can add 9-Box Matrix Assessment');
-INSERT INTO "auth_permission" VALUES(1082,268,'change_nineboxmatrix','Can change 9-Box Matrix Assessment');
-INSERT INTO "auth_permission" VALUES(1083,268,'delete_nineboxmatrix','Can delete 9-Box Matrix Assessment');
-INSERT INTO "auth_permission" VALUES(1084,268,'view_nineboxmatrix','Can view 9-Box Matrix Assessment');
-INSERT INTO "auth_permission" VALUES(1085,269,'add_leadershippipeline','Can add Leadership Pipeline');
-INSERT INTO "auth_permission" VALUES(1086,269,'change_leadershippipeline','Can change Leadership Pipeline');
-INSERT INTO "auth_permission" VALUES(1087,269,'delete_leadershippipeline','Can delete Leadership Pipeline');
-INSERT INTO "auth_permission" VALUES(1088,269,'view_leadershippipeline','Can view Leadership Pipeline');
-INSERT INTO "auth_permission" VALUES(1089,270,'add_careerpath','Can add Career Path');
-INSERT INTO "auth_permission" VALUES(1090,270,'change_careerpath','Can change Career Path');
-INSERT INTO "auth_permission" VALUES(1091,270,'delete_careerpath','Can delete Career Path');
-INSERT INTO "auth_permission" VALUES(1092,270,'view_careerpath','Can view Career Path');
-INSERT INTO "auth_permission" VALUES(1093,271,'add_expensecategory','Can add Expense Category');
-INSERT INTO "auth_permission" VALUES(1094,271,'change_expensecategory','Can change Expense Category');
-INSERT INTO "auth_permission" VALUES(1095,271,'delete_expensecategory','Can delete Expense Category');
-INSERT INTO "auth_permission" VALUES(1096,271,'view_expensecategory','Can view Expense Category');
-INSERT INTO "auth_permission" VALUES(1097,272,'add_expenseclaim','Can add Expense Claim');
-INSERT INTO "auth_permission" VALUES(1098,272,'change_expenseclaim','Can change Expense Claim');
-INSERT INTO "auth_permission" VALUES(1099,272,'delete_expenseclaim','Can delete Expense Claim');
-INSERT INTO "auth_permission" VALUES(1100,272,'view_expenseclaim','Can view Expense Claim');
-INSERT INTO "auth_permission" VALUES(1101,273,'add_expensereport','Can add Expense Report');
-INSERT INTO "auth_permission" VALUES(1102,273,'change_expensereport','Can change Expense Report');
-INSERT INTO "auth_permission" VALUES(1103,273,'delete_expensereport','Can delete Expense Report');
-INSERT INTO "auth_permission" VALUES(1104,273,'view_expensereport','Can view Expense Report');
-INSERT INTO "auth_permission" VALUES(1105,274,'add_travelrequest','Can add Travel Request');
-INSERT INTO "auth_permission" VALUES(1106,274,'change_travelrequest','Can change Travel Request');
-INSERT INTO "auth_permission" VALUES(1107,274,'delete_travelrequest','Can delete Travel Request');
-INSERT INTO "auth_permission" VALUES(1108,274,'view_travelrequest','Can view Travel Request');
-INSERT INTO "auth_permission" VALUES(1109,275,'add_receipt','Can add Receipt');
-INSERT INTO "auth_permission" VALUES(1110,275,'change_receipt','Can change Receipt');
-INSERT INTO "auth_permission" VALUES(1111,275,'delete_receipt','Can delete Receipt');
-INSERT INTO "auth_permission" VALUES(1112,275,'view_receipt','Can view Receipt');
-INSERT INTO "auth_permission" VALUES(1113,276,'add_expensepolicy','Can add Expense Policy');
-INSERT INTO "auth_permission" VALUES(1114,276,'change_expensepolicy','Can change Expense Policy');
-INSERT INTO "auth_permission" VALUES(1115,276,'delete_expensepolicy','Can delete Expense Policy');
-INSERT INTO "auth_permission" VALUES(1116,276,'view_expensepolicy','Can view Expense Policy');
-INSERT INTO "auth_permission" VALUES(1117,277,'add_perdiemrate','Can add Per Diem Rate');
-INSERT INTO "auth_permission" VALUES(1118,277,'change_perdiemrate','Can change Per Diem Rate');
-INSERT INTO "auth_permission" VALUES(1119,277,'delete_perdiemrate','Can delete Per Diem Rate');
-INSERT INTO "auth_permission" VALUES(1120,277,'view_perdiemrate','Can view Per Diem Rate');
-INSERT INTO "auth_permission" VALUES(1121,278,'add_expensereportitem','Can add Expense Report Item');
-INSERT INTO "auth_permission" VALUES(1122,278,'change_expensereportitem','Can change Expense Report Item');
-INSERT INTO "auth_permission" VALUES(1123,278,'delete_expensereportitem','Can delete Expense Report Item');
-INSERT INTO "auth_permission" VALUES(1124,278,'view_expensereportitem','Can view Expense Report Item');
-INSERT INTO "auth_permission" VALUES(1125,279,'add_omanitaxcalculation','Can add Omani Tax Calculation');
-INSERT INTO "auth_permission" VALUES(1126,279,'change_omanitaxcalculation','Can change Omani Tax Calculation');
-INSERT INTO "auth_permission" VALUES(1127,279,'delete_omanitaxcalculation','Can delete Omani Tax Calculation');
-INSERT INTO "auth_permission" VALUES(1128,279,'view_omanitaxcalculation','Can view Omani Tax Calculation');
-INSERT INTO "auth_permission" VALUES(1129,280,'add_omanilabourlawconfig','Can add Omani Labour Law Configuration');
-INSERT INTO "auth_permission" VALUES(1130,280,'change_omanilabourlawconfig','Can change Omani Labour Law Configuration');
-INSERT INTO "auth_permission" VALUES(1131,280,'delete_omanilabourlawconfig','Can delete Omani Labour Law Configuration');
-INSERT INTO "auth_permission" VALUES(1132,280,'view_omanilabourlawconfig','Can view Omani Labour Law Configuration');
-INSERT INTO "auth_permission" VALUES(1133,281,'add_omanicomplianceaudit','Can add Omani Compliance Audit');
-INSERT INTO "auth_permission" VALUES(1134,281,'change_omanicomplianceaudit','Can change Omani Compliance Audit');
-INSERT INTO "auth_permission" VALUES(1135,281,'delete_omanicomplianceaudit','Can delete Omani Compliance Audit');
-INSERT INTO "auth_permission" VALUES(1136,281,'view_omanicomplianceaudit','Can view Omani Compliance Audit');
-INSERT INTO "auth_permission" VALUES(1137,282,'add_djangojob','Can add django job');
-INSERT INTO "auth_permission" VALUES(1138,282,'change_djangojob','Can change django job');
-INSERT INTO "auth_permission" VALUES(1139,282,'delete_djangojob','Can delete django job');
-INSERT INTO "auth_permission" VALUES(1140,282,'view_djangojob','Can view django job');
-INSERT INTO "auth_permission" VALUES(1141,283,'add_djangojobexecution','Can add django job execution');
-INSERT INTO "auth_permission" VALUES(1142,283,'change_djangojobexecution','Can change django job execution');
-INSERT INTO "auth_permission" VALUES(1143,283,'delete_djangojobexecution','Can delete django job execution');
-INSERT INTO "auth_permission" VALUES(1144,283,'view_djangojobexecution','Can view django job execution');
-INSERT INTO "auth_permission" VALUES(1145,284,'add_defaultaccessibility','Can add default accessibility');
-INSERT INTO "auth_permission" VALUES(1146,284,'change_defaultaccessibility','Can change default accessibility');
-INSERT INTO "auth_permission" VALUES(1147,284,'delete_defaultaccessibility','Can delete default accessibility');
-INSERT INTO "auth_permission" VALUES(1148,284,'view_defaultaccessibility','Can view default accessibility');
-INSERT INTO "auth_permission" VALUES(1149,285,'add_documentrequest','Can add Document Request');
-INSERT INTO "auth_permission" VALUES(1150,285,'change_documentrequest','Can change Document Request');
-INSERT INTO "auth_permission" VALUES(1151,285,'delete_documentrequest','Can delete Document Request');
-INSERT INTO "auth_permission" VALUES(1152,285,'view_documentrequest','Can view Document Request');
-INSERT INTO "auth_permission" VALUES(1153,286,'add_document','Can add Document');
-INSERT INTO "auth_permission" VALUES(1154,286,'change_document','Can change Document');
-INSERT INTO "auth_permission" VALUES(1155,286,'delete_document','Can delete Document');
-INSERT INTO "auth_permission" VALUES(1156,286,'view_document','Can view Document');
-INSERT INTO "auth_permission" VALUES(1157,287,'add_togglecolumn','Can add toggle column');
-INSERT INTO "auth_permission" VALUES(1158,287,'change_togglecolumn','Can change toggle column');
-INSERT INTO "auth_permission" VALUES(1159,287,'delete_togglecolumn','Can delete toggle column');
-INSERT INTO "auth_permission" VALUES(1160,287,'view_togglecolumn','Can view toggle column');
-INSERT INTO "auth_permission" VALUES(1161,288,'add_savedfilter','Can add saved filter');
-INSERT INTO "auth_permission" VALUES(1162,288,'change_savedfilter','Can change saved filter');
-INSERT INTO "auth_permission" VALUES(1163,288,'delete_savedfilter','Can delete saved filter');
-INSERT INTO "auth_permission" VALUES(1164,288,'view_savedfilter','Can view saved filter');
-INSERT INTO "auth_permission" VALUES(1165,289,'add_activeview','Can add active view');
-INSERT INTO "auth_permission" VALUES(1166,289,'change_activeview','Can change active view');
-INSERT INTO "auth_permission" VALUES(1167,289,'delete_activeview','Can delete active view');
-INSERT INTO "auth_permission" VALUES(1168,289,'view_activeview','Can view active view');
-INSERT INTO "auth_permission" VALUES(1169,290,'add_activetab','Can add active tab');
-INSERT INTO "auth_permission" VALUES(1170,290,'change_activetab','Can change active tab');
-INSERT INTO "auth_permission" VALUES(1171,290,'delete_activetab','Can delete active tab');
-INSERT INTO "auth_permission" VALUES(1172,290,'view_activetab','Can view active tab');
-INSERT INTO "auth_permission" VALUES(1173,291,'add_activegroup','Can add active group');
-INSERT INTO "auth_permission" VALUES(1174,291,'change_activegroup','Can change active group');
-INSERT INTO "auth_permission" VALUES(1175,291,'delete_activegroup','Can delete active group');
-INSERT INTO "auth_permission" VALUES(1176,291,'view_activegroup','Can view active group');
-INSERT INTO "auth_permission" VALUES(1177,292,'add_mailautomation','Can add mail automation');
-INSERT INTO "auth_permission" VALUES(1178,292,'change_mailautomation','Can change mail automation');
-INSERT INTO "auth_permission" VALUES(1179,292,'delete_mailautomation','Can delete mail automation');
-INSERT INTO "auth_permission" VALUES(1180,292,'view_mailautomation','Can view mail automation');
-INSERT INTO "auth_permission" VALUES(1181,293,'add_logentry','Can add log entry');
-INSERT INTO "auth_permission" VALUES(1182,293,'change_logentry','Can change log entry');
-INSERT INTO "auth_permission" VALUES(1183,293,'delete_logentry','Can delete log entry');
-INSERT INTO "auth_permission" VALUES(1184,293,'view_logentry','Can view log entry');
-INSERT INTO "auth_permission" VALUES(1185,294,'add_biometricdevices','Can add Biometric Device');
-INSERT INTO "auth_permission" VALUES(1186,294,'change_biometricdevices','Can change Biometric Device');
-INSERT INTO "auth_permission" VALUES(1187,294,'delete_biometricdevices','Can delete Biometric Device');
-INSERT INTO "auth_permission" VALUES(1188,294,'view_biometricdevices','Can view Biometric Device');
-INSERT INTO "auth_permission" VALUES(1189,295,'add_cosecattendancearguments','Can add COSEC Attendance Arguments');
-INSERT INTO "auth_permission" VALUES(1190,295,'change_cosecattendancearguments','Can change COSEC Attendance Arguments');
-INSERT INTO "auth_permission" VALUES(1191,295,'delete_cosecattendancearguments','Can delete COSEC Attendance Arguments');
-INSERT INTO "auth_permission" VALUES(1192,295,'view_cosecattendancearguments','Can view COSEC Attendance Arguments');
-INSERT INTO "auth_permission" VALUES(1193,296,'add_biometricemployees','Can add Employee in Biometric Device');
-INSERT INTO "auth_permission" VALUES(1194,296,'change_biometricemployees','Can change Employee in Biometric Device');
-INSERT INTO "auth_permission" VALUES(1195,296,'delete_biometricemployees','Can delete Employee in Biometric Device');
-INSERT INTO "auth_permission" VALUES(1196,296,'view_biometricemployees','Can view Employee in Biometric Device');
-INSERT INTO "auth_permission" VALUES(1197,297,'add_tickettype','Can add Ticket Type');
-INSERT INTO "auth_permission" VALUES(1198,297,'change_tickettype','Can change Ticket Type');
-INSERT INTO "auth_permission" VALUES(1199,297,'delete_tickettype','Can delete Ticket Type');
-INSERT INTO "auth_permission" VALUES(1200,297,'view_tickettype','Can view Ticket Type');
-INSERT INTO "auth_permission" VALUES(1201,298,'add_ticket','Can add Ticket');
-INSERT INTO "auth_permission" VALUES(1202,298,'change_ticket','Can change Ticket');
-INSERT INTO "auth_permission" VALUES(1203,298,'delete_ticket','Can delete Ticket');
-INSERT INTO "auth_permission" VALUES(1204,298,'view_ticket','Can view Ticket');
-INSERT INTO "auth_permission" VALUES(1205,299,'add_historicalticket','Can add historical Ticket');
-INSERT INTO "auth_permission" VALUES(1206,299,'change_historicalticket','Can change historical Ticket');
-INSERT INTO "auth_permission" VALUES(1207,299,'delete_historicalticket','Can delete historical Ticket');
-INSERT INTO "auth_permission" VALUES(1208,299,'view_historicalticket','Can view historical Ticket');
-INSERT INTO "auth_permission" VALUES(1209,300,'add_faqcategory','Can add FAQ Category');
-INSERT INTO "auth_permission" VALUES(1210,300,'change_faqcategory','Can change FAQ Category');
-INSERT INTO "auth_permission" VALUES(1211,300,'delete_faqcategory','Can delete FAQ Category');
-INSERT INTO "auth_permission" VALUES(1212,300,'view_faqcategory','Can view FAQ Category');
-INSERT INTO "auth_permission" VALUES(1213,301,'add_faq','Can add FAQ');
-INSERT INTO "auth_permission" VALUES(1214,301,'change_faq','Can change FAQ');
-INSERT INTO "auth_permission" VALUES(1215,301,'delete_faq','Can delete FAQ');
-INSERT INTO "auth_permission" VALUES(1216,301,'view_faq','Can view FAQ');
-INSERT INTO "auth_permission" VALUES(1217,302,'add_comment','Can add comment');
-INSERT INTO "auth_permission" VALUES(1218,302,'change_comment','Can change comment');
-INSERT INTO "auth_permission" VALUES(1219,302,'delete_comment','Can delete comment');
-INSERT INTO "auth_permission" VALUES(1220,302,'view_comment','Can view comment');
-INSERT INTO "auth_permission" VALUES(1221,303,'add_attachment','Can add attachment');
-INSERT INTO "auth_permission" VALUES(1222,303,'change_attachment','Can change attachment');
-INSERT INTO "auth_permission" VALUES(1223,303,'delete_attachment','Can delete attachment');
-INSERT INTO "auth_permission" VALUES(1224,303,'view_attachment','Can view attachment');
-INSERT INTO "auth_permission" VALUES(1225,304,'add_departmentmanager','Can add Department Manager');
-INSERT INTO "auth_permission" VALUES(1226,304,'change_departmentmanager','Can change Department Manager');
-INSERT INTO "auth_permission" VALUES(1227,304,'delete_departmentmanager','Can delete Department Manager');
-INSERT INTO "auth_permission" VALUES(1228,304,'view_departmentmanager','Can view Department Manager');
-INSERT INTO "auth_permission" VALUES(1229,305,'add_claimrequest','Can add claim request');
-INSERT INTO "auth_permission" VALUES(1230,305,'change_claimrequest','Can change claim request');
-INSERT INTO "auth_permission" VALUES(1231,305,'delete_claimrequest','Can delete claim request');
-INSERT INTO "auth_permission" VALUES(1232,305,'view_claimrequest','Can view claim request');
-INSERT INTO "auth_permission" VALUES(1233,306,'add_employeetask','Can add employee task');
-INSERT INTO "auth_permission" VALUES(1234,306,'change_employeetask','Can change employee task');
-INSERT INTO "auth_permission" VALUES(1235,306,'delete_employeetask','Can delete employee task');
-INSERT INTO "auth_permission" VALUES(1236,306,'view_employeetask','Can view employee task');
-INSERT INTO "auth_permission" VALUES(1237,307,'add_offboarding','Can add offboarding');
-INSERT INTO "auth_permission" VALUES(1238,307,'change_offboarding','Can change offboarding');
-INSERT INTO "auth_permission" VALUES(1239,307,'delete_offboarding','Can delete offboarding');
-INSERT INTO "auth_permission" VALUES(1240,307,'view_offboarding','Can view offboarding');
-INSERT INTO "auth_permission" VALUES(1241,308,'add_offboardingemployee','Can add offboarding employee');
-INSERT INTO "auth_permission" VALUES(1242,308,'change_offboardingemployee','Can change offboarding employee');
-INSERT INTO "auth_permission" VALUES(1243,308,'delete_offboardingemployee','Can delete offboarding employee');
-INSERT INTO "auth_permission" VALUES(1244,308,'view_offboardingemployee','Can view offboarding employee');
-INSERT INTO "auth_permission" VALUES(1245,309,'add_offboardingstage','Can add offboarding stage');
-INSERT INTO "auth_permission" VALUES(1246,309,'change_offboardingstage','Can change offboarding stage');
-INSERT INTO "auth_permission" VALUES(1247,309,'delete_offboardingstage','Can delete offboarding stage');
-INSERT INTO "auth_permission" VALUES(1248,309,'view_offboardingstage','Can view offboarding stage');
-INSERT INTO "auth_permission" VALUES(1249,310,'add_resignationletter','Can add resignation letter');
-INSERT INTO "auth_permission" VALUES(1250,310,'change_resignationletter','Can change resignation letter');
-INSERT INTO "auth_permission" VALUES(1251,310,'delete_resignationletter','Can delete resignation letter');
-INSERT INTO "auth_permission" VALUES(1252,310,'view_resignationletter','Can view resignation letter');
-INSERT INTO "auth_permission" VALUES(1253,311,'add_offboardingtask','Can add offboarding task');
-INSERT INTO "auth_permission" VALUES(1254,311,'change_offboardingtask','Can change offboarding task');
-INSERT INTO "auth_permission" VALUES(1255,311,'delete_offboardingtask','Can delete offboarding task');
-INSERT INTO "auth_permission" VALUES(1256,311,'view_offboardingtask','Can view offboarding task');
-INSERT INTO "auth_permission" VALUES(1257,312,'add_offboardingstagemultiplefile','Can add offboarding stage multiple file');
-INSERT INTO "auth_permission" VALUES(1258,312,'change_offboardingstagemultiplefile','Can change offboarding stage multiple file');
-INSERT INTO "auth_permission" VALUES(1259,312,'delete_offboardingstagemultiplefile','Can delete offboarding stage multiple file');
-INSERT INTO "auth_permission" VALUES(1260,312,'view_offboardingstagemultiplefile','Can view offboarding stage multiple file');
-INSERT INTO "auth_permission" VALUES(1261,313,'add_offboardingnote','Can add offboarding note');
-INSERT INTO "auth_permission" VALUES(1262,313,'change_offboardingnote','Can change offboarding note');
-INSERT INTO "auth_permission" VALUES(1263,313,'delete_offboardingnote','Can delete offboarding note');
-INSERT INTO "auth_permission" VALUES(1264,313,'view_offboardingnote','Can view offboarding note');
-INSERT INTO "auth_permission" VALUES(1265,314,'add_offboardinggeneralsetting','Can add offboarding general setting');
-INSERT INTO "auth_permission" VALUES(1266,314,'change_offboardinggeneralsetting','Can change offboarding general setting');
-INSERT INTO "auth_permission" VALUES(1267,314,'delete_offboardinggeneralsetting','Can delete offboarding general setting');
-INSERT INTO "auth_permission" VALUES(1268,314,'view_offboardinggeneralsetting','Can view offboarding general setting');
-INSERT INTO "auth_permission" VALUES(1269,315,'add_historicalemployeetask','Can add historical employee task');
-INSERT INTO "auth_permission" VALUES(1270,315,'change_historicalemployeetask','Can change historical employee task');
-INSERT INTO "auth_permission" VALUES(1271,315,'delete_historicalemployeetask','Can delete historical employee task');
-INSERT INTO "auth_permission" VALUES(1272,315,'view_historicalemployeetask','Can view historical employee task');
-INSERT INTO "auth_permission" VALUES(1273,316,'add_exitreason','Can add exit reason');
-INSERT INTO "auth_permission" VALUES(1274,316,'change_exitreason','Can change exit reason');
-INSERT INTO "auth_permission" VALUES(1275,316,'delete_exitreason','Can delete exit reason');
-INSERT INTO "auth_permission" VALUES(1276,316,'view_exitreason','Can view exit reason');
-INSERT INTO "auth_permission" VALUES(1277,317,'add_googledrivebackup','Can add google drive backup');
-INSERT INTO "auth_permission" VALUES(1278,317,'change_googledrivebackup','Can change google drive backup');
-INSERT INTO "auth_permission" VALUES(1279,317,'delete_googledrivebackup','Can delete google drive backup');
-INSERT INTO "auth_permission" VALUES(1280,317,'view_googledrivebackup','Can view google drive backup');
-INSERT INTO "auth_permission" VALUES(1281,318,'add_localbackup','Can add local backup');
-INSERT INTO "auth_permission" VALUES(1282,318,'change_localbackup','Can change local backup');
-INSERT INTO "auth_permission" VALUES(1283,318,'delete_localbackup','Can delete local backup');
-INSERT INTO "auth_permission" VALUES(1284,318,'view_localbackup','Can view local backup');
-INSERT INTO "auth_permission" VALUES(1285,319,'add_project','Can add Project');
-INSERT INTO "auth_permission" VALUES(1286,319,'change_project','Can change Project');
-INSERT INTO "auth_permission" VALUES(1287,319,'delete_project','Can delete Project');
-INSERT INTO "auth_permission" VALUES(1288,319,'view_project','Can view Project');
-INSERT INTO "auth_permission" VALUES(1289,320,'add_projectstage','Can add Project Stage');
-INSERT INTO "auth_permission" VALUES(1290,320,'change_projectstage','Can change Project Stage');
-INSERT INTO "auth_permission" VALUES(1291,320,'delete_projectstage','Can delete Project Stage');
-INSERT INTO "auth_permission" VALUES(1292,320,'view_projectstage','Can view Project Stage');
-INSERT INTO "auth_permission" VALUES(1293,321,'add_task','Can add Task');
-INSERT INTO "auth_permission" VALUES(1294,321,'change_task','Can change Task');
-INSERT INTO "auth_permission" VALUES(1295,321,'delete_task','Can delete Task');
-INSERT INTO "auth_permission" VALUES(1296,321,'view_task','Can view Task');
-INSERT INTO "auth_permission" VALUES(1297,322,'add_timesheet','Can add Time Sheet');
-INSERT INTO "auth_permission" VALUES(1298,322,'change_timesheet','Can change Time Sheet');
-INSERT INTO "auth_permission" VALUES(1299,322,'delete_timesheet','Can delete Time Sheet');
-INSERT INTO "auth_permission" VALUES(1300,322,'view_timesheet','Can view Time Sheet');
-INSERT INTO "auth_permission" VALUES(1301,323,'add_geofencing','Can add geo fencing');
-INSERT INTO "auth_permission" VALUES(1302,323,'change_geofencing','Can change geo fencing');
-INSERT INTO "auth_permission" VALUES(1303,323,'delete_geofencing','Can delete geo fencing');
-INSERT INTO "auth_permission" VALUES(1304,323,'view_geofencing','Can view geo fencing');
-INSERT INTO "auth_permission" VALUES(1305,324,'add_facedetection','Can add face detection');
-INSERT INTO "auth_permission" VALUES(1306,324,'change_facedetection','Can change face detection');
-INSERT INTO "auth_permission" VALUES(1307,324,'delete_facedetection','Can delete face detection');
-INSERT INTO "auth_permission" VALUES(1308,324,'view_facedetection','Can view face detection');
-INSERT INTO "auth_permission" VALUES(1309,325,'add_employeefacedetection','Can add employee face detection');
-INSERT INTO "auth_permission" VALUES(1310,325,'change_employeefacedetection','Can change employee face detection');
-INSERT INTO "auth_permission" VALUES(1311,325,'delete_employeefacedetection','Can delete employee face detection');
-INSERT INTO "auth_permission" VALUES(1312,325,'view_employeefacedetection','Can view employee face detection');
+INSERT INTO "auth_permission" VALUES(17,5,'add_contenttype','Can add content type');
+INSERT INTO "auth_permission" VALUES(18,5,'change_contenttype','Can change content type');
+INSERT INTO "auth_permission" VALUES(19,5,'delete_contenttype','Can delete content type');
+INSERT INTO "auth_permission" VALUES(20,5,'view_contenttype','Can view content type');
+INSERT INTO "auth_permission" VALUES(21,6,'add_session','Can add session');
+INSERT INTO "auth_permission" VALUES(22,6,'change_session','Can change session');
+INSERT INTO "auth_permission" VALUES(23,6,'delete_session','Can delete session');
+INSERT INTO "auth_permission" VALUES(24,6,'view_session','Can view session');
+INSERT INTO "auth_permission" VALUES(25,7,'add_audittag','Can add audit tag');
+INSERT INTO "auth_permission" VALUES(26,7,'change_audittag','Can change audit tag');
+INSERT INTO "auth_permission" VALUES(27,7,'delete_audittag','Can delete audit tag');
+INSERT INTO "auth_permission" VALUES(28,7,'view_audittag','Can view audit tag');
+INSERT INTO "auth_permission" VALUES(29,8,'add_historytrackingfields','Can add history tracking fields');
+INSERT INTO "auth_permission" VALUES(30,8,'change_historytrackingfields','Can change history tracking fields');
+INSERT INTO "auth_permission" VALUES(31,8,'delete_historytrackingfields','Can delete history tracking fields');
+INSERT INTO "auth_permission" VALUES(32,8,'view_historytrackingfields','Can view history tracking fields');
+INSERT INTO "auth_permission" VALUES(33,9,'add_accountblockunblock','Can add account block unblock');
+INSERT INTO "auth_permission" VALUES(34,9,'change_accountblockunblock','Can change account block unblock');
+INSERT INTO "auth_permission" VALUES(35,9,'delete_accountblockunblock','Can delete account block unblock');
+INSERT INTO "auth_permission" VALUES(36,9,'view_accountblockunblock','Can view account block unblock');
+INSERT INTO "auth_permission" VALUES(37,10,'add_defaultaccessibility','Can add default accessibility');
+INSERT INTO "auth_permission" VALUES(38,10,'change_defaultaccessibility','Can change default accessibility');
+INSERT INTO "auth_permission" VALUES(39,10,'delete_defaultaccessibility','Can delete default accessibility');
+INSERT INTO "auth_permission" VALUES(40,10,'view_defaultaccessibility','Can view default accessibility');
+INSERT INTO "auth_permission" VALUES(41,11,'add_project','Can add project');
+INSERT INTO "auth_permission" VALUES(42,11,'change_project','Can change project');
+INSERT INTO "auth_permission" VALUES(43,11,'delete_project','Can delete project');
+INSERT INTO "auth_permission" VALUES(44,11,'view_project','Can view project');
+INSERT INTO "auth_permission" VALUES(45,12,'add_gracetime','Can add grace time');
+INSERT INTO "auth_permission" VALUES(46,12,'change_gracetime','Can change grace time');
+INSERT INTO "auth_permission" VALUES(47,12,'delete_gracetime','Can delete grace time');
+INSERT INTO "auth_permission" VALUES(48,12,'view_gracetime','Can view grace time');
+INSERT INTO "auth_permission" VALUES(49,13,'add_attendancelatecomeearlyout','Can add attendance late come early out');
+INSERT INTO "auth_permission" VALUES(50,13,'change_attendancelatecomeearlyout','Can change attendance late come early out');
+INSERT INTO "auth_permission" VALUES(51,13,'delete_attendancelatecomeearlyout','Can delete attendance late come early out');
+INSERT INTO "auth_permission" VALUES(52,13,'view_attendancelatecomeearlyout','Can view attendance late come early out');
+INSERT INTO "auth_permission" VALUES(53,14,'add_leavetype','Can add leave type');
+INSERT INTO "auth_permission" VALUES(54,14,'change_leavetype','Can change leave type');
+INSERT INTO "auth_permission" VALUES(55,14,'delete_leavetype','Can delete leave type');
+INSERT INTO "auth_permission" VALUES(56,14,'view_leavetype','Can view leave type');
+INSERT INTO "auth_permission" VALUES(57,15,'add_leaverequest','Can add leave request');
+INSERT INTO "auth_permission" VALUES(58,15,'change_leaverequest','Can change leave request');
+INSERT INTO "auth_permission" VALUES(59,15,'delete_leaverequest','Can delete leave request');
+INSERT INTO "auth_permission" VALUES(60,15,'view_leaverequest','Can view leave request');
+INSERT INTO "auth_permission" VALUES(61,16,'add_announcement','Can add Announcement');
+INSERT INTO "auth_permission" VALUES(62,16,'change_announcement','Can change Announcement');
+INSERT INTO "auth_permission" VALUES(63,16,'delete_announcement','Can delete Announcement');
+INSERT INTO "auth_permission" VALUES(64,16,'view_announcement','Can view Announcement');
+INSERT INTO "auth_permission" VALUES(65,17,'add_announcementcomment','Can add announcement comment');
+INSERT INTO "auth_permission" VALUES(66,17,'change_announcementcomment','Can change announcement comment');
+INSERT INTO "auth_permission" VALUES(67,17,'delete_announcementcomment','Can delete announcement comment');
+INSERT INTO "auth_permission" VALUES(68,17,'view_announcementcomment','Can view announcement comment');
+INSERT INTO "auth_permission" VALUES(69,18,'add_announcementexpire','Can add announcement expire');
+INSERT INTO "auth_permission" VALUES(70,18,'change_announcementexpire','Can change announcement expire');
+INSERT INTO "auth_permission" VALUES(71,18,'delete_announcementexpire','Can delete announcement expire');
+INSERT INTO "auth_permission" VALUES(72,18,'view_announcementexpire','Can view announcement expire');
+INSERT INTO "auth_permission" VALUES(73,19,'add_announcementview','Can add announcement view');
+INSERT INTO "auth_permission" VALUES(74,19,'change_announcementview','Can change announcement view');
+INSERT INTO "auth_permission" VALUES(75,19,'delete_announcementview','Can delete announcement view');
+INSERT INTO "auth_permission" VALUES(76,19,'view_announcementview','Can view announcement view');
+INSERT INTO "auth_permission" VALUES(77,20,'add_attachment','Can add attachment');
+INSERT INTO "auth_permission" VALUES(78,20,'change_attachment','Can change attachment');
+INSERT INTO "auth_permission" VALUES(79,20,'delete_attachment','Can delete attachment');
+INSERT INTO "auth_permission" VALUES(80,20,'view_attachment','Can view attachment');
+INSERT INTO "auth_permission" VALUES(81,21,'add_attendanceallowedip','Can add attendance allowed ip');
+INSERT INTO "auth_permission" VALUES(82,21,'change_attendanceallowedip','Can change attendance allowed ip');
+INSERT INTO "auth_permission" VALUES(83,21,'delete_attendanceallowedip','Can delete attendance allowed ip');
+INSERT INTO "auth_permission" VALUES(84,21,'view_attendanceallowedip','Can view attendance allowed ip');
+INSERT INTO "auth_permission" VALUES(85,22,'add_baserequestfile','Can add baserequest file');
+INSERT INTO "auth_permission" VALUES(86,22,'change_baserequestfile','Can change baserequest file');
+INSERT INTO "auth_permission" VALUES(87,22,'delete_baserequestfile','Can delete baserequest file');
+INSERT INTO "auth_permission" VALUES(88,22,'view_baserequestfile','Can view baserequest file');
+INSERT INTO "auth_permission" VALUES(89,23,'add_biometricattendance','Can add biometric attendance');
+INSERT INTO "auth_permission" VALUES(90,23,'change_biometricattendance','Can change biometric attendance');
+INSERT INTO "auth_permission" VALUES(91,23,'delete_biometricattendance','Can delete biometric attendance');
+INSERT INTO "auth_permission" VALUES(92,23,'view_biometricattendance','Can view biometric attendance');
+INSERT INTO "auth_permission" VALUES(93,24,'add_company','Can add Company');
+INSERT INTO "auth_permission" VALUES(94,24,'change_company','Can change Company');
+INSERT INTO "auth_permission" VALUES(95,24,'delete_company','Can delete Company');
+INSERT INTO "auth_permission" VALUES(96,24,'view_company','Can view Company');
+INSERT INTO "auth_permission" VALUES(97,25,'add_companyleaves','Can add Company Leave');
+INSERT INTO "auth_permission" VALUES(98,25,'change_companyleaves','Can change Company Leave');
+INSERT INTO "auth_permission" VALUES(99,25,'delete_companyleaves','Can delete Company Leave');
+INSERT INTO "auth_permission" VALUES(100,25,'view_companyleaves','Can view Company Leave');
+INSERT INTO "auth_permission" VALUES(101,26,'add_dashboardemployeecharts','Can add Dashboard Employee Charts');
+INSERT INTO "auth_permission" VALUES(102,26,'change_dashboardemployeecharts','Can change Dashboard Employee Charts');
+INSERT INTO "auth_permission" VALUES(103,26,'delete_dashboardemployeecharts','Can delete Dashboard Employee Charts');
+INSERT INTO "auth_permission" VALUES(104,26,'view_dashboardemployeecharts','Can view Dashboard Employee Charts');
+INSERT INTO "auth_permission" VALUES(105,27,'add_department','Can add Department');
+INSERT INTO "auth_permission" VALUES(106,27,'change_department','Can change Department');
+INSERT INTO "auth_permission" VALUES(107,27,'delete_department','Can delete Department');
+INSERT INTO "auth_permission" VALUES(108,27,'view_department','Can view Department');
+INSERT INTO "auth_permission" VALUES(109,28,'add_driverviewed','Can add driver viewed');
+INSERT INTO "auth_permission" VALUES(110,28,'change_driverviewed','Can change driver viewed');
+INSERT INTO "auth_permission" VALUES(111,28,'delete_driverviewed','Can delete driver viewed');
+INSERT INTO "auth_permission" VALUES(112,28,'view_driverviewed','Can view driver viewed');
+INSERT INTO "auth_permission" VALUES(113,29,'add_dynamicemailconfiguration','Can add Email Configuration');
+INSERT INTO "auth_permission" VALUES(114,29,'change_dynamicemailconfiguration','Can change Email Configuration');
+INSERT INTO "auth_permission" VALUES(115,29,'delete_dynamicemailconfiguration','Can delete Email Configuration');
+INSERT INTO "auth_permission" VALUES(116,29,'view_dynamicemailconfiguration','Can view Email Configuration');
+INSERT INTO "auth_permission" VALUES(117,30,'add_dynamicpagination','Can add dynamic pagination');
+INSERT INTO "auth_permission" VALUES(118,30,'change_dynamicpagination','Can change dynamic pagination');
+INSERT INTO "auth_permission" VALUES(119,30,'delete_dynamicpagination','Can delete dynamic pagination');
+INSERT INTO "auth_permission" VALUES(120,30,'view_dynamicpagination','Can view dynamic pagination');
+INSERT INTO "auth_permission" VALUES(121,31,'add_emaillog','Can add email log');
+INSERT INTO "auth_permission" VALUES(122,31,'change_emaillog','Can change email log');
+INSERT INTO "auth_permission" VALUES(123,31,'delete_emaillog','Can delete email log');
+INSERT INTO "auth_permission" VALUES(124,31,'view_emaillog','Can view email log');
+INSERT INTO "auth_permission" VALUES(125,32,'add_employeeshift','Can add Employee Shift');
+INSERT INTO "auth_permission" VALUES(126,32,'change_employeeshift','Can change Employee Shift');
+INSERT INTO "auth_permission" VALUES(127,32,'delete_employeeshift','Can delete Employee Shift');
+INSERT INTO "auth_permission" VALUES(128,32,'view_employeeshift','Can view Employee Shift');
+INSERT INTO "auth_permission" VALUES(129,33,'add_employeeshiftday','Can add Employee Shift Day');
+INSERT INTO "auth_permission" VALUES(130,33,'change_employeeshiftday','Can change Employee Shift Day');
+INSERT INTO "auth_permission" VALUES(131,33,'delete_employeeshiftday','Can delete Employee Shift Day');
+INSERT INTO "auth_permission" VALUES(132,33,'view_employeeshiftday','Can view Employee Shift Day');
+INSERT INTO "auth_permission" VALUES(133,34,'add_employeeshiftschedule','Can add Employee Shift Schedule');
+INSERT INTO "auth_permission" VALUES(134,34,'change_employeeshiftschedule','Can change Employee Shift Schedule');
+INSERT INTO "auth_permission" VALUES(135,34,'delete_employeeshiftschedule','Can delete Employee Shift Schedule');
+INSERT INTO "auth_permission" VALUES(136,34,'view_employeeshiftschedule','Can view Employee Shift Schedule');
+INSERT INTO "auth_permission" VALUES(137,35,'add_employeetype','Can add Employee Type');
+INSERT INTO "auth_permission" VALUES(138,35,'change_employeetype','Can change Employee Type');
+INSERT INTO "auth_permission" VALUES(139,35,'delete_employeetype','Can delete Employee Type');
+INSERT INTO "auth_permission" VALUES(140,35,'view_employeetype','Can view Employee Type');
+INSERT INTO "auth_permission" VALUES(141,36,'add_fitsmailtemplate','Can add fits mail template');
+INSERT INTO "auth_permission" VALUES(142,36,'change_fitsmailtemplate','Can change fits mail template');
+INSERT INTO "auth_permission" VALUES(143,36,'delete_fitsmailtemplate','Can delete fits mail template');
+INSERT INTO "auth_permission" VALUES(144,36,'view_fitsmailtemplate','Can view fits mail template');
+INSERT INTO "auth_permission" VALUES(145,37,'add_historicalrotatingshiftassign','Can add historical Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(146,37,'change_historicalrotatingshiftassign','Can change historical Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(147,37,'delete_historicalrotatingshiftassign','Can delete historical Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(148,37,'view_historicalrotatingshiftassign','Can view historical Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(149,38,'add_historicalrotatingworktypeassign','Can add historical Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(150,38,'change_historicalrotatingworktypeassign','Can change historical Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(151,38,'delete_historicalrotatingworktypeassign','Can delete historical Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(152,38,'view_historicalrotatingworktypeassign','Can view historical Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(153,39,'add_historicalshiftrequest','Can add historical Shift Request');
+INSERT INTO "auth_permission" VALUES(154,39,'change_historicalshiftrequest','Can change historical Shift Request');
+INSERT INTO "auth_permission" VALUES(155,39,'delete_historicalshiftrequest','Can delete historical Shift Request');
+INSERT INTO "auth_permission" VALUES(156,39,'view_historicalshiftrequest','Can view historical Shift Request');
+INSERT INTO "auth_permission" VALUES(157,40,'add_historicalworktyperequest','Can add historical Work Type Request');
+INSERT INTO "auth_permission" VALUES(158,40,'change_historicalworktyperequest','Can change historical Work Type Request');
+INSERT INTO "auth_permission" VALUES(159,40,'delete_historicalworktyperequest','Can delete historical Work Type Request');
+INSERT INTO "auth_permission" VALUES(160,40,'view_historicalworktyperequest','Can view historical Work Type Request');
+INSERT INTO "auth_permission" VALUES(161,41,'add_holidays','Can add Holiday');
+INSERT INTO "auth_permission" VALUES(162,41,'change_holidays','Can change Holiday');
+INSERT INTO "auth_permission" VALUES(163,41,'delete_holidays','Can delete Holiday');
+INSERT INTO "auth_permission" VALUES(164,41,'view_holidays','Can view Holiday');
+INSERT INTO "auth_permission" VALUES(165,42,'add_hruser','Can add HR User');
+INSERT INTO "auth_permission" VALUES(166,42,'change_hruser','Can change HR User');
+INSERT INTO "auth_permission" VALUES(167,42,'delete_hruser','Can delete HR User');
+INSERT INTO "auth_permission" VALUES(168,42,'view_hruser','Can view HR User');
+INSERT INTO "auth_permission" VALUES(169,43,'add_jobposition','Can add Job Position');
+INSERT INTO "auth_permission" VALUES(170,43,'change_jobposition','Can change Job Position');
+INSERT INTO "auth_permission" VALUES(171,43,'delete_jobposition','Can delete Job Position');
+INSERT INTO "auth_permission" VALUES(172,43,'view_jobposition','Can view Job Position');
+INSERT INTO "auth_permission" VALUES(173,44,'add_jobrole','Can add Job Role');
+INSERT INTO "auth_permission" VALUES(174,44,'change_jobrole','Can change Job Role');
+INSERT INTO "auth_permission" VALUES(175,44,'delete_jobrole','Can delete Job Role');
+INSERT INTO "auth_permission" VALUES(176,44,'view_jobrole','Can view Job Role');
+INSERT INTO "auth_permission" VALUES(177,45,'add_multipleapprovalcondition','Can add multiple approval condition');
+INSERT INTO "auth_permission" VALUES(178,45,'change_multipleapprovalcondition','Can change multiple approval condition');
+INSERT INTO "auth_permission" VALUES(179,45,'delete_multipleapprovalcondition','Can delete multiple approval condition');
+INSERT INTO "auth_permission" VALUES(180,45,'view_multipleapprovalcondition','Can view multiple approval condition');
+INSERT INTO "auth_permission" VALUES(181,46,'add_multipleapprovalmanagers','Can add Multiple Approval Managers');
+INSERT INTO "auth_permission" VALUES(182,46,'change_multipleapprovalmanagers','Can change Multiple Approval Managers');
+INSERT INTO "auth_permission" VALUES(183,46,'delete_multipleapprovalmanagers','Can delete Multiple Approval Managers');
+INSERT INTO "auth_permission" VALUES(184,46,'view_multipleapprovalmanagers','Can view Multiple Approval Managers');
+INSERT INTO "auth_permission" VALUES(185,47,'add_notificationsound','Can add notification sound');
+INSERT INTO "auth_permission" VALUES(186,47,'change_notificationsound','Can change notification sound');
+INSERT INTO "auth_permission" VALUES(187,47,'delete_notificationsound','Can delete notification sound');
+INSERT INTO "auth_permission" VALUES(188,47,'view_notificationsound','Can view notification sound');
+INSERT INTO "auth_permission" VALUES(189,48,'add_penaltyaccounts','Can add Penalty Account');
+INSERT INTO "auth_permission" VALUES(190,48,'change_penaltyaccounts','Can change Penalty Account');
+INSERT INTO "auth_permission" VALUES(191,48,'delete_penaltyaccounts','Can delete Penalty Account');
+INSERT INTO "auth_permission" VALUES(192,48,'view_penaltyaccounts','Can view Penalty Account');
+INSERT INTO "auth_permission" VALUES(193,49,'add_rotatingshift','Can add Rotating Shift');
+INSERT INTO "auth_permission" VALUES(194,49,'change_rotatingshift','Can change Rotating Shift');
+INSERT INTO "auth_permission" VALUES(195,49,'delete_rotatingshift','Can delete Rotating Shift');
+INSERT INTO "auth_permission" VALUES(196,49,'view_rotatingshift','Can view Rotating Shift');
+INSERT INTO "auth_permission" VALUES(197,50,'add_rotatingshiftassign','Can add Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(198,50,'change_rotatingshiftassign','Can change Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(199,50,'delete_rotatingshiftassign','Can delete Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(200,50,'view_rotatingshiftassign','Can view Rotating Shift Assign');
+INSERT INTO "auth_permission" VALUES(201,51,'add_rotatingworktype','Can add Rotating Work Type');
+INSERT INTO "auth_permission" VALUES(202,51,'change_rotatingworktype','Can change Rotating Work Type');
+INSERT INTO "auth_permission" VALUES(203,51,'delete_rotatingworktype','Can delete Rotating Work Type');
+INSERT INTO "auth_permission" VALUES(204,51,'view_rotatingworktype','Can view Rotating Work Type');
+INSERT INTO "auth_permission" VALUES(205,52,'add_rotatingworktypeassign','Can add Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(206,52,'change_rotatingworktypeassign','Can change Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(207,52,'delete_rotatingworktypeassign','Can delete Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(208,52,'view_rotatingworktypeassign','Can view Rotating Work Type Assign');
+INSERT INTO "auth_permission" VALUES(209,53,'add_shiftrequest','Can add Shift Request');
+INSERT INTO "auth_permission" VALUES(210,53,'change_shiftrequest','Can change Shift Request');
+INSERT INTO "auth_permission" VALUES(211,53,'delete_shiftrequest','Can delete Shift Request');
+INSERT INTO "auth_permission" VALUES(212,53,'view_shiftrequest','Can view Shift Request');
+INSERT INTO "auth_permission" VALUES(213,53,'approve_shiftrequest','Approve Shift Request');
+INSERT INTO "auth_permission" VALUES(214,53,'cancel_shiftrequest','Cancel Shift Request');
+INSERT INTO "auth_permission" VALUES(215,54,'add_shiftrequestcomment','Can add shift request comment');
+INSERT INTO "auth_permission" VALUES(216,54,'change_shiftrequestcomment','Can change shift request comment');
+INSERT INTO "auth_permission" VALUES(217,54,'delete_shiftrequestcomment','Can delete shift request comment');
+INSERT INTO "auth_permission" VALUES(218,54,'view_shiftrequestcomment','Can view shift request comment');
+INSERT INTO "auth_permission" VALUES(219,55,'add_tags','Can add Tag');
+INSERT INTO "auth_permission" VALUES(220,55,'change_tags','Can change Tag');
+INSERT INTO "auth_permission" VALUES(221,55,'delete_tags','Can delete Tag');
+INSERT INTO "auth_permission" VALUES(222,55,'view_tags','Can view Tag');
+INSERT INTO "auth_permission" VALUES(223,56,'add_tracklatecomeearlyout','Can add Track Late Come Early Out');
+INSERT INTO "auth_permission" VALUES(224,56,'change_tracklatecomeearlyout','Can change Track Late Come Early Out');
+INSERT INTO "auth_permission" VALUES(225,56,'delete_tracklatecomeearlyout','Can delete Track Late Come Early Out');
+INSERT INTO "auth_permission" VALUES(226,56,'view_tracklatecomeearlyout','Can view Track Late Come Early Out');
+INSERT INTO "auth_permission" VALUES(227,57,'add_worktype','Can add Work Type');
+INSERT INTO "auth_permission" VALUES(228,57,'change_worktype','Can change Work Type');
+INSERT INTO "auth_permission" VALUES(229,57,'delete_worktype','Can delete Work Type');
+INSERT INTO "auth_permission" VALUES(230,57,'view_worktype','Can view Work Type');
+INSERT INTO "auth_permission" VALUES(231,58,'add_worktyperequest','Can add Work Type Request');
+INSERT INTO "auth_permission" VALUES(232,58,'change_worktyperequest','Can change Work Type Request');
+INSERT INTO "auth_permission" VALUES(233,58,'delete_worktyperequest','Can delete Work Type Request');
+INSERT INTO "auth_permission" VALUES(234,58,'view_worktyperequest','Can view Work Type Request');
+INSERT INTO "auth_permission" VALUES(235,58,'approve_worktyperequest','Approve Work Type Request');
+INSERT INTO "auth_permission" VALUES(236,58,'cancel_worktyperequest','Cancel Work Type Request');
+INSERT INTO "auth_permission" VALUES(237,59,'add_worktyperequestcomment','Can add work type request comment');
+INSERT INTO "auth_permission" VALUES(238,59,'change_worktyperequestcomment','Can change work type request comment');
+INSERT INTO "auth_permission" VALUES(239,59,'delete_worktyperequestcomment','Can delete work type request comment');
+INSERT INTO "auth_permission" VALUES(240,59,'view_worktyperequestcomment','Can view work type request comment');
+INSERT INTO "auth_permission" VALUES(241,60,'add_mailboxintegration','Can add Mailbox Integration');
+INSERT INTO "auth_permission" VALUES(242,60,'change_mailboxintegration','Can change Mailbox Integration');
+INSERT INTO "auth_permission" VALUES(243,60,'delete_mailboxintegration','Can delete Mailbox Integration');
+INSERT INTO "auth_permission" VALUES(244,60,'view_mailboxintegration','Can view Mailbox Integration');
+INSERT INTO "auth_permission" VALUES(245,61,'add_actiontype','Can add Action Type');
+INSERT INTO "auth_permission" VALUES(246,61,'change_actiontype','Can change Action Type');
+INSERT INTO "auth_permission" VALUES(247,61,'delete_actiontype','Can delete Action Type');
+INSERT INTO "auth_permission" VALUES(248,61,'view_actiontype','Can view Action Type');
+INSERT INTO "auth_permission" VALUES(249,62,'add_bonuspoint','Can add bonus point');
+INSERT INTO "auth_permission" VALUES(250,62,'change_bonuspoint','Can change bonus point');
+INSERT INTO "auth_permission" VALUES(251,62,'delete_bonuspoint','Can delete bonus point');
+INSERT INTO "auth_permission" VALUES(252,62,'view_bonuspoint','Can view bonus point');
+INSERT INTO "auth_permission" VALUES(253,63,'add_employee','Can add employee');
+INSERT INTO "auth_permission" VALUES(254,63,'change_employee','Can change employee');
+INSERT INTO "auth_permission" VALUES(255,63,'delete_employee','Can delete employee');
+INSERT INTO "auth_permission" VALUES(256,63,'view_employee','Can view employee');
+INSERT INTO "auth_permission" VALUES(257,63,'change_ownprofile','Update own profile');
+INSERT INTO "auth_permission" VALUES(258,63,'view_ownprofile','View Own Profile');
+INSERT INTO "auth_permission" VALUES(259,64,'add_employeetag','Can add employee tag');
+INSERT INTO "auth_permission" VALUES(260,64,'change_employeetag','Can change employee tag');
+INSERT INTO "auth_permission" VALUES(261,64,'delete_employeetag','Can delete employee tag');
+INSERT INTO "auth_permission" VALUES(262,64,'view_employeetag','Can view employee tag');
+INSERT INTO "auth_permission" VALUES(263,65,'add_employeeworkinformation','Can add employee work information');
+INSERT INTO "auth_permission" VALUES(264,65,'change_employeeworkinformation','Can change employee work information');
+INSERT INTO "auth_permission" VALUES(265,65,'delete_employeeworkinformation','Can delete employee work information');
+INSERT INTO "auth_permission" VALUES(266,65,'view_employeeworkinformation','Can view employee work information');
+INSERT INTO "auth_permission" VALUES(267,66,'add_profileeditfeature','Can add profile edit feature');
+INSERT INTO "auth_permission" VALUES(268,66,'change_profileeditfeature','Can change profile edit feature');
+INSERT INTO "auth_permission" VALUES(269,66,'delete_profileeditfeature','Can delete profile edit feature');
+INSERT INTO "auth_permission" VALUES(270,66,'view_profileeditfeature','Can view profile edit feature');
+INSERT INTO "auth_permission" VALUES(271,67,'add_policymultiplefile','Can add policy multiple file');
+INSERT INTO "auth_permission" VALUES(272,67,'change_policymultiplefile','Can change policy multiple file');
+INSERT INTO "auth_permission" VALUES(273,67,'delete_policymultiplefile','Can delete policy multiple file');
+INSERT INTO "auth_permission" VALUES(274,67,'view_policymultiplefile','Can view policy multiple file');
+INSERT INTO "auth_permission" VALUES(275,68,'add_policy','Can add Policy');
+INSERT INTO "auth_permission" VALUES(276,68,'change_policy','Can change Policy');
+INSERT INTO "auth_permission" VALUES(277,68,'delete_policy','Can delete Policy');
+INSERT INTO "auth_permission" VALUES(278,68,'view_policy','Can view Policy');
+INSERT INTO "auth_permission" VALUES(279,69,'add_notefiles','Can add note files');
+INSERT INTO "auth_permission" VALUES(280,69,'change_notefiles','Can change note files');
+INSERT INTO "auth_permission" VALUES(281,69,'delete_notefiles','Can delete note files');
+INSERT INTO "auth_permission" VALUES(282,69,'view_notefiles','Can view note files');
+INSERT INTO "auth_permission" VALUES(283,70,'add_historicalemployeeworkinformation','Can add historical employee work information');
+INSERT INTO "auth_permission" VALUES(284,70,'change_historicalemployeeworkinformation','Can change historical employee work information');
+INSERT INTO "auth_permission" VALUES(285,70,'delete_historicalemployeeworkinformation','Can delete historical employee work information');
+INSERT INTO "auth_permission" VALUES(286,70,'view_historicalemployeeworkinformation','Can view historical employee work information');
+INSERT INTO "auth_permission" VALUES(287,71,'add_historicalbonuspoint','Can add historical bonus point');
+INSERT INTO "auth_permission" VALUES(288,71,'change_historicalbonuspoint','Can change historical bonus point');
+INSERT INTO "auth_permission" VALUES(289,71,'delete_historicalbonuspoint','Can delete historical bonus point');
+INSERT INTO "auth_permission" VALUES(290,71,'view_historicalbonuspoint','Can view historical bonus point');
+INSERT INTO "auth_permission" VALUES(291,72,'add_employeesalaryhistory','Can add Salary History');
+INSERT INTO "auth_permission" VALUES(292,72,'change_employeesalaryhistory','Can change Salary History');
+INSERT INTO "auth_permission" VALUES(293,72,'delete_employeesalaryhistory','Can delete Salary History');
+INSERT INTO "auth_permission" VALUES(294,72,'view_employeesalaryhistory','Can view Salary History');
+INSERT INTO "auth_permission" VALUES(295,73,'add_employeenote','Can add employee note');
+INSERT INTO "auth_permission" VALUES(296,73,'change_employeenote','Can change employee note');
+INSERT INTO "auth_permission" VALUES(297,73,'delete_employeenote','Can delete employee note');
+INSERT INTO "auth_permission" VALUES(298,73,'view_employeenote','Can view employee note');
+INSERT INTO "auth_permission" VALUES(299,74,'add_employeegeneralsetting','Can add employee general setting');
+INSERT INTO "auth_permission" VALUES(300,74,'change_employeegeneralsetting','Can change employee general setting');
+INSERT INTO "auth_permission" VALUES(301,74,'delete_employeegeneralsetting','Can delete employee general setting');
+INSERT INTO "auth_permission" VALUES(302,74,'view_employeegeneralsetting','Can view employee general setting');
+INSERT INTO "auth_permission" VALUES(303,75,'add_employeebankdetails','Can add Employee Bank Details');
+INSERT INTO "auth_permission" VALUES(304,75,'change_employeebankdetails','Can change Employee Bank Details');
+INSERT INTO "auth_permission" VALUES(305,75,'delete_employeebankdetails','Can delete Employee Bank Details');
+INSERT INTO "auth_permission" VALUES(306,75,'view_employeebankdetails','Can view Employee Bank Details');
+INSERT INTO "auth_permission" VALUES(307,76,'add_disciplinaryaction','Can add disciplinary action');
+INSERT INTO "auth_permission" VALUES(308,76,'change_disciplinaryaction','Can change disciplinary action');
+INSERT INTO "auth_permission" VALUES(309,76,'delete_disciplinaryaction','Can delete disciplinary action');
+INSERT INTO "auth_permission" VALUES(310,76,'view_disciplinaryaction','Can view disciplinary action');
+INSERT INTO "auth_permission" VALUES(311,77,'add_approvalrule','Can add Approval Rule');
+INSERT INTO "auth_permission" VALUES(312,77,'change_approvalrule','Can change Approval Rule');
+INSERT INTO "auth_permission" VALUES(313,77,'delete_approvalrule','Can delete Approval Rule');
+INSERT INTO "auth_permission" VALUES(314,77,'view_approvalrule','Can view Approval Rule');
+INSERT INTO "auth_permission" VALUES(315,78,'add_approvalstep','Can add Approval Step');
+INSERT INTO "auth_permission" VALUES(316,78,'change_approvalstep','Can change Approval Step');
+INSERT INTO "auth_permission" VALUES(317,78,'delete_approvalstep','Can delete Approval Step');
+INSERT INTO "auth_permission" VALUES(318,78,'view_approvalstep','Can view Approval Step');
+INSERT INTO "auth_permission" VALUES(319,79,'add_candidate','Can add Candidate');
+INSERT INTO "auth_permission" VALUES(320,79,'change_candidate','Can change Candidate');
+INSERT INTO "auth_permission" VALUES(321,79,'delete_candidate','Can delete Candidate');
+INSERT INTO "auth_permission" VALUES(322,79,'view_candidate','Can view Candidate');
+INSERT INTO "auth_permission" VALUES(323,79,'view_history','View Candidate History');
+INSERT INTO "auth_permission" VALUES(324,79,'archive_candidate','Archive Candidate');
+INSERT INTO "auth_permission" VALUES(325,80,'add_evaluationcriteria','Can add Evaluation Criteria');
+INSERT INTO "auth_permission" VALUES(326,80,'change_evaluationcriteria','Can change Evaluation Criteria');
+INSERT INTO "auth_permission" VALUES(327,80,'delete_evaluationcriteria','Can delete Evaluation Criteria');
+INSERT INTO "auth_permission" VALUES(328,80,'view_evaluationcriteria','Can view Evaluation Criteria');
+INSERT INTO "auth_permission" VALUES(329,81,'add_jobemailtemplate','Can add job email template');
+INSERT INTO "auth_permission" VALUES(330,81,'change_jobemailtemplate','Can change job email template');
+INSERT INTO "auth_permission" VALUES(331,81,'delete_jobemailtemplate','Can delete job email template');
+INSERT INTO "auth_permission" VALUES(332,81,'view_jobemailtemplate','Can view job email template');
+INSERT INTO "auth_permission" VALUES(333,82,'add_linkedinaccount','Can add LinkedIn Account');
+INSERT INTO "auth_permission" VALUES(334,82,'change_linkedinaccount','Can change LinkedIn Account');
+INSERT INTO "auth_permission" VALUES(335,82,'delete_linkedinaccount','Can delete LinkedIn Account');
+INSERT INTO "auth_permission" VALUES(336,82,'view_linkedinaccount','Can view LinkedIn Account');
+INSERT INTO "auth_permission" VALUES(337,83,'add_manpowerrequest','Can add Manpower Request');
+INSERT INTO "auth_permission" VALUES(338,83,'change_manpowerrequest','Can change Manpower Request');
+INSERT INTO "auth_permission" VALUES(339,83,'delete_manpowerrequest','Can delete Manpower Request');
+INSERT INTO "auth_permission" VALUES(340,83,'view_manpowerrequest','Can view Manpower Request');
+INSERT INTO "auth_permission" VALUES(341,84,'add_offerlettertemplate','Can add Offer Letter Template');
+INSERT INTO "auth_permission" VALUES(342,84,'change_offerlettertemplate','Can change Offer Letter Template');
+INSERT INTO "auth_permission" VALUES(343,84,'delete_offerlettertemplate','Can delete Offer Letter Template');
+INSERT INTO "auth_permission" VALUES(344,84,'view_offerlettertemplate','Can view Offer Letter Template');
+INSERT INTO "auth_permission" VALUES(345,85,'add_recruitment','Can add Recruitment');
+INSERT INTO "auth_permission" VALUES(346,85,'change_recruitment','Can change Recruitment');
+INSERT INTO "auth_permission" VALUES(347,85,'delete_recruitment','Can delete Recruitment');
+INSERT INTO "auth_permission" VALUES(348,85,'view_recruitment','Can view Recruitment');
+INSERT INTO "auth_permission" VALUES(349,85,'archive_recruitment','Archive Recruitment');
+INSERT INTO "auth_permission" VALUES(350,86,'add_skillzone','Can add Skill Zone');
+INSERT INTO "auth_permission" VALUES(351,86,'change_skillzone','Can change Skill Zone');
+INSERT INTO "auth_permission" VALUES(352,86,'delete_skillzone','Can delete Skill Zone');
+INSERT INTO "auth_permission" VALUES(353,86,'view_skillzone','Can view Skill Zone');
+INSERT INTO "auth_permission" VALUES(354,87,'add_stage','Can add Stage');
+INSERT INTO "auth_permission" VALUES(355,87,'change_stage','Can change Stage');
+INSERT INTO "auth_permission" VALUES(356,87,'delete_stage','Can delete Stage');
+INSERT INTO "auth_permission" VALUES(357,87,'view_stage','Can view Stage');
+INSERT INTO "auth_permission" VALUES(358,87,'archive_Stage','Archive Stage');
+INSERT INTO "auth_permission" VALUES(359,88,'add_stagefiles','Can add stage files');
+INSERT INTO "auth_permission" VALUES(360,88,'change_stagefiles','Can change stage files');
+INSERT INTO "auth_permission" VALUES(361,88,'delete_stagefiles','Can delete stage files');
+INSERT INTO "auth_permission" VALUES(362,88,'view_stagefiles','Can view stage files');
+INSERT INTO "auth_permission" VALUES(363,89,'add_surveytemplate','Can add Survey Template');
+INSERT INTO "auth_permission" VALUES(364,89,'change_surveytemplate','Can change Survey Template');
+INSERT INTO "auth_permission" VALUES(365,89,'delete_surveytemplate','Can delete Survey Template');
+INSERT INTO "auth_permission" VALUES(366,89,'view_surveytemplate','Can view Survey Template');
+INSERT INTO "auth_permission" VALUES(367,90,'add_stagenote','Can add stage note');
+INSERT INTO "auth_permission" VALUES(368,90,'change_stagenote','Can change stage note');
+INSERT INTO "auth_permission" VALUES(369,90,'delete_stagenote','Can delete stage note');
+INSERT INTO "auth_permission" VALUES(370,90,'view_stagenote','Can view stage note');
+INSERT INTO "auth_permission" VALUES(371,91,'add_skillzonecandidate','Can add skill zone candidate');
+INSERT INTO "auth_permission" VALUES(372,91,'change_skillzonecandidate','Can change skill zone candidate');
+INSERT INTO "auth_permission" VALUES(373,91,'delete_skillzonecandidate','Can delete skill zone candidate');
+INSERT INTO "auth_permission" VALUES(374,91,'view_skillzonecandidate','Can view skill zone candidate');
+INSERT INTO "auth_permission" VALUES(375,92,'add_skill','Can add Skill');
+INSERT INTO "auth_permission" VALUES(376,92,'change_skill','Can change Skill');
+INSERT INTO "auth_permission" VALUES(377,92,'delete_skill','Can delete Skill');
+INSERT INTO "auth_permission" VALUES(378,92,'view_skill','Can view Skill');
+INSERT INTO "auth_permission" VALUES(379,93,'add_resume','Can add resume');
+INSERT INTO "auth_permission" VALUES(380,93,'change_resume','Can change resume');
+INSERT INTO "auth_permission" VALUES(381,93,'delete_resume','Can delete resume');
+INSERT INTO "auth_permission" VALUES(382,93,'view_resume','Can view resume');
+INSERT INTO "auth_permission" VALUES(383,94,'add_rejectreason','Can add Reject Reason');
+INSERT INTO "auth_permission" VALUES(384,94,'change_rejectreason','Can change Reject Reason');
+INSERT INTO "auth_permission" VALUES(385,94,'delete_rejectreason','Can delete Reject Reason');
+INSERT INTO "auth_permission" VALUES(386,94,'view_rejectreason','Can view Reject Reason');
+INSERT INTO "auth_permission" VALUES(387,95,'add_rejectedcandidate','Can add Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(388,95,'change_rejectedcandidate','Can change Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(389,95,'delete_rejectedcandidate','Can delete Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(390,95,'view_rejectedcandidate','Can view Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(391,96,'add_recruitmentsurveyanswer','Can add recruitment survey answer');
+INSERT INTO "auth_permission" VALUES(392,96,'change_recruitmentsurveyanswer','Can change recruitment survey answer');
+INSERT INTO "auth_permission" VALUES(393,96,'delete_recruitmentsurveyanswer','Can delete recruitment survey answer');
+INSERT INTO "auth_permission" VALUES(394,96,'view_recruitmentsurveyanswer','Can view recruitment survey answer');
+INSERT INTO "auth_permission" VALUES(395,97,'add_recruitmentsurvey','Can add recruitment survey');
+INSERT INTO "auth_permission" VALUES(396,97,'change_recruitmentsurvey','Can change recruitment survey');
+INSERT INTO "auth_permission" VALUES(397,97,'delete_recruitmentsurvey','Can delete recruitment survey');
+INSERT INTO "auth_permission" VALUES(398,97,'view_recruitmentsurvey','Can view recruitment survey');
+INSERT INTO "auth_permission" VALUES(399,98,'add_recruitmentgeneralsetting','Can add recruitment general setting');
+INSERT INTO "auth_permission" VALUES(400,98,'change_recruitmentgeneralsetting','Can change recruitment general setting');
+INSERT INTO "auth_permission" VALUES(401,98,'delete_recruitmentgeneralsetting','Can delete recruitment general setting');
+INSERT INTO "auth_permission" VALUES(402,98,'view_recruitmentgeneralsetting','Can view recruitment general setting');
+INSERT INTO "auth_permission" VALUES(403,99,'add_recruitmentapprovaldelegation','Can add Approval Delegation');
+INSERT INTO "auth_permission" VALUES(404,99,'change_recruitmentapprovaldelegation','Can change Approval Delegation');
+INSERT INTO "auth_permission" VALUES(405,99,'delete_recruitmentapprovaldelegation','Can delete Approval Delegation');
+INSERT INTO "auth_permission" VALUES(406,99,'view_recruitmentapprovaldelegation','Can view Approval Delegation');
+INSERT INTO "auth_permission" VALUES(407,100,'add_recruitmentapproval','Can add Recruitment Approval');
+INSERT INTO "auth_permission" VALUES(408,100,'change_recruitmentapproval','Can change Recruitment Approval');
+INSERT INTO "auth_permission" VALUES(409,100,'delete_recruitmentapproval','Can delete Recruitment Approval');
+INSERT INTO "auth_permission" VALUES(410,100,'view_recruitmentapproval','Can view Recruitment Approval');
+INSERT INTO "auth_permission" VALUES(411,101,'add_questionordering','Can add question ordering');
+INSERT INTO "auth_permission" VALUES(412,101,'change_questionordering','Can change question ordering');
+INSERT INTO "auth_permission" VALUES(413,101,'delete_questionordering','Can delete question ordering');
+INSERT INTO "auth_permission" VALUES(414,101,'view_questionordering','Can view question ordering');
+INSERT INTO "auth_permission" VALUES(415,102,'add_parsedcvdata','Can add Parsed CV Data');
+INSERT INTO "auth_permission" VALUES(416,102,'change_parsedcvdata','Can change Parsed CV Data');
+INSERT INTO "auth_permission" VALUES(417,102,'delete_parsedcvdata','Can delete Parsed CV Data');
+INSERT INTO "auth_permission" VALUES(418,102,'view_parsedcvdata','Can view Parsed CV Data');
+INSERT INTO "auth_permission" VALUES(419,103,'add_offerletter','Can add Offer Letter');
+INSERT INTO "auth_permission" VALUES(420,103,'change_offerletter','Can change Offer Letter');
+INSERT INTO "auth_permission" VALUES(421,103,'delete_offerletter','Can delete Offer Letter');
+INSERT INTO "auth_permission" VALUES(422,103,'view_offerletter','Can view Offer Letter');
+INSERT INTO "auth_permission" VALUES(423,104,'add_offerapproval','Can add Offer Approval');
+INSERT INTO "auth_permission" VALUES(424,104,'change_offerapproval','Can change Offer Approval');
+INSERT INTO "auth_permission" VALUES(425,104,'delete_offerapproval','Can delete Offer Approval');
+INSERT INTO "auth_permission" VALUES(426,104,'view_offerapproval','Can view Offer Approval');
+INSERT INTO "auth_permission" VALUES(427,105,'add_manpowerrequeststatuslog','Can add Status Log');
+INSERT INTO "auth_permission" VALUES(428,105,'change_manpowerrequeststatuslog','Can change Status Log');
+INSERT INTO "auth_permission" VALUES(429,105,'delete_manpowerrequeststatuslog','Can delete Status Log');
+INSERT INTO "auth_permission" VALUES(430,105,'view_manpowerrequeststatuslog','Can view Status Log');
+INSERT INTO "auth_permission" VALUES(431,106,'add_manpowerapproval','Can add Manpower Approval');
+INSERT INTO "auth_permission" VALUES(432,106,'change_manpowerapproval','Can change Manpower Approval');
+INSERT INTO "auth_permission" VALUES(433,106,'delete_manpowerapproval','Can delete Manpower Approval');
+INSERT INTO "auth_permission" VALUES(434,106,'view_manpowerapproval','Can view Manpower Approval');
+INSERT INTO "auth_permission" VALUES(435,107,'add_jobapplication','Can add job application');
+INSERT INTO "auth_permission" VALUES(436,107,'change_jobapplication','Can change job application');
+INSERT INTO "auth_permission" VALUES(437,107,'delete_jobapplication','Can delete job application');
+INSERT INTO "auth_permission" VALUES(438,107,'view_jobapplication','Can view job application');
+INSERT INTO "auth_permission" VALUES(439,108,'add_interviewschedule','Can add Schedule Interview');
+INSERT INTO "auth_permission" VALUES(440,108,'change_interviewschedule','Can change Schedule Interview');
+INSERT INTO "auth_permission" VALUES(441,108,'delete_interviewschedule','Can delete Schedule Interview');
+INSERT INTO "auth_permission" VALUES(442,108,'view_interviewschedule','Can view Schedule Interview');
+INSERT INTO "auth_permission" VALUES(443,109,'add_interviewevaluation','Can add Interview Evaluation');
+INSERT INTO "auth_permission" VALUES(444,109,'change_interviewevaluation','Can change Interview Evaluation');
+INSERT INTO "auth_permission" VALUES(445,109,'delete_interviewevaluation','Can delete Interview Evaluation');
+INSERT INTO "auth_permission" VALUES(446,109,'view_interviewevaluation','Can view Interview Evaluation');
+INSERT INTO "auth_permission" VALUES(447,110,'add_historicalrejectedcandidate','Can add historical Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(448,110,'change_historicalrejectedcandidate','Can change historical Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(449,110,'delete_historicalrejectedcandidate','Can delete historical Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(450,110,'view_historicalrejectedcandidate','Can view historical Rejected Candidate');
+INSERT INTO "auth_permission" VALUES(451,111,'add_historicalcandidate','Can add historical Candidate');
+INSERT INTO "auth_permission" VALUES(452,111,'change_historicalcandidate','Can change historical Candidate');
+INSERT INTO "auth_permission" VALUES(453,111,'delete_historicalcandidate','Can delete historical Candidate');
+INSERT INTO "auth_permission" VALUES(454,111,'view_historicalcandidate','Can view historical Candidate');
+INSERT INTO "auth_permission" VALUES(455,112,'add_cvscreeninglog','Can add CV Screening Log');
+INSERT INTO "auth_permission" VALUES(456,112,'change_cvscreeninglog','Can change CV Screening Log');
+INSERT INTO "auth_permission" VALUES(457,112,'delete_cvscreeninglog','Can delete CV Screening Log');
+INSERT INTO "auth_permission" VALUES(458,112,'view_cvscreeninglog','Can view CV Screening Log');
+INSERT INTO "auth_permission" VALUES(459,113,'add_cvparsingsettings','Can add CV Parsing Settings');
+INSERT INTO "auth_permission" VALUES(460,113,'change_cvparsingsettings','Can change CV Parsing Settings');
+INSERT INTO "auth_permission" VALUES(461,113,'delete_cvparsingsettings','Can delete CV Parsing Settings');
+INSERT INTO "auth_permission" VALUES(462,113,'view_cvparsingsettings','Can view CV Parsing Settings');
+INSERT INTO "auth_permission" VALUES(463,114,'add_candidatescreeningprofile','Can add candidate screening profile');
+INSERT INTO "auth_permission" VALUES(464,114,'change_candidatescreeningprofile','Can change candidate screening profile');
+INSERT INTO "auth_permission" VALUES(465,114,'delete_candidatescreeningprofile','Can delete candidate screening profile');
+INSERT INTO "auth_permission" VALUES(466,114,'view_candidatescreeningprofile','Can view candidate screening profile');
+INSERT INTO "auth_permission" VALUES(467,115,'add_candidatedocumentrequest','Can add candidate document request');
+INSERT INTO "auth_permission" VALUES(468,115,'change_candidatedocumentrequest','Can change candidate document request');
+INSERT INTO "auth_permission" VALUES(469,115,'delete_candidatedocumentrequest','Can delete candidate document request');
+INSERT INTO "auth_permission" VALUES(470,115,'view_candidatedocumentrequest','Can view candidate document request');
+INSERT INTO "auth_permission" VALUES(471,116,'add_candidatedocument','Can add candidate document');
+INSERT INTO "auth_permission" VALUES(472,116,'change_candidatedocument','Can change candidate document');
+INSERT INTO "auth_permission" VALUES(473,116,'delete_candidatedocument','Can delete candidate document');
+INSERT INTO "auth_permission" VALUES(474,116,'view_candidatedocument','Can view candidate document');
+INSERT INTO "auth_permission" VALUES(475,117,'add_evaluationscore','Can add evaluation score');
+INSERT INTO "auth_permission" VALUES(476,117,'change_evaluationscore','Can change evaluation score');
+INSERT INTO "auth_permission" VALUES(477,117,'delete_evaluationscore','Can delete evaluation score');
+INSERT INTO "auth_permission" VALUES(478,117,'view_evaluationscore','Can view evaluation score');
+INSERT INTO "auth_permission" VALUES(479,118,'add_candidateskillmatch','Can add Candidate Skill Match');
+INSERT INTO "auth_permission" VALUES(480,118,'change_candidateskillmatch','Can change Candidate Skill Match');
+INSERT INTO "auth_permission" VALUES(481,118,'delete_candidateskillmatch','Can delete Candidate Skill Match');
+INSERT INTO "auth_permission" VALUES(482,118,'view_candidateskillmatch','Can view Candidate Skill Match');
+INSERT INTO "auth_permission" VALUES(483,119,'add_candidaterating','Can add candidate rating');
+INSERT INTO "auth_permission" VALUES(484,119,'change_candidaterating','Can change candidate rating');
+INSERT INTO "auth_permission" VALUES(485,119,'delete_candidaterating','Can delete candidate rating');
+INSERT INTO "auth_permission" VALUES(486,119,'view_candidaterating','Can view candidate rating');
+INSERT INTO "auth_permission" VALUES(487,120,'add_candidaterankingscore','Can add Candidate Ranking Score');
+INSERT INTO "auth_permission" VALUES(488,120,'change_candidaterankingscore','Can change Candidate Ranking Score');
+INSERT INTO "auth_permission" VALUES(489,120,'delete_candidaterankingscore','Can delete Candidate Ranking Score');
+INSERT INTO "auth_permission" VALUES(490,120,'view_candidaterankingscore','Can view Candidate Ranking Score');
+INSERT INTO "auth_permission" VALUES(491,121,'add_offerletterapproval','Can add Offer Letter Approval');
+INSERT INTO "auth_permission" VALUES(492,121,'change_offerletterapproval','Can change Offer Letter Approval');
+INSERT INTO "auth_permission" VALUES(493,121,'delete_offerletterapproval','Can delete Offer Letter Approval');
+INSERT INTO "auth_permission" VALUES(494,121,'view_offerletterapproval','Can view Offer Letter Approval');
+INSERT INTO "auth_permission" VALUES(495,122,'add_interviewround','Can add Interview Round');
+INSERT INTO "auth_permission" VALUES(496,122,'change_interviewround','Can change Interview Round');
+INSERT INTO "auth_permission" VALUES(497,122,'delete_interviewround','Can delete Interview Round');
+INSERT INTO "auth_permission" VALUES(498,122,'view_interviewround','Can view Interview Round');
+INSERT INTO "auth_permission" VALUES(499,123,'add_medicallettertemplate','Can add Medical Letter Template');
+INSERT INTO "auth_permission" VALUES(500,123,'change_medicallettertemplate','Can change Medical Letter Template');
+INSERT INTO "auth_permission" VALUES(501,123,'delete_medicallettertemplate','Can delete Medical Letter Template');
+INSERT INTO "auth_permission" VALUES(502,123,'view_medicallettertemplate','Can view Medical Letter Template');
+INSERT INTO "auth_permission" VALUES(503,124,'add_visalettertemplate','Can add Visa Letter Template');
+INSERT INTO "auth_permission" VALUES(504,124,'change_visalettertemplate','Can change Visa Letter Template');
+INSERT INTO "auth_permission" VALUES(505,124,'delete_visalettertemplate','Can delete Visa Letter Template');
+INSERT INTO "auth_permission" VALUES(506,124,'view_visalettertemplate','Can view Visa Letter Template');
+INSERT INTO "auth_permission" VALUES(507,125,'add_visaletter','Can add Visa Letter');
+INSERT INTO "auth_permission" VALUES(508,125,'change_visaletter','Can change Visa Letter');
+INSERT INTO "auth_permission" VALUES(509,125,'delete_visaletter','Can delete Visa Letter');
+INSERT INTO "auth_permission" VALUES(510,125,'view_visaletter','Can view Visa Letter');
+INSERT INTO "auth_permission" VALUES(511,126,'add_medicalletter','Can add Medical Letter');
+INSERT INTO "auth_permission" VALUES(512,126,'change_medicalletter','Can change Medical Letter');
+INSERT INTO "auth_permission" VALUES(513,126,'delete_medicalletter','Can delete Medical Letter');
+INSERT INTO "auth_permission" VALUES(514,126,'view_medicalletter','Can view Medical Letter');
+INSERT INTO "auth_permission" VALUES(515,127,'add_offerletterstatuslog','Can add Offer Letter Status Log');
+INSERT INTO "auth_permission" VALUES(516,127,'change_offerletterstatuslog','Can change Offer Letter Status Log');
+INSERT INTO "auth_permission" VALUES(517,127,'delete_offerletterstatuslog','Can delete Offer Letter Status Log');
+INSERT INTO "auth_permission" VALUES(518,127,'view_offerletterstatuslog','Can view Offer Letter Status Log');
+INSERT INTO "auth_permission" VALUES(519,128,'add_medicalletterstatuslog','Can add Medical Letter Status Log');
+INSERT INTO "auth_permission" VALUES(520,128,'change_medicalletterstatuslog','Can change Medical Letter Status Log');
+INSERT INTO "auth_permission" VALUES(521,128,'delete_medicalletterstatuslog','Can delete Medical Letter Status Log');
+INSERT INTO "auth_permission" VALUES(522,128,'view_medicalletterstatuslog','Can view Medical Letter Status Log');
+INSERT INTO "auth_permission" VALUES(523,129,'add_visaletterstatuslog','Can add Visa Letter Status Log');
+INSERT INTO "auth_permission" VALUES(524,129,'change_visaletterstatuslog','Can change Visa Letter Status Log');
+INSERT INTO "auth_permission" VALUES(525,129,'delete_visaletterstatuslog','Can delete Visa Letter Status Log');
+INSERT INTO "auth_permission" VALUES(526,129,'view_visaletterstatuslog','Can view Visa Letter Status Log');
+INSERT INTO "auth_permission" VALUES(527,130,'add_employmentproposal','Can add Employment Proposal');
+INSERT INTO "auth_permission" VALUES(528,130,'change_employmentproposal','Can change Employment Proposal');
+INSERT INTO "auth_permission" VALUES(529,130,'delete_employmentproposal','Can delete Employment Proposal');
+INSERT INTO "auth_permission" VALUES(530,130,'view_employmentproposal','Can view Employment Proposal');
+INSERT INTO "auth_permission" VALUES(531,131,'add_proposalstatuslog','Can add proposal status log');
+INSERT INTO "auth_permission" VALUES(532,131,'change_proposalstatuslog','Can change proposal status log');
+INSERT INTO "auth_permission" VALUES(533,131,'delete_proposalstatuslog','Can delete proposal status log');
+INSERT INTO "auth_permission" VALUES(534,131,'view_proposalstatuslog','Can view proposal status log');
+INSERT INTO "auth_permission" VALUES(535,132,'add_proposalroleassignment','Can add Proposal Role Assignment');
+INSERT INTO "auth_permission" VALUES(536,132,'change_proposalroleassignment','Can change Proposal Role Assignment');
+INSERT INTO "auth_permission" VALUES(537,132,'delete_proposalroleassignment','Can delete Proposal Role Assignment');
+INSERT INTO "auth_permission" VALUES(538,132,'view_proposalroleassignment','Can view Proposal Role Assignment');
+INSERT INTO "auth_permission" VALUES(539,133,'add_proposalapproval','Can add Proposal Approval');
+INSERT INTO "auth_permission" VALUES(540,133,'change_proposalapproval','Can change Proposal Approval');
+INSERT INTO "auth_permission" VALUES(541,133,'delete_proposalapproval','Can delete Proposal Approval');
+INSERT INTO "auth_permission" VALUES(542,133,'view_proposalapproval','Can view Proposal Approval');
+INSERT INTO "auth_permission" VALUES(543,134,'add_candidateportalupload','Can add Candidate Portal Upload');
+INSERT INTO "auth_permission" VALUES(544,134,'change_candidateportalupload','Can change Candidate Portal Upload');
+INSERT INTO "auth_permission" VALUES(545,134,'delete_candidateportalupload','Can delete Candidate Portal Upload');
+INSERT INTO "auth_permission" VALUES(546,134,'view_candidateportalupload','Can view Candidate Portal Upload');
+INSERT INTO "auth_permission" VALUES(547,135,'add_logentry','Can add log entry');
+INSERT INTO "auth_permission" VALUES(548,135,'change_logentry','Can change log entry');
+INSERT INTO "auth_permission" VALUES(549,135,'delete_logentry','Can delete log entry');
+INSERT INTO "auth_permission" VALUES(550,135,'view_logentry','Can view log entry');
+INSERT INTO "auth_permission" VALUES(551,136,'add_attendancegeneralsetting','Can add attendance general setting');
+INSERT INTO "auth_permission" VALUES(552,136,'change_attendancegeneralsetting','Can change attendance general setting');
+INSERT INTO "auth_permission" VALUES(553,136,'delete_attendancegeneralsetting','Can delete attendance general setting');
+INSERT INTO "auth_permission" VALUES(554,136,'view_attendancegeneralsetting','Can view attendance general setting');
+INSERT INTO "auth_permission" VALUES(555,137,'add_docusignaccount','Can add DocuSign Account');
+INSERT INTO "auth_permission" VALUES(556,137,'change_docusignaccount','Can change DocuSign Account');
+INSERT INTO "auth_permission" VALUES(557,137,'delete_docusignaccount','Can delete DocuSign Account');
+INSERT INTO "auth_permission" VALUES(558,137,'view_docusignaccount','Can view DocuSign Account');
+INSERT INTO "auth_permission" VALUES(559,138,'add_adobesignaccount','Can add Adobe Sign Account');
+INSERT INTO "auth_permission" VALUES(560,138,'change_adobesignaccount','Can change Adobe Sign Account');
+INSERT INTO "auth_permission" VALUES(561,138,'delete_adobesignaccount','Can delete Adobe Sign Account');
+INSERT INTO "auth_permission" VALUES(562,138,'view_adobesignaccount','Can view Adobe Sign Account');
+INSERT INTO "auth_permission" VALUES(563,139,'add_onboardingdocument','Can add Onboarding Document');
+INSERT INTO "auth_permission" VALUES(564,139,'change_onboardingdocument','Can change Onboarding Document');
+INSERT INTO "auth_permission" VALUES(565,139,'delete_onboardingdocument','Can delete Onboarding Document');
+INSERT INTO "auth_permission" VALUES(566,139,'view_onboardingdocument','Can view Onboarding Document');
+INSERT INTO "auth_permission" VALUES(567,140,'add_bulkrequestline','Can add Bulk Request Line');
+INSERT INTO "auth_permission" VALUES(568,140,'change_bulkrequestline','Can change Bulk Request Line');
+INSERT INTO "auth_permission" VALUES(569,140,'delete_bulkrequestline','Can delete Bulk Request Line');
+INSERT INTO "auth_permission" VALUES(570,140,'view_bulkrequestline','Can view Bulk Request Line');
 CREATE TABLE "auth_user" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "password" varchar(128) NOT NULL, "last_login" datetime NULL, "is_superuser" bool NOT NULL, "username" varchar(150) NOT NULL UNIQUE, "first_name" varchar(150) NOT NULL, "last_name" varchar(150) NOT NULL, "email" varchar(254) NOT NULL, "is_staff" bool NOT NULL, "is_active" bool NOT NULL, "date_joined" datetime NOT NULL, "is_new_employee" bool NOT NULL);
-INSERT INTO "auth_user" VALUES(1,'pbkdf2_sha256$600000$R1gs7nDOELfTxRlmpZTjIB$yhi4GKafDn43ygL660O6XvNlXW4WqdBBSkZTxwWo+PU=',NULL,1,'hr@fits.com','HR','Manager','hr@fits.com',1,1,'2026-10-03 20:19:42.344631',0);
-INSERT INTO "auth_user" VALUES(2,'pbkdf2_sha256$600000$VPNXl54Tfa1TYpklD9Mzag$X5Db6A591PefFDn/o+d/bDWJH8Q2PINOHOIEH26WSOQ=','2026-10-03 21:24:05.811364',1,'admin','','','admin@example.com',1,1,'2026-10-03 20:23:24.813294',0);
+INSERT INTO "auth_user" VALUES(1,'pbkdf2_sha256$600000$IEcVshYgpkHVe0jQT30DWz$fM15h24zfdTWZeXq7Q2cJ258Ye4/NfTH01PLb4Onu+g=','2026-05-29 12:05:38.047165',1,'hr@fits.com','HR','Manager','hr@fits.com',1,1,'2026-05-29 10:18:08.437981',0);
+INSERT INTO "auth_user" VALUES(2,'pbkdf2_sha256$600000$uggtVu3v4q0B3r06HhtlQ6$6ENtdvh7esnDlVZiw+kUqhxGwoCpm6yZlXEpTb72UgQ=',NULL,1,'karthikeya','','','karthikeya@fits.one',1,1,'2026-05-29 10:18:28.581530',0);
 CREATE TABLE "auth_user_groups" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "user_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "group_id" integer NOT NULL REFERENCES "auth_group" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "auth_user_user_permissions" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "user_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "permission_id" integer NOT NULL REFERENCES "auth_permission" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_adobesignaccount" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "api_access_point" varchar(255) NOT NULL, "email_address" varchar(254) NOT NULL, "display_name" varchar(255) NOT NULL, "access_token" text NOT NULL, "refresh_token" text NOT NULL, "token_expires_at" datetime NULL, "scope" text NOT NULL, "is_active" bool NOT NULL, "last_used_at" datetime NULL, "last_error" text NOT NULL, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL, "user_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -1386,7 +614,6 @@ CREATE TABLE "base_attachment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 CREATE TABLE "base_attendanceallowedip" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_enabled" bool NOT NULL, "additional_data" text NULL CHECK ((JSON_VALID("additional_data") OR "additional_data" IS NULL)));
 CREATE TABLE "base_baserequestfile" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "file" varchar(100) NOT NULL);
 CREATE TABLE "base_biometricattendance" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_installed" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-INSERT INTO "base_biometricattendance" VALUES(1,0,NULL);
 CREATE TABLE "base_company" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "company" varchar(50) NOT NULL, "hq" bool NOT NULL, "address" text NOT NULL, "country" varchar(50) NOT NULL, "state" varchar(50) NOT NULL, "city" varchar(50) NOT NULL, "zip" varchar(20) NOT NULL, "icon" varchar(100) NULL, "date_format" varchar(30) NULL, "time_format" varchar(20) NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_companyleaves" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "based_on_week" varchar(100) NULL, "based_on_week_day" varchar(100) NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_dashboardemployeecharts" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "charts" text NULL CHECK ((JSON_VALID("charts") OR "charts" IS NULL)), "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -1397,7 +624,7 @@ CREATE TABLE "base_driverviewed" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMEN
 CREATE TABLE "base_dynamicemailconfiguration" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "host" varchar(256) NULL, "port" smallint NULL, "from_email" varchar(256) NULL, "username" varchar(256) NULL, "display_name" varchar(256) NULL, "password" varchar(256) NULL, "use_tls" bool NOT NULL, "use_ssl" bool NOT NULL, "fail_silently" bool NOT NULL, "is_primary" bool NOT NULL, "use_dynamic_display_name" bool NOT NULL, "timeout" smallint NULL, "company_id_id" bigint NULL UNIQUE REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_dynamicpagination" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "pagination" integer NOT NULL, "user_id_id" integer NULL UNIQUE REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_emaillog" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "subject" varchar(255) NOT NULL, "body" text NOT NULL, "from_email" varchar(254) NOT NULL, "to" varchar(254) NOT NULL, "status" varchar(6) NOT NULL, "created_at" datetime NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "base_employeeshift" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "employee_shift" varchar(50) NOT NULL, "weekly_full_time" varchar(6) NULL, "full_time" varchar(6) NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "grace_time_id_id" bigint NULL REFERENCES "attendance_gracetime" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "base_employeeshift" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "employee_shift" varchar(50) NOT NULL, "weekly_full_time" varchar(6) NULL, "full_time" varchar(6) NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "grace_time_id_id" integer NULL REFERENCES "attendance_gracetime" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_employeeshift_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "employeeshift_id" bigint NOT NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_employeeshiftday" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "day" varchar(20) NOT NULL);
 INSERT INTO "base_employeeshiftday" VALUES(1,'monday');
@@ -1423,7 +650,7 @@ CREATE TABLE "base_historicalworktyperequest" ("id" bigint NOT NULL, "created_at
 CREATE TABLE "base_historicalworktyperequest_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalworktyperequest_id" integer NOT NULL REFERENCES "base_historicalworktyperequest" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_holidays" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(30) NOT NULL, "start_date" date NOT NULL, "end_date" date NULL, "recurring" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_hruser" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_hr_staff" bool NOT NULL, "can_view_all_companies" bool NOT NULL, "can_manage_employees" bool NOT NULL, "can_manage_leaves" bool NOT NULL, "can_manage_attendance" bool NOT NULL, "can_manage_payroll" bool NOT NULL, "can_manage_recruitment" bool NOT NULL, "can_manage_assets" bool NOT NULL, "can_manage_biometric" bool NOT NULL, "can_manage_pms" bool NOT NULL, "can_manage_reports" bool NOT NULL, "can_manage_onboarding" bool NOT NULL, "can_manage_offboarding" bool NOT NULL, "can_manage_projects" bool NOT NULL, "can_manage_omani_compliance" bool NOT NULL, "can_manage_expenses" bool NOT NULL, "can_manage_learning" bool NOT NULL, "can_manage_fits_audit" bool NOT NULL, "can_manage_helpdesk" bool NOT NULL, "can_manage_talent" bool NOT NULL, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL, "employee_id" bigint NOT NULL UNIQUE REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-INSERT INTO "base_hruser" VALUES(1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,'2026-10-03 20:19:42.358318','2026-10-03 20:19:42.358332',1);
+INSERT INTO "base_hruser" VALUES(1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,'2026-05-29 10:18:08.444174','2026-05-29 10:18:08.444180',1);
 CREATE TABLE "base_jobposition" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "job_position" varchar(50) NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_jobposition_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "jobposition_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_jobrole" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "job_role" varchar(50) NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -1432,7 +659,7 @@ CREATE TABLE "base_mailboxintegration" ("id" integer NOT NULL PRIMARY KEY AUTOIN
 CREATE TABLE "base_multipleapprovalcondition" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "condition_field" varchar(255) NOT NULL, "condition_operator" varchar(255) NULL, "condition_value" varchar(100) NULL, "condition_start_value" varchar(100) NULL, "condition_end_value" varchar(100) NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_multipleapprovalmanagers" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sequence" integer NOT NULL, "employee_id" integer NULL, "reporting_manager" varchar(100) NULL, "condition_id_id" bigint NOT NULL REFERENCES "base_multipleapprovalcondition" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_notificationsound" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sound_enabled" bool NOT NULL, "employee_id" bigint NOT NULL UNIQUE REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "base_penaltyaccounts" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "minus_leaves" real NULL, "deduct_from_carry_forward" bool NOT NULL, "penalty_amount" real NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "late_early_id_id" bigint NULL REFERENCES "attendance_attendancelatecomeearlyout" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_request_id_id" bigint NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "base_penaltyaccounts" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "minus_leaves" real NULL, "deduct_from_carry_forward" bool NOT NULL, "penalty_amount" real NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "late_early_id_id" integer NULL REFERENCES "attendance_attendancelatecomeearlyout" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_request_id_id" integer NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" integer NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_rotatingshift" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(50) NOT NULL, "additional_data" text NULL CHECK ((JSON_VALID("additional_data") OR "additional_data" IS NULL)), "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "shift1_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED, "shift2_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_rotatingshiftassign" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "start_date" date NOT NULL, "next_change_date" date NULL, "based_on" varchar(10) NOT NULL, "rotate_after_day" integer NULL, "rotate_every_weekend" varchar(10) NULL, "rotate_every" varchar(10) NULL, "additional_data" text NULL CHECK ((JSON_VALID("additional_data") OR "additional_data" IS NULL)), "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "current_shift_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "next_shift_id" bigint NULL REFERENCES "base_employeeshift" ("id") DEFERRABLE INITIALLY DEFERRED, "rotating_shift_id_id" bigint NOT NULL REFERENCES "base_rotatingshift" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "base_rotatingworktype" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(50) NOT NULL, "additional_data" text NULL CHECK ((JSON_VALID("additional_data") OR "additional_data" IS NULL)), "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "work_type1_id" bigint NOT NULL REFERENCES "base_worktype" ("id") DEFERRABLE INITIALLY DEFERRED, "work_type2_id" bigint NOT NULL REFERENCES "base_worktype" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -1454,449 +681,260 @@ CREATE TABLE "django_admin_log" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT
 CREATE TABLE "django_apscheduler_djangojob" ("id" varchar(255) NOT NULL PRIMARY KEY, "next_run_time" datetime NULL, "job_state" BLOB NOT NULL);
 CREATE TABLE "django_apscheduler_djangojobexecution" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "status" varchar(50) NOT NULL, "run_time" datetime NOT NULL, "duration" decimal NULL, "finished" decimal NULL, "exception" varchar(1000) NULL, "traceback" text NULL, "job_id" varchar(255) NOT NULL REFERENCES "django_apscheduler_djangojob" ("id") DEFERRABLE INITIALLY DEFERRED, CONSTRAINT "unique_job_executions" UNIQUE ("job_id", "run_time"));
 CREATE TABLE "django_content_type" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "app_label" varchar(100) NOT NULL, "model" varchar(100) NOT NULL);
-INSERT INTO "django_content_type" VALUES(1,'leave','employeepastleaverestrict');
-INSERT INTO "django_content_type" VALUES(2,'contenttypes','contenttype');
-INSERT INTO "django_content_type" VALUES(3,'base','biometricattendance');
+INSERT INTO "django_content_type" VALUES(1,'admin','logentry');
+INSERT INTO "django_content_type" VALUES(2,'auth','permission');
+INSERT INTO "django_content_type" VALUES(3,'auth','group');
 INSERT INTO "django_content_type" VALUES(4,'auth','user');
-INSERT INTO "django_content_type" VALUES(5,'payroll','payrollsettings');
-INSERT INTO "django_content_type" VALUES(6,'admin','logentry');
-INSERT INTO "django_content_type" VALUES(7,'auth','permission');
-INSERT INTO "django_content_type" VALUES(8,'auth','group');
-INSERT INTO "django_content_type" VALUES(9,'sessions','session');
-INSERT INTO "django_content_type" VALUES(10,'notifications','notification');
-INSERT INTO "django_content_type" VALUES(11,'fits_audit','audittag');
-INSERT INTO "django_content_type" VALUES(12,'fits_audit','historytrackingfields');
-INSERT INTO "django_content_type" VALUES(13,'fits_audit','accountblockunblock');
-INSERT INTO "django_content_type" VALUES(14,'base','announcement');
-INSERT INTO "django_content_type" VALUES(15,'base','announcementcomment');
-INSERT INTO "django_content_type" VALUES(16,'base','announcementexpire');
-INSERT INTO "django_content_type" VALUES(17,'base','announcementview');
-INSERT INTO "django_content_type" VALUES(18,'base','attachment');
-INSERT INTO "django_content_type" VALUES(19,'base','attendanceallowedip');
-INSERT INTO "django_content_type" VALUES(20,'base','baserequestfile');
-INSERT INTO "django_content_type" VALUES(21,'base','company');
-INSERT INTO "django_content_type" VALUES(22,'base','companyleaves');
-INSERT INTO "django_content_type" VALUES(23,'base','dashboardemployeecharts');
-INSERT INTO "django_content_type" VALUES(24,'base','department');
-INSERT INTO "django_content_type" VALUES(25,'base','driverviewed');
-INSERT INTO "django_content_type" VALUES(26,'base','dynamicemailconfiguration');
-INSERT INTO "django_content_type" VALUES(27,'base','dynamicpagination');
-INSERT INTO "django_content_type" VALUES(28,'base','emaillog');
-INSERT INTO "django_content_type" VALUES(29,'base','employeeshift');
-INSERT INTO "django_content_type" VALUES(30,'base','employeeshiftday');
-INSERT INTO "django_content_type" VALUES(31,'base','employeeshiftschedule');
-INSERT INTO "django_content_type" VALUES(32,'base','employeetype');
-INSERT INTO "django_content_type" VALUES(33,'base','fitsmailtemplate');
-INSERT INTO "django_content_type" VALUES(34,'base','historicalrotatingshiftassign');
-INSERT INTO "django_content_type" VALUES(35,'base','historicalrotatingworktypeassign');
-INSERT INTO "django_content_type" VALUES(36,'base','historicalshiftrequest');
-INSERT INTO "django_content_type" VALUES(37,'base','historicalworktyperequest');
-INSERT INTO "django_content_type" VALUES(38,'base','holidays');
-INSERT INTO "django_content_type" VALUES(39,'base','hruser');
-INSERT INTO "django_content_type" VALUES(40,'base','jobposition');
-INSERT INTO "django_content_type" VALUES(41,'base','jobrole');
-INSERT INTO "django_content_type" VALUES(42,'base','multipleapprovalcondition');
-INSERT INTO "django_content_type" VALUES(43,'base','multipleapprovalmanagers');
-INSERT INTO "django_content_type" VALUES(44,'base','notificationsound');
-INSERT INTO "django_content_type" VALUES(45,'base','penaltyaccounts');
-INSERT INTO "django_content_type" VALUES(46,'base','rotatingshift');
-INSERT INTO "django_content_type" VALUES(47,'base','rotatingshiftassign');
-INSERT INTO "django_content_type" VALUES(48,'base','rotatingworktype');
-INSERT INTO "django_content_type" VALUES(49,'base','rotatingworktypeassign');
-INSERT INTO "django_content_type" VALUES(50,'base','shiftrequest');
-INSERT INTO "django_content_type" VALUES(51,'base','shiftrequestcomment');
-INSERT INTO "django_content_type" VALUES(52,'base','tags');
-INSERT INTO "django_content_type" VALUES(53,'base','tracklatecomeearlyout');
-INSERT INTO "django_content_type" VALUES(54,'base','worktype');
-INSERT INTO "django_content_type" VALUES(55,'base','worktyperequest');
-INSERT INTO "django_content_type" VALUES(56,'base','worktyperequestcomment');
-INSERT INTO "django_content_type" VALUES(57,'base','mailboxintegration');
-INSERT INTO "django_content_type" VALUES(58,'base','docusignaccount');
-INSERT INTO "django_content_type" VALUES(59,'base','adobesignaccount');
-INSERT INTO "django_content_type" VALUES(60,'employee','actiontype');
-INSERT INTO "django_content_type" VALUES(61,'employee','bonuspoint');
-INSERT INTO "django_content_type" VALUES(62,'employee','employee');
-INSERT INTO "django_content_type" VALUES(63,'employee','employeetag');
-INSERT INTO "django_content_type" VALUES(64,'employee','employeeworkinformation');
-INSERT INTO "django_content_type" VALUES(65,'employee','profileeditfeature');
-INSERT INTO "django_content_type" VALUES(66,'employee','policymultiplefile');
-INSERT INTO "django_content_type" VALUES(67,'employee','policy');
-INSERT INTO "django_content_type" VALUES(68,'employee','notefiles');
-INSERT INTO "django_content_type" VALUES(69,'employee','historicalemployeeworkinformation');
-INSERT INTO "django_content_type" VALUES(70,'employee','historicalbonuspoint');
-INSERT INTO "django_content_type" VALUES(71,'employee','employeesalaryhistory');
-INSERT INTO "django_content_type" VALUES(72,'employee','employeenote');
-INSERT INTO "django_content_type" VALUES(73,'employee','employeegeneralsetting');
-INSERT INTO "django_content_type" VALUES(74,'employee','employeebankdetails');
-INSERT INTO "django_content_type" VALUES(75,'employee','disciplinaryaction');
-INSERT INTO "django_content_type" VALUES(76,'recruitment','approvalrule');
-INSERT INTO "django_content_type" VALUES(77,'recruitment','approvalstep');
-INSERT INTO "django_content_type" VALUES(78,'recruitment','candidate');
-INSERT INTO "django_content_type" VALUES(79,'recruitment','evaluationcriteria');
-INSERT INTO "django_content_type" VALUES(80,'recruitment','jobemailtemplate');
-INSERT INTO "django_content_type" VALUES(81,'recruitment','linkedinaccount');
-INSERT INTO "django_content_type" VALUES(82,'recruitment','manpowerrequest');
-INSERT INTO "django_content_type" VALUES(83,'recruitment','offerlettertemplate');
-INSERT INTO "django_content_type" VALUES(84,'recruitment','recruitment');
-INSERT INTO "django_content_type" VALUES(85,'recruitment','skillzone');
-INSERT INTO "django_content_type" VALUES(86,'recruitment','stage');
-INSERT INTO "django_content_type" VALUES(87,'recruitment','stagefiles');
-INSERT INTO "django_content_type" VALUES(88,'recruitment','surveytemplate');
-INSERT INTO "django_content_type" VALUES(89,'recruitment','stagenote');
-INSERT INTO "django_content_type" VALUES(90,'recruitment','skillzonecandidate');
-INSERT INTO "django_content_type" VALUES(91,'recruitment','skill');
-INSERT INTO "django_content_type" VALUES(92,'recruitment','resume');
-INSERT INTO "django_content_type" VALUES(93,'recruitment','rejectreason');
-INSERT INTO "django_content_type" VALUES(94,'recruitment','rejectedcandidate');
-INSERT INTO "django_content_type" VALUES(95,'recruitment','recruitmentsurveyanswer');
-INSERT INTO "django_content_type" VALUES(96,'recruitment','recruitmentsurvey');
-INSERT INTO "django_content_type" VALUES(97,'recruitment','recruitmentgeneralsetting');
-INSERT INTO "django_content_type" VALUES(98,'recruitment','recruitmentapprovaldelegation');
-INSERT INTO "django_content_type" VALUES(99,'recruitment','recruitmentapproval');
-INSERT INTO "django_content_type" VALUES(100,'recruitment','questionordering');
-INSERT INTO "django_content_type" VALUES(101,'recruitment','parsedcvdata');
-INSERT INTO "django_content_type" VALUES(102,'recruitment','offerletter');
-INSERT INTO "django_content_type" VALUES(103,'recruitment','offerapproval');
-INSERT INTO "django_content_type" VALUES(104,'recruitment','manpowerrequeststatuslog');
-INSERT INTO "django_content_type" VALUES(105,'recruitment','manpowerapproval');
-INSERT INTO "django_content_type" VALUES(106,'recruitment','jobapplication');
-INSERT INTO "django_content_type" VALUES(107,'recruitment','interviewschedule');
-INSERT INTO "django_content_type" VALUES(108,'recruitment','interviewevaluation');
-INSERT INTO "django_content_type" VALUES(109,'recruitment','historicalrejectedcandidate');
-INSERT INTO "django_content_type" VALUES(110,'recruitment','historicalcandidate');
-INSERT INTO "django_content_type" VALUES(111,'recruitment','cvscreeninglog');
-INSERT INTO "django_content_type" VALUES(112,'recruitment','cvparsingsettings');
-INSERT INTO "django_content_type" VALUES(113,'recruitment','candidatescreeningprofile');
-INSERT INTO "django_content_type" VALUES(114,'recruitment','candidatedocumentrequest');
-INSERT INTO "django_content_type" VALUES(115,'recruitment','candidatedocument');
-INSERT INTO "django_content_type" VALUES(116,'recruitment','evaluationscore');
-INSERT INTO "django_content_type" VALUES(117,'recruitment','candidateskillmatch');
-INSERT INTO "django_content_type" VALUES(118,'recruitment','candidaterating');
-INSERT INTO "django_content_type" VALUES(119,'recruitment','candidaterankingscore');
-INSERT INTO "django_content_type" VALUES(120,'recruitment','offerletterapproval');
-INSERT INTO "django_content_type" VALUES(121,'recruitment','interviewround');
-INSERT INTO "django_content_type" VALUES(122,'recruitment','medicallettertemplate');
-INSERT INTO "django_content_type" VALUES(123,'recruitment','visalettertemplate');
-INSERT INTO "django_content_type" VALUES(124,'recruitment','visaletter');
-INSERT INTO "django_content_type" VALUES(125,'recruitment','medicalletter');
-INSERT INTO "django_content_type" VALUES(126,'recruitment','offerletterstatuslog');
-INSERT INTO "django_content_type" VALUES(127,'recruitment','medicalletterstatuslog');
-INSERT INTO "django_content_type" VALUES(128,'recruitment','visaletterstatuslog');
-INSERT INTO "django_content_type" VALUES(129,'recruitment','employmentproposal');
-INSERT INTO "django_content_type" VALUES(130,'recruitment','proposalstatuslog');
-INSERT INTO "django_content_type" VALUES(131,'recruitment','proposalroleassignment');
-INSERT INTO "django_content_type" VALUES(132,'recruitment','proposalapproval');
-INSERT INTO "django_content_type" VALUES(133,'recruitment','candidateportalupload');
-INSERT INTO "django_content_type" VALUES(134,'recruitment','onboardingdocument');
-INSERT INTO "django_content_type" VALUES(135,'recruitment','bulkrequestline');
-INSERT INTO "django_content_type" VALUES(136,'leave','approvalrequest');
-INSERT INTO "django_content_type" VALUES(137,'leave','availableleave');
-INSERT INTO "django_content_type" VALUES(138,'leave','compensatoryleaverequest');
-INSERT INTO "django_content_type" VALUES(139,'leave','leaveallocationrequest');
-INSERT INTO "django_content_type" VALUES(140,'leave','leaverequest');
-INSERT INTO "django_content_type" VALUES(141,'leave','leaverequestfile');
-INSERT INTO "django_content_type" VALUES(142,'leave','leavetype');
-INSERT INTO "django_content_type" VALUES(143,'leave','overrideleaverequests');
-INSERT INTO "django_content_type" VALUES(144,'leave','restrictleave');
-INSERT INTO "django_content_type" VALUES(145,'leave','leaverequestconditionapproval');
-INSERT INTO "django_content_type" VALUES(146,'leave','leaverequestcomment');
-INSERT INTO "django_content_type" VALUES(147,'leave','leavegeneralsetting');
-INSERT INTO "django_content_type" VALUES(148,'leave','leaveallocationrequestcomment');
-INSERT INTO "django_content_type" VALUES(149,'leave','holiday');
-INSERT INTO "django_content_type" VALUES(150,'leave','historicalleaverequest');
-INSERT INTO "django_content_type" VALUES(151,'leave','historicalleaveallocationrequest');
-INSERT INTO "django_content_type" VALUES(152,'leave','historicalcompensatoryleaverequest');
-INSERT INTO "django_content_type" VALUES(153,'leave','historicalavailableleave');
-INSERT INTO "django_content_type" VALUES(154,'leave','compensatoryleaverequestcomment');
-INSERT INTO "django_content_type" VALUES(155,'leave','approvalslaalert');
-INSERT INTO "django_content_type" VALUES(156,'leave','approvaloverride');
-INSERT INTO "django_content_type" VALUES(157,'leave','approvaldelegation');
-INSERT INTO "django_content_type" VALUES(158,'leave','companyleave');
-INSERT INTO "django_content_type" VALUES(159,'leave','approvalpolicy');
-INSERT INTO "django_content_type" VALUES(160,'leave','approvalmetrics');
-INSERT INTO "django_content_type" VALUES(161,'pms','bonuspointsetting');
-INSERT INTO "django_content_type" VALUES(162,'pms','employeekeyresult');
-INSERT INTO "django_content_type" VALUES(163,'pms','employeeobjective');
-INSERT INTO "django_content_type" VALUES(164,'pms','feedback');
-INSERT INTO "django_content_type" VALUES(165,'pms','keyresult');
-INSERT INTO "django_content_type" VALUES(166,'pms','meetings');
-INSERT INTO "django_content_type" VALUES(167,'pms','performanceimprovementplan');
-INSERT INTO "django_content_type" VALUES(168,'pms','period');
-INSERT INTO "django_content_type" VALUES(169,'pms','question');
-INSERT INTO "django_content_type" VALUES(170,'pms','talentcalibration');
-INSERT INTO "django_content_type" VALUES(171,'pms','questiontemplate');
-INSERT INTO "django_content_type" VALUES(172,'pms','questionoptions');
-INSERT INTO "django_content_type" VALUES(173,'pms','piptemplate');
-INSERT INTO "django_content_type" VALUES(174,'pms','pipreview');
-INSERT INTO "django_content_type" VALUES(175,'pms','pipmilestone');
-INSERT INTO "django_content_type" VALUES(176,'pms','pipextension');
-INSERT INTO "django_content_type" VALUES(177,'pms','objective');
-INSERT INTO "django_content_type" VALUES(178,'pms','meetingsanswer');
-INSERT INTO "django_content_type" VALUES(179,'pms','keyresultfeedback');
-INSERT INTO "django_content_type" VALUES(180,'pms','historicaltalentcalibration');
-INSERT INTO "django_content_type" VALUES(181,'pms','historicalperformancerating');
-INSERT INTO "django_content_type" VALUES(182,'pms','historicalobjective');
-INSERT INTO "django_content_type" VALUES(183,'pms','historicalkeyresult');
-INSERT INTO "django_content_type" VALUES(184,'pms','historicalemployeeobjective');
-INSERT INTO "django_content_type" VALUES(185,'pms','historicalemployeekeyresult');
-INSERT INTO "django_content_type" VALUES(186,'pms','historicalcomment');
-INSERT INTO "django_content_type" VALUES(187,'pms','historicalcalibrationrating');
-INSERT INTO "django_content_type" VALUES(188,'pms','employeebonuspoint');
-INSERT INTO "django_content_type" VALUES(189,'pms','comment');
-INSERT INTO "django_content_type" VALUES(190,'pms','calibrationrating');
-INSERT INTO "django_content_type" VALUES(191,'pms','answer');
-INSERT INTO "django_content_type" VALUES(192,'pms','anonymousfeedback');
-INSERT INTO "django_content_type" VALUES(193,'pms','performancerating');
-INSERT INTO "django_content_type" VALUES(194,'onboarding','candidatetask');
-INSERT INTO "django_content_type" VALUES(195,'onboarding','onboardingstage');
-INSERT INTO "django_content_type" VALUES(196,'onboarding','onboardingcandidate');
-INSERT INTO "django_content_type" VALUES(197,'onboarding','onboardingtask');
-INSERT INTO "django_content_type" VALUES(198,'onboarding','onboardingportal');
-INSERT INTO "django_content_type" VALUES(199,'onboarding','historicalcandidatetask');
-INSERT INTO "django_content_type" VALUES(200,'onboarding','candidatestage');
-INSERT INTO "django_content_type" VALUES(201,'asset','asset');
-INSERT INTO "django_content_type" VALUES(202,'asset','assetcategory');
-INSERT INTO "django_content_type" VALUES(203,'asset','returnimages');
-INSERT INTO "django_content_type" VALUES(204,'asset','assetrequest');
-INSERT INTO "django_content_type" VALUES(205,'asset','assetreport');
-INSERT INTO "django_content_type" VALUES(206,'asset','assetlot');
-INSERT INTO "django_content_type" VALUES(207,'asset','assetdocuments');
-INSERT INTO "django_content_type" VALUES(208,'asset','assetassignment');
-INSERT INTO "django_content_type" VALUES(209,'attendance','attendance');
-INSERT INTO "django_content_type" VALUES(210,'attendance','attendanceactivity');
-INSERT INTO "django_content_type" VALUES(211,'attendance','attendancegeneralsetting');
-INSERT INTO "django_content_type" VALUES(212,'attendance','attendancelatecomeearlyout');
-INSERT INTO "django_content_type" VALUES(213,'attendance','attendanceovertime');
-INSERT INTO "django_content_type" VALUES(214,'attendance','attendancerequestcomment');
-INSERT INTO "django_content_type" VALUES(215,'attendance','attendancerequestfile');
-INSERT INTO "django_content_type" VALUES(216,'attendance','attendancevalidationcondition');
-INSERT INTO "django_content_type" VALUES(217,'attendance','batchattendance');
-INSERT INTO "django_content_type" VALUES(218,'attendance','gracetime');
-INSERT INTO "django_content_type" VALUES(219,'attendance','historicalattendance');
-INSERT INTO "django_content_type" VALUES(220,'attendance','workrecords');
-INSERT INTO "django_content_type" VALUES(221,'payroll','allowance');
-INSERT INTO "django_content_type" VALUES(222,'payroll','contract');
-INSERT INTO "django_content_type" VALUES(223,'payroll','deduction');
-INSERT INTO "django_content_type" VALUES(224,'payroll','encashmentgeneralsettings');
-INSERT INTO "django_content_type" VALUES(225,'payroll','filingstatus');
-INSERT INTO "django_content_type" VALUES(226,'payroll','glaccount');
-INSERT INTO "django_content_type" VALUES(227,'payroll','multiplecondition');
-INSERT INTO "django_content_type" VALUES(228,'payroll','overrideattendance');
-INSERT INTO "django_content_type" VALUES(229,'payroll','overrideleaverequest');
-INSERT INTO "django_content_type" VALUES(230,'payroll','reimbursement');
-INSERT INTO "django_content_type" VALUES(231,'payroll','reimbursementfile');
-INSERT INTO "django_content_type" VALUES(232,'payroll','reimbursementmultipleattachment');
-INSERT INTO "django_content_type" VALUES(233,'payroll','wpsperiodicfile');
-INSERT INTO "django_content_type" VALUES(234,'payroll','wpspaymentexception');
-INSERT INTO "django_content_type" VALUES(235,'payroll','wpsglobalsettings');
-INSERT INTO "django_content_type" VALUES(236,'payroll','wpsauditlog');
-INSERT INTO "django_content_type" VALUES(237,'payroll','workrecord');
-INSERT INTO "django_content_type" VALUES(238,'payroll','taxbracket');
-INSERT INTO "django_content_type" VALUES(239,'payroll','serviceaward');
-INSERT INTO "django_content_type" VALUES(240,'payroll','salaryrevision');
-INSERT INTO "django_content_type" VALUES(241,'payroll','reimbursementrequestcomment');
-INSERT INTO "django_content_type" VALUES(242,'payroll','payslipautogenerate');
-INSERT INTO "django_content_type" VALUES(243,'payroll','payslip');
-INSERT INTO "django_content_type" VALUES(244,'payroll','payrollgeneralsetting');
-INSERT INTO "django_content_type" VALUES(245,'payroll','loanaccount');
-INSERT INTO "django_content_type" VALUES(246,'payroll','leaveencashment');
-INSERT INTO "django_content_type" VALUES(247,'payroll','icbsconfig');
-INSERT INTO "django_content_type" VALUES(248,'payroll','historicalpayslip');
-INSERT INTO "django_content_type" VALUES(249,'payroll','historicalcontract');
-INSERT INTO "django_content_type" VALUES(250,'payroll','glmapping');
-INSERT INTO "django_content_type" VALUES(251,'payroll','eosbgratuitysettings');
-INSERT INTO "django_content_type" VALUES(252,'payroll','endofservicebenefit');
-INSERT INTO "django_content_type" VALUES(253,'learning','certification');
-INSERT INTO "django_content_type" VALUES(254,'learning','coursecategory');
-INSERT INTO "django_content_type" VALUES(255,'learning','learningplan');
-INSERT INTO "django_content_type" VALUES(256,'learning','skill');
-INSERT INTO "django_content_type" VALUES(257,'learning','trainingcourse');
-INSERT INTO "django_content_type" VALUES(258,'learning','learningplanitem');
-INSERT INTO "django_content_type" VALUES(259,'learning','employeecertification');
-INSERT INTO "django_content_type" VALUES(260,'learning','trainingbudget');
-INSERT INTO "django_content_type" VALUES(261,'learning','employeeskill');
-INSERT INTO "django_content_type" VALUES(262,'learning','courseenrollment');
-INSERT INTO "django_content_type" VALUES(263,'talent','criticalrole');
-INSERT INTO "django_content_type" VALUES(264,'talent','talentreview');
-INSERT INTO "django_content_type" VALUES(265,'talent','talentprofile');
-INSERT INTO "django_content_type" VALUES(266,'talent','successionplan');
-INSERT INTO "django_content_type" VALUES(267,'talent','retentionrisk');
-INSERT INTO "django_content_type" VALUES(268,'talent','nineboxmatrix');
-INSERT INTO "django_content_type" VALUES(269,'talent','leadershippipeline');
-INSERT INTO "django_content_type" VALUES(270,'talent','careerpath');
-INSERT INTO "django_content_type" VALUES(271,'expenses','expensecategory');
-INSERT INTO "django_content_type" VALUES(272,'expenses','expenseclaim');
-INSERT INTO "django_content_type" VALUES(273,'expenses','expensereport');
-INSERT INTO "django_content_type" VALUES(274,'expenses','travelrequest');
-INSERT INTO "django_content_type" VALUES(275,'expenses','receipt');
-INSERT INTO "django_content_type" VALUES(276,'expenses','expensepolicy');
-INSERT INTO "django_content_type" VALUES(277,'expenses','perdiemrate');
-INSERT INTO "django_content_type" VALUES(278,'expenses','expensereportitem');
-INSERT INTO "django_content_type" VALUES(279,'omani_compliance','omanitaxcalculation');
-INSERT INTO "django_content_type" VALUES(280,'omani_compliance','omanilabourlawconfig');
-INSERT INTO "django_content_type" VALUES(281,'omani_compliance','omanicomplianceaudit');
-INSERT INTO "django_content_type" VALUES(282,'django_apscheduler','djangojob');
-INSERT INTO "django_content_type" VALUES(283,'django_apscheduler','djangojobexecution');
-INSERT INTO "django_content_type" VALUES(284,'accessibility','defaultaccessibility');
-INSERT INTO "django_content_type" VALUES(285,'fits_documents','documentrequest');
-INSERT INTO "django_content_type" VALUES(286,'fits_documents','document');
-INSERT INTO "django_content_type" VALUES(287,'fits_views','togglecolumn');
-INSERT INTO "django_content_type" VALUES(288,'fits_views','savedfilter');
-INSERT INTO "django_content_type" VALUES(289,'fits_views','activeview');
-INSERT INTO "django_content_type" VALUES(290,'fits_views','activetab');
-INSERT INTO "django_content_type" VALUES(291,'fits_views','activegroup');
-INSERT INTO "django_content_type" VALUES(292,'fits_automations','mailautomation');
-INSERT INTO "django_content_type" VALUES(293,'auditlog','logentry');
-INSERT INTO "django_content_type" VALUES(294,'biometric','biometricdevices');
-INSERT INTO "django_content_type" VALUES(295,'biometric','cosecattendancearguments');
-INSERT INTO "django_content_type" VALUES(296,'biometric','biometricemployees');
-INSERT INTO "django_content_type" VALUES(297,'helpdesk','tickettype');
-INSERT INTO "django_content_type" VALUES(298,'helpdesk','ticket');
-INSERT INTO "django_content_type" VALUES(299,'helpdesk','historicalticket');
-INSERT INTO "django_content_type" VALUES(300,'helpdesk','faqcategory');
-INSERT INTO "django_content_type" VALUES(301,'helpdesk','faq');
-INSERT INTO "django_content_type" VALUES(302,'helpdesk','comment');
-INSERT INTO "django_content_type" VALUES(303,'helpdesk','attachment');
-INSERT INTO "django_content_type" VALUES(304,'helpdesk','departmentmanager');
-INSERT INTO "django_content_type" VALUES(305,'helpdesk','claimrequest');
-INSERT INTO "django_content_type" VALUES(306,'offboarding','employeetask');
-INSERT INTO "django_content_type" VALUES(307,'offboarding','offboarding');
-INSERT INTO "django_content_type" VALUES(308,'offboarding','offboardingemployee');
-INSERT INTO "django_content_type" VALUES(309,'offboarding','offboardingstage');
-INSERT INTO "django_content_type" VALUES(310,'offboarding','resignationletter');
-INSERT INTO "django_content_type" VALUES(311,'offboarding','offboardingtask');
-INSERT INTO "django_content_type" VALUES(312,'offboarding','offboardingstagemultiplefile');
-INSERT INTO "django_content_type" VALUES(313,'offboarding','offboardingnote');
-INSERT INTO "django_content_type" VALUES(314,'offboarding','offboardinggeneralsetting');
-INSERT INTO "django_content_type" VALUES(315,'offboarding','historicalemployeetask');
-INSERT INTO "django_content_type" VALUES(316,'offboarding','exitreason');
-INSERT INTO "django_content_type" VALUES(317,'fits_backup','googledrivebackup');
-INSERT INTO "django_content_type" VALUES(318,'fits_backup','localbackup');
-INSERT INTO "django_content_type" VALUES(319,'project','project');
-INSERT INTO "django_content_type" VALUES(320,'project','projectstage');
-INSERT INTO "django_content_type" VALUES(321,'project','task');
-INSERT INTO "django_content_type" VALUES(322,'project','timesheet');
-INSERT INTO "django_content_type" VALUES(323,'geofencing','geofencing');
-INSERT INTO "django_content_type" VALUES(324,'facedetection','facedetection');
-INSERT INTO "django_content_type" VALUES(325,'facedetection','employeefacedetection');
+INSERT INTO "django_content_type" VALUES(5,'contenttypes','contenttype');
+INSERT INTO "django_content_type" VALUES(6,'sessions','session');
+INSERT INTO "django_content_type" VALUES(7,'fits_audit','audittag');
+INSERT INTO "django_content_type" VALUES(8,'fits_audit','historytrackingfields');
+INSERT INTO "django_content_type" VALUES(9,'fits_audit','accountblockunblock');
+INSERT INTO "django_content_type" VALUES(10,'accessibility','defaultaccessibility');
+INSERT INTO "django_content_type" VALUES(11,'project','project');
+INSERT INTO "django_content_type" VALUES(12,'attendance','gracetime');
+INSERT INTO "django_content_type" VALUES(13,'attendance','attendancelatecomeearlyout');
+INSERT INTO "django_content_type" VALUES(14,'leave','leavetype');
+INSERT INTO "django_content_type" VALUES(15,'leave','leaverequest');
+INSERT INTO "django_content_type" VALUES(16,'base','announcement');
+INSERT INTO "django_content_type" VALUES(17,'base','announcementcomment');
+INSERT INTO "django_content_type" VALUES(18,'base','announcementexpire');
+INSERT INTO "django_content_type" VALUES(19,'base','announcementview');
+INSERT INTO "django_content_type" VALUES(20,'base','attachment');
+INSERT INTO "django_content_type" VALUES(21,'base','attendanceallowedip');
+INSERT INTO "django_content_type" VALUES(22,'base','baserequestfile');
+INSERT INTO "django_content_type" VALUES(23,'base','biometricattendance');
+INSERT INTO "django_content_type" VALUES(24,'base','company');
+INSERT INTO "django_content_type" VALUES(25,'base','companyleaves');
+INSERT INTO "django_content_type" VALUES(26,'base','dashboardemployeecharts');
+INSERT INTO "django_content_type" VALUES(27,'base','department');
+INSERT INTO "django_content_type" VALUES(28,'base','driverviewed');
+INSERT INTO "django_content_type" VALUES(29,'base','dynamicemailconfiguration');
+INSERT INTO "django_content_type" VALUES(30,'base','dynamicpagination');
+INSERT INTO "django_content_type" VALUES(31,'base','emaillog');
+INSERT INTO "django_content_type" VALUES(32,'base','employeeshift');
+INSERT INTO "django_content_type" VALUES(33,'base','employeeshiftday');
+INSERT INTO "django_content_type" VALUES(34,'base','employeeshiftschedule');
+INSERT INTO "django_content_type" VALUES(35,'base','employeetype');
+INSERT INTO "django_content_type" VALUES(36,'base','fitsmailtemplate');
+INSERT INTO "django_content_type" VALUES(37,'base','historicalrotatingshiftassign');
+INSERT INTO "django_content_type" VALUES(38,'base','historicalrotatingworktypeassign');
+INSERT INTO "django_content_type" VALUES(39,'base','historicalshiftrequest');
+INSERT INTO "django_content_type" VALUES(40,'base','historicalworktyperequest');
+INSERT INTO "django_content_type" VALUES(41,'base','holidays');
+INSERT INTO "django_content_type" VALUES(42,'base','hruser');
+INSERT INTO "django_content_type" VALUES(43,'base','jobposition');
+INSERT INTO "django_content_type" VALUES(44,'base','jobrole');
+INSERT INTO "django_content_type" VALUES(45,'base','multipleapprovalcondition');
+INSERT INTO "django_content_type" VALUES(46,'base','multipleapprovalmanagers');
+INSERT INTO "django_content_type" VALUES(47,'base','notificationsound');
+INSERT INTO "django_content_type" VALUES(48,'base','penaltyaccounts');
+INSERT INTO "django_content_type" VALUES(49,'base','rotatingshift');
+INSERT INTO "django_content_type" VALUES(50,'base','rotatingshiftassign');
+INSERT INTO "django_content_type" VALUES(51,'base','rotatingworktype');
+INSERT INTO "django_content_type" VALUES(52,'base','rotatingworktypeassign');
+INSERT INTO "django_content_type" VALUES(53,'base','shiftrequest');
+INSERT INTO "django_content_type" VALUES(54,'base','shiftrequestcomment');
+INSERT INTO "django_content_type" VALUES(55,'base','tags');
+INSERT INTO "django_content_type" VALUES(56,'base','tracklatecomeearlyout');
+INSERT INTO "django_content_type" VALUES(57,'base','worktype');
+INSERT INTO "django_content_type" VALUES(58,'base','worktyperequest');
+INSERT INTO "django_content_type" VALUES(59,'base','worktyperequestcomment');
+INSERT INTO "django_content_type" VALUES(60,'base','mailboxintegration');
+INSERT INTO "django_content_type" VALUES(61,'employee','actiontype');
+INSERT INTO "django_content_type" VALUES(62,'employee','bonuspoint');
+INSERT INTO "django_content_type" VALUES(63,'employee','employee');
+INSERT INTO "django_content_type" VALUES(64,'employee','employeetag');
+INSERT INTO "django_content_type" VALUES(65,'employee','employeeworkinformation');
+INSERT INTO "django_content_type" VALUES(66,'employee','profileeditfeature');
+INSERT INTO "django_content_type" VALUES(67,'employee','policymultiplefile');
+INSERT INTO "django_content_type" VALUES(68,'employee','policy');
+INSERT INTO "django_content_type" VALUES(69,'employee','notefiles');
+INSERT INTO "django_content_type" VALUES(70,'employee','historicalemployeeworkinformation');
+INSERT INTO "django_content_type" VALUES(71,'employee','historicalbonuspoint');
+INSERT INTO "django_content_type" VALUES(72,'employee','employeesalaryhistory');
+INSERT INTO "django_content_type" VALUES(73,'employee','employeenote');
+INSERT INTO "django_content_type" VALUES(74,'employee','employeegeneralsetting');
+INSERT INTO "django_content_type" VALUES(75,'employee','employeebankdetails');
+INSERT INTO "django_content_type" VALUES(76,'employee','disciplinaryaction');
+INSERT INTO "django_content_type" VALUES(77,'recruitment','approvalrule');
+INSERT INTO "django_content_type" VALUES(78,'recruitment','approvalstep');
+INSERT INTO "django_content_type" VALUES(79,'recruitment','candidate');
+INSERT INTO "django_content_type" VALUES(80,'recruitment','evaluationcriteria');
+INSERT INTO "django_content_type" VALUES(81,'recruitment','jobemailtemplate');
+INSERT INTO "django_content_type" VALUES(82,'recruitment','linkedinaccount');
+INSERT INTO "django_content_type" VALUES(83,'recruitment','manpowerrequest');
+INSERT INTO "django_content_type" VALUES(84,'recruitment','offerlettertemplate');
+INSERT INTO "django_content_type" VALUES(85,'recruitment','recruitment');
+INSERT INTO "django_content_type" VALUES(86,'recruitment','skillzone');
+INSERT INTO "django_content_type" VALUES(87,'recruitment','stage');
+INSERT INTO "django_content_type" VALUES(88,'recruitment','stagefiles');
+INSERT INTO "django_content_type" VALUES(89,'recruitment','surveytemplate');
+INSERT INTO "django_content_type" VALUES(90,'recruitment','stagenote');
+INSERT INTO "django_content_type" VALUES(91,'recruitment','skillzonecandidate');
+INSERT INTO "django_content_type" VALUES(92,'recruitment','skill');
+INSERT INTO "django_content_type" VALUES(93,'recruitment','resume');
+INSERT INTO "django_content_type" VALUES(94,'recruitment','rejectreason');
+INSERT INTO "django_content_type" VALUES(95,'recruitment','rejectedcandidate');
+INSERT INTO "django_content_type" VALUES(96,'recruitment','recruitmentsurveyanswer');
+INSERT INTO "django_content_type" VALUES(97,'recruitment','recruitmentsurvey');
+INSERT INTO "django_content_type" VALUES(98,'recruitment','recruitmentgeneralsetting');
+INSERT INTO "django_content_type" VALUES(99,'recruitment','recruitmentapprovaldelegation');
+INSERT INTO "django_content_type" VALUES(100,'recruitment','recruitmentapproval');
+INSERT INTO "django_content_type" VALUES(101,'recruitment','questionordering');
+INSERT INTO "django_content_type" VALUES(102,'recruitment','parsedcvdata');
+INSERT INTO "django_content_type" VALUES(103,'recruitment','offerletter');
+INSERT INTO "django_content_type" VALUES(104,'recruitment','offerapproval');
+INSERT INTO "django_content_type" VALUES(105,'recruitment','manpowerrequeststatuslog');
+INSERT INTO "django_content_type" VALUES(106,'recruitment','manpowerapproval');
+INSERT INTO "django_content_type" VALUES(107,'recruitment','jobapplication');
+INSERT INTO "django_content_type" VALUES(108,'recruitment','interviewschedule');
+INSERT INTO "django_content_type" VALUES(109,'recruitment','interviewevaluation');
+INSERT INTO "django_content_type" VALUES(110,'recruitment','historicalrejectedcandidate');
+INSERT INTO "django_content_type" VALUES(111,'recruitment','historicalcandidate');
+INSERT INTO "django_content_type" VALUES(112,'recruitment','cvscreeninglog');
+INSERT INTO "django_content_type" VALUES(113,'recruitment','cvparsingsettings');
+INSERT INTO "django_content_type" VALUES(114,'recruitment','candidatescreeningprofile');
+INSERT INTO "django_content_type" VALUES(115,'recruitment','candidatedocumentrequest');
+INSERT INTO "django_content_type" VALUES(116,'recruitment','candidatedocument');
+INSERT INTO "django_content_type" VALUES(117,'recruitment','evaluationscore');
+INSERT INTO "django_content_type" VALUES(118,'recruitment','candidateskillmatch');
+INSERT INTO "django_content_type" VALUES(119,'recruitment','candidaterating');
+INSERT INTO "django_content_type" VALUES(120,'recruitment','candidaterankingscore');
+INSERT INTO "django_content_type" VALUES(121,'recruitment','offerletterapproval');
+INSERT INTO "django_content_type" VALUES(122,'recruitment','interviewround');
+INSERT INTO "django_content_type" VALUES(123,'recruitment','medicallettertemplate');
+INSERT INTO "django_content_type" VALUES(124,'recruitment','visalettertemplate');
+INSERT INTO "django_content_type" VALUES(125,'recruitment','visaletter');
+INSERT INTO "django_content_type" VALUES(126,'recruitment','medicalletter');
+INSERT INTO "django_content_type" VALUES(127,'recruitment','offerletterstatuslog');
+INSERT INTO "django_content_type" VALUES(128,'recruitment','medicalletterstatuslog');
+INSERT INTO "django_content_type" VALUES(129,'recruitment','visaletterstatuslog');
+INSERT INTO "django_content_type" VALUES(130,'recruitment','employmentproposal');
+INSERT INTO "django_content_type" VALUES(131,'recruitment','proposalstatuslog');
+INSERT INTO "django_content_type" VALUES(132,'recruitment','proposalroleassignment');
+INSERT INTO "django_content_type" VALUES(133,'recruitment','proposalapproval');
+INSERT INTO "django_content_type" VALUES(134,'recruitment','candidateportalupload');
+INSERT INTO "django_content_type" VALUES(135,'auditlog','logentry');
+INSERT INTO "django_content_type" VALUES(136,'attendance','attendancegeneralsetting');
+INSERT INTO "django_content_type" VALUES(137,'base','docusignaccount');
+INSERT INTO "django_content_type" VALUES(138,'base','adobesignaccount');
+INSERT INTO "django_content_type" VALUES(139,'recruitment','onboardingdocument');
+INSERT INTO "django_content_type" VALUES(140,'recruitment','bulkrequestline');
 CREATE TABLE "django_migrations" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "app" varchar(255) NOT NULL, "name" varchar(255) NOT NULL, "applied" datetime NOT NULL);
-INSERT INTO "django_migrations" VALUES(1,'contenttypes','0001_initial','2026-10-03 20:19:12.939818');
-INSERT INTO "django_migrations" VALUES(2,'auth','0001_initial','2026-10-03 20:19:12.945296');
-INSERT INTO "django_migrations" VALUES(3,'fits_audit','0001_candidate_perf_indexes','2026-10-03 20:19:12.950519');
-INSERT INTO "django_migrations" VALUES(4,'base','0001_candidate_perf_indexes','2026-10-03 20:19:12.972021');
-INSERT INTO "django_migrations" VALUES(5,'employee','0001_candidate_perf_indexes','2026-10-03 20:19:13.196340');
-INSERT INTO "django_migrations" VALUES(6,'accessibility','0001_initial','2026-10-03 20:19:13.207468');
-INSERT INTO "django_migrations" VALUES(7,'admin','0001_initial','2026-10-03 20:19:13.220828');
-INSERT INTO "django_migrations" VALUES(8,'admin','0002_logentry_remove_auto_add','2026-10-03 20:19:13.231499');
-INSERT INTO "django_migrations" VALUES(9,'admin','0003_logentry_add_action_flag_choices','2026-10-03 20:19:13.240241');
-INSERT INTO "django_migrations" VALUES(10,'attendance','0001_candidate_perf_indexes','2026-10-03 20:19:13.251019');
-INSERT INTO "django_migrations" VALUES(11,'leave','0001_candidate_perf_indexes','2026-10-03 20:19:14.117959');
-INSERT INTO "django_migrations" VALUES(12,'attendance','0002_candidate_perf_indexes','2026-10-03 20:19:15.889120');
-INSERT INTO "django_migrations" VALUES(13,'base','0002_candidate_perf_indexes','2026-10-03 20:19:22.804350');
-INSERT INTO "django_migrations" VALUES(14,'base','0003_mailbox_integration','2026-10-03 20:19:22.842785');
-INSERT INTO "django_migrations" VALUES(15,'base','0004_docusignaccount_adobesignaccount','2026-10-03 20:19:22.917313');
-INSERT INTO "django_migrations" VALUES(16,'asset','0001_initial','2026-10-03 20:19:23.685396');
-INSERT INTO "django_migrations" VALUES(17,'auditlog','0001_initial','2026-10-03 20:19:23.731788');
-INSERT INTO "django_migrations" VALUES(18,'auditlog','0002_auto_support_long_primary_keys','2026-10-03 20:19:23.776467');
-INSERT INTO "django_migrations" VALUES(19,'auditlog','0003_logentry_remote_addr','2026-10-03 20:19:23.817212');
-INSERT INTO "django_migrations" VALUES(20,'auditlog','0004_logentry_detailed_object_repr','2026-10-03 20:19:23.859819');
-INSERT INTO "django_migrations" VALUES(21,'auditlog','0005_logentry_additional_data_verbose_name','2026-10-03 20:19:23.899806');
-INSERT INTO "django_migrations" VALUES(22,'auditlog','0006_object_pk_index','2026-10-03 20:19:23.948929');
-INSERT INTO "django_migrations" VALUES(23,'auditlog','0007_object_pk_type','2026-10-03 20:19:23.992693');
-INSERT INTO "django_migrations" VALUES(24,'auditlog','0008_action_index','2026-10-03 20:19:24.035494');
-INSERT INTO "django_migrations" VALUES(25,'auditlog','0009_alter_logentry_additional_data','2026-10-03 20:19:24.239378');
-INSERT INTO "django_migrations" VALUES(26,'auditlog','0010_alter_logentry_timestamp','2026-10-03 20:19:24.325521');
-INSERT INTO "django_migrations" VALUES(27,'auditlog','0011_logentry_serialized_data','2026-10-03 20:19:24.367513');
-INSERT INTO "django_migrations" VALUES(28,'auditlog','0012_add_logentry_action_access','2026-10-03 20:19:24.408126');
-INSERT INTO "django_migrations" VALUES(29,'auditlog','0013_alter_logentry_timestamp','2026-10-03 20:19:24.450693');
-INSERT INTO "django_migrations" VALUES(30,'auditlog','0014_logentry_cid','2026-10-03 20:19:24.493916');
-INSERT INTO "django_migrations" VALUES(31,'auditlog','0015_alter_logentry_changes','2026-10-03 20:19:24.580470');
-INSERT INTO "django_migrations" VALUES(32,'auditlog','0016_logentry_remote_port','2026-10-03 20:19:24.620586');
-INSERT INTO "django_migrations" VALUES(33,'auditlog','0017_add_actor_email','2026-10-03 20:19:24.664377');
-INSERT INTO "django_migrations" VALUES(34,'contenttypes','0002_remove_content_type_name','2026-10-03 20:19:24.873039');
-INSERT INTO "django_migrations" VALUES(35,'auth','0002_alter_permission_name_max_length','2026-10-03 20:19:24.922556');
-INSERT INTO "django_migrations" VALUES(36,'auth','0003_alter_user_email_max_length','2026-10-03 20:19:24.967977');
-INSERT INTO "django_migrations" VALUES(37,'auth','0004_alter_user_username_opts','2026-10-03 20:19:25.006897');
-INSERT INTO "django_migrations" VALUES(38,'auth','0005_alter_user_last_login_null','2026-10-03 20:19:25.050709');
-INSERT INTO "django_migrations" VALUES(39,'auth','0006_require_contenttypes_0002','2026-10-03 20:19:25.051756');
-INSERT INTO "django_migrations" VALUES(40,'auth','0007_alter_validators_add_error_messages','2026-10-03 20:19:25.090126');
-INSERT INTO "django_migrations" VALUES(41,'auth','0008_alter_user_username_max_length','2026-10-03 20:19:25.133866');
-INSERT INTO "django_migrations" VALUES(42,'auth','0009_alter_user_last_name_max_length','2026-10-03 20:19:25.176179');
-INSERT INTO "django_migrations" VALUES(43,'auth','0010_alter_group_name_max_length','2026-10-03 20:19:25.226541');
-INSERT INTO "django_migrations" VALUES(44,'auth','0011_update_proxy_permissions','2026-10-03 20:19:25.394076');
-INSERT INTO "django_migrations" VALUES(45,'auth','0012_alter_user_first_name_max_length','2026-10-03 20:19:25.439909');
-INSERT INTO "django_migrations" VALUES(46,'auth','0013_add_is_new_employee','2026-10-03 20:19:25.484583');
-INSERT INTO "django_migrations" VALUES(47,'biometric','0001_initial','2026-10-03 20:19:25.619188');
-INSERT INTO "django_migrations" VALUES(48,'django_apscheduler','0001_initial','2026-10-03 20:19:25.625814');
-INSERT INTO "django_migrations" VALUES(49,'django_apscheduler','0002_auto_20180412_0758','2026-10-03 20:19:25.634605');
-INSERT INTO "django_migrations" VALUES(50,'django_apscheduler','0003_auto_20200716_1632','2026-10-03 20:19:25.657028');
-INSERT INTO "django_migrations" VALUES(51,'django_apscheduler','0004_auto_20200717_1043','2026-10-03 20:19:25.675739');
-INSERT INTO "django_migrations" VALUES(52,'django_apscheduler','0005_migrate_name_to_id','2026-10-03 20:19:25.721504');
-INSERT INTO "django_migrations" VALUES(53,'django_apscheduler','0006_remove_djangojob_name','2026-10-03 20:19:25.729921');
-INSERT INTO "django_migrations" VALUES(54,'django_apscheduler','0007_auto_20200717_1404','2026-10-03 20:19:25.739165');
-INSERT INTO "django_migrations" VALUES(55,'django_apscheduler','0008_remove_djangojobexecution_started','2026-10-03 20:19:25.749312');
-INSERT INTO "django_migrations" VALUES(56,'django_apscheduler','0009_djangojobexecution_unique_job_executions','2026-10-03 20:19:25.758450');
-INSERT INTO "django_migrations" VALUES(57,'expenses','0001_initial','2026-10-03 20:19:26.319660');
-INSERT INTO "django_migrations" VALUES(58,'facedetection','0001_initial','2026-10-03 20:19:26.547308');
-INSERT INTO "django_migrations" VALUES(59,'fits_automations','0001_initial','2026-10-03 20:19:26.599021');
-INSERT INTO "django_migrations" VALUES(60,'fits_backup','0001_initial','2026-10-03 20:19:26.606235');
-INSERT INTO "django_migrations" VALUES(61,'fits_documents','0001_initial','2026-10-03 20:19:26.702624');
-INSERT INTO "django_migrations" VALUES(62,'fits_views','0001_initial','2026-10-03 20:19:27.073544');
-INSERT INTO "django_migrations" VALUES(63,'geofencing','0001_initial','2026-10-03 20:19:27.138528');
-INSERT INTO "django_migrations" VALUES(64,'helpdesk','0001_initial','2026-10-03 20:19:27.767088');
-INSERT INTO "django_migrations" VALUES(65,'learning','0001_initial','2026-10-03 20:19:28.328640');
-INSERT INTO "django_migrations" VALUES(66,'notifications','0001_initial','2026-10-03 20:19:28.386100');
-INSERT INTO "django_migrations" VALUES(67,'offboarding','0001_initial','2026-10-03 20:19:29.699546');
-INSERT INTO "django_migrations" VALUES(68,'omani_compliance','0001_initial','2026-10-03 20:19:29.876832');
-INSERT INTO "django_migrations" VALUES(69,'recruitment','0001_candidate_perf_indexes','2026-10-03 20:19:34.860793');
-INSERT INTO "django_migrations" VALUES(70,'recruitment','0002_add_justification_to_recruitment','2026-10-03 20:19:34.940467');
-INSERT INTO "django_migrations" VALUES(71,'recruitment','0005_jobemailtemplate_offerlettertemplate_and_more','2026-10-03 20:19:38.032727');
-INSERT INTO "django_migrations" VALUES(72,'recruitment','0006_interview_time_nullable','2026-10-03 20:19:38.248260');
-INSERT INTO "django_migrations" VALUES(73,'recruitment','0007_seed_offer_letter_templates','2026-10-03 20:19:38.320460');
-INSERT INTO "django_migrations" VALUES(74,'recruitment','0008_offerapproval_offerletter_approval_submitted_at_and_more','2026-10-03 20:19:38.321928');
-INSERT INTO "django_migrations" VALUES(75,'recruitment','0009_add_num_rounds_to_interviewschedule','2026-10-03 20:19:38.403601');
-INSERT INTO "django_migrations" VALUES(76,'recruitment','0010_add_signature_image_to_offerletterapproval','2026-10-03 20:19:38.461289');
-INSERT INTO "django_migrations" VALUES(77,'recruitment','0011_add_medical_visa_letters','2026-10-03 20:19:38.890939');
-INSERT INTO "django_migrations" VALUES(78,'recruitment','0012_seed_medical_visa_templates','2026-10-03 20:19:38.968698');
-INSERT INTO "django_migrations" VALUES(79,'recruitment','0013_module9_doc_tracking','2026-10-03 20:19:39.703355');
-INSERT INTO "django_migrations" VALUES(80,'project','0001_candidate_project_fk','2026-10-03 20:19:40.178810');
-INSERT INTO "django_migrations" VALUES(81,'recruitment','0011_candidate_project_fk','2026-10-03 20:19:40.557932');
-INSERT INTO "django_migrations" VALUES(82,'recruitment','0014_merge_20260516_1233','2026-10-03 20:19:40.558747');
-INSERT INTO "django_migrations" VALUES(83,'recruitment','0015_add_signature_image_to_offerapproval','2026-10-03 20:19:40.760571');
-INSERT INTO "django_migrations" VALUES(84,'recruitment','0016_add_role_type_to_offerletter','2026-10-03 20:19:40.851948');
-INSERT INTO "django_migrations" VALUES(85,'recruitment','0017_interviewround_per_round_fields','2026-10-03 20:19:41.236112');
-INSERT INTO "django_migrations" VALUES(86,'recruitment','0018_recruitment_budget_fields','2026-10-03 20:19:41.493848');
-INSERT INTO "django_migrations" VALUES(87,'recruitment','0019_jobapplication_hr_override_justification','2026-10-03 20:19:41.514796');
-INSERT INTO "django_migrations" VALUES(88,'recruitment','0020_manpower_query_fields','2026-10-03 20:19:42.057504');
-INSERT INTO "django_migrations" VALUES(89,'recruitment','0021_seed_hr_user','2026-10-03 20:19:42.359253');
-INSERT INTO "django_migrations" VALUES(90,'recruitment','0022_recruitment_approval_queried_status','2026-10-03 20:19:42.547979');
-INSERT INTO "django_migrations" VALUES(91,'recruitment','0023_seed_oneic_form_templates','2026-10-03 20:23:05.700158');
-INSERT INTO "django_migrations" VALUES(92,'recruitment','0024_recruitment_job_id_and_fields','2026-10-03 20:23:06.450398');
-INSERT INTO "django_migrations" VALUES(93,'recruitment','0025_employment_proposal','2026-10-03 20:23:06.899532');
-INSERT INTO "django_migrations" VALUES(94,'recruitment','0026_candidate_portal','2026-10-03 20:23:07.585919');
-INSERT INTO "django_migrations" VALUES(95,'recruitment','0027_jobapplication_skills_rejection','2026-10-03 20:23:07.650613');
-INSERT INTO "django_migrations" VALUES(96,'recruitment','0028_alter_candidateportalupload_fields','2026-10-03 20:23:07.692842');
-INSERT INTO "django_migrations" VALUES(97,'recruitment','0029_add_personal_fields_to_screening_profile','2026-10-03 20:23:08.721187');
-INSERT INTO "django_migrations" VALUES(98,'recruitment','0030_recruitmentapproval_signature_image','2026-10-03 20:23:08.802234');
-INSERT INTO "django_migrations" VALUES(99,'recruitment','0031_add_oneic_scoring_fields','2026-10-03 20:23:09.183609');
-INSERT INTO "django_migrations" VALUES(100,'recruitment','0032_add_hr_override_to_screening_profile','2026-10-03 20:23:09.299149');
-INSERT INTO "django_migrations" VALUES(101,'recruitment','0033_interviewround_interviewers_m2m','2026-10-03 20:23:09.379545');
-INSERT INTO "django_migrations" VALUES(102,'recruitment','0034_add_round_number_to_evaluation','2026-10-03 20:23:09.777753');
-INSERT INTO "django_migrations" VALUES(103,'recruitment','0035_offerletter_add_location','2026-10-03 20:23:09.853551');
-INSERT INTO "django_migrations" VALUES(104,'recruitment','0036_onboardingdocument','2026-10-03 20:23:09.936566');
-INSERT INTO "django_migrations" VALUES(105,'recruitment','0037_recruitment_is_bulk_bulkrequestline','2026-10-03 20:23:10.249651');
-INSERT INTO "django_migrations" VALUES(106,'recruitment','0038_offerletterapproval_esign_provider_and_more','2026-10-03 20:23:10.448200');
-INSERT INTO "django_migrations" VALUES(107,'onboarding','0001_initial','2026-10-03 20:23:12.340926');
-INSERT INTO "django_migrations" VALUES(108,'payroll','0001_initial','2026-10-03 20:23:24.387425');
-INSERT INTO "django_migrations" VALUES(109,'pms','0001_initial','2026-10-03 20:23:38.197554');
-INSERT INTO "django_migrations" VALUES(110,'sessions','0001_initial','2026-10-03 20:23:38.206664');
-INSERT INTO "django_migrations" VALUES(111,'talent','0001_initial','2026-10-03 20:23:40.826992');
+INSERT INTO "django_migrations" VALUES(1,'contenttypes','0001_initial','2026-05-29 10:17:59.663581');
+INSERT INTO "django_migrations" VALUES(2,'auth','0001_initial','2026-05-29 10:17:59.668389');
+INSERT INTO "django_migrations" VALUES(3,'admin','0001_initial','2026-05-29 10:17:59.670978');
+INSERT INTO "django_migrations" VALUES(4,'admin','0002_logentry_remove_auto_add','2026-05-29 10:17:59.673817');
+INSERT INTO "django_migrations" VALUES(5,'admin','0003_logentry_add_action_flag_choices','2026-05-29 10:17:59.675700');
+INSERT INTO "django_migrations" VALUES(6,'attendance','0001_candidate_perf_indexes','2026-05-29 10:17:59.676653');
+INSERT INTO "django_migrations" VALUES(7,'attendance','0002_candidate_perf_indexes','2026-05-29 10:17:59.677028');
+INSERT INTO "django_migrations" VALUES(8,'auditlog','0001_initial','2026-05-29 10:17:59.679673');
+INSERT INTO "django_migrations" VALUES(9,'auditlog','0002_auto_support_long_primary_keys','2026-05-29 10:17:59.682830');
+INSERT INTO "django_migrations" VALUES(10,'auditlog','0003_logentry_remote_addr','2026-05-29 10:17:59.686726');
+INSERT INTO "django_migrations" VALUES(11,'auditlog','0004_logentry_detailed_object_repr','2026-05-29 10:17:59.689933');
+INSERT INTO "django_migrations" VALUES(12,'auditlog','0005_logentry_additional_data_verbose_name','2026-05-29 10:17:59.692622');
+INSERT INTO "django_migrations" VALUES(13,'auditlog','0006_object_pk_index','2026-05-29 10:17:59.695919');
+INSERT INTO "django_migrations" VALUES(14,'auditlog','0007_object_pk_type','2026-05-29 10:17:59.697952');
+INSERT INTO "django_migrations" VALUES(15,'auditlog','0008_action_index','2026-05-29 10:17:59.701334');
+INSERT INTO "django_migrations" VALUES(16,'auditlog','0009_alter_logentry_additional_data','2026-05-29 10:17:59.703287');
+INSERT INTO "django_migrations" VALUES(17,'auditlog','0010_alter_logentry_timestamp','2026-05-29 10:17:59.706674');
+INSERT INTO "django_migrations" VALUES(18,'auditlog','0011_logentry_serialized_data','2026-05-29 10:17:59.708984');
+INSERT INTO "django_migrations" VALUES(19,'auditlog','0012_add_logentry_action_access','2026-05-29 10:17:59.711004');
+INSERT INTO "django_migrations" VALUES(20,'auditlog','0013_alter_logentry_timestamp','2026-05-29 10:17:59.714406');
+INSERT INTO "django_migrations" VALUES(21,'auditlog','0014_logentry_cid','2026-05-29 10:17:59.716915');
+INSERT INTO "django_migrations" VALUES(22,'auditlog','0015_alter_logentry_changes','2026-05-29 10:17:59.723847');
+INSERT INTO "django_migrations" VALUES(23,'auditlog','0016_logentry_remote_port','2026-05-29 10:17:59.727235');
+INSERT INTO "django_migrations" VALUES(24,'auditlog','0017_add_actor_email','2026-05-29 10:17:59.729514');
+INSERT INTO "django_migrations" VALUES(25,'contenttypes','0002_remove_content_type_name','2026-05-29 10:17:59.735630');
+INSERT INTO "django_migrations" VALUES(26,'auth','0002_alter_permission_name_max_length','2026-05-29 10:17:59.738626');
+INSERT INTO "django_migrations" VALUES(27,'auth','0003_alter_user_email_max_length','2026-05-29 10:17:59.743662');
+INSERT INTO "django_migrations" VALUES(28,'auth','0004_alter_user_username_opts','2026-05-29 10:17:59.745630');
+INSERT INTO "django_migrations" VALUES(29,'auth','0005_alter_user_last_login_null','2026-05-29 10:17:59.797011');
+INSERT INTO "django_migrations" VALUES(30,'auth','0006_require_contenttypes_0002','2026-05-29 10:17:59.797693');
+INSERT INTO "django_migrations" VALUES(31,'auth','0007_alter_validators_add_error_messages','2026-05-29 10:17:59.801193');
+INSERT INTO "django_migrations" VALUES(32,'auth','0008_alter_user_username_max_length','2026-05-29 10:17:59.804372');
+INSERT INTO "django_migrations" VALUES(33,'auth','0009_alter_user_last_name_max_length','2026-05-29 10:17:59.807292');
+INSERT INTO "django_migrations" VALUES(34,'auth','0010_alter_group_name_max_length','2026-05-29 10:17:59.810158');
+INSERT INTO "django_migrations" VALUES(35,'auth','0011_update_proxy_permissions','2026-05-29 10:17:59.812392');
+INSERT INTO "django_migrations" VALUES(36,'auth','0012_alter_user_first_name_max_length','2026-05-29 10:17:59.815262');
+INSERT INTO "django_migrations" VALUES(37,'auth','0013_add_is_new_employee','2026-05-29 10:17:59.818189');
+INSERT INTO "django_migrations" VALUES(38,'leave','0001_candidate_perf_indexes','2026-05-29 10:17:59.819128');
+INSERT INTO "django_migrations" VALUES(39,'fits_audit','0001_candidate_perf_indexes','2026-05-29 10:17:59.824367');
+INSERT INTO "django_migrations" VALUES(40,'base','0001_candidate_perf_indexes','2026-05-29 10:17:59.845198');
+INSERT INTO "django_migrations" VALUES(41,'employee','0001_candidate_perf_indexes','2026-05-29 10:17:59.988207');
+INSERT INTO "django_migrations" VALUES(42,'base','0002_candidate_perf_indexes','2026-05-29 10:18:03.193002');
+INSERT INTO "django_migrations" VALUES(43,'base','0003_mailbox_integration','2026-05-29 10:18:03.215236');
+INSERT INTO "django_migrations" VALUES(44,'project','0001_candidate_project_fk','2026-05-29 10:18:03.216461');
+INSERT INTO "django_migrations" VALUES(45,'recruitment','0001_candidate_perf_indexes','2026-05-29 10:18:05.324161');
+INSERT INTO "django_migrations" VALUES(46,'recruitment','0002_add_justification_to_recruitment','2026-05-29 10:18:05.360351');
+INSERT INTO "django_migrations" VALUES(47,'recruitment','0005_jobemailtemplate_offerlettertemplate_and_more','2026-05-29 10:18:06.765185');
+INSERT INTO "django_migrations" VALUES(48,'recruitment','0006_interview_time_nullable','2026-05-29 10:18:06.807587');
+INSERT INTO "django_migrations" VALUES(49,'recruitment','0007_seed_offer_letter_templates','2026-05-29 10:18:06.846347');
+INSERT INTO "django_migrations" VALUES(50,'recruitment','0008_offerapproval_offerletter_approval_submitted_at_and_more','2026-05-29 10:18:06.847260');
+INSERT INTO "django_migrations" VALUES(51,'recruitment','0009_add_num_rounds_to_interviewschedule','2026-05-29 10:18:06.886590');
+INSERT INTO "django_migrations" VALUES(52,'recruitment','0010_add_signature_image_to_offerletterapproval','2026-05-29 10:18:06.912520');
+INSERT INTO "django_migrations" VALUES(53,'recruitment','0011_add_medical_visa_letters','2026-05-29 10:18:07.026096');
+INSERT INTO "django_migrations" VALUES(54,'recruitment','0012_seed_medical_visa_templates','2026-05-29 10:18:07.064818');
+INSERT INTO "django_migrations" VALUES(55,'recruitment','0013_module9_doc_tracking','2026-05-29 10:18:07.475509');
+INSERT INTO "django_migrations" VALUES(56,'recruitment','0011_candidate_project_fk','2026-05-29 10:18:07.705486');
+INSERT INTO "django_migrations" VALUES(57,'recruitment','0014_merge_20260516_1233','2026-05-29 10:18:07.706210');
+INSERT INTO "django_migrations" VALUES(58,'recruitment','0015_add_signature_image_to_offerapproval','2026-05-29 10:18:07.808160');
+INSERT INTO "django_migrations" VALUES(59,'recruitment','0016_add_role_type_to_offerletter','2026-05-29 10:18:07.848732');
+INSERT INTO "django_migrations" VALUES(60,'recruitment','0017_interviewround_per_round_fields','2026-05-29 10:18:07.954120');
+INSERT INTO "django_migrations" VALUES(61,'recruitment','0018_recruitment_budget_fields','2026-05-29 10:18:08.073593');
+INSERT INTO "django_migrations" VALUES(62,'recruitment','0019_jobapplication_hr_override_justification','2026-05-29 10:18:08.085948');
+INSERT INTO "django_migrations" VALUES(63,'recruitment','0020_manpower_query_fields','2026-05-29 10:18:08.352417');
+INSERT INTO "django_migrations" VALUES(64,'recruitment','0021_seed_hr_user','2026-05-29 10:18:08.447679');
+INSERT INTO "django_migrations" VALUES(65,'recruitment','0022_recruitment_approval_queried_status','2026-05-29 10:18:08.540830');
+INSERT INTO "django_migrations" VALUES(66,'recruitment','0023_seed_oneic_form_templates','2026-05-29 10:18:08.581483');
+INSERT INTO "django_migrations" VALUES(67,'recruitment','0024_recruitment_job_id_and_fields','2026-05-29 10:18:08.985051');
+INSERT INTO "django_migrations" VALUES(68,'recruitment','0025_employment_proposal','2026-05-29 10:18:09.248134');
+INSERT INTO "django_migrations" VALUES(69,'recruitment','0026_candidate_portal','2026-05-29 10:18:09.531717');
+INSERT INTO "django_migrations" VALUES(70,'recruitment','0027_jobapplication_skills_rejection','2026-05-29 10:18:09.576903');
+INSERT INTO "django_migrations" VALUES(71,'recruitment','0028_alter_candidateportalupload_fields','2026-05-29 10:18:09.605059');
+INSERT INTO "django_migrations" VALUES(72,'recruitment','0029_add_personal_fields_to_screening_profile','2026-05-29 10:18:10.123254');
+INSERT INTO "django_migrations" VALUES(73,'sessions','0001_initial','2026-05-29 10:18:10.126057');
+INSERT INTO "django_migrations" VALUES(74,'attendance','0003_stub_models','2026-05-29 10:25:34.438534');
+INSERT INTO "django_migrations" VALUES(75,'base','0004_docusignaccount_adobesignaccount','2026-06-17 04:55:25.271956');
+INSERT INTO "django_migrations" VALUES(76,'recruitment','0030_recruitmentapproval_signature_image','2026-06-17 04:55:25.323374');
+INSERT INTO "django_migrations" VALUES(77,'recruitment','0031_add_oneic_scoring_fields','2026-06-17 04:55:25.458724');
+INSERT INTO "django_migrations" VALUES(78,'recruitment','0032_add_hr_override_to_screening_profile','2026-06-17 04:55:25.524298');
+INSERT INTO "django_migrations" VALUES(79,'recruitment','0033_interviewround_interviewers_m2m','2026-06-17 04:55:25.571958');
+INSERT INTO "django_migrations" VALUES(80,'recruitment','0034_add_round_number_to_evaluation','2026-06-17 04:55:25.800303');
+INSERT INTO "django_migrations" VALUES(81,'recruitment','0035_offerletter_add_location','2026-06-17 04:55:25.843719');
+INSERT INTO "django_migrations" VALUES(82,'recruitment','0036_onboardingdocument','2026-06-17 04:55:25.891320');
+INSERT INTO "django_migrations" VALUES(83,'recruitment','0037_recruitment_is_bulk_bulkrequestline','2026-06-17 04:55:25.983785');
+INSERT INTO "django_migrations" VALUES(84,'recruitment','0038_offerletterapproval_esign_provider_and_more','2026-06-17 04:55:26.257894');
+INSERT INTO "django_migrations" VALUES(85,'accessibility','0001_initial','2026-10-03 22:00:36.316257');
+INSERT INTO "django_migrations" VALUES(86,'asset','0001_initial','2026-10-03 22:00:37.281221');
+INSERT INTO "django_migrations" VALUES(87,'base','0005_add_is_new_employee_to_auth_user','2026-10-03 22:00:37.283317');
+INSERT INTO "django_migrations" VALUES(88,'biometric','0001_initial','2026-10-03 22:00:37.471845');
+INSERT INTO "django_migrations" VALUES(89,'django_apscheduler','0001_initial','2026-10-03 22:00:37.480737');
+INSERT INTO "django_migrations" VALUES(90,'django_apscheduler','0002_auto_20180412_0758','2026-10-03 22:00:37.491179');
+INSERT INTO "django_migrations" VALUES(91,'django_apscheduler','0003_auto_20200716_1632','2026-10-03 22:00:37.522411');
+INSERT INTO "django_migrations" VALUES(92,'django_apscheduler','0004_auto_20200717_1043','2026-10-03 22:00:37.544129');
+INSERT INTO "django_migrations" VALUES(93,'django_apscheduler','0005_migrate_name_to_id','2026-10-03 22:00:37.606005');
+INSERT INTO "django_migrations" VALUES(94,'django_apscheduler','0006_remove_djangojob_name','2026-10-03 22:00:37.616085');
+INSERT INTO "django_migrations" VALUES(95,'django_apscheduler','0007_auto_20200717_1404','2026-10-03 22:00:37.626631');
+INSERT INTO "django_migrations" VALUES(96,'django_apscheduler','0008_remove_djangojobexecution_started','2026-10-03 22:00:37.638489');
+INSERT INTO "django_migrations" VALUES(97,'django_apscheduler','0009_djangojobexecution_unique_job_executions','2026-10-03 22:00:37.648570');
+INSERT INTO "django_migrations" VALUES(98,'expenses','0001_initial','2026-10-03 22:00:38.447317');
+INSERT INTO "django_migrations" VALUES(99,'facedetection','0001_initial','2026-10-03 22:00:38.596376');
+INSERT INTO "django_migrations" VALUES(100,'fits_automations','0001_initial','2026-10-03 22:00:38.786976');
+INSERT INTO "django_migrations" VALUES(101,'fits_backup','0001_initial','2026-10-03 22:00:38.791418');
+INSERT INTO "django_migrations" VALUES(102,'fits_documents','0001_initial','2026-10-03 22:00:38.926030');
+INSERT INTO "django_migrations" VALUES(103,'fits_views','0001_initial','2026-10-03 22:00:39.405337');
+INSERT INTO "django_migrations" VALUES(104,'geofencing','0001_initial','2026-10-03 22:00:39.494027');
+INSERT INTO "django_migrations" VALUES(105,'helpdesk','0001_initial','2026-10-03 22:00:40.363100');
+INSERT INTO "django_migrations" VALUES(106,'learning','0001_initial','2026-10-03 22:00:41.055089');
+INSERT INTO "django_migrations" VALUES(107,'notifications','0001_initial','2026-10-03 22:00:41.257855');
+INSERT INTO "django_migrations" VALUES(108,'offboarding','0001_initial','2026-10-03 22:00:42.850113');
+INSERT INTO "django_migrations" VALUES(109,'omani_compliance','0001_initial','2026-10-03 22:00:43.086193');
+INSERT INTO "django_migrations" VALUES(110,'onboarding','0001_initial','2026-10-03 22:00:43.983788');
+INSERT INTO "django_migrations" VALUES(111,'payroll','0001_initial','2026-10-03 22:00:49.921132');
 CREATE TABLE "django_session" ("session_key" varchar(40) NOT NULL PRIMARY KEY, "session_data" text NOT NULL, "expire_date" datetime NOT NULL);
-INSERT INTO "django_session" VALUES('z2dtobvqr6pxn4rpmzij5eoapewgeo4p','.eJyVkUtPwzAQhP8K8oELpe80pFKFoAjBgRPcEIrW9ro1OHbkR0VV9b-zgUBbBEIcPbvz2TPeMO4RpPCp4oFNHzcsecOmbBljPe31IoYY0K_Q91iHWaiQZte3D_dHN_O7e5KUS1ayafQJt53fzUnv-ZPeGRWY8JdTQlhyB17uMa4-tX-9QYCVWgKJe6id-C8W1LV3K3r-HupL-0Z6oqM2ET3KEqvauDVi0_aABiWkuCwTgUtN-2zIDjQO4gUbEJPPYBeuK5yNXvNus9Jtp6F75ySay3b3ALCkpsh9lqlhxtVEKSX7Ixzygg9UATLLclBqMFRFLopsMpr0-SiXg7M-zQuRjfvjscRxnhE0oEERKYJwVQ123QQ25odBqW2IYAVVsmG75QtjjubtqcM0BWm7DVRu0qewggg-UMKK2tW986bVGblOWtdxE3fhm2Jnnn7NVcSJ-Bpb-MdV-v0jmy5tMma7fQMmDf0G:1xD6Gr:_c_u6MOgrIWhqk2NVOLhHF8ETkgmeNYpYKQPTv9LEf4','2026-10-17 20:23:49.745928');
-INSERT INTO "django_session" VALUES('1z3apxufujh73m5fxztc6n2urlqhvmt1','.eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD6SE:LkHGAknm9GYwhEqKYsest_yirxPdosIcPWXBvFUXet8','2026-10-17 20:35:34.645888');
-INSERT INTO "django_session" VALUES('550r47bu0omyquhdmux8hbz855of6zk1','.eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7Ci:9uKchsPQuabnlDeYz60Kd5Btr1e5Pc8vAkxoH9HWNCA','2026-10-17 21:23:36.129633');
-INSERT INTO "django_session" VALUES('v5hjppnm6wp775bqt4t5s75srys20asa','.eJyrVkoqSk1MSS4qzU0qVrKKrlYqLcpRslLKKCkpsNLXNzQy1zMAQkMrCwMDA30lHaW8xNxUoLybZ0iwgoezbzBQKC2_NC9FyaqkqDS1Vge_AaWZSGaUZiI0pyXmFBOjOyc_PTMPyQwwH80NsUBuZk5JalFqSnxqbkFOfmVqKshvhrG1AOgzSGo:1xD7Cm:eYYUjg8xDgAJJizVBVPNn4Z9T2EL1NkFsIBSN51WsyU','2026-10-17 21:23:40.089172');
-INSERT INTO "django_session" VALUES('92kgy971ojk1ijpzzkpgbqm0kcb0rx9o','.eJyVk09v00AQxb9KtQcuJI7txElsqUJQhODQU7lVyJr1zjZb1rtm_xSiKN-dcWsaJ0IIa0_73szPnqfZA-MOQTQuttyz6v7AotOsYrsQumqxyPJNktLJqm2apgs2YwZaJP_Tl693V59vbu9IkjYawargIh5n_wZENWJEdWqWoP3_dAvwO27BiRHn4x9t8r88Wj53-CMqr4KyZsS8cCaTWzCd_YnuGYI-jNCX1mQ2dJ2zTxTYCPqqTaY1YIQSEHCMO4mTeVZKdGPWizCZ47CzLszBgN57NQZeOJPJlFRn_Xl-r9oF7RtdlQ7oUNTYdtruEft3kpFRQwy7Onp0taJ6lrMzjUPzHXsQE49gHmzSWBOc4klfkgyuT26tQP1hqD0D7GivqXtbyLzgci2lFOkSc17yTJYgimIDUma5LDdNWayX65QvNyLbpuSXTbFKVyuBq01BUI8am0AjNLbtwOz7hdH6L0atjA9gGorkwE7F77W-uhluM6ZokCFfTwFHNYcnCOA8TdjSdqrFuz7Va-p6O3S96cd9cH2w1452y7bECfgrDPCXT6nndeuzNFHr4_E3a2B7jQ:1xD7DI:hChk18A_-sH6H-JpwPylksSCZQE9J58HS9vM64lQRio','2026-10-17 21:24:12.060123');
+INSERT INTO "django_session" VALUES('2a29vjtrq4ermab8fs34i7sokfqpiwnz','.eJxtkN1KxDAQhV9FcuHNrv1JmjYtLIt67TOUaTLdRtOkNIkoy767KRZU8HLmnPMNZ66khximPnpce61IR0py_L0bQL6h3QT1CvbiMulsWPWQbZZsV3324hSap937BzCBn1KaiUYyySgtG6h5XdMKW84rFLzhbChEU5WtGFvK20JUlMqxaIea0REpUkBZJahHgzKg6qWbF7CfiQrG_CP02voAViLpruTH_GjM3fM-HYlORdJyCmHxXZ5H_QDvEGD1qeGcw6Lzs4UZTyl12FP3W93L6qJVpxWscnPiBPwIO_z7lEa_4dPLbDTmdvsCQZB3aQ:1wSvzb:4c7_zbgZZ3PjCHPIFCj2YFrZjNP8Z84tVjDNQh3537w','2026-06-12 12:07:11.145107');
 CREATE TABLE "employee_actiontype" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(50) NOT NULL, "action_type" varchar(30) NOT NULL, "block_option" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "employee_bonuspoint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "points" integer NOT NULL, "encashment_condition" varchar(100) NULL, "redeeming_points" integer NULL, "reason" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL UNIQUE REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "employee_disciplinaryaction" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "description" text NOT NULL, "unit_in" varchar(10) NOT NULL, "days" integer NULL, "hours" varchar(6) NULL, "start_date" date NULL, "attachment" varchar(100) NULL, "action_id" bigint NOT NULL REFERENCES "employee_actiontype" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -1973,45 +1011,8 @@ CREATE TABLE "learning_learningplanitem" ("id" integer NOT NULL PRIMARY KEY AUTO
 CREATE TABLE "learning_skill" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(100) NOT NULL, "description" text NOT NULL, "category" varchar(50) NOT NULL);
 CREATE TABLE "learning_trainingbudget" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "year" integer unsigned NOT NULL CHECK ("year" >= 0), "budget_amount" decimal NOT NULL, "allocated_amount" decimal NOT NULL, "remaining_amount" decimal NOT NULL, "department_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "learning_trainingcourse" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(200) NOT NULL, "description" text NOT NULL, "format" varchar(20) NOT NULL, "level" varchar(20) NOT NULL, "duration_hours" integer unsigned NOT NULL CHECK ("duration_hours" >= 0), "cost" decimal NOT NULL, "instructor" varchar(100) NOT NULL, "is_active" bool NOT NULL, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL, "category_id" bigint NOT NULL REFERENCES "learning_coursecategory" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvaldelegation" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_active" bool NOT NULL, "start_date" datetime NOT NULL, "end_date" datetime NOT NULL, "reason" text NOT NULL, "status" varchar(20) NOT NULL, "is_back_to_original" bool NOT NULL, "created_at" datetime NOT NULL, "revoked_at" datetime NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "delegated_to_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "delegating_manager_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "revoked_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvaldelegation_departments" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "approvaldelegation_id" bigint NOT NULL REFERENCES "leave_approvaldelegation" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvalmetrics" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "approval_period" date NOT NULL, "total_requests" integer NOT NULL, "approved_count" integer NOT NULL, "rejected_count" integer NOT NULL, "pending_count" integer NOT NULL, "auto_approved_count" integer NOT NULL, "avg_approval_time_hours" real NULL, "sla_compliance_percentage" real NULL, "escalation_count" integer NOT NULL, "bottleneck_requests" integer NOT NULL, "bottleneck_avg_days_pending" real NULL, "calculated_at" datetime NOT NULL, "bottleneck_approver_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvaloverride" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "original_status" varchar(30) NOT NULL, "new_status" varchar(30) NOT NULL, "action" varchar(20) NOT NULL, "reason" text NOT NULL, "overridden_at" datetime NOT NULL, "approval_request_id" bigint NULL REFERENCES "leave_approvalrequest" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_request_id" bigint NOT NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "overridden_by_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvalpolicy" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(255) NOT NULL, "sla_hours" integer NOT NULL, "escalation_hours" integer NOT NULL, "allow_parallel_approvals" bool NOT NULL, "auto_approve_threshold_days" real NULL, "require_manager_confirmation" bool NOT NULL, "allow_override" bool NOT NULL, "max_override_count" integer NOT NULL, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL, "is_active" bool NOT NULL, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvalrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "sequence_order" integer NOT NULL, "approval_type" varchar(20) NOT NULL, "status" varchar(20) NOT NULL, "assigned_at" datetime NOT NULL, "sla_deadline" datetime NOT NULL, "escalation_deadline" datetime NOT NULL, "approved_at" datetime NULL, "approval_comment" text NOT NULL, "rejected_at" datetime NULL, "rejection_reason" text NOT NULL, "escalated_at" datetime NULL, "escalation_reason" varchar(50) NULL, "notified_count" integer NOT NULL, "first_notified_at" datetime NULL, "last_notified_at" datetime NULL, "auto_approved" bool NOT NULL, "confirmation_required" bool NOT NULL, "approved_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "approver_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "escalated_to_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_request_id" bigint NOT NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "rejected_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_approvalslaalert" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "alert_type" varchar(20) NOT NULL, "triggered_at" datetime NOT NULL, "notification_sent" bool NOT NULL, "escalation_triggered" bool NOT NULL, "approval_request_id" bigint NOT NULL REFERENCES "leave_approvalrequest" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_availableleave" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "available_days" real NOT NULL, "carryforward_days" real NOT NULL, "total_leave_days" real NOT NULL, "assigned_date" date NOT NULL, "reset_date" date NULL, "expired_date" date NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_companyleave" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "based_on_week" varchar(100) NULL, "based_on_week_day" varchar(100) NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_compensatoryleaverequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "requested_days" real NULL, "requested_date" date NOT NULL, "description" text NOT NULL, "status" varchar(30) NOT NULL, "reject_reason" text NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NOT NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_compensatoryleaverequest_attendance_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "compensatoryleaverequest_id" bigint NOT NULL REFERENCES "leave_compensatoryleaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "attendance_id" bigint NOT NULL REFERENCES "attendance_attendance" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_compensatoryleaverequestcomment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "comment" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "request_id_id" bigint NOT NULL REFERENCES "leave_compensatoryleaverequest" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_compensatoryleaverequestcomment_files" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "compensatoryleaverequestcomment_id" bigint NOT NULL REFERENCES "leave_compensatoryleaverequestcomment" ("id") DEFERRABLE INITIALLY DEFERRED, "leaverequestfile_id" bigint NOT NULL REFERENCES "leave_leaverequestfile" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_employeepastleaverestrict" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "enabled" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-INSERT INTO "leave_employeepastleaverestrict" VALUES(1,'2026-10-03 20:19:58.916955',1,1,NULL,NULL);
-CREATE TABLE "leave_historicalavailableleave" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "available_days" real NOT NULL, "carryforward_days" real NOT NULL, "total_leave_days" real NOT NULL, "assigned_date" date NOT NULL, "reset_date" date NULL, "expired_date" date NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL, "modified_by_id" integer NULL);
-CREATE TABLE "leave_historicalavailableleave_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalavailableleave_id" integer NOT NULL REFERENCES "leave_historicalavailableleave" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_historicalcompensatoryleaverequest" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "requested_days" real NULL, "requested_date" date NOT NULL, "description" text NOT NULL, "status" varchar(30) NOT NULL, "reject_reason" text NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL, "modified_by_id" integer NULL);
-CREATE TABLE "leave_historicalcompensatoryleaverequest_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalcompensatoryleaverequest_id" integer NOT NULL REFERENCES "leave_historicalcompensatoryleaverequest" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_historicalleaveallocationrequest" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "requested_days" real NULL, "requested_date" date NOT NULL, "description" text NOT NULL, "attachment" text NULL, "status" varchar(30) NOT NULL, "reject_reason" text NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL, "modified_by_id" integer NULL);
-CREATE TABLE "leave_historicalleaveallocationrequest_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalleaveallocationrequest_id" integer NOT NULL REFERENCES "leave_historicalleaveallocationrequest" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_historicalleaverequest" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "start_date" date NOT NULL, "start_date_breakdown" varchar(30) NOT NULL, "end_date" date NULL, "end_date_breakdown" varchar(30) NOT NULL, "requested_days" real NULL, "leave_clashes_count" integer NOT NULL, "description" text NOT NULL, "attachment" text NULL, "status" varchar(30) NOT NULL, "requested_date" date NOT NULL, "approved_available_days" real NOT NULL, "approved_carryforward_days" real NOT NULL, "reject_reason" text NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" bigint NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NULL, "modified_by_id" integer NULL);
-CREATE TABLE "leave_historicalleaverequest_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalleaverequest_id" integer NOT NULL REFERENCES "leave_historicalleaverequest" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_holiday" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(30) NOT NULL, "start_date" date NOT NULL, "end_date" date NULL, "recurring" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaveallocationrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "requested_days" real NULL, "requested_date" date NOT NULL, "description" text NOT NULL, "attachment" varchar(100) NULL, "status" varchar(30) NOT NULL, "reject_reason" text NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NOT NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaveallocationrequestcomment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "comment" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "request_id_id" bigint NOT NULL REFERENCES "leave_leaveallocationrequest" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaveallocationrequestcomment_files" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "leaveallocationrequestcomment_id" bigint NOT NULL REFERENCES "leave_leaveallocationrequestcomment" ("id") DEFERRABLE INITIALLY DEFERRED, "leaverequestfile_id" bigint NOT NULL REFERENCES "leave_leaverequestfile" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leavegeneralsetting" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "compensatory_leave" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaverequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "start_date" date NOT NULL, "start_date_breakdown" varchar(30) NOT NULL, "end_date" date NULL, "end_date_breakdown" varchar(30) NOT NULL, "requested_days" real NULL, "leave_clashes_count" integer NOT NULL, "description" text NOT NULL, "attachment" varchar(100) NULL, "status" varchar(30) NOT NULL, "requested_date" date NOT NULL, "approved_available_days" real NOT NULL, "approved_carryforward_days" real NOT NULL, "reject_reason" text NOT NULL, "created_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "leave_type_id_id" bigint NOT NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaverequestcomment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "comment" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "request_id_id" bigint NOT NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaverequestcomment_files" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "leaverequestcomment_id" bigint NOT NULL REFERENCES "leave_leaverequestcomment" ("id") DEFERRABLE INITIALLY DEFERRED, "leaverequestfile_id" bigint NOT NULL REFERENCES "leave_leaverequestfile" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaverequestconditionapproval" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sequence" integer NOT NULL, "is_approved" bool NOT NULL, "is_rejected" bool NOT NULL, "leave_request_id_id" bigint NOT NULL REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED, "manager_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_leaverequestfile" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "file" varchar(100) NOT NULL);
-CREATE TABLE "leave_leavetype" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "icon" varchar(100) NULL, "name" varchar(30) NOT NULL, "color" varchar(30) NULL, "payment" varchar(30) NOT NULL, "count" real NULL, "period_in" varchar(30) NOT NULL, "limit_leave" bool NOT NULL, "total_days" real NULL, "reset" bool NOT NULL, "is_encashable" bool NOT NULL, "reset_based" varchar(30) NULL, "reset_month" varchar(30) NOT NULL, "reset_day" varchar(30) NULL, "reset_weekend" varchar(10) NULL, "carryforward_type" varchar(30) NOT NULL, "carryforward_max" real NULL, "carryforward_expire_in" integer NULL, "carryforward_expire_period" varchar(30) NULL, "carryforward_expire_date" date NULL, "require_approval" varchar(30) NULL, "require_attachment" varchar(30) NULL, "exclude_company_leave" varchar(30) NOT NULL, "exclude_holiday" varchar(30) NOT NULL, "is_compensatory_leave" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_overrideleaverequests" ("leaverequest_ptr_id" bigint NOT NULL PRIMARY KEY REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_restrictleave" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(200) NOT NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "include_all" bool NOT NULL, "description" text NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_restrictleave_exclued_leave_types" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "restrictleave_id" bigint NOT NULL REFERENCES "leave_restrictleave" ("id") DEFERRABLE INITIALLY DEFERRED, "leavetype_id" bigint NOT NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_restrictleave_job_position" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "restrictleave_id" bigint NOT NULL REFERENCES "leave_restrictleave" ("id") DEFERRABLE INITIALLY DEFERRED, "jobposition_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "leave_restrictleave_spesific_leave_types" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "restrictleave_id" bigint NOT NULL REFERENCES "leave_restrictleave" ("id") DEFERRABLE INITIALLY DEFERRED, "leavetype_id" bigint NOT NULL REFERENCES "leave_leavetype" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "leave_leaverequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT);
+CREATE TABLE "leave_leavetype" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(100) NOT NULL);
 CREATE TABLE "notifications_notification" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "level" varchar(20) NOT NULL, "unread" bool NOT NULL, "actor_object_id" varchar(255) NOT NULL, "verb" varchar(255) NOT NULL, "description" text NULL, "target_object_id" varchar(255) NULL, "action_object_object_id" varchar(255) NULL, "timestamp" datetime NOT NULL, "public" bool NOT NULL, "deleted" bool NOT NULL, "emailed" bool NOT NULL, "data" text NULL CHECK ((JSON_VALID("data") OR "data" IS NULL)), "verb_en" varchar(255) NULL, "verb_ar" varchar(255) NULL, "verb_de" varchar(255) NULL, "verb_es" varchar(255) NULL, "verb_fr" varchar(255) NULL, "action_object_content_type_id" integer NULL REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED, "actor_content_type_id" integer NOT NULL REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED, "recipient_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "target_content_type_id" integer NULL REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "offboarding_employeetask" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "status" varchar(20) NOT NULL, "description" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "offboarding_offboardingemployee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "task_id_id" bigint NOT NULL REFERENCES "offboarding_offboardingtask" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "offboarding_exitreason" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(50) NOT NULL, "description" text NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "offboarding_employee_id_id" bigint NOT NULL REFERENCES "offboarding_offboardingemployee" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -2071,7 +1072,6 @@ CREATE TABLE "payroll_overrideattendance" ("attendance_ptr_id" bigint NOT NULL P
 CREATE TABLE "payroll_overrideleaverequest" ("leaverequest_ptr_id" bigint NOT NULL PRIMARY KEY REFERENCES "leave_leaverequest" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_payrollgeneralsetting" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "notice_period" integer NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_payrollsettings" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "currency_symbol" varchar(5) NULL, "position" varchar(15) NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-INSERT INTO "payroll_payrollsettings" VALUES(1,'2026-10-03 20:23:24.923975',1,'$','prefix',NULL,NULL,NULL);
 CREATE TABLE "payroll_payslip" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "group_name" varchar(50) NULL, "reference" varchar(255) NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "pay_head_data" text NOT NULL CHECK ((JSON_VALID("pay_head_data") OR "pay_head_data" IS NULL)), "contract_wage" real NULL, "basic_pay" real NULL, "gross_pay" real NULL, "deduction" real NULL, "net_pay" real NULL, "status" varchar(20) NULL, "sent_to_employee" bool NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_payslip_installment_ids" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "payslip_id" bigint NOT NULL REFERENCES "payroll_payslip" ("id") DEFERRABLE INITIALLY DEFERRED, "deduction_id" bigint NOT NULL REFERENCES "payroll_deduction" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_payslipautogenerate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "generate_day" varchar(30) NOT NULL, "auto_generate" bool NOT NULL, "company_id_id" bigint NULL UNIQUE REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -2089,73 +1089,11 @@ CREATE TABLE "payroll_wpsauditlog" ("id" integer NOT NULL PRIMARY KEY AUTOINCREM
 CREATE TABLE "payroll_wpsglobalsettings" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "company_bank_name" varchar(100) NOT NULL, "company_bank_code" varchar(10) NOT NULL, "company_bank_account_number" varchar(20) NOT NULL, "company_bank_account_iban" varchar(34) NOT NULL, "company_cr_number" varchar(20) NOT NULL, "company_wps_code" varchar(20) NOT NULL, "enable_wps_processing" bool NOT NULL, "wps_submission_frequency" varchar(20) NOT NULL, "wps_format_version" varchar(10) NOT NULL, "auto_generate_wps_file" bool NOT NULL, "include_end_of_service" bool NOT NULL, "include_loans" bool NOT NULL, "requires_director_approval" bool NOT NULL, "digital_signature_required" bool NOT NULL, "updated_at" datetime NOT NULL, "company_id" bigint NOT NULL UNIQUE REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_wpspaymentexception" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "exception_type" varchar(30) NOT NULL, "error_description" text NOT NULL, "is_resolved" bool NOT NULL, "resolution_notes" text NULL, "created_date" datetime NOT NULL, "resolved_date" datetime NULL, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "wps_file_id" bigint NOT NULL REFERENCES "payroll_wpsperiodicfile" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "payroll_wpsperiodicfile" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "payroll_period" varchar(20) NOT NULL, "payment_date" date NOT NULL, "file_reference_number" varchar(50) NOT NULL UNIQUE, "file_generation_date" datetime NOT NULL, "file_version" varchar(10) NOT NULL, "total_records" integer NOT NULL, "total_amount" decimal NOT NULL, "currency" varchar(3) NOT NULL, "employee_records" text NOT NULL CHECK ((JSON_VALID("employee_records") OR "employee_records" IS NULL)), "file_path" varchar(255) NOT NULL, "file_size_bytes" integer NOT NULL, "file_format" varchar(20) NOT NULL, "status" varchar(20) NOT NULL, "approval_date" datetime NULL, "approval_comments" text NULL, "submitted_date" datetime NULL, "bank_response_code" varchar(20) NOT NULL, "bank_response_message" text NULL, "bank_reference_number" varchar(50) NOT NULL, "processing_status" varchar(100) NOT NULL, "processing_date" datetime NULL, "rejection_reason" text NULL, "is_resubmitted" bool NOT NULL, "resubmission_date" datetime NULL, "notes" text NULL, "approved_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "generated_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_anonymousfeedback" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "feedback_subject" varchar(100) NOT NULL, "based_on" varchar(50) NOT NULL, "status" varchar(50) NOT NULL, "created_at" date NOT NULL, "archive" bool NULL, "anonymous_feedback_id" varchar(10) NULL, "feedback_description" text NULL, "department_id_id" bigint NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_answer" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "answer" text NULL CHECK ((JSON_VALID("answer") OR "answer" IS NULL)), "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "feedback_id_id" bigint NOT NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "question_id_id" bigint NULL REFERENCES "pms_question" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_bonuspointsetting" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "model" varchar(100) NOT NULL, "applicable_for" varchar(50) NULL, "bonus_for" varchar(25) NOT NULL, "field_1" varchar(25) NULL, "conditions" varchar(25) NULL, "field_2" varchar(25) NULL, "points" integer NOT NULL, "is_active" bool NOT NULL);
-CREATE TABLE "pms_calibrationrating" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "performance_rating" integer NULL, "potential_rating" integer NULL, "talent_category" varchar(50) NULL, "calibrated_rank" integer NULL, "succession_ready" bool NOT NULL, "next_move" varchar(200) NULL, "calibration_notes" text NULL, "calibration_id_id" bigint NOT NULL REFERENCES "pms_talentcalibration" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_comment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "comment" varchar(150) NOT NULL, "created_at" datetime NULL, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_objective_id_id" bigint NULL REFERENCES "pms_employeeobjective" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_employeebonuspoint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "bonus_point" integer NOT NULL, "instance" varchar(150) NULL, "based_on" varchar(150) NOT NULL, "bonus_point_id_id" bigint NULL REFERENCES "employee_bonuspoint" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_employeekeyresult" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "key_result" varchar(60) NULL, "key_result_description" text NULL, "progress_type" varchar(60) NULL, "status" varchar(20) NULL, "created_at" date NULL, "updated_at" date NULL, "start_value" integer NULL, "current_value" integer NULL, "target_value" integer NULL, "start_date" date NULL, "end_date" date NULL, "progress_percentage" integer NOT NULL, "employee_objective_id_id" bigint NULL REFERENCES "pms_employeeobjective" ("id") DEFERRABLE INITIALLY DEFERRED, "key_result_id_id" bigint NULL REFERENCES "pms_keyresult" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_employeeobjective" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "is_active" bool NOT NULL, "objective" varchar(100) NULL, "objective_description" text NULL, "created_at" date NOT NULL, "updated_at" date NOT NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "status" varchar(20) NOT NULL, "progress_percentage" integer NOT NULL, "archive" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "objective_id_id" bigint NULL REFERENCES "pms_objective" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_employeeobjective_key_result_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "employeeobjective_id" bigint NOT NULL REFERENCES "pms_employeeobjective" ("id") DEFERRABLE INITIALLY DEFERRED, "keyresult_id" bigint NOT NULL REFERENCES "pms_keyresult" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_feedback" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "review_cycle" varchar(100) NOT NULL, "status" varchar(50) NOT NULL, "archive" bool NULL, "start_date" date NOT NULL, "end_date" date NULL, "cyclic_feedback" bool NOT NULL, "cyclic_feedback_days_count" integer NULL, "cyclic_feedback_period" varchar(50) NULL, "cyclic_next_start_date" date NULL, "cyclic_next_end_date" date NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "manager_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "question_template_id_id" bigint NOT NULL REFERENCES "pms_questiontemplate" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_feedback_colleague_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "feedback_id" bigint NOT NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_feedback_employee_key_results_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "feedback_id" bigint NOT NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "employeekeyresult_id" bigint NOT NULL REFERENCES "pms_employeekeyresult" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_feedback_others_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "feedback_id" bigint NOT NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_feedback_subordinate_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "feedback_id" bigint NOT NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalcalibrationrating" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "performance_rating" integer NULL, "potential_rating" integer NULL, "talent_category" varchar(50) NULL, "calibrated_rank" integer NULL, "succession_ready" bool NOT NULL, "next_move" varchar(200) NULL, "calibration_notes" text NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "calibration_id_id" bigint NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL);
-CREATE TABLE "pms_historicalcalibrationrating_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalcalibrationrating_id" integer NOT NULL REFERENCES "pms_historicalcalibrationrating" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalcomment" ("id" bigint NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "created_at" datetime NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "employee_id_id" bigint NULL, "employee_objective_id_id" bigint NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalcomment_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalcomment_id" integer NOT NULL REFERENCES "pms_historicalcomment" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalemployeekeyresult" ("id" bigint NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "key_result" varchar(60) NULL, "key_result_description" text NULL, "progress_type" varchar(60) NULL, "status" varchar(20) NULL, "created_at" date NULL, "updated_at" date NULL, "start_value" integer NULL, "current_value" integer NULL, "target_value" integer NULL, "start_date" date NULL, "end_date" date NULL, "progress_percentage" integer NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "employee_objective_id_id" bigint NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "key_result_id_id" bigint NULL);
-CREATE TABLE "pms_historicalemployeekeyresult_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalemployeekeyresult_id" integer NOT NULL REFERENCES "pms_historicalemployeekeyresult" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalemployeeobjective" ("id" bigint NOT NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "objective" varchar(100) NULL, "objective_description" text NULL, "created_at" date NOT NULL, "updated_at" date NOT NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "status" varchar(20) NOT NULL, "progress_percentage" integer NOT NULL, "archive" bool NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL, "objective_id_id" bigint NULL);
-CREATE TABLE "pms_historicalemployeeobjective_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalemployeeobjective_id" integer NOT NULL REFERENCES "pms_historicalemployeeobjective" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalkeyresult" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "title" varchar(60) NULL, "description" text NOT NULL, "progress_type" varchar(60) NOT NULL, "target_value" integer NULL, "duration" integer NULL, "archive" bool NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "company_id_id" bigint NULL, "created_by_id" integer NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL);
-CREATE TABLE "pms_historicalkeyresult_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalkeyresult_id" integer NOT NULL REFERENCES "pms_historicalkeyresult" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalobjective" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "title" varchar(100) NOT NULL, "description" text NOT NULL, "duration_unit" varchar(20) NULL, "duration" integer NOT NULL, "add_assignees" bool NOT NULL, "archive" bool NOT NULL, "self_employee_progress_update" bool NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "company_id_id" bigint NULL, "created_by_id" integer NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL);
-CREATE TABLE "pms_historicalobjective_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalobjective_id" integer NOT NULL REFERENCES "pms_historicalobjective" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicalperformancerating" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "overall_rating" integer NULL, "competency_rating" integer NULL, "collaboration_rating" integer NULL, "innovation_rating" integer NULL, "customer_focus_rating" integer NULL, "comments" text NULL, "strengths" text NULL, "improvement_areas" text NULL, "development_plan" text NULL, "rating_date" datetime NOT NULL, "is_finalized" bool NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" integer NULL, "employee_id_id" bigint NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "manager_id_id" bigint NULL, "modified_by_id" integer NULL, "period_id_id" bigint NULL);
-CREATE TABLE "pms_historicalperformancerating_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalperformancerating_id" integer NOT NULL REFERENCES "pms_historicalperformancerating" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_historicaltalentcalibration" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "title" varchar(200) NOT NULL, "scheduled_date" datetime NOT NULL, "location" varchar(200) NULL, "description" text NULL, "status" varchar(20) NOT NULL, "meeting_notes" text NULL, "recommendations" text NULL, "created_on" datetime NOT NULL, "modified_on" datetime NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "created_by_id" bigint NULL, "department_id_id" bigint NULL, "facilitator_id" bigint NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL, "period_id_id" bigint NULL);
-CREATE TABLE "pms_historicaltalentcalibration_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicaltalentcalibration_id" integer NOT NULL REFERENCES "pms_historicaltalentcalibration" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_keyresult" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(60) NULL, "description" text NOT NULL, "progress_type" varchar(60) NOT NULL, "target_value" integer NULL, "duration" integer NULL, "archive" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_keyresultfeedback" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "answer" text NULL CHECK ((JSON_VALID("answer") OR "answer" IS NULL)), "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "feedback_id_id" bigint NULL REFERENCES "pms_feedback" ("id") DEFERRABLE INITIALLY DEFERRED, "key_result_id_id" bigint NULL REFERENCES "pms_employeekeyresult" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_meetings" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(100) NOT NULL, "date" datetime NULL, "response" text NULL, "show_response" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "question_template_id" bigint NULL REFERENCES "pms_questiontemplate" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_meetings_answer_employees" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "meetings_id" bigint NOT NULL REFERENCES "pms_meetings" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_meetings_employee_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "meetings_id" bigint NOT NULL REFERENCES "pms_meetings" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_meetings_manager" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "meetings_id" bigint NOT NULL REFERENCES "pms_meetings" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_meetingsanswer" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "answer" text NULL CHECK ((JSON_VALID("answer") OR "answer" IS NULL)), "employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "meeting_id_id" bigint NOT NULL REFERENCES "pms_meetings" ("id") DEFERRABLE INITIALLY DEFERRED, "question_id_id" bigint NULL REFERENCES "pms_question" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_objective" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(100) NOT NULL, "description" text NOT NULL, "duration_unit" varchar(20) NULL, "duration" integer NOT NULL, "add_assignees" bool NOT NULL, "archive" bool NOT NULL, "self_employee_progress_update" bool NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_objective_assignees" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "objective_id" bigint NOT NULL REFERENCES "pms_objective" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_objective_key_result_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "objective_id" bigint NOT NULL REFERENCES "pms_objective" ("id") DEFERRABLE INITIALLY DEFERRED, "keyresult_id" bigint NOT NULL REFERENCES "pms_keyresult" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_objective_managers" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "objective_id" bigint NOT NULL REFERENCES "pms_objective" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_performanceimprovementplan" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "title" varchar(255) NOT NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "mid_review_date" date NULL, "reason" varchar(50) NOT NULL, "reason_details" text NOT NULL, "expected_outcomes" text NOT NULL, "support_provided" text NOT NULL, "status" varchar(20) NOT NULL, "approved_date" datetime NULL, "employee_acknowledged" bool NOT NULL, "acknowledgment_date" datetime NULL, "outcome" text NULL, "completion_status" varchar(50) NOT NULL, "completion_date" datetime NULL, "is_active" bool NOT NULL, "approved_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "initiated_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "template_id" bigint NULL REFERENCES "pms_piptemplate" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_performancerating" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "overall_rating" integer NULL, "competency_rating" integer NULL, "collaboration_rating" integer NULL, "innovation_rating" integer NULL, "customer_focus_rating" integer NULL, "comments" text NULL, "strengths" text NULL, "improvement_areas" text NULL, "development_plan" text NULL, "rating_date" datetime NOT NULL, "is_finalized" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "manager_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "period_id_id" bigint NOT NULL REFERENCES "pms_period" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_period" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "period_name" varchar(150) NOT NULL UNIQUE, "start_date" date NOT NULL, "end_date" date NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_period_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "period_id" bigint NOT NULL REFERENCES "pms_period" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_pipextension" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "requested_date" datetime NOT NULL, "current_end_date" date NOT NULL, "requested_new_end_date" date NOT NULL, "extension_days" integer NOT NULL, "justification" text NOT NULL, "status" varchar(20) NOT NULL, "approval_date" datetime NULL, "approval_comments" text NULL, "approved_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "pip_id" bigint NOT NULL UNIQUE REFERENCES "pms_performanceimprovementplan" ("id") DEFERRABLE INITIALLY DEFERRED, "requested_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_pipmilestone" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "milestone_title" varchar(255) NOT NULL, "description" text NULL, "target_date" date NOT NULL, "success_criteria" text NOT NULL, "status" varchar(25) NOT NULL, "completion_date" datetime NULL, "comments" text NULL, "order" integer NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "pip_id" bigint NOT NULL REFERENCES "pms_performanceimprovementplan" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_pipreview" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "review_date" datetime NOT NULL, "review_type" varchar(20) NOT NULL, "overall_rating" varchar(25) NOT NULL, "achievements" text NULL, "areas_for_improvement" text NULL, "recommendations" text NULL, "employee_comments" text NULL, "notes" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "pip_id" bigint NOT NULL REFERENCES "pms_performanceimprovementplan" ("id") DEFERRABLE INITIALLY DEFERRED, "reviewed_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_piptemplate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(255) NOT NULL, "description" text NULL, "duration_days" integer NOT NULL, "status" varchar(20) NOT NULL, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_question" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "question" varchar(250) NOT NULL, "question_type" varchar(100) NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "template_id_id" bigint NULL REFERENCES "pms_questiontemplate" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_questionoptions" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "option_a" varchar(250) NULL, "option_b" varchar(250) NULL, "option_c" varchar(250) NULL, "option_d" varchar(250) NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "question_id_id" bigint NULL REFERENCES "pms_question" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_questiontemplate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "question_template" varchar(100) NOT NULL UNIQUE, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_questiontemplate_company_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "questiontemplate_id" bigint NOT NULL REFERENCES "pms_questiontemplate" ("id") DEFERRABLE INITIALLY DEFERRED, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_talentcalibration" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(200) NOT NULL, "scheduled_date" datetime NOT NULL, "location" varchar(200) NULL, "description" text NULL, "status" varchar(20) NOT NULL, "meeting_notes" text NULL, "recommendations" text NULL, "created_on" datetime NOT NULL, "modified_on" datetime NOT NULL, "created_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id_id" bigint NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "facilitator_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "period_id_id" bigint NOT NULL REFERENCES "pms_period" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "pms_talentcalibration_participants" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "talentcalibration_id" bigint NOT NULL REFERENCES "pms_talentcalibration" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_project" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(200) NOT NULL UNIQUE, "status" varchar(250) NOT NULL, "start_date" date NOT NULL, "end_date" date NULL, "document" varchar(100) NULL, "description" text NOT NULL, "company_id_id" bigint NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_project_managers" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "project_id" bigint NOT NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_project_members" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "project_id" bigint NOT NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_projectstage" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(200) NOT NULL, "sequence" integer NULL, "is_end_stage" bool NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "project_id" bigint NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_task" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(200) NOT NULL, "status" varchar(250) NOT NULL, "start_date" date NULL, "end_date" date NULL, "document" varchar(100) NULL, "description" text NOT NULL, "sequence" integer NOT NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "project_id" bigint NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED, "stage_id" bigint NULL REFERENCES "project_projectstage" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_task_task_managers" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "task_id" bigint NOT NULL REFERENCES "project_task" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_task_task_members" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "task_id" bigint NOT NULL REFERENCES "project_task" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "project_timesheet" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "date" date NOT NULL, "time_spent" varchar(10) NULL, "status" varchar(250) NOT NULL, "description" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "project_id_id" bigint NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED, "task_id_id" bigint NULL REFERENCES "project_task" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "project_project" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "title" varchar(200) NOT NULL);
 CREATE TABLE "recruitment_approvalrule" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "name" varchar(200) NOT NULL, "grade_min" varchar(50) NOT NULL, "grade_max" varchar(50) NOT NULL, "priority" integer unsigned NOT NULL CHECK ("priority" >= 0), "is_active" bool NOT NULL, "company_id_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id" bigint NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_approvalstep" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "sequence" integer unsigned NOT NULL CHECK ("sequence" >= 0), "approver_type" varchar(30) NOT NULL, "sla_hours" integer unsigned NOT NULL CHECK ("sla_hours" >= 0), "is_optional" bool NOT NULL, "approver_user_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "rule_id" bigint NOT NULL REFERENCES "recruitment_approvalrule" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_bulkrequestline" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(120) NOT NULL, "vacancy" integer unsigned NOT NULL CHECK ("vacancy" >= 0), "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id" bigint NULL, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "published_recruitment_id" bigint NULL REFERENCES "recruitment_recruitment" ("id") DEFERRABLE INITIALLY DEFERRED, "recruitment_id" bigint NOT NULL REFERENCES "recruitment_recruitment" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "recruitment_candidate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(100) NULL, "profile" varchar(100) NULL, "portfolio" varchar(200) NOT NULL, "schedule_date" datetime NULL, "email" varchar(254) NOT NULL, "mobile" varchar(15) NOT NULL, "resume" varchar(100) NOT NULL, "address" text NULL, "country" varchar(30) NULL, "dob" date NULL, "state" varchar(30) NULL, "city" varchar(30) NULL, "zip" varchar(30) NULL, "gender" varchar(15) NULL, "source" varchar(20) NULL, "start_onboard" bool NOT NULL, "hired" bool NOT NULL, "canceled" bool NOT NULL, "converted" bool NOT NULL, "joining_date" date NULL, "sequence" integer NULL, "experience_years" decimal NOT NULL, "notice_period_days" integer unsigned NULL CHECK ("notice_period_days" >= 0), "availability_date" date NULL, "probation_end" date NULL, "offer_letter_status" varchar(10) NOT NULL, "last_updated" date NULL, "hired_date" date NULL, "converted_employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "recruitment_id_id" bigint NULL REFERENCES "recruitment_recruitment" ("id") DEFERRABLE INITIALLY DEFERRED, "referral_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "stage_id_id" bigint NULL REFERENCES "recruitment_stage" ("id") DEFERRABLE INITIALLY DEFERRED, "cover_letter" varchar(100) NULL, "graduation_certificate" varchar(100) NULL, "promoted_to_onboarding" bool NOT NULL, "transcripts" varchar(100) NULL, "project_id_id" bigint NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED);
+CREATE TABLE "recruitment_candidate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "name" varchar(100) NULL, "profile" varchar(100) NULL, "portfolio" varchar(200) NOT NULL, "schedule_date" datetime NULL, "email" varchar(254) NOT NULL, "mobile" varchar(15) NOT NULL, "resume" varchar(100) NOT NULL, "address" text NULL, "country" varchar(30) NULL, "dob" date NULL, "state" varchar(30) NULL, "city" varchar(30) NULL, "zip" varchar(30) NULL, "gender" varchar(15) NULL, "source" varchar(20) NULL, "start_onboard" bool NOT NULL, "hired" bool NOT NULL, "canceled" bool NOT NULL, "converted" bool NOT NULL, "joining_date" date NULL, "sequence" integer NULL, "experience_years" decimal NOT NULL, "notice_period_days" integer unsigned NULL CHECK ("notice_period_days" >= 0), "availability_date" date NULL, "probation_end" date NULL, "offer_letter_status" varchar(10) NOT NULL, "last_updated" date NULL, "hired_date" date NULL, "converted_employee_id_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "recruitment_id_id" bigint NULL REFERENCES "recruitment_recruitment" ("id") DEFERRABLE INITIALLY DEFERRED, "referral_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "stage_id_id" bigint NULL REFERENCES "recruitment_stage" ("id") DEFERRABLE INITIALLY DEFERRED, "cover_letter" varchar(100) NULL, "graduation_certificate" varchar(100) NULL, "promoted_to_onboarding" bool NOT NULL, "transcripts" varchar(100) NULL, "project_id_id" integer NULL REFERENCES "project_project" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_candidatedocument" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(250) NOT NULL, "document" varchar(100) NULL, "status" varchar(10) NOT NULL, "reject_reason" text NULL, "candidate_id_id" bigint NOT NULL REFERENCES "recruitment_candidate" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "document_request_id_id" bigint NULL REFERENCES "recruitment_candidatedocumentrequest" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_candidatedocumentrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "title" varchar(100) NOT NULL, "format" varchar(10) NOT NULL, "max_size" integer NULL, "description" text NULL, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_candidatedocumentrequest_candidate_id" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "candidatedocumentrequest_id" bigint NOT NULL REFERENCES "recruitment_candidatedocumentrequest" ("id") DEFERRABLE INITIALLY DEFERRED, "candidate_id" bigint NOT NULL REFERENCES "recruitment_candidate" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -2169,7 +1107,7 @@ CREATE TABLE "recruitment_cvscreeninglog" ("id" integer NOT NULL PRIMARY KEY AUT
 CREATE TABLE "recruitment_employmentproposal" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "proposal_no" varchar(20) NOT NULL UNIQUE, "template_type" varchar(20) NOT NULL, "status" varchar(20) NOT NULL, "post_applied_for" varchar(200) NOT NULL, "grade_group" varchar(50) NOT NULL, "division_department" varchar(200) NOT NULL, "post_location" varchar(200) NOT NULL, "contractual" bool NOT NULL, "contract_name" varchar(200) NOT NULL, "contract_period_from" date NULL, "contract_period_to" date NULL, "job_no" varchar(50) NOT NULL, "reporting_to" varchar(200) NOT NULL, "reporting_staff_no" varchar(50) NOT NULL, "gsm_cpn_no" varchar(50) NOT NULL, "is_new_appointment" bool NOT NULL, "replacement_staff_no" varchar(50) NOT NULL, "candidate_referred" varchar(20) NOT NULL, "referral_staff_number" varchar(50) NOT NULL, "consultancy_reg" varchar(20) NOT NULL, "consultancy_other" varchar(120) NOT NULL, "employment_contract_type" varchar(20) NOT NULL, "employment_contract_months" integer unsigned NULL CHECK ("employment_contract_months" >= 0), "has_relative_in_company" bool NOT NULL, "relative_name" varchar(120) NOT NULL, "relative_staff_no" varchar(50) NOT NULL, "relative_location" varchar(120) NOT NULL, "application_date" date NULL, "interview_date" date NULL, "applicant_name" varchar(200) NOT NULL, "nationality" varchar(80) NOT NULL, "present_employer" varchar(200) NOT NULL, "local_transfer" bool NOT NULL, "marital_status" varchar(20) NOT NULL, "dob" date NULL, "place_of_birth" varchar(120) NOT NULL, "qualification_academic" varchar(200) NOT NULL, "qualification_professional" varchar(200) NOT NULL, "experience_local_years" decimal NULL, "experience_overseas_years" decimal NULL, "lang_arabic" bool NOT NULL, "lang_english" bool NOT NULL, "lang_others" varchar(200) NOT NULL, "driving_license" varchar(20) NOT NULL, "salary_budgeted" varchar(20) NOT NULL, "basic_salary" decimal NULL, "hra_allowance" decimal NULL, "transport_allowance" decimal NULL, "addl_resp_allowance" decimal NULL, "overtime_allowance" decimal NULL, "food_allowance" decimal NULL, "lsa_allowance" decimal NULL, "lsa_tier" varchar(20) NOT NULL, "gross_salary" decimal NULL, "salary_columns_json" text NOT NULL CHECK ((JSON_VALID("salary_columns_json") OR "salary_columns_json" IS NULL)), "air_passage_from" varchar(120) NOT NULL, "air_passage_to" varchar(120) NOT NULL, "air_passage_months" integer unsigned NULL CHECK ("air_passage_months" >= 0), "family_status" varchar(20) NOT NULL, "medical_clause" bool NOT NULL, "salary_increase_clause" text NOT NULL, "hod_comments" text NOT NULL, "remarks" text NOT NULL, "candidate_id" bigint NOT NULL REFERENCES "recruitment_candidate" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "interview_id" bigint NULL REFERENCES "recruitment_interviewschedule" ("id") DEFERRABLE INITIALLY DEFERRED, "manpower_request_id" bigint NULL REFERENCES "recruitment_manpowerrequest" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "recruitment_id" bigint NULL REFERENCES "recruitment_recruitment" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_evaluationcriteria" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(100) NOT NULL, "description" text NOT NULL, "max_score" integer unsigned NOT NULL CHECK ("max_score" >= 0), "is_active" bool NOT NULL);
 CREATE TABLE "recruitment_evaluationscore" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "score" integer unsigned NOT NULL CHECK ("score" >= 0), "comment" text NOT NULL, "criteria_id" bigint NOT NULL REFERENCES "recruitment_evaluationcriteria" ("id") DEFERRABLE INITIALLY DEFERRED, "evaluation_id" bigint NOT NULL REFERENCES "recruitment_interviewevaluation" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "recruitment_historicalcandidate" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "name" varchar(100) NULL, "profile" text NULL, "portfolio" varchar(200) NOT NULL, "schedule_date" datetime NULL, "email" varchar(254) NOT NULL, "mobile" varchar(15) NOT NULL, "resume" text NOT NULL, "address" text NULL, "country" varchar(30) NULL, "dob" date NULL, "state" varchar(30) NULL, "city" varchar(30) NULL, "zip" varchar(30) NULL, "gender" varchar(15) NULL, "source" varchar(20) NULL, "start_onboard" bool NOT NULL, "hired" bool NOT NULL, "canceled" bool NOT NULL, "converted" bool NOT NULL, "joining_date" date NULL, "sequence" integer NULL, "experience_years" decimal NOT NULL, "notice_period_days" integer unsigned NULL CHECK ("notice_period_days" >= 0), "availability_date" date NULL, "probation_end" date NULL, "offer_letter_status" varchar(10) NOT NULL, "last_updated" date NULL, "hired_date" date NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "converted_employee_id_id" bigint NULL, "created_by_id" integer NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NULL, "modified_by_id" integer NULL, "recruitment_id_id" bigint NULL, "referral_id" bigint NULL, "stage_id_id" bigint NULL, "cover_letter" text NULL, "graduation_certificate" text NULL, "promoted_to_onboarding" bool NOT NULL, "transcripts" text NULL, "project_id_id" bigint NULL);
+CREATE TABLE "recruitment_historicalcandidate" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "name" varchar(100) NULL, "profile" text NULL, "portfolio" varchar(200) NOT NULL, "schedule_date" datetime NULL, "email" varchar(254) NOT NULL, "mobile" varchar(15) NOT NULL, "resume" text NOT NULL, "address" text NULL, "country" varchar(30) NULL, "dob" date NULL, "state" varchar(30) NULL, "city" varchar(30) NULL, "zip" varchar(30) NULL, "gender" varchar(15) NULL, "source" varchar(20) NULL, "start_onboard" bool NOT NULL, "hired" bool NOT NULL, "canceled" bool NOT NULL, "converted" bool NOT NULL, "joining_date" date NULL, "sequence" integer NULL, "experience_years" decimal NOT NULL, "notice_period_days" integer unsigned NULL CHECK ("notice_period_days" >= 0), "availability_date" date NULL, "probation_end" date NULL, "offer_letter_status" varchar(10) NOT NULL, "last_updated" date NULL, "hired_date" date NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "converted_employee_id_id" bigint NULL, "created_by_id" integer NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id_id" bigint NULL, "modified_by_id" integer NULL, "recruitment_id_id" bigint NULL, "referral_id" bigint NULL, "stage_id_id" bigint NULL, "cover_letter" text NULL, "graduation_certificate" text NULL, "promoted_to_onboarding" bool NOT NULL, "transcripts" text NULL, "project_id_id" integer NULL);
 CREATE TABLE "recruitment_historicalcandidate_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalcandidate_id" integer NOT NULL REFERENCES "recruitment_historicalcandidate" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_historicalrejectedcandidate" ("id" bigint NOT NULL, "created_at" datetime NULL, "is_active" bool NOT NULL, "history_title" varchar(20) NULL, "history_description" text NULL, "history_highlight" bool NULL, "description" text NOT NULL, "history_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "history_date" datetime NOT NULL, "history_change_reason" varchar(100) NULL, "history_type" varchar(1) NOT NULL, "candidate_id_id" bigint NULL, "created_by_id" integer NULL, "history_relation_id" bigint NOT NULL, "history_user_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL);
 CREATE TABLE "recruitment_historicalrejectedcandidate_history_tags" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "historicalrejectedcandidate_id" integer NOT NULL REFERENCES "recruitment_historicalrejectedcandidate" ("history_id") DEFERRABLE INITIALLY DEFERRED, "audittag_id" bigint NOT NULL REFERENCES "fits_audit_audittag" ("id") DEFERRABLE INITIALLY DEFERRED);
@@ -2199,7 +1137,7 @@ Should you require any further information, please do not hesitate to contact us
 
 Yours sincerely,
 Human Resources Department
-{{company_name}}',1,'2026-10-03 20:19:38.963358');
+{{company_name}}',1,'2026-05-29 10:18:07.063136');
 INSERT INTO "recruitment_medicallettertemplate" VALUES(2,'Medical Clearance — Overseas Placement','RE: Medical Clearance for Overseas Employment
 
 Dear Sir/Madam,
@@ -2212,12 +1150,361 @@ This letter is issued for official purposes only.
 
 Yours faithfully,
 Human Resources
-{{company_name}}',1,'2026-10-03 20:19:38.964502');
+{{company_name}}',1,'2026-05-29 10:18:07.063619');
 CREATE TABLE "recruitment_offerapproval" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "action" varchar(20) NOT NULL, "acted_at" datetime NULL, "due_at" datetime NULL, "comment" text NOT NULL, "acted_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "approver_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "offer_id" bigint NOT NULL REFERENCES "recruitment_offerletter" ("id") DEFERRABLE INITIALLY DEFERRED, "step_id" bigint NULL REFERENCES "recruitment_approvalstep" ("id") DEFERRABLE INITIALLY DEFERRED, "signature_image" text NOT NULL);
 CREATE TABLE "recruitment_offerletter" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "offer_no" varchar(20) NOT NULL UNIQUE, "position" varchar(100) NOT NULL, "department" varchar(100) NULL, "basic_salary" decimal NOT NULL, "gross_salary" decimal NULL, "currency" varchar(3) NOT NULL, "joining_date" date NOT NULL, "contract_duration" integer NULL, "probation_period" integer NOT NULL, "job_description" text NULL, "terms_conditions" text NULL, "letter_template" text NULL, "generated_letter" text NULL, "status" varchar(20) NOT NULL, "sent_date" datetime NULL, "accepted_date" datetime NULL, "rejected_date" datetime NULL, "rejection_reason" text NULL, "approval_submitted_at" datetime NULL, "medical_status" varchar(15) NOT NULL, "visa_status" varchar(15) NOT NULL, "labour_clearance_status" varchar(15) NOT NULL, "documents_completion_pct" integer unsigned NOT NULL CHECK ("documents_completion_pct" >= 0), "joining_status" varchar(15) NOT NULL, "medical_cleared_at" datetime NULL, "visa_cleared_at" datetime NULL, "labour_cleared_at" datetime NULL, "created_on" datetime NOT NULL, "modified_on" datetime NOT NULL, "candidate_id_id" bigint NOT NULL UNIQUE REFERENCES "recruitment_candidate" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "role_type" varchar(20) NOT NULL, "candidate_signature_token" char(32) NOT NULL UNIQUE, "portal_token" char(32) NOT NULL UNIQUE, "candidate_signed_at" datetime NULL, "location" varchar(200) NULL);
 CREATE TABLE "recruitment_offerletterapproval" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sequence" integer unsigned NOT NULL CHECK ("sequence" >= 0), "status" varchar(20) NOT NULL, "feedback" text NOT NULL, "acted_at" datetime NULL, "approver_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "offer_letter_id" bigint NOT NULL REFERENCES "recruitment_offerletter" ("id") DEFERRABLE INITIALLY DEFERRED, "signature_image" text NOT NULL, "esign_provider" varchar(20) NULL, "esign_reference" varchar(120) NULL);
 CREATE TABLE "recruitment_offerletterstatuslog" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "from_status" varchar(30) NOT NULL, "to_status" varchar(30) NOT NULL, "note" text NOT NULL, "timestamp" datetime NOT NULL, "actor_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "offer_letter_id" bigint NOT NULL REFERENCES "recruitment_offerletter" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "recruitment_offerlettertemplate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(200) NOT NULL UNIQUE, "content" text NOT NULL, "is_default" bool NOT NULL, "created_at" datetime NOT NULL);
+CREATE TABLE "recruitment_offerlettertemplate" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "name" varchar(200) NOT NULL UNIQUE, "body_html" text NOT NULL, "is_active" bool NOT NULL, "created_at" datetime NOT NULL);
+INSERT INTO "recruitment_offerlettertemplate" VALUES(1,'Standard Employment Offer','Dear {{candidate_name}},
+
+We are delighted to offer you the position of <strong>{{position}}</strong>{% if department %} in the <strong>{{department}}</strong> department{% endif %} at <strong>{{company_name}}</strong>.
+
+<strong>Key Terms of Employment:</strong>
+
+• <strong>Position:</strong> {{position}}
+• <strong>Department:</strong> {{department}}
+• <strong>Joining Date:</strong> {{joining_date}}
+• <strong>Basic Salary:</strong> OMR {{basic_salary}} per month
+
+Your employment will be subject to the standard terms and conditions of employment as set out in the Employment Contract, which will be provided to you prior to your joining date.
+
+Please confirm your acceptance of this offer by signing and returning a copy of this letter. If you have any questions, please do not hesitate to contact our HR department.
+
+We look forward to welcoming you to our team.
+
+Yours sincerely,
+Human Resources Department
+{{company_name}}',1,'2026-05-29 10:18:06.844691');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(2,'Senior Management Offer','Dear {{candidate_name}},
+
+On behalf of the Leadership Team at <strong>{{company_name}}</strong>, we are pleased to extend this offer of employment for the senior role of <strong>{{position}}</strong>.
+
+<strong>Position Details:</strong>
+
+• <strong>Title:</strong> {{position}}
+• <strong>Division / Department:</strong> {{department}}
+• <strong>Commencement Date:</strong> {{joining_date}}
+• <strong>Basic Monthly Remuneration:</strong> OMR {{basic_salary}}
+
+In addition to your basic salary, you will be entitled to a comprehensive benefits package including health insurance, annual leave entitlement per Omani Labour Law, and performance-based incentives as outlined in the attached schedule.
+
+This offer is contingent upon satisfactory reference checks and receipt of original academic and professional credentials.
+
+We are confident that your expertise and leadership will make a significant contribution to our organisation. We look forward to your positive response.
+
+Warmest regards,
+Chief Executive Officer
+{{company_name}}',1,'2026-05-29 10:18:06.845208');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(3,'Probationary Offer','Dear {{candidate_name}},
+
+We are pleased to offer you the position of <strong>{{position}}</strong>{% if department %} within the <strong>{{department}}</strong> department{% endif %} at <strong>{{company_name}}</strong>, subject to a probationary period.
+
+<strong>Employment Details:</strong>
+
+• <strong>Position:</strong> {{position}}
+• <strong>Department:</strong> {{department}}
+• <strong>Start Date:</strong> {{joining_date}}
+• <strong>Basic Salary:</strong> OMR {{basic_salary}} per month
+• <strong>Probationary Period:</strong> Three (3) months from the date of joining
+
+During the probationary period, your performance will be evaluated against set objectives. Upon successful completion, your employment will be confirmed and you will be entitled to the full benefits package as per company policy.
+
+Either party may terminate employment during the probation period with one (1) week''s written notice.
+
+Please sign and return this letter to confirm acceptance no later than 5 working days from the date of issue.
+
+Kind regards,
+Human Resources Department
+{{company_name}}',1,'2026-05-29 10:18:06.845479');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(4,'Contract Employment Offer','Dear {{candidate_name}},
+
+We are pleased to offer you a fixed-term contract position of <strong>{{position}}</strong>{% if department %} in the <strong>{{department}}</strong> department{% endif %} at <strong>{{company_name}}</strong>.
+
+<strong>Contract Details:</strong>
+
+• <strong>Position:</strong> {{position}}
+• <strong>Department:</strong> {{department}}
+• <strong>Contract Start Date:</strong> {{joining_date}}
+• <strong>Contract Duration:</strong> One (1) year, renewable subject to performance and business needs
+• <strong>Basic Monthly Salary:</strong> OMR {{basic_salary}}
+
+This is a fixed-term engagement and does not imply any promise of permanent employment beyond the stated term. The contract may be renewed by mutual written agreement prior to expiry.
+
+All other employment conditions shall be governed by the Omani Labour Law and the company''s internal policies applicable to contract employees.
+
+Kindly confirm your acceptance of these terms within three (3) working days.
+
+Regards,
+Human Resources Department
+{{company_name}}',1,'2026-05-29 10:18:06.845735');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(5,'Executive Offer Letter','Dear {{candidate_name}},
+
+The Board of Directors and Executive Leadership of <strong>{{company_name}}</strong> are honoured to extend this offer of employment to you for the executive position of <strong>{{position}}</strong>.
+
+<strong>Executive Appointment Details:</strong>
+
+• <strong>Title:</strong> {{position}}
+• <strong>Reporting Division:</strong> {{department}}
+• <strong>Effective Date:</strong> {{joining_date}}
+• <strong>Basic Monthly Salary:</strong> OMR {{basic_salary}}
+
+<strong>Executive Benefits Include:</strong>
+• Comprehensive private medical insurance (employee + dependants)
+• Annual performance bonus (as per the Executive Incentive Plan)
+• Company vehicle or vehicle allowance
+• Annual leave as per Omani Labour Law plus additional executive entitlement
+• Business travel and accommodation per company policy
+
+This appointment is subject to board ratification, satisfactory completion of background screening, and execution of the Executive Service Agreement which will be provided separately.
+
+We are excited about the strategic value you will bring to <strong>{{company_name}}</strong> and look forward to your formal acceptance.
+
+With regards,
+Chairman, Board of Directors
+{{company_name}}',1,'2026-05-29 10:18:06.845998');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(6,'ONEIC — Employment Proposal Form (General)','
+<div style="font-family: Arial, sans-serif; font-size: 11px; color:#000; max-width: 760px; margin:auto;">
+  <div style="text-align:center; font-weight:bold;">
+    <div style="font-size:13px;">الشركة الوطنية العمانية للهندسة و الاستثمار ( ش م ع ع )</div>
+    <div style="font-size:13px;">Oman National Engineering &amp; Investment Company (SAOG)</div>
+    <div style="font-size:14px; margin-top:6px;">EMPLOYMENT PROPOSAL FORM</div>
+  </div>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:10px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;">
+      <td colspan="4">General</td>
+      <td style="width:60px;">05</td>
+      <td style="width:60px;">2025</td>
+    </tr>
+    <tr>
+      <td style="width:130px;">Post Applied for</td>
+      <td colspan="3"><b>{{position}}</b></td>
+      <td>Grade Group</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Div. / Dept.</td>
+      <td colspan="3"><b>{{department}}</b></td>
+      <td>Post Location</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Contractual</td>
+      <td colspan="3">☐ YES &nbsp;&nbsp; ☑ NO</td>
+      <td>Contract Name</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Contract Period</td>
+      <td>From</td>
+      <td>&nbsp;</td>
+      <td>To</td>
+      <td>Job No.</td>
+      <td>83001</td>
+    </tr>
+    <tr>
+      <td>Reporting to</td>
+      <td colspan="3">{{reporting_to}}</td>
+      <td>Staff No.</td>
+      <td>&nbsp;</td>
+    </tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="6">Brief (Recruitment)</td></tr>
+    <tr>
+      <td style="width:130px;">New Appointment</td>
+      <td>☑ YES</td>
+      <td>☐ NO</td>
+      <td colspan="3">Replacement for Staff No. ___________</td>
+    </tr>
+    <tr>
+      <td>Candidate Referred</td>
+      <td>☐ Client</td>
+      <td>☐ Consultancy</td>
+      <td>☑ Direct</td>
+      <td colspan="2">☐ Staff Number</td>
+    </tr>
+    <tr>
+      <td>Consultancy Reg.</td>
+      <td>☐ Voltech HR</td>
+      <td>☐ Zen</td>
+      <td>☐ Trehan</td>
+      <td>☐ Sinclus</td>
+      <td>☐ ALYousuf / ☐ Others</td>
+    </tr>
+    <tr>
+      <td>Employment Contract</td>
+      <td colspan="5">☐ Temporary ______ Months &nbsp;&nbsp; ☑ Permanent (Two years basis)</td>
+    </tr>
+    <tr>
+      <td colspan="6">Does the Candidate have any relation working in the Company? ☐ YES &nbsp; ☑ NO<br/>
+      If YES, mention Name: __________ ; Staff No: ______ ; Work Location: __________</td>
+    </tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="4">Summary of Resume</td></tr>
+    <tr><td>Application Date:</td><td>{{application_date}}</td><td>Interview Date:</td><td>{{interview_date}}</td></tr>
+    <tr><td>Name of Applicant:</td><td><b>{{candidate_name}}</b></td><td>Nationality:</td><td>{{nationality}}</td></tr>
+    <tr><td>Present Employer:</td><td>{{present_employer}}</td><td colspan="2">Local Transfer: ☑ YES &nbsp; ☐ NO</td></tr>
+    <tr><td>Marital Status:</td><td colspan="3">☐ Single &nbsp; ☑ Married &nbsp; ☐ Divorced &nbsp; ☐ Widow &nbsp; ☐ Other</td></tr>
+    <tr><td>Date of Birth:</td><td>{{dob}}</td><td>Place of Birth:</td><td>{{birth_place}}</td></tr>
+    <tr><td>Qualification (Academic):</td><td colspan="3">Master of Business Administration &nbsp; / &nbsp; Professional/Technical: __________</td></tr>
+    <tr><td>Experience:</td><td>Local: __________</td><td colspan="2">Overseas: __________</td></tr>
+    <tr><td>Languages:</td><td colspan="3">☐ Arabic &nbsp; ☑ English &nbsp; ☐ Others &nbsp;&nbsp; Driving License: ☐ Omani ☐ GCC ☐ Other</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="4">SALARY RECOMMENDATION</td></tr>
+    <tr style="background:#f6f6f6; font-weight:bold;">
+      <td>Salary OMR — ☑ Budgeted R.O. &nbsp; ☐ Not Budgeted &nbsp; ☐ Contractual</td>
+      <td>Proposed</td><td>HRC Suggestion</td><td>CEO Approval</td>
+    </tr>
+    <tr><td>Basic Salary</td><td>{{basic_salary}}</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>HRA (Inc. E&amp;W, Tel. &amp; GSM)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Transport Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Additional Responsibility Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Overtime Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>FOOD ALLOWANCE</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Living Standard Allowance (LSA)<br/>
+      ☐ RO 50 (&lt;300) &nbsp; ☐ RO (301–500) &nbsp; ☐ RO 30 (501–999) &nbsp; ☐ RO 20 (1000 &amp; Above)<br/>
+      <i>LSA calculated as per Basic salary</i></td>
+      <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr style="font-weight:bold;"><td>Gross Salary →</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  </table>
+
+  <p style="font-size:10px;">* This allowance is part of gross salary and can be dissolved to adjust in basic and allowances during any compensation restructuring.</p>
+
+  <div style="margin-top:6px;">
+    <b>Notes:</b>
+    <ul style="margin:4px 0 0 18px; padding:0;">
+      <li>☐ Contract Period: ______ to ______ (Two years basis / Short Period)</li>
+      <li>☑ Air passage Sector: From ______ to ______ (Entitlement: ☑ 12 months / ☐ 24 months)</li>
+      <li>☐ Family status (Wife, 2 children up to 18 years age) &nbsp; ☑ Bachelor status</li>
+      <li>☑ Medical (as per Company''s medical insurance policy and Oman Labour Law)</li>
+      <li>☐ Increase Salary by RO ___ after ☐ 3 or ☐ 6 months in ☐ RO ___ in basic / ☐ RO ___ in Addl. Resp. Allow.</li>
+    </ul>
+    <p>HOD''s Comments (if any): ______________________________________________________</p>
+  </div>
+
+  <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="3">Approvals by Circular – HRC</td></tr>
+    <tr><td>Project Director</td><td>Member</td><td>__________________________</td></tr>
+    <tr><td>Head Of Department</td><td>Member</td><td>__________________________</td></tr>
+    <tr><td>Chief Operation Officer</td><td>Member</td><td>__________________________</td></tr>
+    <tr><td>Legal Advisor</td><td>Member</td><td>__________________________</td></tr>
+    <tr><td>General Manager HR&amp;A</td><td>Member</td><td>__________________________</td></tr>
+  </table>
+
+  <p>Remarks (if any): ______________________________________________________</p>
+
+  <table border="1" cellspacing="0" cellpadding="10" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="2">FINAL APPROVAL</td></tr>
+    <tr style="text-align:center;">
+      <td><br/><br/>__________________________<br/><b>Chief Financial Officer</b><br/>HRC Chairman</td>
+      <td><br/><br/>__________________________<br/><b>Chief Executive Officer</b></td>
+    </tr>
+  </table>
+
+  <p style="font-size:10px; margin-top:6px;">
+    Note: 1) "S&amp;O" Grade (Expat.) final approval by the Head of HR.<br/>
+    2) Any change in this form must be signed by any 3 members at least, otherwise it is considered as void.
+  </p>
+  <p style="font-size:9px; text-align:right;">HR&amp;A/EPF/V3/R/July 2022</p>
+</div>
+',1,'2026-05-29 10:18:08.579632');
+INSERT INTO "recruitment_offerlettertemplate" VALUES(7,'ONEIC — Employment Proposal Form (S-O-M Grade Contractual)','
+<div style="font-family: Arial, sans-serif; font-size: 11px; color:#000; max-width:760px; margin:auto;">
+  <div style="text-align:center; font-weight:bold;">
+    <div style="font-size:13px;">الشركة الوطنية العمانية للهندسة و الاستثمار ( ش م ع ع )</div>
+    <div style="font-size:13px;">Oman National Engineering &amp; Investment Company (SAOG)</div>
+    <div style="font-size:14px; margin-top:6px;">EMPLOYMENT PROPOSAL FORM</div>
+    <div style="font-size:12px;">("S-O-M" Grade — Contractual)</div>
+    <div style="text-align:right; font-size:11px;">Date: __________ &nbsp; 2022</div>
+  </div>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:10px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="4">General</td></tr>
+    <tr><td>Post Applied for</td><td>{{position}}</td><td>Grade Group</td><td>&nbsp;</td></tr>
+    <tr><td>Div. / Dept.</td><td>{{department}}</td><td>Post Location</td><td>&nbsp;</td></tr>
+    <tr><td>Contractual</td><td>☐ YES &nbsp; ☐ NO</td><td>Contract Name</td><td>&nbsp;</td></tr>
+    <tr><td>Contract Period</td><td>From _____ To _____</td><td>Job No.</td><td>&nbsp;</td></tr>
+    <tr><td>Reporting to</td><td>{{reporting_to}}</td><td>Staff No. / GSM / CPN No.</td><td>&nbsp;</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="6">Brief (Recruitment)</td></tr>
+    <tr><td>New Appointment</td><td>☐ YES</td><td>☐ NO</td><td colspan="3">Replacement for Staff No. ______</td></tr>
+    <tr><td>Candidate Referred</td><td>☐ Client</td><td>☐ Consultancy</td><td>☐ Direct</td><td colspan="2">☐ Staff Number</td></tr>
+    <tr><td>Consultancy Reg.</td><td>☐ Voltech HR</td><td>☐ Zen</td><td>☐ Trehan</td><td>☐ Sinclus</td><td>☐ ALYousuf / ☐ Others</td></tr>
+    <tr><td>Employment Contract</td><td colspan="5">☐ Temporary _____ Months &nbsp; ☐ Permanent (______)</td></tr>
+    <tr><td colspan="6">Does the Candidate have any relation working in the Company? ☐ YES &nbsp; ☐ NO<br/>If YES, mention Name: ______ ; Staff No: ______ ; Work Location: ______</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="4">Summary of Resume</td></tr>
+    <tr><td>Application Date:</td><td>{{application_date}}</td><td>Interview Date:</td><td>{{interview_date}}</td></tr>
+    <tr><td>Name of Applicant:</td><td><b>{{candidate_name}}</b></td><td>Nationality:</td><td>{{nationality}}</td></tr>
+    <tr><td>Present Employer:</td><td>{{present_employer}}</td><td colspan="2">Local Transfer: ☐ YES ☐ NO</td></tr>
+    <tr><td>Marital Status:</td><td colspan="3">✓ Single &nbsp; ☐ Married &nbsp; ☐ Divorced &nbsp; ☐ Widow &nbsp; ☐ Other</td></tr>
+    <tr><td>Date of Birth:</td><td>{{dob}}</td><td>Place of Birth:</td><td>{{birth_place}}</td></tr>
+    <tr><td>Qualification (Academic):</td><td colspan="3">__________ &nbsp; Professional/Technical: __________</td></tr>
+    <tr><td>Experience:</td><td colspan="3">Overseas: ______ Years</td></tr>
+    <tr><td>Languages:</td><td colspan="3">✓ Arabic &nbsp; ✓ English &nbsp; ☐ Others &nbsp;&nbsp; Driving License: ✓ Omani ☐ GCC ☐ Other</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td colspan="4">SALARY RECOMMENDATION</td></tr>
+    <tr style="background:#f6f6f6; font-weight:bold;">
+      <td>Salary OMR — ☐ Budgeted &nbsp; ☐ Not Budgeted &nbsp; ☐ Contractual</td>
+      <td>Proposed</td><td>HR Suggestion</td><td>Remarks</td></tr>
+    <tr><td>Basic Salary</td><td>{{basic_salary}}</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>HRA (Inc. E&amp;W, Tel. &amp; GSM)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Transport Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Addl. Resp. Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Food Allowance</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Living Standard Allowance (LSA)<br/>
+      ☐ RO 50 (&lt;300) ☐ RO (301–500) ☐ RO 30 (501–999) ☐ RO 20 (1000 &amp; Above)<br/>
+      <i>LSA calculated as per Basic salary</i></td>
+      <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr style="font-weight:bold;"><td>Gross Salary →</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  </table>
+
+  <div style="margin-top:6px;">
+    <b>Notes:</b>
+    <ul style="margin:4px 0 0 18px; padding:0;">
+      <li>☐ Contract Period: From ______ to ______ (Two years basis / Short Period)</li>
+      <li>☐ Air passage Sector: From ______ to MUSCAT (Entitlement: ☐ 12 months ☐ 24 months)</li>
+      <li>☐ Family status (Wife, 2 children up to 18 years age) &nbsp; ☐ Bachelor status</li>
+      <li>☐ Medical (as per Company''s medical insurance policy and Oman Labour Law)</li>
+      <li>☐ Increase Salary by RO ___ after ☐ 3 or ☐ 6 months in ☐ RO ___ in basic / ☐ RO ___ in Addl. Resp. Allow.</li>
+    </ul>
+    <p>HOD''s Comments (if any): ______________________________________________________</p>
+  </div>
+
+  <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold;"><td colspan="3">Approvals by Circular</td></tr>
+    <tr><td>Head Of Department</td><td>Member</td><td>__________________________</td></tr>
+    <tr><td>Chief Operation Officer</td><td>Member</td><td>__________________________</td></tr>
+  </table>
+
+  <p>Remarks (if any): ______________________________________________________</p>
+
+  <table border="1" cellspacing="0" cellpadding="10" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; text-align:center; font-weight:bold;"><td>FINAL APPROVAL</td></tr>
+    <tr style="text-align:center;"><td><br/><br/>__________________________<br/><b>General Manager HR&amp;A</b></td></tr>
+  </table>
+  <p>Comments (if any): ______________________________________________________</p>
+
+  <p style="font-size:10px;">
+    Note: 1) "S – O – M" Grade: Final approval by the Head of HR for all contractual proposals.<br/>
+    2) Any change in this form must be signed by any 3 members at least, otherwise it is considered as void.
+  </p>
+  <p style="font-size:9px; text-align:right;">HR&amp;A/EPF-S/V4/R/July 2022</p>
+</div>
+',1,'2026-05-29 10:18:08.580335');
 CREATE TABLE "recruitment_onboardingdocument" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "doc_key" varchar(40) NOT NULL, "title" varchar(150) NOT NULL, "body_html" text NOT NULL, "batch" integer unsigned NOT NULL CHECK ("batch" >= 0), "sequence" integer unsigned NOT NULL CHECK ("sequence" >= 0), "released" bool NOT NULL, "candidate_signature" text NOT NULL, "candidate_signed_at" datetime NULL, "status" varchar(20) NOT NULL, "hr_note" text NOT NULL, "hr_acted_at" datetime NULL, "created_at" datetime NOT NULL, "hr_acted_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "offer_id" bigint NOT NULL REFERENCES "recruitment_offerletter" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_parsedcvdata" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "created_at" datetime NULL, "is_active" bool NOT NULL, "full_name" varchar(255) NOT NULL, "email" varchar(254) NOT NULL, "phone" varchar(20) NOT NULL, "location_city" varchar(100) NOT NULL, "location_country" varchar(100) NOT NULL, "education_json" text NOT NULL CHECK ((JSON_VALID("education_json") OR "education_json" IS NULL)), "highest_qualification" varchar(100) NOT NULL, "total_years_experience" decimal NOT NULL, "work_experience_json" text NOT NULL CHECK ((JSON_VALID("work_experience_json") OR "work_experience_json" IS NULL)), "current_job_title" varchar(255) NOT NULL, "current_company" varchar(255) NOT NULL, "extracted_skills" text NOT NULL CHECK ((JSON_VALID("extracted_skills") OR "extracted_skills" IS NULL)), "skill_categories" text NOT NULL CHECK ((JSON_VALID("skill_categories") OR "skill_categories" IS NULL)), "languages_spoken" text NOT NULL CHECK ((JSON_VALID("languages_spoken") OR "languages_spoken" IS NULL)), "certifications_json" text NOT NULL CHECK ((JSON_VALID("certifications_json") OR "certifications_json" IS NULL)), "parsing_engine" varchar(20) NOT NULL, "parsing_confidence" real NOT NULL, "parsing_date" datetime NOT NULL, "requires_manual_review" bool NOT NULL, "raw_cv_text" text NULL, "candidate_id" bigint NOT NULL UNIQUE REFERENCES "recruitment_candidate" ("id") DEFERRABLE INITIALLY DEFERRED, "created_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "modified_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED);
 CREATE TABLE "recruitment_proposalapproval" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "role_key" varchar(40) NOT NULL, "role_label" varchar(120) NOT NULL, "sequence" integer unsigned NOT NULL CHECK ("sequence" >= 0), "status" varchar(20) NOT NULL, "feedback" text NOT NULL, "signature_image" text NOT NULL, "acted_at" datetime NULL, "approver_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "proposal_id" bigint NOT NULL REFERENCES "recruitment_employmentproposal" ("id") DEFERRABLE INITIALLY DEFERRED, "esign_provider" varchar(20) NULL, "esign_reference" varchar(120) NULL);
@@ -2267,7 +1554,7 @@ Please feel free to contact our HR department for any further documentation or c
 
 Yours sincerely,
 Human Resources Department
-{{company_name}}',1,'2026-10-03 20:19:38.965686');
+{{company_name}}',1,'2026-05-29 10:18:07.064140');
 INSERT INTO "recruitment_visalettertemplate" VALUES(2,'Visa Support Letter — Skilled Worker','To Whom It May Concern,
 
 This letter serves as official confirmation that {{company_name}} has extended a formal offer of employment to {{candidate_name}} for the role of {{position}}.
@@ -2280,16 +1567,112 @@ All supporting documentation will be provided upon request.
 
 Warm regards,
 Human Resources
-{{company_name}}',1,'2026-10-03 20:19:38.967480');
-CREATE TABLE "talent_careerpath" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "timeline_months" integer unsigned NOT NULL CHECK ("timeline_months" >= 0), "development_activities" text NOT NULL, "status" varchar(20) NOT NULL, "start_date" date NULL, "target_completion_date" date NOT NULL, "current_position_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "target_position_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_criticalrole" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "role_name" varchar(200) NOT NULL, "description" text NOT NULL, "criticality_level" varchar(20) NOT NULL, "vacancy_risk" varchar(20) NOT NULL, "succession_required" bool NOT NULL, "company_id" bigint NOT NULL REFERENCES "base_company" ("id") DEFERRABLE INITIALLY DEFERRED, "department_id" bigint NOT NULL REFERENCES "base_department" ("id") DEFERRABLE INITIALLY DEFERRED, "job_position_id" bigint NOT NULL REFERENCES "base_jobposition" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_leadershippipeline" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "leadership_level" varchar(50) NOT NULL, "target_level" varchar(50) NOT NULL, "development_plan" text NOT NULL, "progress_percentage" integer unsigned NOT NULL CHECK ("progress_percentage" >= 0), "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "mentor_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_nineboxmatrix" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "performance_score" decimal NOT NULL, "potential_score" decimal NOT NULL, "assessment_date" date NOT NULL, "quadrant" varchar(20) NOT NULL, "comments" text NOT NULL, "assessed_by_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_retentionrisk" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "risk_level" varchar(20) NOT NULL, "risk_factors" text NOT NULL, "mitigation_strategy" text NOT NULL, "assessed_date" date NOT NULL, "next_assessment_date" date NOT NULL, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_successionplan" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "readiness_level" varchar(20) NOT NULL, "estimated_timeline_months" integer unsigned NOT NULL CHECK ("estimated_timeline_months" >= 0), "development_plan" text NOT NULL, "status" varchar(20) NOT NULL, "created_date" date NOT NULL, "last_updated" date NOT NULL, "critical_role_id" bigint NOT NULL REFERENCES "talent_criticalrole" ("id") DEFERRABLE INITIALLY DEFERRED, "primary_successor_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED, "secondary_successor_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_talentprofile" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "performance_level" varchar(20) NOT NULL, "potential_level" varchar(20) NOT NULL, "career_aspirations" text NOT NULL, "mobility_willingness" bool NOT NULL, "readiness_level" varchar(20) NOT NULL, "development_needs" text NOT NULL, "last_assessment_date" date NOT NULL, "next_assessment_date" date NOT NULL, "notes" text NOT NULL, "employee_id" bigint NOT NULL UNIQUE REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_talentreview" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "title" varchar(200) NOT NULL, "description" text NOT NULL, "review_date" date NOT NULL, "outcomes" text NOT NULL, "action_items" text NOT NULL, "next_review_date" date NULL, "facilitator_id" bigint NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
-CREATE TABLE "talent_talentreview_participants" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "talentreview_id" bigint NOT NULL REFERENCES "talent_talentreview" ("id") DEFERRABLE INITIALLY DEFERRED, "employee_id" bigint NOT NULL REFERENCES "employee_employee" ("id") DEFERRABLE INITIALLY DEFERRED);
+{{company_name}}',1,'2026-05-29 10:18:07.064483');
+INSERT INTO "recruitment_visalettertemplate" VALUES(3,'ONEIC — Visa Requisition Form','
+<div style="font-family: Arial, sans-serif; font-size: 11px; color:#000; max-width:760px; margin:auto;">
+  <div style="text-align:center; font-weight:bold;">
+    <div style="font-size:13px;">الشركة الوطنية العمانية للهندسة و الاستثمار ( ش م ع ع )</div>
+    <div style="font-size:13px;">Oman National Engineering &amp; Investment Company (SAOG)</div>
+    <div style="font-size:14px; margin-top:6px; font-style:italic;">Visa Requisition Form</div>
+    <div style="text-align:right; font-size:11px;">CV#: «CV_NO» &nbsp; Source: «Consultancy»</div>
+  </div>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:10px;">
+    <tr><td>Staff/Candidate Name</td><td><b>{{candidate_name}}</b></td><td>Date</td><td>{{today_date}}</td></tr>
+    <tr><td>Staff No / PP No</td><td>«PP_ID_NO»</td><td>Designation</td><td>{{position}}</td></tr>
+    <tr><td>Department</td><td><b>O&amp;M</b></td><td>Job No / Location</td><td>«Job_no» / «Job_Location»</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold;"><td colspan="2">Type of Visa (Please ✓)</td></tr>
+    <tr>
+      <td>☐ Short Employment Visa<br/>Months ___ (4/6/9)</td>
+      <td>☐ Medical report (attested) &nbsp; ☐ Salary Details &nbsp; ☐ Photographs &nbsp; ☐ Passport copy<br/>
+          ☐ Degree/Diploma attested copy (Apostle) &nbsp; ☐ Govt./Semi Govt. Document — Contract with ONEIC</td>
+    </tr>
+    <tr>
+      <td>☑ Employment Visa</td>
+      <td>☑ Medical report (attested) &nbsp; ☑ Copy of Signed offer letter &nbsp; ☑ Photographs &nbsp; ☑ Passport copy<br/>
+          ☐ Degree/Diploma attested copy (Apostle)</td>
+    </tr>
+  </table>
+
+  <p style="margin-top:6px;">This Candidate Visa/Post is covered under the contract / project as per the below details:</p>
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%;">
+    <tr>
+      <td style="width:50%;">☑ Existing &nbsp; &nbsp; Job No: «Job_no»</td>
+      <td>☐ New &nbsp; &nbsp; Job No: __________</td>
+    </tr>
+    <tr><td>Project Period</td><td>From «Contract_Start_Date» &nbsp; To «Contract_End_Date»</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold; text-align:center;">
+      <td>Name of the Position</td><td>Requirement as per Contract / Manpower supply (nos)</td>
+      <td>Replacement Post ☐ Y / ☐ N (if ''Y'' write Staff no)</td>
+      <td>Additional Post Budgeted ☐ Y / ☐ N</td>
+      <td>Existing / Available (Nos)</td><td>Shortage (Nos)</td><td>Remarks</td>
+    </tr>
+    <tr><td>{{position}}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>«ReplS»</td></tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr>
+      <td style="width:30%;">☐ Family Visit Visa<br/><i>Mention the Relationship</i></td>
+      <td>☐ Passport Copy &nbsp; ☐ Photographs &nbsp; ☐ Undertaking letter from Embassy (if necessity) &nbsp; ☐ Insurance (RO.2000 — if necessary)<br/>
+          ____________________ &nbsp; Their Mother''s name ____________________</td>
+    </tr>
+    <tr>
+      <td>☐ Family Joining Visa<br/><i>Mention the Relationship</i></td>
+      <td>☐ Medical report (attested) &nbsp; ☐ Passport Copy &nbsp; ☐ Photographs &nbsp; ☐ Attested Marriage Certificate &nbsp; ☐ House Rental Agreement from Municipality &nbsp; ☐ Insurance (RO.2000)<br/>
+          ____________________ &nbsp; Their Mother''s name ____________________</td>
+    </tr>
+    <tr>
+      <td colspan="2">☑ Others: <b>EMPLOYMENT VISA</b> &nbsp; ☑ Passport Copy &nbsp; ☑ Photographs &nbsp; ☑ Medical report (attested)</td>
+    </tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold;"><td colspan="2">Undertaking for &nbsp; ☐ Visit Visa &nbsp; ☐ Family Joining Visa</td></tr>
+    <tr><td colspan="2">I, ______________________ Staff No. ______ am accepting all the relevant expenses (visa charges, ticket, and medical expenses) for my ______________________ stay in Oman during the visit.</td></tr>
+    <tr><td>Signature: ______________________</td><td>Date: ______________________</td></tr>
+    <tr><td colspan="2"><i>Visit visa &amp; Family Joining Visa (if staff is not eligible), the undertaking is <b>Must</b>. Company is not responsible for staff''s relatives insurance.</i></td></tr>
+  </table>
+
+  <p>All relevant documents are enclosed.</p>
+
+  <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="text-align:center;">
+      <td>__________________<br/>Requester Signature</td>
+      <td>__________________<br/>Date</td>
+    </tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold; text-align:center;"><td colspan="4">Approved by</td></tr>
+    <tr style="text-align:center;">
+      <td>__________________<br/>Recommended by</td>
+      <td>__________________<br/>Head of Div/Dept</td>
+      <td>__________________<br/>General Manager (HR&amp;A)</td>
+      <td>__________________<br/>Chief Executive Officer<br/>(for HODs)</td>
+    </tr>
+  </table>
+
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse; width:100%; margin-top:6px;">
+    <tr style="background:#eee; font-weight:bold;"><td colspan="2">HR &amp; Admin Department</td></tr>
+    <tr><td>Family Status: ☐ YES &nbsp; ☐ NO</td><td>☐ Staff Eligibility</td></tr>
+    <tr><td colspan="2">☐ Accepted &nbsp; ☐ Rejected (Basis) — ☐ Salary &nbsp; ☐ ONEIC Experience &nbsp; ☐ Grade &nbsp; ☐ HRC Approval &nbsp; ☐ Less Salary &nbsp; ☐ Less Experience</td></tr>
+    <tr><td>1 — I/C Admin Completed &amp; Forwarded on: __________</td><td>2 — I/C PRO Completed on: __________</td></tr>
+    <tr><td>Visa Entered on Date: __________</td><td>Visa Issued on Date: __________ &nbsp; Visa Charges: RO. ________</td></tr>
+    <tr><td colspan="2">Charge to ☐ SSR Account No __________ &nbsp; ☐ Job No __________</td></tr>
+  </table>
+
+  <p style="font-size:10px; margin-top:6px;">
+    ♦ Pakistani Nationalities — Enclose 2<sup>nd</sup> Page of Passport with Mother Name &nbsp;&nbsp; ♦ Incomplete forms shall not be processed
+  </p>
+  <p style="font-size:9px; text-align:right; font-style:italic;">HR&amp;A/010/09/R1/11/R2/14</p>
+</div>
+',1,'2026-05-29 10:18:08.580946');
 CREATE UNIQUE INDEX "auth_group_permissions_group_id_permission_id_0cd325b0_uniq" ON "auth_group_permissions" ("group_id", "permission_id");
 CREATE INDEX "auth_group_permissions_group_id_b120cbf9" ON "auth_group_permissions" ("group_id");
 CREATE INDEX "auth_group_permissions_permission_id_84c5c92e" ON "auth_group_permissions" ("permission_id");
@@ -2299,6 +1682,18 @@ CREATE INDEX "auth_user_groups_group_id_97559544" ON "auth_user_groups" ("group_
 CREATE UNIQUE INDEX "auth_user_user_permissions_user_id_permission_id_14a6b632_uniq" ON "auth_user_user_permissions" ("user_id", "permission_id");
 CREATE INDEX "auth_user_user_permissions_user_id_a95ead1b" ON "auth_user_user_permissions" ("user_id");
 CREATE INDEX "auth_user_user_permissions_permission_id_1fbb5f2c" ON "auth_user_user_permissions" ("permission_id");
+CREATE INDEX "django_admin_log_content_type_id_c4bce8eb" ON "django_admin_log" ("content_type_id");
+CREATE INDEX "django_admin_log_user_id_c564eba6" ON "django_admin_log" ("user_id");
+CREATE INDEX "auditlog_logentry_object_pk_6e3219c0" ON "auditlog_logentry" ("object_pk");
+CREATE INDEX "auditlog_logentry_object_id_09c2eee8" ON "auditlog_logentry" ("object_id");
+CREATE INDEX "auditlog_logentry_action_229afe39" ON "auditlog_logentry" ("action");
+CREATE INDEX "auditlog_logentry_timestamp_37867bb0" ON "auditlog_logentry" ("timestamp");
+CREATE INDEX "auditlog_logentry_actor_id_959271d2" ON "auditlog_logentry" ("actor_id");
+CREATE INDEX "auditlog_logentry_content_type_id_75830218" ON "auditlog_logentry" ("content_type_id");
+CREATE INDEX "auditlog_logentry_cid_9f467263" ON "auditlog_logentry" ("cid");
+CREATE UNIQUE INDEX "django_content_type_app_label_model_76bd3d3b_uniq" ON "django_content_type" ("app_label", "model");
+CREATE UNIQUE INDEX "auth_permission_content_type_id_codename_01ab375a_uniq" ON "auth_permission" ("content_type_id", "codename");
+CREATE INDEX "auth_permission_content_type_id_2f476e4b" ON "auth_permission" ("content_type_id");
 CREATE INDEX "fits_audit_historytrackingfields_created_by_id_ddb5372d" ON "fits_audit_historytrackingfields" ("created_by_id");
 CREATE INDEX "fits_audit_historytrackingfields_modified_by_id_312b5218" ON "fits_audit_historytrackingfields" ("modified_by_id");
 CREATE INDEX "fits_audit_accountblockunblock_created_by_id_c4e7bbf3" ON "fits_audit_accountblockunblock" ("created_by_id");
@@ -2385,225 +1780,6 @@ CREATE INDEX "employee_bonuspoint_created_by_id_2ce413ab" ON "employee_bonuspoin
 CREATE UNIQUE INDEX "unique_badge_id" ON "employee_employee" ("badge_id") WHERE "badge_id" IS NOT NULL;
 CREATE UNIQUE INDEX "employee_employee_employee_first_name_employee_last_name_email_b193a07f_uniq" ON "employee_employee" ("employee_first_name", "employee_last_name", "email");
 CREATE INDEX "employee_bonuspoint_modified_by_id_3041354b" ON "employee_bonuspoint" ("modified_by_id");
-CREATE INDEX "accessibility_defaultaccessibility_created_by_id_ff9332a2" ON "accessibility_defaultaccessibility" ("created_by_id");
-CREATE INDEX "accessibility_defaultaccessibility_modified_by_id_0b00d519" ON "accessibility_defaultaccessibility" ("modified_by_id");
-CREATE UNIQUE INDEX "accessibility_defaultaccessibility_employees_defaultaccessibility_id_employee_id_ce4c5db1_uniq" ON "accessibility_defaultaccessibility_employees" ("defaultaccessibility_id", "employee_id");
-CREATE INDEX "accessibility_defaultaccessibility_employees_defaultaccessibility_id_914de53f" ON "accessibility_defaultaccessibility_employees" ("defaultaccessibility_id");
-CREATE INDEX "accessibility_defaultaccessibility_employees_employee_id_41ccfcfa" ON "accessibility_defaultaccessibility_employees" ("employee_id");
-CREATE INDEX "django_admin_log_content_type_id_c4bce8eb" ON "django_admin_log" ("content_type_id");
-CREATE INDEX "django_admin_log_user_id_c564eba6" ON "django_admin_log" ("user_id");
-CREATE INDEX "leave_availableleave_created_by_id_75d3a012" ON "leave_availableleave" ("created_by_id");
-CREATE INDEX "leave_availableleave_employee_id_id_3de1ccfe" ON "leave_availableleave" ("employee_id_id");
-CREATE UNIQUE INDEX "leave_compensatoryleaverequest_attendance_id_compensatoryleaverequest_id_attendance_id_87907589_uniq" ON "leave_compensatoryleaverequest_attendance_id" ("compensatoryleaverequest_id", "attendance_id");
-CREATE INDEX "leave_compensatoryleaverequest_attendance_id_compensatoryleaverequest_id_fb4c2ddd" ON "leave_compensatoryleaverequest_attendance_id" ("compensatoryleaverequest_id");
-CREATE INDEX "leave_compensatoryleaverequest_attendance_id_attendance_id_7ce6282a" ON "leave_compensatoryleaverequest_attendance_id" ("attendance_id");
-CREATE INDEX "leave_leavetype_company_id_id_cfef117a" ON "leave_leavetype" ("company_id_id");
-CREATE INDEX "leave_leavetype_created_by_id_351073eb" ON "leave_leavetype" ("created_by_id");
-CREATE INDEX "leave_leavetype_modified_by_id_beabc67d" ON "leave_leavetype" ("modified_by_id");
-CREATE INDEX "leave_restrictleave_company_id_id_b80b2702" ON "leave_restrictleave" ("company_id_id");
-CREATE INDEX "leave_restrictleave_created_by_id_f94684d0" ON "leave_restrictleave" ("created_by_id");
-CREATE INDEX "leave_restrictleave_department_id_75207328" ON "leave_restrictleave" ("department_id");
-CREATE INDEX "leave_restrictleave_modified_by_id_9d60c77a" ON "leave_restrictleave" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_restrictleave_exclued_leave_types_restrictleave_id_leavetype_id_1a764607_uniq" ON "leave_restrictleave_exclued_leave_types" ("restrictleave_id", "leavetype_id");
-CREATE INDEX "leave_restrictleave_exclued_leave_types_restrictleave_id_9ab38ff7" ON "leave_restrictleave_exclued_leave_types" ("restrictleave_id");
-CREATE INDEX "leave_restrictleave_exclued_leave_types_leavetype_id_742bf599" ON "leave_restrictleave_exclued_leave_types" ("leavetype_id");
-CREATE UNIQUE INDEX "leave_restrictleave_job_position_restrictleave_id_jobposition_id_2942864b_uniq" ON "leave_restrictleave_job_position" ("restrictleave_id", "jobposition_id");
-CREATE INDEX "leave_restrictleave_job_position_restrictleave_id_95f0bc8a" ON "leave_restrictleave_job_position" ("restrictleave_id");
-CREATE INDEX "leave_restrictleave_job_position_jobposition_id_1f32135f" ON "leave_restrictleave_job_position" ("jobposition_id");
-CREATE UNIQUE INDEX "leave_restrictleave_spesific_leave_types_restrictleave_id_leavetype_id_7afd39f1_uniq" ON "leave_restrictleave_spesific_leave_types" ("restrictleave_id", "leavetype_id");
-CREATE INDEX "leave_restrictleave_spesific_leave_types_restrictleave_id_7dd5075f" ON "leave_restrictleave_spesific_leave_types" ("restrictleave_id");
-CREATE INDEX "leave_restrictleave_spesific_leave_types_leavetype_id_7173a1ff" ON "leave_restrictleave_spesific_leave_types" ("leavetype_id");
-CREATE INDEX "leave_leaverequestconditionapproval_leave_request_id_id_13609871" ON "leave_leaverequestconditionapproval" ("leave_request_id_id");
-CREATE INDEX "leave_leaverequestconditionapproval_manager_id_id_8cb0a287" ON "leave_leaverequestconditionapproval" ("manager_id_id");
-CREATE INDEX "leave_leaverequestcomment_created_by_id_a2bd9ae7" ON "leave_leaverequestcomment" ("created_by_id");
-CREATE INDEX "leave_leaverequestcomment_employee_id_id_9468873e" ON "leave_leaverequestcomment" ("employee_id_id");
-CREATE INDEX "leave_leaverequestcomment_modified_by_id_c85fa15c" ON "leave_leaverequestcomment" ("modified_by_id");
-CREATE INDEX "leave_leaverequestcomment_request_id_id_c2c8ef1c" ON "leave_leaverequestcomment" ("request_id_id");
-CREATE UNIQUE INDEX "leave_leaverequestcomment_files_leaverequestcomment_id_leaverequestfile_id_ee6bd659_uniq" ON "leave_leaverequestcomment_files" ("leaverequestcomment_id", "leaverequestfile_id");
-CREATE INDEX "leave_leaverequestcomment_files_leaverequestcomment_id_07e0f8a7" ON "leave_leaverequestcomment_files" ("leaverequestcomment_id");
-CREATE INDEX "leave_leaverequestcomment_files_leaverequestfile_id_bf9a097c" ON "leave_leaverequestcomment_files" ("leaverequestfile_id");
-CREATE INDEX "leave_leaverequest_created_by_id_138d1e03" ON "leave_leaverequest" ("created_by_id");
-CREATE INDEX "leave_leaverequest_employee_id_id_5126d5dc" ON "leave_leaverequest" ("employee_id_id");
-CREATE INDEX "leave_leaverequest_leave_type_id_id_9e99d24a" ON "leave_leaverequest" ("leave_type_id_id");
-CREATE INDEX "leave_leaverequest_modified_by_id_f81b1097" ON "leave_leaverequest" ("modified_by_id");
-CREATE INDEX "leave_leavegeneralsetting_company_id_id_9f0b5af7" ON "leave_leavegeneralsetting" ("company_id_id");
-CREATE INDEX "leave_leavegeneralsetting_created_by_id_f09effc2" ON "leave_leavegeneralsetting" ("created_by_id");
-CREATE INDEX "leave_leavegeneralsetting_modified_by_id_748bc603" ON "leave_leavegeneralsetting" ("modified_by_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_created_by_id_284eb30c" ON "leave_leaveallocationrequestcomment" ("created_by_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_employee_id_id_c7bb44c4" ON "leave_leaveallocationrequestcomment" ("employee_id_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_modified_by_id_8b578167" ON "leave_leaveallocationrequestcomment" ("modified_by_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_request_id_id_6d41135e" ON "leave_leaveallocationrequestcomment" ("request_id_id");
-CREATE UNIQUE INDEX "leave_leaveallocationrequestcomment_files_leaveallocationrequestcomment_id_leaverequestfile_id_af245abc_uniq" ON "leave_leaveallocationrequestcomment_files" ("leaveallocationrequestcomment_id", "leaverequestfile_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_files_leaveallocationrequestcomment_id_5aaf615b" ON "leave_leaveallocationrequestcomment_files" ("leaveallocationrequestcomment_id");
-CREATE INDEX "leave_leaveallocationrequestcomment_files_leaverequestfile_id_5298ebaf" ON "leave_leaveallocationrequestcomment_files" ("leaverequestfile_id");
-CREATE INDEX "leave_leaveallocationrequest_created_by_id_92cdfae6" ON "leave_leaveallocationrequest" ("created_by_id");
-CREATE INDEX "leave_leaveallocationrequest_employee_id_id_5316112b" ON "leave_leaveallocationrequest" ("employee_id_id");
-CREATE INDEX "leave_leaveallocationrequest_leave_type_id_id_d548f4a6" ON "leave_leaveallocationrequest" ("leave_type_id_id");
-CREATE INDEX "leave_leaveallocationrequest_modified_by_id_d7f086e9" ON "leave_leaveallocationrequest" ("modified_by_id");
-CREATE INDEX "leave_holiday_company_id_id_13975602" ON "leave_holiday" ("company_id_id");
-CREATE INDEX "leave_holiday_created_by_id_053c9356" ON "leave_holiday" ("created_by_id");
-CREATE INDEX "leave_holiday_modified_by_id_40ef9af8" ON "leave_holiday" ("modified_by_id");
-CREATE INDEX "leave_historicalleaverequest_id_4f93caea" ON "leave_historicalleaverequest" ("id");
-CREATE INDEX "leave_historicalleaverequest_history_date_d0e2c98e" ON "leave_historicalleaverequest" ("history_date");
-CREATE INDEX "leave_historicalleaverequest_created_by_id_7681162e" ON "leave_historicalleaverequest" ("created_by_id");
-CREATE INDEX "leave_historicalleaverequest_employee_id_id_d5c2543c" ON "leave_historicalleaverequest" ("employee_id_id");
-CREATE INDEX "leave_historicalleaverequest_history_relation_id_88ceed52" ON "leave_historicalleaverequest" ("history_relation_id");
-CREATE INDEX "leave_historicalleaverequest_history_user_id_e4091693" ON "leave_historicalleaverequest" ("history_user_id");
-CREATE INDEX "leave_historicalleaverequest_leave_type_id_id_d191c2d4" ON "leave_historicalleaverequest" ("leave_type_id_id");
-CREATE INDEX "leave_historicalleaverequest_modified_by_id_cf5fddb9" ON "leave_historicalleaverequest" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_historicalleaverequest_history_tags_historicalleaverequest_id_audittag_id_372dde8e_uniq" ON "leave_historicalleaverequest_history_tags" ("historicalleaverequest_id", "audittag_id");
-CREATE INDEX "leave_historicalleaverequest_history_tags_historicalleaverequest_id_98d6407d" ON "leave_historicalleaverequest_history_tags" ("historicalleaverequest_id");
-CREATE INDEX "leave_historicalleaverequest_history_tags_audittag_id_53adf68d" ON "leave_historicalleaverequest_history_tags" ("audittag_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_id_7a662112" ON "leave_historicalleaveallocationrequest" ("id");
-CREATE INDEX "leave_historicalleaveallocationrequest_history_date_b672610d" ON "leave_historicalleaveallocationrequest" ("history_date");
-CREATE INDEX "leave_historicalleaveallocationrequest_created_by_id_0b0eb9f8" ON "leave_historicalleaveallocationrequest" ("created_by_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_employee_id_id_4fd984a6" ON "leave_historicalleaveallocationrequest" ("employee_id_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_history_relation_id_794f8177" ON "leave_historicalleaveallocationrequest" ("history_relation_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_history_user_id_4b781dd5" ON "leave_historicalleaveallocationrequest" ("history_user_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_leave_type_id_id_eaf323c2" ON "leave_historicalleaveallocationrequest" ("leave_type_id_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_modified_by_id_cfbcab04" ON "leave_historicalleaveallocationrequest" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_historicalleaveallocationrequest_history_tags_historicalleaveallocationrequest_id_audittag_id_7e0a694f_uniq" ON "leave_historicalleaveallocationrequest_history_tags" ("historicalleaveallocationrequest_id", "audittag_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_history_tags_historicalleaveallocationrequest_id_e3b6fb3a" ON "leave_historicalleaveallocationrequest_history_tags" ("historicalleaveallocationrequest_id");
-CREATE INDEX "leave_historicalleaveallocationrequest_history_tags_audittag_id_b2aa60d9" ON "leave_historicalleaveallocationrequest_history_tags" ("audittag_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_id_7710c744" ON "leave_historicalcompensatoryleaverequest" ("id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_history_date_ec170bef" ON "leave_historicalcompensatoryleaverequest" ("history_date");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_created_by_id_8ce0aa66" ON "leave_historicalcompensatoryleaverequest" ("created_by_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_employee_id_id_61ea7ae1" ON "leave_historicalcompensatoryleaverequest" ("employee_id_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_history_relation_id_868c3a67" ON "leave_historicalcompensatoryleaverequest" ("history_relation_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_history_user_id_20a9d7af" ON "leave_historicalcompensatoryleaverequest" ("history_user_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_leave_type_id_id_6f5475fb" ON "leave_historicalcompensatoryleaverequest" ("leave_type_id_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_modified_by_id_f7ecf360" ON "leave_historicalcompensatoryleaverequest" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_historicalcompensatoryleaverequest_history_tags_historicalcompensatoryleaverequest_id_audittag_id_bba17be0_uniq" ON "leave_historicalcompensatoryleaverequest_history_tags" ("historicalcompensatoryleaverequest_id", "audittag_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_history_tags_historicalcompensatoryleaverequest_id_6146f2d9" ON "leave_historicalcompensatoryleaverequest_history_tags" ("historicalcompensatoryleaverequest_id");
-CREATE INDEX "leave_historicalcompensatoryleaverequest_history_tags_audittag_id_24ff99a6" ON "leave_historicalcompensatoryleaverequest_history_tags" ("audittag_id");
-CREATE INDEX "leave_historicalavailableleave_id_a95e4b3a" ON "leave_historicalavailableleave" ("id");
-CREATE INDEX "leave_historicalavailableleave_history_date_08ada119" ON "leave_historicalavailableleave" ("history_date");
-CREATE INDEX "leave_historicalavailableleave_created_by_id_0efaecfc" ON "leave_historicalavailableleave" ("created_by_id");
-CREATE INDEX "leave_historicalavailableleave_employee_id_id_51610009" ON "leave_historicalavailableleave" ("employee_id_id");
-CREATE INDEX "leave_historicalavailableleave_history_relation_id_f10eea38" ON "leave_historicalavailableleave" ("history_relation_id");
-CREATE INDEX "leave_historicalavailableleave_history_user_id_38f3a774" ON "leave_historicalavailableleave" ("history_user_id");
-CREATE INDEX "leave_historicalavailableleave_leave_type_id_id_32718e53" ON "leave_historicalavailableleave" ("leave_type_id_id");
-CREATE INDEX "leave_historicalavailableleave_modified_by_id_fd7825a7" ON "leave_historicalavailableleave" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_historicalavailableleave_history_tags_historicalavailableleave_id_audittag_id_d0664182_uniq" ON "leave_historicalavailableleave_history_tags" ("historicalavailableleave_id", "audittag_id");
-CREATE INDEX "leave_historicalavailableleave_history_tags_historicalavailableleave_id_3015fcbf" ON "leave_historicalavailableleave_history_tags" ("historicalavailableleave_id");
-CREATE INDEX "leave_historicalavailableleave_history_tags_audittag_id_16f9c7b7" ON "leave_historicalavailableleave_history_tags" ("audittag_id");
-CREATE INDEX "leave_employeepastleaverestrict_created_by_id_c1663d75" ON "leave_employeepastleaverestrict" ("created_by_id");
-CREATE INDEX "leave_employeepastleaverestrict_modified_by_id_abfc1efe" ON "leave_employeepastleaverestrict" ("modified_by_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_created_by_id_598d2be4" ON "leave_compensatoryleaverequestcomment" ("created_by_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_employee_id_id_0641cfdd" ON "leave_compensatoryleaverequestcomment" ("employee_id_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_modified_by_id_6a26749a" ON "leave_compensatoryleaverequestcomment" ("modified_by_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_request_id_id_dd5729ca" ON "leave_compensatoryleaverequestcomment" ("request_id_id");
-CREATE UNIQUE INDEX "leave_compensatoryleaverequestcomment_files_compensatoryleaverequestcomment_id_leaverequestfile_id_dd7596fe_uniq" ON "leave_compensatoryleaverequestcomment_files" ("compensatoryleaverequestcomment_id", "leaverequestfile_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_files_compensatoryleaverequestcomment_id_d9216e38" ON "leave_compensatoryleaverequestcomment_files" ("compensatoryleaverequestcomment_id");
-CREATE INDEX "leave_compensatoryleaverequestcomment_files_leaverequestfile_id_cc53628f" ON "leave_compensatoryleaverequestcomment_files" ("leaverequestfile_id");
-CREATE INDEX "leave_compensatoryleaverequest_created_by_id_a533f271" ON "leave_compensatoryleaverequest" ("created_by_id");
-CREATE INDEX "leave_compensatoryleaverequest_employee_id_id_c2d214d6" ON "leave_compensatoryleaverequest" ("employee_id_id");
-CREATE INDEX "leave_compensatoryleaverequest_leave_type_id_id_47c030a2" ON "leave_compensatoryleaverequest" ("leave_type_id_id");
-CREATE INDEX "leave_compensatoryleaverequest_modified_by_id_ea6163b7" ON "leave_compensatoryleaverequest" ("modified_by_id");
-CREATE INDEX "leave_availableleave_leave_type_id_id_b0a6a9df" ON "leave_availableleave" ("leave_type_id_id");
-CREATE INDEX "leave_availableleave_modified_by_id_12a52a9f" ON "leave_availableleave" ("modified_by_id");
-CREATE INDEX "leave_approvalslaalert_approval_request_id_13985733" ON "leave_approvalslaalert" ("approval_request_id");
-CREATE INDEX "leave_approvalslaalert_created_by_id_36c96e23" ON "leave_approvalslaalert" ("created_by_id");
-CREATE INDEX "leave_approvalslaalert_modified_by_id_70fbaad5" ON "leave_approvalslaalert" ("modified_by_id");
-CREATE INDEX "leave_approvalrequest_approved_by_id_e7a2a77a" ON "leave_approvalrequest" ("approved_by_id");
-CREATE INDEX "leave_approvalrequest_approver_id_a17b1d49" ON "leave_approvalrequest" ("approver_id");
-CREATE INDEX "leave_approvalrequest_created_by_id_12ad100f" ON "leave_approvalrequest" ("created_by_id");
-CREATE INDEX "leave_approvalrequest_escalated_to_id_56db9cfe" ON "leave_approvalrequest" ("escalated_to_id");
-CREATE INDEX "leave_approvalrequest_leave_request_id_c1245f06" ON "leave_approvalrequest" ("leave_request_id");
-CREATE UNIQUE INDEX "leave_availableleave_leave_type_id_id_employee_id_id_bf1a152b_uniq" ON "leave_availableleave" ("leave_type_id_id", "employee_id_id");
-CREATE UNIQUE INDEX "leave_approvalrequest_leave_request_id_approver_id_sequence_order_95505130_uniq" ON "leave_approvalrequest" ("leave_request_id", "approver_id", "sequence_order");
-CREATE UNIQUE INDEX "unique_active_delegation" ON "leave_approvaldelegation" ("delegating_manager_id", "start_date", "end_date") WHERE "status" = 'active';
-CREATE INDEX "leave_approvalrequest_modified_by_id_fdbbcf1b" ON "leave_approvalrequest" ("modified_by_id");
-CREATE INDEX "leave_approvalrequest_rejected_by_id_87dab790" ON "leave_approvalrequest" ("rejected_by_id");
-CREATE INDEX "leave_approvaloverride_approval_request_id_1de524a9" ON "leave_approvaloverride" ("approval_request_id");
-CREATE INDEX "leave_approvaloverride_created_by_id_5eda684e" ON "leave_approvaloverride" ("created_by_id");
-CREATE INDEX "leave_approvaloverride_leave_request_id_bc11725f" ON "leave_approvaloverride" ("leave_request_id");
-CREATE INDEX "leave_approvaloverride_modified_by_id_c20c93e3" ON "leave_approvaloverride" ("modified_by_id");
-CREATE INDEX "leave_approvaloverride_overridden_by_id_f51b861b" ON "leave_approvaloverride" ("overridden_by_id");
-CREATE INDEX "leave_approvaldelegation_created_by_id_55ed7361" ON "leave_approvaldelegation" ("created_by_id");
-CREATE INDEX "leave_approvaldelegation_delegated_to_id_a2d2e405" ON "leave_approvaldelegation" ("delegated_to_id");
-CREATE INDEX "leave_approvaldelegation_delegating_manager_id_74c841c8" ON "leave_approvaldelegation" ("delegating_manager_id");
-CREATE INDEX "leave_approvaldelegation_modified_by_id_cc758114" ON "leave_approvaldelegation" ("modified_by_id");
-CREATE INDEX "leave_approvaldelegation_revoked_by_id_1a6db53a" ON "leave_approvaldelegation" ("revoked_by_id");
-CREATE UNIQUE INDEX "leave_approvaldelegation_departments_approvaldelegation_id_department_id_e4d1cb96_uniq" ON "leave_approvaldelegation_departments" ("approvaldelegation_id", "department_id");
-CREATE INDEX "leave_approvaldelegation_departments_approvaldelegation_id_c9d5e787" ON "leave_approvaldelegation_departments" ("approvaldelegation_id");
-CREATE INDEX "leave_approvaldelegation_departments_department_id_5ef2ddc6" ON "leave_approvaldelegation_departments" ("department_id");
-CREATE UNIQUE INDEX "leave_companyleave_based_on_week_based_on_week_day_bb1889f4_uniq" ON "leave_companyleave" ("based_on_week", "based_on_week_day");
-CREATE INDEX "leave_companyleave_company_id_id_3b9c39d2" ON "leave_companyleave" ("company_id_id");
-CREATE INDEX "leave_companyleave_created_by_id_d1124f9a" ON "leave_companyleave" ("created_by_id");
-CREATE INDEX "leave_companyleave_modified_by_id_443e3b4e" ON "leave_companyleave" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_approvalpolicy_company_id_name_78194baf_uniq" ON "leave_approvalpolicy" ("company_id", "name");
-CREATE INDEX "leave_approvalpolicy_company_id_7f9097ce" ON "leave_approvalpolicy" ("company_id");
-CREATE INDEX "leave_approvalpolicy_created_by_id_9297a9e6" ON "leave_approvalpolicy" ("created_by_id");
-CREATE INDEX "leave_approvalpolicy_modified_by_id_e894c6a9" ON "leave_approvalpolicy" ("modified_by_id");
-CREATE UNIQUE INDEX "leave_approvalmetrics_company_id_approval_period_5683b479_uniq" ON "leave_approvalmetrics" ("company_id", "approval_period");
-CREATE INDEX "leave_approvalmetrics_bottleneck_approver_id_84182607" ON "leave_approvalmetrics" ("bottleneck_approver_id");
-CREATE INDEX "leave_approvalmetrics_company_id_78cccc6a" ON "leave_approvalmetrics" ("company_id");
-CREATE INDEX "attendance_workrecords_attendance_id_id_132d38b9" ON "attendance_workrecords" ("attendance_id_id");
-CREATE INDEX "attendance_workrecords_employee_id_id_a533961f" ON "attendance_workrecords" ("employee_id_id");
-CREATE INDEX "attendance_workrecords_leave_request_id_id_1c671bdb" ON "attendance_workrecords" ("leave_request_id_id");
-CREATE INDEX "attendance_workrecords_shift_id_id_d25e8ebb" ON "attendance_workrecords" ("shift_id_id");
-CREATE INDEX "attendance_historicalattendance_id_f6ca4b2d" ON "attendance_historicalattendance" ("id");
-CREATE INDEX "attendance_historicalattendance_history_date_6bb06c70" ON "attendance_historicalattendance" ("history_date");
-CREATE INDEX "attendance_historicalattendance_approved_by_id_a1eee249" ON "attendance_historicalattendance" ("approved_by_id");
-CREATE INDEX "attendance_historicalattendance_attendance_day_id_baac678e" ON "attendance_historicalattendance" ("attendance_day_id");
-CREATE INDEX "attendance_historicalattendance_batch_attendance_id_id_c198b93a" ON "attendance_historicalattendance" ("batch_attendance_id_id");
-CREATE INDEX "attendance_historicalattendance_created_by_id_9a6c92b3" ON "attendance_historicalattendance" ("created_by_id");
-CREATE INDEX "attendance_historicalattendance_employee_id_id_61bf4b8b" ON "attendance_historicalattendance" ("employee_id_id");
-CREATE INDEX "attendance_historicalattendance_history_relation_id_8dd5eefa" ON "attendance_historicalattendance" ("history_relation_id");
-CREATE UNIQUE INDEX "attendance_historicalattendance_history_tags_historicalattendance_id_audittag_id_3385842d_uniq" ON "attendance_historicalattendance_history_tags" ("historicalattendance_id", "audittag_id");
-CREATE INDEX "attendance_historicalattendance_history_tags_historicalattendance_id_cd419b72" ON "attendance_historicalattendance_history_tags" ("historicalattendance_id");
-CREATE INDEX "attendance_historicalattendance_history_tags_audittag_id_22b5d483" ON "attendance_historicalattendance_history_tags" ("audittag_id");
-CREATE INDEX "attendance_historicalattendance_history_user_id_0cb04709" ON "attendance_historicalattendance" ("history_user_id");
-CREATE INDEX "attendance_historicalattendance_modified_by_id_4d29539a" ON "attendance_historicalattendance" ("modified_by_id");
-CREATE INDEX "attendance_historicalattendance_shift_id_id_f99f84a2" ON "attendance_historicalattendance" ("shift_id_id");
-CREATE INDEX "attendance_historicalattendance_work_type_id_id_49209f61" ON "attendance_historicalattendance" ("work_type_id_id");
-CREATE UNIQUE INDEX "attendance_gracetime_company_id_gracetime_id_company_id_e668b552_uniq" ON "attendance_gracetime_company_id" ("gracetime_id", "company_id");
-CREATE INDEX "attendance_gracetime_company_id_gracetime_id_a47c5ae4" ON "attendance_gracetime_company_id" ("gracetime_id");
-CREATE INDEX "attendance_gracetime_company_id_company_id_942808b8" ON "attendance_gracetime_company_id" ("company_id");
-CREATE INDEX "attendance_gracetime_created_by_id_2819c6c7" ON "attendance_gracetime" ("created_by_id");
-CREATE INDEX "attendance_gracetime_modified_by_id_e0be5422" ON "attendance_gracetime" ("modified_by_id");
-CREATE INDEX "attendance_batchattendance_created_by_id_3e782e45" ON "attendance_batchattendance" ("created_by_id");
-CREATE INDEX "attendance_batchattendance_modified_by_id_b5388e3b" ON "attendance_batchattendance" ("modified_by_id");
-CREATE UNIQUE INDEX "attendance_attendancevalidationcondition_company_id_attendancevalidationcondition_id_company_id_b22132c5_uniq" ON "attendance_attendancevalidationcondition_company_id" ("attendancevalidationcondition_id", "company_id");
-CREATE INDEX "attendance_attendancevalidationcondition_company_id_attendancevalidationcondition_id_435e89ec" ON "attendance_attendancevalidationcondition_company_id" ("attendancevalidationcondition_id");
-CREATE INDEX "attendance_attendancevalidationcondition_company_id_company_id_15bf7647" ON "attendance_attendancevalidationcondition_company_id" ("company_id");
-CREATE INDEX "attendance_attendancevalidationcondition_created_by_id_b84b1ab2" ON "attendance_attendancevalidationcondition" ("created_by_id");
-CREATE INDEX "attendance_attendancevalidationcondition_modified_by_id_2e4b51ba" ON "attendance_attendancevalidationcondition" ("modified_by_id");
-CREATE INDEX "attendance_attendancerequestfile_created_by_id_0b196a4d" ON "attendance_attendancerequestfile" ("created_by_id");
-CREATE INDEX "attendance_attendancerequestfile_modified_by_id_ed5b3154" ON "attendance_attendancerequestfile" ("modified_by_id");
-CREATE UNIQUE INDEX "attendance_attendancerequestcomment_files_attendancerequestcomment_id_attendancerequestfile_id_022e9e3c_uniq" ON "attendance_attendancerequestcomment_files" ("attendancerequestcomment_id", "attendancerequestfile_id");
-CREATE INDEX "attendance_attendancerequestcomment_files_attendancerequestcomment_id_a80fed87" ON "attendance_attendancerequestcomment_files" ("attendancerequestcomment_id");
-CREATE INDEX "attendance_attendancerequestcomment_files_attendancerequestfile_id_f9332418" ON "attendance_attendancerequestcomment_files" ("attendancerequestfile_id");
-CREATE INDEX "attendance_attendancerequestcomment_created_by_id_d47327ee" ON "attendance_attendancerequestcomment" ("created_by_id");
-CREATE INDEX "attendance_attendancerequestcomment_employee_id_id_287f91f6" ON "attendance_attendancerequestcomment" ("employee_id_id");
-CREATE INDEX "attendance_attendancerequestcomment_modified_by_id_574591a7" ON "attendance_attendancerequestcomment" ("modified_by_id");
-CREATE INDEX "attendance_attendancerequestcomment_request_id_id_e906b582" ON "attendance_attendancerequestcomment" ("request_id_id");
-CREATE INDEX "attendance_attendanceovertime_created_by_id_8128ac7c" ON "attendance_attendanceovertime" ("created_by_id");
-CREATE INDEX "attendance_attendanceovertime_employee_id_id_b7422c25" ON "attendance_attendanceovertime" ("employee_id_id");
-CREATE INDEX "attendance_attendanceovertime_modified_by_id_7a752250" ON "attendance_attendanceovertime" ("modified_by_id");
-CREATE INDEX "attendance_attendancelatecomeearlyout_attendance_id_id_86e48a6d" ON "attendance_attendancelatecomeearlyout" ("attendance_id_id");
-CREATE INDEX "attendance_attendancelatecomeearlyout_created_by_id_c07050a1" ON "attendance_attendancelatecomeearlyout" ("created_by_id");
-CREATE INDEX "attendance_attendancelatecomeearlyout_employee_id_id_98d63dab" ON "attendance_attendancelatecomeearlyout" ("employee_id_id");
-CREATE INDEX "attendance_attendancelatecomeearlyout_modified_by_id_ca21b8da" ON "attendance_attendancelatecomeearlyout" ("modified_by_id");
-CREATE INDEX "attendance_attendancegeneralsetting_company_id_id_49d8b388" ON "attendance_attendancegeneralsetting" ("company_id_id");
-CREATE INDEX "attendance_attendancegeneralsetting_created_by_id_5d369b31" ON "attendance_attendancegeneralsetting" ("created_by_id");
-CREATE INDEX "attendance_attendancegeneralsetting_modified_by_id_3b013cdc" ON "attendance_attendancegeneralsetting" ("modified_by_id");
-CREATE INDEX "attendance_attendanceactivity_created_by_id_c64cdac8" ON "attendance_attendanceactivity" ("created_by_id");
-CREATE INDEX "attendance_attendanceactivity_employee_id_id_387d5d6c" ON "attendance_attendanceactivity" ("employee_id_id");
-CREATE UNIQUE INDEX "attendance_attendanceovertime_employee_id_id_month_year_98bd34d8_uniq" ON "attendance_attendanceovertime" ("employee_id_id", "month", "year");
-CREATE UNIQUE INDEX "attendance_attendancelatecomeearlyout_attendance_id_id_type_1b658e2f_uniq" ON "attendance_attendancelatecomeearlyout" ("attendance_id_id", "type");
-CREATE UNIQUE INDEX "attendance_attendance_employee_id_id_attendance_date_a9a57f3e_uniq" ON "attendance_attendance" ("employee_id_id", "attendance_date");
-CREATE INDEX "attendance_attendanceactivity_modified_by_id_90e38a42" ON "attendance_attendanceactivity" ("modified_by_id");
-CREATE INDEX "attendance_attendanceactivity_shift_day_id_21632240" ON "attendance_attendanceactivity" ("shift_day_id");
-CREATE INDEX "attendance_attendance_approved_by_id_9d89aafd" ON "attendance_attendance" ("approved_by_id");
-CREATE INDEX "attendance_attendance_attendance_day_id_8bb2b869" ON "attendance_attendance" ("attendance_day_id");
-CREATE INDEX "attendance_attendance_batch_attendance_id_id_3f1b552b" ON "attendance_attendance" ("batch_attendance_id_id");
-CREATE INDEX "attendance_attendance_created_by_id_621a60fa" ON "attendance_attendance" ("created_by_id");
-CREATE INDEX "attendance_attendance_employee_id_id_a63854dc" ON "attendance_attendance" ("employee_id_id");
-CREATE INDEX "attendance_attendance_modified_by_id_e2e344c7" ON "attendance_attendance" ("modified_by_id");
-CREATE INDEX "attendance_attendance_shift_id_id_6fba51aa" ON "attendance_attendance" ("shift_id_id");
-CREATE INDEX "attendance_attendance_work_type_id_id_f370eeed" ON "attendance_attendance" ("work_type_id_id");
 CREATE UNIQUE INDEX "base_worktyperequestcomment_files_worktyperequestcomment_id_baserequestfile_id_11279360_uniq" ON "base_worktyperequestcomment_files" ("worktyperequestcomment_id", "baserequestfile_id");
 CREATE INDEX "base_worktyperequestcomment_files_worktyperequestcomment_id_4f8ea110" ON "base_worktyperequestcomment_files" ("worktyperequestcomment_id");
 CREATE INDEX "base_worktyperequestcomment_files_baserequestfile_id_56f0cad3" ON "base_worktyperequestcomment_files" ("baserequestfile_id");
@@ -2810,8 +1986,255 @@ CREATE INDEX "base_announcement_job_position_jobposition_id_884b606d" ON "base_a
 CREATE INDEX "base_announcement_modified_by_id_bd30f74b" ON "base_announcement" ("modified_by_id");
 CREATE UNIQUE INDEX "base_mailboxintegration_user_id_provider_9c08718c_uniq" ON "base_mailboxintegration" ("user_id", "provider");
 CREATE INDEX "base_mailboxintegration_user_id_73ee9860" ON "base_mailboxintegration" ("user_id");
+CREATE INDEX "recruitment_approvalrule_company_id_id_575157c4" ON "recruitment_approvalrule" ("company_id_id");
+CREATE INDEX "recruitment_approvalrule_created_by_id_5e0779c3" ON "recruitment_approvalrule" ("created_by_id");
+CREATE INDEX "recruitment_approvalrule_department_id_502a0d2f" ON "recruitment_approvalrule" ("department_id");
+CREATE INDEX "recruitment_approvalrule_modified_by_id_96f0af45" ON "recruitment_approvalrule" ("modified_by_id");
+CREATE INDEX "recruitment_approvalstep_approver_user_id_6ffed9cf" ON "recruitment_approvalstep" ("approver_user_id");
+CREATE INDEX "recruitment_approvalstep_created_by_id_f89c8d09" ON "recruitment_approvalstep" ("created_by_id");
+CREATE INDEX "recruitment_approvalstep_modified_by_id_bc82a244" ON "recruitment_approvalstep" ("modified_by_id");
+CREATE INDEX "recruitment_approvalstep_rule_id_b049d91b" ON "recruitment_approvalstep" ("rule_id");
+CREATE INDEX "recruitment_linkedinaccount_company_id_id_92fc0d4f" ON "recruitment_linkedinaccount" ("company_id_id");
+CREATE INDEX "recruitment_linkedinaccount_created_by_id_d4c65311" ON "recruitment_linkedinaccount" ("created_by_id");
+CREATE INDEX "recruitment_linkedinaccount_modified_by_id_6f83d73b" ON "recruitment_linkedinaccount" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_open_positions_recruitment_id_jobposition_id_dd7d1b27_uniq" ON "recruitment_recruitment_open_positions" ("recruitment_id", "jobposition_id");
+CREATE INDEX "recruitment_recruitment_open_positions_recruitment_id_ecad5263" ON "recruitment_recruitment_open_positions" ("recruitment_id");
+CREATE INDEX "recruitment_recruitment_open_positions_jobposition_id_b152ea09" ON "recruitment_recruitment_open_positions" ("jobposition_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_recruitment_managers_recruitment_id_employee_id_685bc030_uniq" ON "recruitment_recruitment_recruitment_managers" ("recruitment_id", "employee_id");
+CREATE INDEX "recruitment_recruitment_recruitment_managers_recruitment_id_a4c3404a" ON "recruitment_recruitment_recruitment_managers" ("recruitment_id");
+CREATE INDEX "recruitment_recruitment_recruitment_managers_employee_id_a7139bba" ON "recruitment_recruitment_recruitment_managers" ("employee_id");
+CREATE INDEX "recruitment_skillzone_company_id_id_a5d93a16" ON "recruitment_skillzone" ("company_id_id");
+CREATE INDEX "recruitment_skillzone_created_by_id_5d1ea287" ON "recruitment_skillzone" ("created_by_id");
+CREATE INDEX "recruitment_skillzone_modified_by_id_e00c979e" ON "recruitment_skillzone" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_stage_recruitment_id_id_stage_41b4d1c0_uniq" ON "recruitment_stage" ("recruitment_id_id", "stage");
+CREATE INDEX "recruitment_stage_created_by_id_93d9a4be" ON "recruitment_stage" ("created_by_id");
+CREATE INDEX "recruitment_stage_modified_by_id_96c190ac" ON "recruitment_stage" ("modified_by_id");
+CREATE INDEX "recruitment_stage_recruitment_id_id_d63ee32a" ON "recruitment_stage" ("recruitment_id_id");
+CREATE UNIQUE INDEX "recruitment_stage_stage_managers_stage_id_employee_id_2ce70681_uniq" ON "recruitment_stage_stage_managers" ("stage_id", "employee_id");
+CREATE INDEX "recruitment_stage_stage_managers_stage_id_6d61885b" ON "recruitment_stage_stage_managers" ("stage_id");
+CREATE INDEX "recruitment_stage_stage_managers_employee_id_e7e5236a" ON "recruitment_stage_stage_managers" ("employee_id");
+CREATE INDEX "recruitment_stagefiles_created_by_id_a3b5b93f" ON "recruitment_stagefiles" ("created_by_id");
+CREATE INDEX "recruitment_stagefiles_modified_by_id_cb03fbd9" ON "recruitment_stagefiles" ("modified_by_id");
+CREATE INDEX "recruitment_surveytemplate_company_id_id_5bae672b" ON "recruitment_surveytemplate" ("company_id_id");
+CREATE INDEX "recruitment_surveytemplate_created_by_id_38b804e2" ON "recruitment_surveytemplate" ("created_by_id");
+CREATE INDEX "recruitment_surveytemplate_modified_by_id_6311950c" ON "recruitment_surveytemplate" ("modified_by_id");
+CREATE INDEX "recruitment_stagenote_candidate_id_id_d1383dd3" ON "recruitment_stagenote" ("candidate_id_id");
+CREATE INDEX "recruitment_stagenote_created_by_id_b3a66e86" ON "recruitment_stagenote" ("created_by_id");
+CREATE INDEX "recruitment_stagenote_modified_by_id_c57c24d3" ON "recruitment_stagenote" ("modified_by_id");
+CREATE INDEX "recruitment_stagenote_stage_id_id_1a358085" ON "recruitment_stagenote" ("stage_id_id");
+CREATE INDEX "recruitment_stagenote_updated_by_id_ed4ff558" ON "recruitment_stagenote" ("updated_by_id");
+CREATE UNIQUE INDEX "recruitment_stagenote_stage_files_stagenote_id_stagefiles_id_2f931248_uniq" ON "recruitment_stagenote_stage_files" ("stagenote_id", "stagefiles_id");
+CREATE INDEX "recruitment_stagenote_stage_files_stagenote_id_8a0b35b6" ON "recruitment_stagenote_stage_files" ("stagenote_id");
+CREATE INDEX "recruitment_stagenote_stage_files_stagefiles_id_c02993d0" ON "recruitment_stagenote_stage_files" ("stagefiles_id");
+CREATE INDEX "recruitment_skillzonecandidate_candidate_id_id_ac9e3998" ON "recruitment_skillzonecandidate" ("candidate_id_id");
+CREATE INDEX "recruitment_skillzonecandidate_created_by_id_bea62548" ON "recruitment_skillzonecandidate" ("created_by_id");
+CREATE INDEX "recruitment_skillzonecandidate_modified_by_id_a1ce64d0" ON "recruitment_skillzonecandidate" ("modified_by_id");
+CREATE INDEX "recruitment_skillzonecandidate_skill_zone_id_id_f55c73fc" ON "recruitment_skillzonecandidate" ("skill_zone_id_id");
+CREATE INDEX "recruitment_skill_created_by_id_fbf18ae8" ON "recruitment_skill" ("created_by_id");
+CREATE INDEX "recruitment_skill_modified_by_id_32de1bd8" ON "recruitment_skill" ("modified_by_id");
+CREATE INDEX "recruitment_resume_recruitment_id_id_00eb694d" ON "recruitment_resume" ("recruitment_id_id");
+CREATE INDEX "recruitment_rejectreason_company_id_id_710f492e" ON "recruitment_rejectreason" ("company_id_id");
+CREATE INDEX "recruitment_rejectreason_created_by_id_f79fee48" ON "recruitment_rejectreason" ("created_by_id");
+CREATE INDEX "recruitment_rejectreason_modified_by_id_87e738ae" ON "recruitment_rejectreason" ("modified_by_id");
+CREATE INDEX "recruitment_rejectedcandidate_created_by_id_0d2b6a1a" ON "recruitment_rejectedcandidate" ("created_by_id");
+CREATE INDEX "recruitment_rejectedcandidate_modified_by_id_9bef5a46" ON "recruitment_rejectedcandidate" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectedcandidate_id_rejectreason_id_c4d4a5a0_uniq" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectedcandidate_id", "rejectreason_id");
+CREATE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectedcandidate_id_0029fa4e" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectedcandidate_id");
+CREATE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectreason_id_a5275520" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectreason_id");
+CREATE INDEX "recruitment_recruitmentsurveyanswer_candidate_id_id_e1b0fedb" ON "recruitment_recruitmentsurveyanswer" ("candidate_id_id");
+CREATE INDEX "recruitment_recruitmentsurveyanswer_created_by_id_163d2633" ON "recruitment_recruitmentsurveyanswer" ("created_by_id");
+CREATE INDEX "recruitment_recruitmentsurveyanswer_job_position_id_id_97a8b004" ON "recruitment_recruitmentsurveyanswer" ("job_position_id_id");
+CREATE INDEX "recruitment_recruitmentsurveyanswer_modified_by_id_1bfd6064" ON "recruitment_recruitmentsurveyanswer" ("modified_by_id");
+CREATE INDEX "recruitment_recruitmentsurveyanswer_recruitment_id_id_56888b17" ON "recruitment_recruitmentsurveyanswer" ("recruitment_id_id");
+CREATE INDEX "recruitment_recruitmentsurvey_created_by_id_1a345de1" ON "recruitment_recruitmentsurvey" ("created_by_id");
+CREATE INDEX "recruitment_recruitmentsurvey_modified_by_id_3669d754" ON "recruitment_recruitmentsurvey" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_job_position_ids_recruitmentsurvey_id_jobposition_id_06322710_uniq" ON "recruitment_recruitmentsurvey_job_position_ids" ("recruitmentsurvey_id", "jobposition_id");
+CREATE INDEX "recruitment_recruitmentsurvey_job_position_ids_recruitmentsurvey_id_75c9ce77" ON "recruitment_recruitmentsurvey_job_position_ids" ("recruitmentsurvey_id");
+CREATE INDEX "recruitment_recruitmentsurvey_job_position_ids_jobposition_id_89704641" ON "recruitment_recruitmentsurvey_job_position_ids" ("jobposition_id");
+CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitmentsurvey_id_recruitment_id_71c5480b_uniq" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitmentsurvey_id", "recruitment_id");
+CREATE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitmentsurvey_id_711bd7eb" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitmentsurvey_id");
+CREATE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitment_id_e1b93c79" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitment_id");
+CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_template_id_recruitmentsurvey_id_surveytemplate_id_4062fb17_uniq" ON "recruitment_recruitmentsurvey_template_id" ("recruitmentsurvey_id", "surveytemplate_id");
+CREATE INDEX "recruitment_recruitmentsurvey_template_id_recruitmentsurvey_id_45834a00" ON "recruitment_recruitmentsurvey_template_id" ("recruitmentsurvey_id");
+CREATE INDEX "recruitment_recruitmentsurvey_template_id_surveytemplate_id_54a3a2e8" ON "recruitment_recruitmentsurvey_template_id" ("surveytemplate_id");
+CREATE INDEX "recruitment_recruitmentgeneralsetting_company_id_id_32a2ecaf" ON "recruitment_recruitmentgeneralsetting" ("company_id_id");
+CREATE INDEX "recruitment_recruitmentgeneralsetting_created_by_id_86a5f511" ON "recruitment_recruitmentgeneralsetting" ("created_by_id");
+CREATE INDEX "recruitment_recruitmentgeneralsetting_modified_by_id_1e118681" ON "recruitment_recruitmentgeneralsetting" ("modified_by_id");
+CREATE INDEX "recruitment_recruitmentapprovaldelegation_created_by_id_d545932e" ON "recruitment_recruitmentapprovaldelegation" ("created_by_id");
+CREATE INDEX "recruitment_recruitmentapprovaldelegation_delegate_id_6086cbc7" ON "recruitment_recruitmentapprovaldelegation" ("delegate_id");
+CREATE INDEX "recruitment_recruitmentapprovaldelegation_delegator_id_cd95c61f" ON "recruitment_recruitmentapprovaldelegation" ("delegator_id");
+CREATE INDEX "recruitment_recruitmentapprovaldelegation_modified_by_id_dee95532" ON "recruitment_recruitmentapprovaldelegation" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_skills_recruitment_id_skill_id_9d15d780_uniq" ON "recruitment_recruitment_skills" ("recruitment_id", "skill_id");
+CREATE INDEX "recruitment_recruitment_skills_recruitment_id_c62ab337" ON "recruitment_recruitment_skills" ("recruitment_id");
+CREATE INDEX "recruitment_recruitment_skills_skill_id_659ac48e" ON "recruitment_recruitment_skills" ("skill_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_survey_templates_recruitment_id_surveytemplate_id_9d52b3b1_uniq" ON "recruitment_recruitment_survey_templates" ("recruitment_id", "surveytemplate_id");
+CREATE INDEX "recruitment_recruitment_survey_templates_recruitment_id_082d049d" ON "recruitment_recruitment_survey_templates" ("recruitment_id");
+CREATE INDEX "recruitment_recruitment_survey_templates_surveytemplate_id_536c97fa" ON "recruitment_recruitment_survey_templates" ("surveytemplate_id");
+CREATE INDEX "recruitment_questionordering_created_by_id_f8771bb5" ON "recruitment_questionordering" ("created_by_id");
+CREATE INDEX "recruitment_questionordering_modified_by_id_0355a7a5" ON "recruitment_questionordering" ("modified_by_id");
+CREATE INDEX "recruitment_questionordering_question_id_id_1b4adb1f" ON "recruitment_questionordering" ("question_id_id");
+CREATE INDEX "recruitment_questionordering_recruitment_id_id_d35a120f" ON "recruitment_questionordering" ("recruitment_id_id");
+CREATE INDEX "recruitment_parsedcvdata_created_by_id_edeb7885" ON "recruitment_parsedcvdata" ("created_by_id");
+CREATE INDEX "recruitment_parsedcvdata_modified_by_id_191f2857" ON "recruitment_parsedcvdata" ("modified_by_id");
+CREATE INDEX "recruitment_manpowerrequeststatuslog_changed_by_id_b72c3f3d" ON "recruitment_manpowerrequeststatuslog" ("changed_by_id");
+CREATE INDEX "recruitment_manpowerrequeststatuslog_request_id_66cf8a9c" ON "recruitment_manpowerrequeststatuslog" ("request_id");
+CREATE INDEX "recruitment_manpowerapproval_acted_by_id_285ce998" ON "recruitment_manpowerapproval" ("acted_by_id");
+CREATE INDEX "recruitment_manpowerapproval_approver_id_2c190202" ON "recruitment_manpowerapproval" ("approver_id");
+CREATE INDEX "recruitment_manpowerapproval_request_id_c35650ee" ON "recruitment_manpowerapproval" ("request_id");
+CREATE INDEX "recruitment_manpowerapproval_step_id_a1847b45" ON "recruitment_manpowerapproval" ("step_id");
+CREATE UNIQUE INDEX "recruitment_interviewschedule_employee_id_interviewschedule_id_employee_id_34c14bfc_uniq" ON "recruitment_interviewschedule_employee_id" ("interviewschedule_id", "employee_id");
+CREATE INDEX "recruitment_interviewschedule_employee_id_interviewschedule_id_60873c42" ON "recruitment_interviewschedule_employee_id" ("interviewschedule_id");
+CREATE INDEX "recruitment_interviewschedule_employee_id_employee_id_ccd9a309" ON "recruitment_interviewschedule_employee_id" ("employee_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_id_30e1cc24" ON "recruitment_historicalrejectedcandidate" ("id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_history_date_cc4995db" ON "recruitment_historicalrejectedcandidate" ("history_date");
+CREATE INDEX "recruitment_historicalrejectedcandidate_candidate_id_id_f590a22d" ON "recruitment_historicalrejectedcandidate" ("candidate_id_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_created_by_id_ad5f645f" ON "recruitment_historicalrejectedcandidate" ("created_by_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_history_relation_id_99021d48" ON "recruitment_historicalrejectedcandidate" ("history_relation_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_history_user_id_ade3345e" ON "recruitment_historicalrejectedcandidate" ("history_user_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_modified_by_id_9c81374f" ON "recruitment_historicalrejectedcandidate" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_historicalrejectedcandidate_history_tags_historicalrejectedcandidate_id_audittag_id_eb843d90_uniq" ON "recruitment_historicalrejectedcandidate_history_tags" ("historicalrejectedcandidate_id", "audittag_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_history_tags_historicalrejectedcandidate_id_4765b9a4" ON "recruitment_historicalrejectedcandidate_history_tags" ("historicalrejectedcandidate_id");
+CREATE INDEX "recruitment_historicalrejectedcandidate_history_tags_audittag_id_c5b10b47" ON "recruitment_historicalrejectedcandidate_history_tags" ("audittag_id");
+CREATE UNIQUE INDEX "recruitment_historicalcandidate_history_tags_historicalcandidate_id_audittag_id_8a9083b7_uniq" ON "recruitment_historicalcandidate_history_tags" ("historicalcandidate_id", "audittag_id");
+CREATE INDEX "recruitment_historicalcandidate_history_tags_historicalcandidate_id_8b4729d7" ON "recruitment_historicalcandidate_history_tags" ("historicalcandidate_id");
+CREATE INDEX "recruitment_historicalcandidate_history_tags_audittag_id_18d229c0" ON "recruitment_historicalcandidate_history_tags" ("audittag_id");
+CREATE INDEX "recruitment_cvscreeninglog_candidate_id_9a78fc6f" ON "recruitment_cvscreeninglog" ("candidate_id");
+CREATE INDEX "recruitment_cvscreeninglog_recruitment_id_7ce0edfc" ON "recruitment_cvscreeninglog" ("recruitment_id");
+CREATE INDEX "recruitment_candidatedocumentrequest_created_by_id_9aff83cf" ON "recruitment_candidatedocumentrequest" ("created_by_id");
+CREATE INDEX "recruitment_candidatedocumentrequest_modified_by_id_0e961fa2" ON "recruitment_candidatedocumentrequest" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidatedocumentrequest_id_candidate_id_287d5959_uniq" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidatedocumentrequest_id", "candidate_id");
+CREATE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidatedocumentrequest_id_58411ac1" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidatedocumentrequest_id");
+CREATE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidate_id_aa0c35ed" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidate_id");
+CREATE INDEX "recruitment_candidatedocument_candidate_id_id_e3f353e9" ON "recruitment_candidatedocument" ("candidate_id_id");
+CREATE INDEX "recruitment_candidatedocument_created_by_id_b99ad3d5" ON "recruitment_candidatedocument" ("created_by_id");
+CREATE INDEX "recruitment_candidatedocument_document_request_id_id_f57b6648" ON "recruitment_candidatedocument" ("document_request_id_id");
+CREATE INDEX "recruitment_candidatedocument_modified_by_id_bf50b147" ON "recruitment_candidatedocument" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_evaluationscore_evaluation_id_criteria_id_f2fa4073_uniq" ON "recruitment_evaluationscore" ("evaluation_id", "criteria_id");
+CREATE INDEX "recruitment_evaluationscore_criteria_id_a6df35fd" ON "recruitment_evaluationscore" ("criteria_id");
+CREATE INDEX "recruitment_evaluationscore_evaluation_id_98d67e39" ON "recruitment_evaluationscore" ("evaluation_id");
+CREATE UNIQUE INDEX "recruitment_candidateskillmatch_candidate_id_recruitment_id_dfe487b9_uniq" ON "recruitment_candidateskillmatch" ("candidate_id", "recruitment_id");
+CREATE INDEX "recruitment_candidateskillmatch_candidate_id_14d4efd8" ON "recruitment_candidateskillmatch" ("candidate_id");
+CREATE INDEX "recruitment_candidateskillmatch_created_by_id_74022123" ON "recruitment_candidateskillmatch" ("created_by_id");
+CREATE INDEX "recruitment_candidateskillmatch_modified_by_id_04b54e70" ON "recruitment_candidateskillmatch" ("modified_by_id");
+CREATE INDEX "recruitment_candidateskillmatch_recruitment_id_daf32433" ON "recruitment_candidateskillmatch" ("recruitment_id");
+CREATE UNIQUE INDEX "recruitment_candidaterating_employee_id_id_candidate_id_id_1e72748e_uniq" ON "recruitment_candidaterating" ("employee_id_id", "candidate_id_id");
+CREATE INDEX "recruitment_candidaterating_candidate_id_id_1ede0d1f" ON "recruitment_candidaterating" ("candidate_id_id");
+CREATE INDEX "recruitment_candidaterating_created_by_id_0e9a4f8f" ON "recruitment_candidaterating" ("created_by_id");
+CREATE INDEX "recruitment_candidaterating_employee_id_id_aa90a5e3" ON "recruitment_candidaterating" ("employee_id_id");
+CREATE INDEX "recruitment_candidaterating_modified_by_id_3ab4f1fe" ON "recruitment_candidaterating" ("modified_by_id");
+CREATE UNIQUE INDEX "recruitment_candidaterankingscore_candidate_id_recruitment_id_5fb6d14a_uniq" ON "recruitment_candidaterankingscore" ("candidate_id", "recruitment_id");
+CREATE INDEX "recruitment_candidaterankingscore_candidate_id_aa04c842" ON "recruitment_candidaterankingscore" ("candidate_id");
+CREATE INDEX "recruitment_candidaterankingscore_created_by_id_1d7e0072" ON "recruitment_candidaterankingscore" ("created_by_id");
+CREATE INDEX "recruitment_candidaterankingscore_modified_by_id_aae66f7c" ON "recruitment_candidaterankingscore" ("modified_by_id");
+CREATE INDEX "recruitment_candidaterankingscore_recruitment_id_2f82c450" ON "recruitment_candidaterankingscore" ("recruitment_id");
+CREATE INDEX "recruitment_overall_b544ac_idx" ON "recruitment_candidaterankingscore" ("overall_ranking_score" DESC);
+CREATE INDEX "recruitment_ranking_4d7dd0_idx" ON "recruitment_candidaterankingscore" ("ranking_category");
+CREATE INDEX "recruitment_interviewround_interview_id_d04677d8" ON "recruitment_interviewround" ("interview_id");
+CREATE UNIQUE INDEX "recruitment_candidate_email_recruitment_id_id_2d38a838_uniq" ON "recruitment_candidate" ("email", "recruitment_id_id");
+CREATE INDEX "recruitment_candidate_converted_employee_id_id_aea3b89c" ON "recruitment_candidate" ("converted_employee_id_id");
+CREATE INDEX "recruitment_candidate_created_by_id_e66d3f8b" ON "recruitment_candidate" ("created_by_id");
+CREATE INDEX "recruitment_candidate_job_position_id_id_6d554ae7" ON "recruitment_candidate" ("job_position_id_id");
+CREATE INDEX "recruitment_candidate_modified_by_id_ea175e4b" ON "recruitment_candidate" ("modified_by_id");
+CREATE INDEX "recruitment_candidate_recruitment_id_id_3276947d" ON "recruitment_candidate" ("recruitment_id_id");
+CREATE INDEX "recruitment_candidate_referral_id_0aaff040" ON "recruitment_candidate" ("referral_id");
+CREATE INDEX "recruitment_candidate_stage_id_id_95c8b982" ON "recruitment_candidate" ("stage_id_id");
+CREATE INDEX "recruitment_recruit_3b5d61_idx" ON "recruitment_candidate" ("recruitment_id_id", "stage_id_id");
+CREATE INDEX "recruitment_job_pos_e2cb0c_idx" ON "recruitment_candidate" ("job_position_id_id", "stage_id_id");
+CREATE INDEX "recruitment_is_acti_c3edb9_idx" ON "recruitment_candidate" ("is_active", "recruitment_id_id");
+CREATE INDEX "recruitment_offer_l_014232_idx" ON "recruitment_candidate" ("offer_letter_status");
+CREATE INDEX "recruitment_hired_31c289_idx" ON "recruitment_candidate" ("hired");
+CREATE INDEX "recruitment_historicalcandidate_id_754f239c" ON "recruitment_historicalcandidate" ("id");
+CREATE INDEX "recruitment_historicalcandidate_history_date_ab29a308" ON "recruitment_historicalcandidate" ("history_date");
+CREATE INDEX "recruitment_historicalcandidate_converted_employee_id_id_539259f7" ON "recruitment_historicalcandidate" ("converted_employee_id_id");
+CREATE INDEX "recruitment_historicalcandidate_created_by_id_e0d2d80b" ON "recruitment_historicalcandidate" ("created_by_id");
+CREATE INDEX "recruitment_historicalcandidate_history_relation_id_04af0535" ON "recruitment_historicalcandidate" ("history_relation_id");
+CREATE INDEX "recruitment_historicalcandidate_history_user_id_c56fecb3" ON "recruitment_historicalcandidate" ("history_user_id");
+CREATE INDEX "recruitment_historicalcandidate_job_position_id_id_f6fadcbc" ON "recruitment_historicalcandidate" ("job_position_id_id");
+CREATE INDEX "recruitment_historicalcandidate_modified_by_id_ffd9a8ac" ON "recruitment_historicalcandidate" ("modified_by_id");
+CREATE INDEX "recruitment_historicalcandidate_recruitment_id_id_bf78daa8" ON "recruitment_historicalcandidate" ("recruitment_id_id");
+CREATE INDEX "recruitment_historicalcandidate_referral_id_66a55772" ON "recruitment_historicalcandidate" ("referral_id");
+CREATE INDEX "recruitment_historicalcandidate_stage_id_id_a5d26037" ON "recruitment_historicalcandidate" ("stage_id_id");
+CREATE INDEX "recruitment_interviewschedule_candidate_id_id_bae2223f" ON "recruitment_interviewschedule" ("candidate_id_id");
+CREATE INDEX "recruitment_interviewschedule_created_by_id_7ea3824e" ON "recruitment_interviewschedule" ("created_by_id");
+CREATE INDEX "recruitment_interviewschedule_modified_by_id_d79442b1" ON "recruitment_interviewschedule" ("modified_by_id");
+CREATE INDEX "recruitment_offerletterapproval_approver_id_f98db871" ON "recruitment_offerletterapproval" ("approver_id");
+CREATE INDEX "recruitment_offerletterapproval_offer_letter_id_779914bc" ON "recruitment_offerletterapproval" ("offer_letter_id");
+CREATE INDEX "recruitment_medicalletter_created_by_id_7873dab0" ON "recruitment_medicalletter" ("created_by_id");
+CREATE INDEX "recruitment_medicalletter_hr_signed_by_id_b08a0a36" ON "recruitment_medicalletter" ("hr_signed_by_id");
+CREATE INDEX "recruitment_visaletter_created_by_id_9f44b0f1" ON "recruitment_visaletter" ("created_by_id");
+CREATE INDEX "recruitment_visaletter_hr_signed_by_id_48d5890c" ON "recruitment_visaletter" ("hr_signed_by_id");
+CREATE INDEX "recruitment_offerletterstatuslog_actor_id_2c392fc7" ON "recruitment_offerletterstatuslog" ("actor_id");
+CREATE INDEX "recruitment_offerletterstatuslog_offer_letter_id_b7c1d2b9" ON "recruitment_offerletterstatuslog" ("offer_letter_id");
+CREATE INDEX "recruitment_medicalletterstatuslog_actor_id_311788f4" ON "recruitment_medicalletterstatuslog" ("actor_id");
+CREATE INDEX "recruitment_medicalletterstatuslog_medical_letter_id_c34b9a20" ON "recruitment_medicalletterstatuslog" ("medical_letter_id");
+CREATE INDEX "recruitment_visaletterstatuslog_actor_id_4b10d967" ON "recruitment_visaletterstatuslog" ("actor_id");
+CREATE INDEX "recruitment_visaletterstatuslog_visa_letter_id_52304b39" ON "recruitment_visaletterstatuslog" ("visa_letter_id");
+CREATE INDEX "recruitment_candidate_project_id_id_c2a9d14f" ON "recruitment_candidate" ("project_id_id");
+CREATE INDEX "recruitment_historicalcandidate_project_id_id_532383f7" ON "recruitment_historicalcandidate" ("project_id_id");
+CREATE INDEX "recruitment_offerapproval_acted_by_id_a061963f" ON "recruitment_offerapproval" ("acted_by_id");
+CREATE INDEX "recruitment_offerapproval_approver_id_624390e1" ON "recruitment_offerapproval" ("approver_id");
+CREATE INDEX "recruitment_offerapproval_offer_id_1f0c1d78" ON "recruitment_offerapproval" ("offer_id");
+CREATE INDEX "recruitment_offerapproval_step_id_8a7f9d55" ON "recruitment_offerapproval" ("step_id");
+CREATE INDEX "recruitment_interviewround_interviewer_id_8b1be98e" ON "recruitment_interviewround" ("interviewer_id");
+CREATE INDEX "recruitment_manpowerrequest_company_id_id_2c084ad6" ON "recruitment_manpowerrequest" ("company_id_id");
+CREATE INDEX "recruitment_manpowerrequest_created_by_id_d44d8f1a" ON "recruitment_manpowerrequest" ("created_by_id");
+CREATE INDEX "recruitment_manpowerrequest_department_id_aad15e4d" ON "recruitment_manpowerrequest" ("department_id");
+CREATE INDEX "recruitment_manpowerrequest_job_position_id_8cbf2f41" ON "recruitment_manpowerrequest" ("job_position_id");
+CREATE INDEX "recruitment_manpowerrequest_modified_by_id_e1830c60" ON "recruitment_manpowerrequest" ("modified_by_id");
+CREATE INDEX "recruitment_manpowerrequest_requested_by_id_eb0bea7c" ON "recruitment_manpowerrequest" ("requested_by_id");
+CREATE INDEX "recruitment_employmentproposal_candidate_id_95511fe0" ON "recruitment_employmentproposal" ("candidate_id");
+CREATE INDEX "recruitment_employmentproposal_created_by_id_e65c583b" ON "recruitment_employmentproposal" ("created_by_id");
+CREATE INDEX "recruitment_employmentproposal_interview_id_26c93c49" ON "recruitment_employmentproposal" ("interview_id");
+CREATE INDEX "recruitment_employmentproposal_manpower_request_id_55528f4c" ON "recruitment_employmentproposal" ("manpower_request_id");
+CREATE INDEX "recruitment_employmentproposal_modified_by_id_2df125e7" ON "recruitment_employmentproposal" ("modified_by_id");
+CREATE INDEX "recruitment_employmentproposal_recruitment_id_804adbcb" ON "recruitment_employmentproposal" ("recruitment_id");
+CREATE INDEX "recruitment_proposalstatuslog_actor_id_cebcdc87" ON "recruitment_proposalstatuslog" ("actor_id");
+CREATE INDEX "recruitment_proposalstatuslog_proposal_id_7e3e006b" ON "recruitment_proposalstatuslog" ("proposal_id");
+CREATE INDEX "recruitment_proposalroleassignment_employee_id_3e369fd7" ON "recruitment_proposalroleassignment" ("employee_id");
+CREATE INDEX "recruitment_proposalapproval_approver_id_29eb9365" ON "recruitment_proposalapproval" ("approver_id");
+CREATE INDEX "recruitment_proposalapproval_proposal_id_0e0640c7" ON "recruitment_proposalapproval" ("proposal_id");
+CREATE INDEX "recruitment_offerletter_created_by_id_91f615cf" ON "recruitment_offerletter" ("created_by_id");
+CREATE INDEX "recruitment_offerletter_modified_by_id_0e46397c" ON "recruitment_offerletter" ("modified_by_id");
+CREATE INDEX "recruitment_jobapplication_recruitment_id_f00e34eb" ON "recruitment_jobapplication" ("recruitment_id");
+CREATE INDEX "recruitment_candidateportalupload_offer_id_fbbb00f7" ON "recruitment_candidateportalupload" ("offer_id");
+CREATE INDEX "django_session_expire_date_a5c62663" ON "django_session" ("expire_date");
 CREATE INDEX "base_docusignaccount_user_id_298030d4" ON "base_docusignaccount" ("user_id");
 CREATE INDEX "base_adobesignaccount_user_id_191f7e83" ON "base_adobesignaccount" ("user_id");
+CREATE INDEX "recruitment_recruitmentapproval_approver_id_2c4f7fef" ON "recruitment_recruitmentapproval" ("approver_id");
+CREATE INDEX "recruitment_recruitmentapproval_created_by_id_9acd4cdf" ON "recruitment_recruitmentapproval" ("created_by_id");
+CREATE INDEX "recruitment_recruitmentapproval_modified_by_id_1a02107d" ON "recruitment_recruitmentapproval" ("modified_by_id");
+CREATE INDEX "recruitment_recruitmentapproval_recruitment_id_1cd75752" ON "recruitment_recruitmentapproval" ("recruitment_id");
+CREATE INDEX "recruitment_candidatescreeningprofile_screened_by_id_777c4bc0" ON "recruitment_candidatescreeningprofile" ("screened_by_id");
+CREATE UNIQUE INDEX "recruitment_interviewround_interviewers_interviewround_id_employee_id_3573b8df_uniq" ON "recruitment_interviewround_interviewers" ("interviewround_id", "employee_id");
+CREATE INDEX "recruitment_interviewround_interviewers_interviewround_id_5eecb261" ON "recruitment_interviewround_interviewers" ("interviewround_id");
+CREATE INDEX "recruitment_interviewround_interviewers_employee_id_b4ef8b0f" ON "recruitment_interviewround_interviewers" ("employee_id");
+CREATE INDEX "recruitment_interviewevaluation_candidate_id_e110261a" ON "recruitment_interviewevaluation" ("candidate_id");
+CREATE INDEX "recruitment_interviewevaluation_created_by_id_57c0cbeb" ON "recruitment_interviewevaluation" ("created_by_id");
+CREATE INDEX "recruitment_interviewevaluation_interview_id_f90464fa" ON "recruitment_interviewevaluation" ("interview_id");
+CREATE INDEX "recruitment_interviewevaluation_modified_by_id_3c465729" ON "recruitment_interviewevaluation" ("modified_by_id");
+CREATE INDEX "recruitment_interviewevaluation_panelist_id_974b1822" ON "recruitment_interviewevaluation" ("panelist_id");
+CREATE UNIQUE INDEX "recruitment_interviewevaluation_interview_id_panelist_id_round_number_ef57780b_uniq" ON "recruitment_interviewevaluation" ("interview_id", "panelist_id", "round_number");
+CREATE INDEX "recruitment_onboardingdocument_hr_acted_by_id_467a3f9f" ON "recruitment_onboardingdocument" ("hr_acted_by_id");
+CREATE INDEX "recruitment_onboardingdocument_offer_id_9bbd0891" ON "recruitment_onboardingdocument" ("offer_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_job_position_id_id_start_date_company_id_id_5247efe7_uniq" ON "recruitment_recruitment" ("job_position_id_id", "start_date", "company_id_id");
+CREATE UNIQUE INDEX "recruitment_recruitment_job_position_id_id_start_date_5785e5bf_uniq" ON "recruitment_recruitment" ("job_position_id_id", "start_date");
+CREATE INDEX "recruitment_recruitment_public_slug_38391823" ON "recruitment_recruitment" ("public_slug");
+CREATE INDEX "recruitment_recruitment_company_id_id_35c39ac1" ON "recruitment_recruitment" ("company_id_id");
+CREATE INDEX "recruitment_recruitment_created_by_id_7487d8a1" ON "recruitment_recruitment" ("created_by_id");
+CREATE INDEX "recruitment_recruitment_job_position_id_id_253cfce6" ON "recruitment_recruitment" ("job_position_id_id");
+CREATE INDEX "recruitment_recruitment_linkedin_account_id_id_ed119e75" ON "recruitment_recruitment" ("linkedin_account_id_id");
+CREATE INDEX "recruitment_recruitment_modified_by_id_3da7024d" ON "recruitment_recruitment" ("modified_by_id");
+CREATE INDEX "recruitment_recruitment_raised_by_id_1c3bda64" ON "recruitment_recruitment" ("raised_by_id");
+CREATE INDEX "recruitment_bulkrequestline_created_by_id_7086b2a3" ON "recruitment_bulkrequestline" ("created_by_id");
+CREATE INDEX "recruitment_bulkrequestline_job_position_id_866636be" ON "recruitment_bulkrequestline" ("job_position_id");
+CREATE INDEX "recruitment_bulkrequestline_modified_by_id_4ce5f301" ON "recruitment_bulkrequestline" ("modified_by_id");
+CREATE INDEX "recruitment_bulkrequestline_published_recruitment_id_2fb36fb1" ON "recruitment_bulkrequestline" ("published_recruitment_id");
+CREATE INDEX "recruitment_bulkrequestline_recruitment_id_5d9d8395" ON "recruitment_bulkrequestline" ("recruitment_id");
+CREATE INDEX "accessibility_defaultaccessibility_created_by_id_ff9332a2" ON "accessibility_defaultaccessibility" ("created_by_id");
+CREATE INDEX "accessibility_defaultaccessibility_modified_by_id_0b00d519" ON "accessibility_defaultaccessibility" ("modified_by_id");
+CREATE UNIQUE INDEX "accessibility_defaultaccessibility_employees_defaultaccessibility_id_employee_id_ce4c5db1_uniq" ON "accessibility_defaultaccessibility_employees" ("defaultaccessibility_id", "employee_id");
+CREATE INDEX "accessibility_defaultaccessibility_employees_defaultaccessibility_id_914de53f" ON "accessibility_defaultaccessibility_employees" ("defaultaccessibility_id");
+CREATE INDEX "accessibility_defaultaccessibility_employees_employee_id_41ccfcfa" ON "accessibility_defaultaccessibility_employees" ("employee_id");
 CREATE INDEX "asset_assetcategory_created_by_id_c99b90f0" ON "asset_assetcategory" ("created_by_id");
 CREATE INDEX "asset_assetcategory_modified_by_id_bd92ea34" ON "asset_assetcategory" ("modified_by_id");
 CREATE UNIQUE INDEX "asset_assetcategory_company_id_assetcategory_id_company_id_cd9193ab_uniq" ON "asset_assetcategory_company_id" ("assetcategory_id", "company_id");
@@ -2850,16 +2273,6 @@ CREATE INDEX "asset_asset_asset_lot_number_id_id_5b307bec" ON "asset_asset" ("as
 CREATE INDEX "asset_asset_created_by_id_3ee1315a" ON "asset_asset" ("created_by_id");
 CREATE INDEX "asset_asset_modified_by_id_b605c1ff" ON "asset_asset" ("modified_by_id");
 CREATE INDEX "asset_asset_owner_id_d2d14c87" ON "asset_asset" ("owner_id");
-CREATE INDEX "auditlog_logentry_object_pk_6e3219c0" ON "auditlog_logentry" ("object_pk");
-CREATE INDEX "auditlog_logentry_object_id_09c2eee8" ON "auditlog_logentry" ("object_id");
-CREATE INDEX "auditlog_logentry_action_229afe39" ON "auditlog_logentry" ("action");
-CREATE INDEX "auditlog_logentry_timestamp_37867bb0" ON "auditlog_logentry" ("timestamp");
-CREATE INDEX "auditlog_logentry_actor_id_959271d2" ON "auditlog_logentry" ("actor_id");
-CREATE INDEX "auditlog_logentry_content_type_id_75830218" ON "auditlog_logentry" ("content_type_id");
-CREATE INDEX "auditlog_logentry_cid_9f467263" ON "auditlog_logentry" ("cid");
-CREATE UNIQUE INDEX "django_content_type_app_label_model_76bd3d3b_uniq" ON "django_content_type" ("app_label", "model");
-CREATE UNIQUE INDEX "auth_permission_content_type_id_codename_01ab375a_uniq" ON "auth_permission" ("content_type_id", "codename");
-CREATE INDEX "auth_permission_content_type_id_2f476e4b" ON "auth_permission" ("content_type_id");
 CREATE INDEX "biometric_biometricdevices_company_id_id_24f01059" ON "biometric_biometricdevices" ("company_id_id");
 CREATE INDEX "biometric_biometricdevices_created_by_id_e53d3c02" ON "biometric_biometricdevices" ("created_by_id");
 CREATE INDEX "biometric_biometricdevices_modified_by_id_4a3ba0a1" ON "biometric_biometricdevices" ("modified_by_id");
@@ -3070,276 +2483,6 @@ CREATE INDEX "omani_compliance_omanilabourlawconfig_modified_by_id_715b322a" ON 
 CREATE INDEX "omani_compliance_omanicomplianceaudit_created_by_id_65b11385" ON "omani_compliance_omanicomplianceaudit" ("created_by_id");
 CREATE INDEX "omani_compliance_omanicomplianceaudit_employee_id_2741246a" ON "omani_compliance_omanicomplianceaudit" ("employee_id");
 CREATE INDEX "omani_compliance_omanicomplianceaudit_modified_by_id_674564e2" ON "omani_compliance_omanicomplianceaudit" ("modified_by_id");
-CREATE INDEX "recruitment_approvalrule_company_id_id_575157c4" ON "recruitment_approvalrule" ("company_id_id");
-CREATE INDEX "recruitment_approvalrule_created_by_id_5e0779c3" ON "recruitment_approvalrule" ("created_by_id");
-CREATE INDEX "recruitment_approvalrule_department_id_502a0d2f" ON "recruitment_approvalrule" ("department_id");
-CREATE INDEX "recruitment_approvalrule_modified_by_id_96f0af45" ON "recruitment_approvalrule" ("modified_by_id");
-CREATE INDEX "recruitment_approvalstep_approver_user_id_6ffed9cf" ON "recruitment_approvalstep" ("approver_user_id");
-CREATE INDEX "recruitment_approvalstep_created_by_id_f89c8d09" ON "recruitment_approvalstep" ("created_by_id");
-CREATE INDEX "recruitment_approvalstep_modified_by_id_bc82a244" ON "recruitment_approvalstep" ("modified_by_id");
-CREATE INDEX "recruitment_approvalstep_rule_id_b049d91b" ON "recruitment_approvalstep" ("rule_id");
-CREATE INDEX "recruitment_linkedinaccount_company_id_id_92fc0d4f" ON "recruitment_linkedinaccount" ("company_id_id");
-CREATE INDEX "recruitment_linkedinaccount_created_by_id_d4c65311" ON "recruitment_linkedinaccount" ("created_by_id");
-CREATE INDEX "recruitment_linkedinaccount_modified_by_id_6f83d73b" ON "recruitment_linkedinaccount" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_open_positions_recruitment_id_jobposition_id_dd7d1b27_uniq" ON "recruitment_recruitment_open_positions" ("recruitment_id", "jobposition_id");
-CREATE INDEX "recruitment_recruitment_open_positions_recruitment_id_ecad5263" ON "recruitment_recruitment_open_positions" ("recruitment_id");
-CREATE INDEX "recruitment_recruitment_open_positions_jobposition_id_b152ea09" ON "recruitment_recruitment_open_positions" ("jobposition_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_recruitment_managers_recruitment_id_employee_id_685bc030_uniq" ON "recruitment_recruitment_recruitment_managers" ("recruitment_id", "employee_id");
-CREATE INDEX "recruitment_recruitment_recruitment_managers_recruitment_id_a4c3404a" ON "recruitment_recruitment_recruitment_managers" ("recruitment_id");
-CREATE INDEX "recruitment_recruitment_recruitment_managers_employee_id_a7139bba" ON "recruitment_recruitment_recruitment_managers" ("employee_id");
-CREATE INDEX "recruitment_skillzone_company_id_id_a5d93a16" ON "recruitment_skillzone" ("company_id_id");
-CREATE INDEX "recruitment_skillzone_created_by_id_5d1ea287" ON "recruitment_skillzone" ("created_by_id");
-CREATE INDEX "recruitment_skillzone_modified_by_id_e00c979e" ON "recruitment_skillzone" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_stage_recruitment_id_id_stage_41b4d1c0_uniq" ON "recruitment_stage" ("recruitment_id_id", "stage");
-CREATE INDEX "recruitment_stage_created_by_id_93d9a4be" ON "recruitment_stage" ("created_by_id");
-CREATE INDEX "recruitment_stage_modified_by_id_96c190ac" ON "recruitment_stage" ("modified_by_id");
-CREATE INDEX "recruitment_stage_recruitment_id_id_d63ee32a" ON "recruitment_stage" ("recruitment_id_id");
-CREATE UNIQUE INDEX "recruitment_stage_stage_managers_stage_id_employee_id_2ce70681_uniq" ON "recruitment_stage_stage_managers" ("stage_id", "employee_id");
-CREATE INDEX "recruitment_stage_stage_managers_stage_id_6d61885b" ON "recruitment_stage_stage_managers" ("stage_id");
-CREATE INDEX "recruitment_stage_stage_managers_employee_id_e7e5236a" ON "recruitment_stage_stage_managers" ("employee_id");
-CREATE INDEX "recruitment_stagefiles_created_by_id_a3b5b93f" ON "recruitment_stagefiles" ("created_by_id");
-CREATE INDEX "recruitment_stagefiles_modified_by_id_cb03fbd9" ON "recruitment_stagefiles" ("modified_by_id");
-CREATE INDEX "recruitment_surveytemplate_company_id_id_5bae672b" ON "recruitment_surveytemplate" ("company_id_id");
-CREATE INDEX "recruitment_surveytemplate_created_by_id_38b804e2" ON "recruitment_surveytemplate" ("created_by_id");
-CREATE INDEX "recruitment_surveytemplate_modified_by_id_6311950c" ON "recruitment_surveytemplate" ("modified_by_id");
-CREATE INDEX "recruitment_stagenote_candidate_id_id_d1383dd3" ON "recruitment_stagenote" ("candidate_id_id");
-CREATE INDEX "recruitment_stagenote_created_by_id_b3a66e86" ON "recruitment_stagenote" ("created_by_id");
-CREATE INDEX "recruitment_stagenote_modified_by_id_c57c24d3" ON "recruitment_stagenote" ("modified_by_id");
-CREATE INDEX "recruitment_stagenote_stage_id_id_1a358085" ON "recruitment_stagenote" ("stage_id_id");
-CREATE INDEX "recruitment_stagenote_updated_by_id_ed4ff558" ON "recruitment_stagenote" ("updated_by_id");
-CREATE UNIQUE INDEX "recruitment_stagenote_stage_files_stagenote_id_stagefiles_id_2f931248_uniq" ON "recruitment_stagenote_stage_files" ("stagenote_id", "stagefiles_id");
-CREATE INDEX "recruitment_stagenote_stage_files_stagenote_id_8a0b35b6" ON "recruitment_stagenote_stage_files" ("stagenote_id");
-CREATE INDEX "recruitment_stagenote_stage_files_stagefiles_id_c02993d0" ON "recruitment_stagenote_stage_files" ("stagefiles_id");
-CREATE INDEX "recruitment_skillzonecandidate_candidate_id_id_ac9e3998" ON "recruitment_skillzonecandidate" ("candidate_id_id");
-CREATE INDEX "recruitment_skillzonecandidate_created_by_id_bea62548" ON "recruitment_skillzonecandidate" ("created_by_id");
-CREATE INDEX "recruitment_skillzonecandidate_modified_by_id_a1ce64d0" ON "recruitment_skillzonecandidate" ("modified_by_id");
-CREATE INDEX "recruitment_skillzonecandidate_skill_zone_id_id_f55c73fc" ON "recruitment_skillzonecandidate" ("skill_zone_id_id");
-CREATE INDEX "recruitment_skill_created_by_id_fbf18ae8" ON "recruitment_skill" ("created_by_id");
-CREATE INDEX "recruitment_skill_modified_by_id_32de1bd8" ON "recruitment_skill" ("modified_by_id");
-CREATE INDEX "recruitment_resume_recruitment_id_id_00eb694d" ON "recruitment_resume" ("recruitment_id_id");
-CREATE INDEX "recruitment_rejectreason_company_id_id_710f492e" ON "recruitment_rejectreason" ("company_id_id");
-CREATE INDEX "recruitment_rejectreason_created_by_id_f79fee48" ON "recruitment_rejectreason" ("created_by_id");
-CREATE INDEX "recruitment_rejectreason_modified_by_id_87e738ae" ON "recruitment_rejectreason" ("modified_by_id");
-CREATE INDEX "recruitment_rejectedcandidate_created_by_id_0d2b6a1a" ON "recruitment_rejectedcandidate" ("created_by_id");
-CREATE INDEX "recruitment_rejectedcandidate_modified_by_id_9bef5a46" ON "recruitment_rejectedcandidate" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectedcandidate_id_rejectreason_id_c4d4a5a0_uniq" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectedcandidate_id", "rejectreason_id");
-CREATE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectedcandidate_id_0029fa4e" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectedcandidate_id");
-CREATE INDEX "recruitment_rejectedcandidate_reject_reason_id_rejectreason_id_a5275520" ON "recruitment_rejectedcandidate_reject_reason_id" ("rejectreason_id");
-CREATE INDEX "recruitment_recruitmentsurveyanswer_candidate_id_id_e1b0fedb" ON "recruitment_recruitmentsurveyanswer" ("candidate_id_id");
-CREATE INDEX "recruitment_recruitmentsurveyanswer_created_by_id_163d2633" ON "recruitment_recruitmentsurveyanswer" ("created_by_id");
-CREATE INDEX "recruitment_recruitmentsurveyanswer_job_position_id_id_97a8b004" ON "recruitment_recruitmentsurveyanswer" ("job_position_id_id");
-CREATE INDEX "recruitment_recruitmentsurveyanswer_modified_by_id_1bfd6064" ON "recruitment_recruitmentsurveyanswer" ("modified_by_id");
-CREATE INDEX "recruitment_recruitmentsurveyanswer_recruitment_id_id_56888b17" ON "recruitment_recruitmentsurveyanswer" ("recruitment_id_id");
-CREATE INDEX "recruitment_recruitmentsurvey_created_by_id_1a345de1" ON "recruitment_recruitmentsurvey" ("created_by_id");
-CREATE INDEX "recruitment_recruitmentsurvey_modified_by_id_3669d754" ON "recruitment_recruitmentsurvey" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_job_position_ids_recruitmentsurvey_id_jobposition_id_06322710_uniq" ON "recruitment_recruitmentsurvey_job_position_ids" ("recruitmentsurvey_id", "jobposition_id");
-CREATE INDEX "recruitment_recruitmentsurvey_job_position_ids_recruitmentsurvey_id_75c9ce77" ON "recruitment_recruitmentsurvey_job_position_ids" ("recruitmentsurvey_id");
-CREATE INDEX "recruitment_recruitmentsurvey_job_position_ids_jobposition_id_89704641" ON "recruitment_recruitmentsurvey_job_position_ids" ("jobposition_id");
-CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitmentsurvey_id_recruitment_id_71c5480b_uniq" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitmentsurvey_id", "recruitment_id");
-CREATE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitmentsurvey_id_711bd7eb" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitmentsurvey_id");
-CREATE INDEX "recruitment_recruitmentsurvey_recruitment_ids_recruitment_id_e1b93c79" ON "recruitment_recruitmentsurvey_recruitment_ids" ("recruitment_id");
-CREATE UNIQUE INDEX "recruitment_recruitmentsurvey_template_id_recruitmentsurvey_id_surveytemplate_id_4062fb17_uniq" ON "recruitment_recruitmentsurvey_template_id" ("recruitmentsurvey_id", "surveytemplate_id");
-CREATE INDEX "recruitment_recruitmentsurvey_template_id_recruitmentsurvey_id_45834a00" ON "recruitment_recruitmentsurvey_template_id" ("recruitmentsurvey_id");
-CREATE INDEX "recruitment_recruitmentsurvey_template_id_surveytemplate_id_54a3a2e8" ON "recruitment_recruitmentsurvey_template_id" ("surveytemplate_id");
-CREATE INDEX "recruitment_recruitmentgeneralsetting_company_id_id_32a2ecaf" ON "recruitment_recruitmentgeneralsetting" ("company_id_id");
-CREATE INDEX "recruitment_recruitmentgeneralsetting_created_by_id_86a5f511" ON "recruitment_recruitmentgeneralsetting" ("created_by_id");
-CREATE INDEX "recruitment_recruitmentgeneralsetting_modified_by_id_1e118681" ON "recruitment_recruitmentgeneralsetting" ("modified_by_id");
-CREATE INDEX "recruitment_recruitmentapprovaldelegation_created_by_id_d545932e" ON "recruitment_recruitmentapprovaldelegation" ("created_by_id");
-CREATE INDEX "recruitment_recruitmentapprovaldelegation_delegate_id_6086cbc7" ON "recruitment_recruitmentapprovaldelegation" ("delegate_id");
-CREATE INDEX "recruitment_recruitmentapprovaldelegation_delegator_id_cd95c61f" ON "recruitment_recruitmentapprovaldelegation" ("delegator_id");
-CREATE INDEX "recruitment_recruitmentapprovaldelegation_modified_by_id_dee95532" ON "recruitment_recruitmentapprovaldelegation" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_skills_recruitment_id_skill_id_9d15d780_uniq" ON "recruitment_recruitment_skills" ("recruitment_id", "skill_id");
-CREATE INDEX "recruitment_recruitment_skills_recruitment_id_c62ab337" ON "recruitment_recruitment_skills" ("recruitment_id");
-CREATE INDEX "recruitment_recruitment_skills_skill_id_659ac48e" ON "recruitment_recruitment_skills" ("skill_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_survey_templates_recruitment_id_surveytemplate_id_9d52b3b1_uniq" ON "recruitment_recruitment_survey_templates" ("recruitment_id", "surveytemplate_id");
-CREATE INDEX "recruitment_recruitment_survey_templates_recruitment_id_082d049d" ON "recruitment_recruitment_survey_templates" ("recruitment_id");
-CREATE INDEX "recruitment_recruitment_survey_templates_surveytemplate_id_536c97fa" ON "recruitment_recruitment_survey_templates" ("surveytemplate_id");
-CREATE INDEX "recruitment_questionordering_created_by_id_f8771bb5" ON "recruitment_questionordering" ("created_by_id");
-CREATE INDEX "recruitment_questionordering_modified_by_id_0355a7a5" ON "recruitment_questionordering" ("modified_by_id");
-CREATE INDEX "recruitment_questionordering_question_id_id_1b4adb1f" ON "recruitment_questionordering" ("question_id_id");
-CREATE INDEX "recruitment_questionordering_recruitment_id_id_d35a120f" ON "recruitment_questionordering" ("recruitment_id_id");
-CREATE INDEX "recruitment_parsedcvdata_created_by_id_edeb7885" ON "recruitment_parsedcvdata" ("created_by_id");
-CREATE INDEX "recruitment_parsedcvdata_modified_by_id_191f2857" ON "recruitment_parsedcvdata" ("modified_by_id");
-CREATE INDEX "recruitment_manpowerrequeststatuslog_changed_by_id_b72c3f3d" ON "recruitment_manpowerrequeststatuslog" ("changed_by_id");
-CREATE INDEX "recruitment_manpowerrequeststatuslog_request_id_66cf8a9c" ON "recruitment_manpowerrequeststatuslog" ("request_id");
-CREATE INDEX "recruitment_manpowerapproval_acted_by_id_285ce998" ON "recruitment_manpowerapproval" ("acted_by_id");
-CREATE INDEX "recruitment_manpowerapproval_approver_id_2c190202" ON "recruitment_manpowerapproval" ("approver_id");
-CREATE INDEX "recruitment_manpowerapproval_request_id_c35650ee" ON "recruitment_manpowerapproval" ("request_id");
-CREATE INDEX "recruitment_manpowerapproval_step_id_a1847b45" ON "recruitment_manpowerapproval" ("step_id");
-CREATE UNIQUE INDEX "recruitment_interviewschedule_employee_id_interviewschedule_id_employee_id_34c14bfc_uniq" ON "recruitment_interviewschedule_employee_id" ("interviewschedule_id", "employee_id");
-CREATE INDEX "recruitment_interviewschedule_employee_id_interviewschedule_id_60873c42" ON "recruitment_interviewschedule_employee_id" ("interviewschedule_id");
-CREATE INDEX "recruitment_interviewschedule_employee_id_employee_id_ccd9a309" ON "recruitment_interviewschedule_employee_id" ("employee_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_id_30e1cc24" ON "recruitment_historicalrejectedcandidate" ("id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_history_date_cc4995db" ON "recruitment_historicalrejectedcandidate" ("history_date");
-CREATE INDEX "recruitment_historicalrejectedcandidate_candidate_id_id_f590a22d" ON "recruitment_historicalrejectedcandidate" ("candidate_id_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_created_by_id_ad5f645f" ON "recruitment_historicalrejectedcandidate" ("created_by_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_history_relation_id_99021d48" ON "recruitment_historicalrejectedcandidate" ("history_relation_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_history_user_id_ade3345e" ON "recruitment_historicalrejectedcandidate" ("history_user_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_modified_by_id_9c81374f" ON "recruitment_historicalrejectedcandidate" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_historicalrejectedcandidate_history_tags_historicalrejectedcandidate_id_audittag_id_eb843d90_uniq" ON "recruitment_historicalrejectedcandidate_history_tags" ("historicalrejectedcandidate_id", "audittag_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_history_tags_historicalrejectedcandidate_id_4765b9a4" ON "recruitment_historicalrejectedcandidate_history_tags" ("historicalrejectedcandidate_id");
-CREATE INDEX "recruitment_historicalrejectedcandidate_history_tags_audittag_id_c5b10b47" ON "recruitment_historicalrejectedcandidate_history_tags" ("audittag_id");
-CREATE UNIQUE INDEX "recruitment_historicalcandidate_history_tags_historicalcandidate_id_audittag_id_8a9083b7_uniq" ON "recruitment_historicalcandidate_history_tags" ("historicalcandidate_id", "audittag_id");
-CREATE INDEX "recruitment_historicalcandidate_history_tags_historicalcandidate_id_8b4729d7" ON "recruitment_historicalcandidate_history_tags" ("historicalcandidate_id");
-CREATE INDEX "recruitment_historicalcandidate_history_tags_audittag_id_18d229c0" ON "recruitment_historicalcandidate_history_tags" ("audittag_id");
-CREATE INDEX "recruitment_cvscreeninglog_candidate_id_9a78fc6f" ON "recruitment_cvscreeninglog" ("candidate_id");
-CREATE INDEX "recruitment_cvscreeninglog_recruitment_id_7ce0edfc" ON "recruitment_cvscreeninglog" ("recruitment_id");
-CREATE INDEX "recruitment_candidatedocumentrequest_created_by_id_9aff83cf" ON "recruitment_candidatedocumentrequest" ("created_by_id");
-CREATE INDEX "recruitment_candidatedocumentrequest_modified_by_id_0e961fa2" ON "recruitment_candidatedocumentrequest" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidatedocumentrequest_id_candidate_id_287d5959_uniq" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidatedocumentrequest_id", "candidate_id");
-CREATE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidatedocumentrequest_id_58411ac1" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidatedocumentrequest_id");
-CREATE INDEX "recruitment_candidatedocumentrequest_candidate_id_candidate_id_aa0c35ed" ON "recruitment_candidatedocumentrequest_candidate_id" ("candidate_id");
-CREATE INDEX "recruitment_candidatedocument_candidate_id_id_e3f353e9" ON "recruitment_candidatedocument" ("candidate_id_id");
-CREATE INDEX "recruitment_candidatedocument_created_by_id_b99ad3d5" ON "recruitment_candidatedocument" ("created_by_id");
-CREATE INDEX "recruitment_candidatedocument_document_request_id_id_f57b6648" ON "recruitment_candidatedocument" ("document_request_id_id");
-CREATE INDEX "recruitment_candidatedocument_modified_by_id_bf50b147" ON "recruitment_candidatedocument" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_evaluationscore_evaluation_id_criteria_id_f2fa4073_uniq" ON "recruitment_evaluationscore" ("evaluation_id", "criteria_id");
-CREATE INDEX "recruitment_evaluationscore_criteria_id_a6df35fd" ON "recruitment_evaluationscore" ("criteria_id");
-CREATE INDEX "recruitment_evaluationscore_evaluation_id_98d67e39" ON "recruitment_evaluationscore" ("evaluation_id");
-CREATE UNIQUE INDEX "recruitment_candidateskillmatch_candidate_id_recruitment_id_dfe487b9_uniq" ON "recruitment_candidateskillmatch" ("candidate_id", "recruitment_id");
-CREATE INDEX "recruitment_candidateskillmatch_candidate_id_14d4efd8" ON "recruitment_candidateskillmatch" ("candidate_id");
-CREATE INDEX "recruitment_candidateskillmatch_created_by_id_74022123" ON "recruitment_candidateskillmatch" ("created_by_id");
-CREATE INDEX "recruitment_candidateskillmatch_modified_by_id_04b54e70" ON "recruitment_candidateskillmatch" ("modified_by_id");
-CREATE INDEX "recruitment_candidateskillmatch_recruitment_id_daf32433" ON "recruitment_candidateskillmatch" ("recruitment_id");
-CREATE UNIQUE INDEX "recruitment_candidaterating_employee_id_id_candidate_id_id_1e72748e_uniq" ON "recruitment_candidaterating" ("employee_id_id", "candidate_id_id");
-CREATE INDEX "recruitment_candidaterating_candidate_id_id_1ede0d1f" ON "recruitment_candidaterating" ("candidate_id_id");
-CREATE INDEX "recruitment_candidaterating_created_by_id_0e9a4f8f" ON "recruitment_candidaterating" ("created_by_id");
-CREATE INDEX "recruitment_candidaterating_employee_id_id_aa90a5e3" ON "recruitment_candidaterating" ("employee_id_id");
-CREATE INDEX "recruitment_candidaterating_modified_by_id_3ab4f1fe" ON "recruitment_candidaterating" ("modified_by_id");
-CREATE UNIQUE INDEX "recruitment_candidaterankingscore_candidate_id_recruitment_id_5fb6d14a_uniq" ON "recruitment_candidaterankingscore" ("candidate_id", "recruitment_id");
-CREATE INDEX "recruitment_candidaterankingscore_candidate_id_aa04c842" ON "recruitment_candidaterankingscore" ("candidate_id");
-CREATE INDEX "recruitment_candidaterankingscore_created_by_id_1d7e0072" ON "recruitment_candidaterankingscore" ("created_by_id");
-CREATE INDEX "recruitment_candidaterankingscore_modified_by_id_aae66f7c" ON "recruitment_candidaterankingscore" ("modified_by_id");
-CREATE INDEX "recruitment_candidaterankingscore_recruitment_id_2f82c450" ON "recruitment_candidaterankingscore" ("recruitment_id");
-CREATE INDEX "recruitment_overall_b544ac_idx" ON "recruitment_candidaterankingscore" ("overall_ranking_score" DESC);
-CREATE INDEX "recruitment_ranking_4d7dd0_idx" ON "recruitment_candidaterankingscore" ("ranking_category");
-CREATE INDEX "recruitment_interviewround_interview_id_d04677d8" ON "recruitment_interviewround" ("interview_id");
-CREATE UNIQUE INDEX "recruitment_candidate_email_recruitment_id_id_2d38a838_uniq" ON "recruitment_candidate" ("email", "recruitment_id_id");
-CREATE INDEX "recruitment_candidate_converted_employee_id_id_aea3b89c" ON "recruitment_candidate" ("converted_employee_id_id");
-CREATE INDEX "recruitment_candidate_created_by_id_e66d3f8b" ON "recruitment_candidate" ("created_by_id");
-CREATE INDEX "recruitment_candidate_job_position_id_id_6d554ae7" ON "recruitment_candidate" ("job_position_id_id");
-CREATE INDEX "recruitment_candidate_modified_by_id_ea175e4b" ON "recruitment_candidate" ("modified_by_id");
-CREATE INDEX "recruitment_candidate_recruitment_id_id_3276947d" ON "recruitment_candidate" ("recruitment_id_id");
-CREATE INDEX "recruitment_candidate_referral_id_0aaff040" ON "recruitment_candidate" ("referral_id");
-CREATE INDEX "recruitment_candidate_stage_id_id_95c8b982" ON "recruitment_candidate" ("stage_id_id");
-CREATE INDEX "recruitment_recruit_3b5d61_idx" ON "recruitment_candidate" ("recruitment_id_id", "stage_id_id");
-CREATE INDEX "recruitment_job_pos_e2cb0c_idx" ON "recruitment_candidate" ("job_position_id_id", "stage_id_id");
-CREATE INDEX "recruitment_is_acti_c3edb9_idx" ON "recruitment_candidate" ("is_active", "recruitment_id_id");
-CREATE INDEX "recruitment_offer_l_014232_idx" ON "recruitment_candidate" ("offer_letter_status");
-CREATE INDEX "recruitment_hired_31c289_idx" ON "recruitment_candidate" ("hired");
-CREATE INDEX "recruitment_historicalcandidate_id_754f239c" ON "recruitment_historicalcandidate" ("id");
-CREATE INDEX "recruitment_historicalcandidate_history_date_ab29a308" ON "recruitment_historicalcandidate" ("history_date");
-CREATE INDEX "recruitment_historicalcandidate_converted_employee_id_id_539259f7" ON "recruitment_historicalcandidate" ("converted_employee_id_id");
-CREATE INDEX "recruitment_historicalcandidate_created_by_id_e0d2d80b" ON "recruitment_historicalcandidate" ("created_by_id");
-CREATE INDEX "recruitment_historicalcandidate_history_relation_id_04af0535" ON "recruitment_historicalcandidate" ("history_relation_id");
-CREATE INDEX "recruitment_historicalcandidate_history_user_id_c56fecb3" ON "recruitment_historicalcandidate" ("history_user_id");
-CREATE INDEX "recruitment_historicalcandidate_job_position_id_id_f6fadcbc" ON "recruitment_historicalcandidate" ("job_position_id_id");
-CREATE INDEX "recruitment_historicalcandidate_modified_by_id_ffd9a8ac" ON "recruitment_historicalcandidate" ("modified_by_id");
-CREATE INDEX "recruitment_historicalcandidate_recruitment_id_id_bf78daa8" ON "recruitment_historicalcandidate" ("recruitment_id_id");
-CREATE INDEX "recruitment_historicalcandidate_referral_id_66a55772" ON "recruitment_historicalcandidate" ("referral_id");
-CREATE INDEX "recruitment_historicalcandidate_stage_id_id_a5d26037" ON "recruitment_historicalcandidate" ("stage_id_id");
-CREATE INDEX "recruitment_interviewschedule_candidate_id_id_bae2223f" ON "recruitment_interviewschedule" ("candidate_id_id");
-CREATE INDEX "recruitment_interviewschedule_created_by_id_7ea3824e" ON "recruitment_interviewschedule" ("created_by_id");
-CREATE INDEX "recruitment_interviewschedule_modified_by_id_d79442b1" ON "recruitment_interviewschedule" ("modified_by_id");
-CREATE INDEX "recruitment_offerletterapproval_approver_id_f98db871" ON "recruitment_offerletterapproval" ("approver_id");
-CREATE INDEX "recruitment_offerletterapproval_offer_letter_id_779914bc" ON "recruitment_offerletterapproval" ("offer_letter_id");
-CREATE INDEX "recruitment_medicalletter_created_by_id_7873dab0" ON "recruitment_medicalletter" ("created_by_id");
-CREATE INDEX "recruitment_medicalletter_hr_signed_by_id_b08a0a36" ON "recruitment_medicalletter" ("hr_signed_by_id");
-CREATE INDEX "recruitment_visaletter_created_by_id_9f44b0f1" ON "recruitment_visaletter" ("created_by_id");
-CREATE INDEX "recruitment_visaletter_hr_signed_by_id_48d5890c" ON "recruitment_visaletter" ("hr_signed_by_id");
-CREATE INDEX "recruitment_offerletterstatuslog_actor_id_2c392fc7" ON "recruitment_offerletterstatuslog" ("actor_id");
-CREATE INDEX "recruitment_offerletterstatuslog_offer_letter_id_b7c1d2b9" ON "recruitment_offerletterstatuslog" ("offer_letter_id");
-CREATE INDEX "recruitment_medicalletterstatuslog_actor_id_311788f4" ON "recruitment_medicalletterstatuslog" ("actor_id");
-CREATE INDEX "recruitment_medicalletterstatuslog_medical_letter_id_c34b9a20" ON "recruitment_medicalletterstatuslog" ("medical_letter_id");
-CREATE INDEX "recruitment_visaletterstatuslog_actor_id_4b10d967" ON "recruitment_visaletterstatuslog" ("actor_id");
-CREATE INDEX "recruitment_visaletterstatuslog_visa_letter_id_52304b39" ON "recruitment_visaletterstatuslog" ("visa_letter_id");
-CREATE INDEX "project_project_company_id_id_3b541f4d" ON "project_project" ("company_id_id");
-CREATE INDEX "project_project_created_by_id_b4ef8dd6" ON "project_project" ("created_by_id");
-CREATE INDEX "project_project_modified_by_id_b07be181" ON "project_project" ("modified_by_id");
-CREATE UNIQUE INDEX "project_project_managers_project_id_employee_id_c59a3413_uniq" ON "project_project_managers" ("project_id", "employee_id");
-CREATE INDEX "project_project_managers_project_id_c8ee4c70" ON "project_project_managers" ("project_id");
-CREATE INDEX "project_project_managers_employee_id_52eccea8" ON "project_project_managers" ("employee_id");
-CREATE UNIQUE INDEX "project_project_members_project_id_employee_id_7f97fe37_uniq" ON "project_project_members" ("project_id", "employee_id");
-CREATE INDEX "project_project_members_project_id_0c0a7146" ON "project_project_members" ("project_id");
-CREATE INDEX "project_project_members_employee_id_6236dc25" ON "project_project_members" ("employee_id");
-CREATE UNIQUE INDEX "project_projectstage_project_id_title_a112c883_uniq" ON "project_projectstage" ("project_id", "title");
-CREATE INDEX "project_projectstage_created_by_id_8031fcea" ON "project_projectstage" ("created_by_id");
-CREATE INDEX "project_projectstage_modified_by_id_b3fddb64" ON "project_projectstage" ("modified_by_id");
-CREATE INDEX "project_projectstage_project_id_9b915412" ON "project_projectstage" ("project_id");
-CREATE UNIQUE INDEX "project_task_project_id_title_6fcfd47f_uniq" ON "project_task" ("project_id", "title");
-CREATE INDEX "project_task_created_by_id_21916daf" ON "project_task" ("created_by_id");
-CREATE INDEX "project_task_modified_by_id_106a7e44" ON "project_task" ("modified_by_id");
-CREATE INDEX "project_task_project_id_a8ab06ac" ON "project_task" ("project_id");
-CREATE INDEX "project_task_stage_id_7333e419" ON "project_task" ("stage_id");
-CREATE UNIQUE INDEX "project_task_task_managers_task_id_employee_id_0b566032_uniq" ON "project_task_task_managers" ("task_id", "employee_id");
-CREATE INDEX "project_task_task_managers_task_id_fbc2c5a4" ON "project_task_task_managers" ("task_id");
-CREATE INDEX "project_task_task_managers_employee_id_d81f09bb" ON "project_task_task_managers" ("employee_id");
-CREATE UNIQUE INDEX "project_task_task_members_task_id_employee_id_cec0475b_uniq" ON "project_task_task_members" ("task_id", "employee_id");
-CREATE INDEX "project_task_task_members_task_id_af91b467" ON "project_task_task_members" ("task_id");
-CREATE INDEX "project_task_task_members_employee_id_fbd97e5f" ON "project_task_task_members" ("employee_id");
-CREATE INDEX "project_timesheet_created_by_id_66f2f1be" ON "project_timesheet" ("created_by_id");
-CREATE INDEX "project_timesheet_employee_id_id_8774a71d" ON "project_timesheet" ("employee_id_id");
-CREATE INDEX "project_timesheet_modified_by_id_8b8c57ba" ON "project_timesheet" ("modified_by_id");
-CREATE INDEX "project_timesheet_project_id_id_daf90f6b" ON "project_timesheet" ("project_id_id");
-CREATE INDEX "project_timesheet_task_id_id_88ed4e3c" ON "project_timesheet" ("task_id_id");
-CREATE INDEX "recruitment_candidate_project_id_id_c2a9d14f" ON "recruitment_candidate" ("project_id_id");
-CREATE INDEX "recruitment_historicalcandidate_project_id_id_532383f7" ON "recruitment_historicalcandidate" ("project_id_id");
-CREATE INDEX "recruitment_offerapproval_acted_by_id_a061963f" ON "recruitment_offerapproval" ("acted_by_id");
-CREATE INDEX "recruitment_offerapproval_approver_id_624390e1" ON "recruitment_offerapproval" ("approver_id");
-CREATE INDEX "recruitment_offerapproval_offer_id_1f0c1d78" ON "recruitment_offerapproval" ("offer_id");
-CREATE INDEX "recruitment_offerapproval_step_id_8a7f9d55" ON "recruitment_offerapproval" ("step_id");
-CREATE INDEX "recruitment_interviewround_interviewer_id_8b1be98e" ON "recruitment_interviewround" ("interviewer_id");
-CREATE INDEX "recruitment_manpowerrequest_company_id_id_2c084ad6" ON "recruitment_manpowerrequest" ("company_id_id");
-CREATE INDEX "recruitment_manpowerrequest_created_by_id_d44d8f1a" ON "recruitment_manpowerrequest" ("created_by_id");
-CREATE INDEX "recruitment_manpowerrequest_department_id_aad15e4d" ON "recruitment_manpowerrequest" ("department_id");
-CREATE INDEX "recruitment_manpowerrequest_job_position_id_8cbf2f41" ON "recruitment_manpowerrequest" ("job_position_id");
-CREATE INDEX "recruitment_manpowerrequest_modified_by_id_e1830c60" ON "recruitment_manpowerrequest" ("modified_by_id");
-CREATE INDEX "recruitment_manpowerrequest_requested_by_id_eb0bea7c" ON "recruitment_manpowerrequest" ("requested_by_id");
-CREATE INDEX "recruitment_employmentproposal_candidate_id_95511fe0" ON "recruitment_employmentproposal" ("candidate_id");
-CREATE INDEX "recruitment_employmentproposal_created_by_id_e65c583b" ON "recruitment_employmentproposal" ("created_by_id");
-CREATE INDEX "recruitment_employmentproposal_interview_id_26c93c49" ON "recruitment_employmentproposal" ("interview_id");
-CREATE INDEX "recruitment_employmentproposal_manpower_request_id_55528f4c" ON "recruitment_employmentproposal" ("manpower_request_id");
-CREATE INDEX "recruitment_employmentproposal_modified_by_id_2df125e7" ON "recruitment_employmentproposal" ("modified_by_id");
-CREATE INDEX "recruitment_employmentproposal_recruitment_id_804adbcb" ON "recruitment_employmentproposal" ("recruitment_id");
-CREATE INDEX "recruitment_proposalstatuslog_actor_id_cebcdc87" ON "recruitment_proposalstatuslog" ("actor_id");
-CREATE INDEX "recruitment_proposalstatuslog_proposal_id_7e3e006b" ON "recruitment_proposalstatuslog" ("proposal_id");
-CREATE INDEX "recruitment_proposalroleassignment_employee_id_3e369fd7" ON "recruitment_proposalroleassignment" ("employee_id");
-CREATE INDEX "recruitment_proposalapproval_approver_id_29eb9365" ON "recruitment_proposalapproval" ("approver_id");
-CREATE INDEX "recruitment_proposalapproval_proposal_id_0e0640c7" ON "recruitment_proposalapproval" ("proposal_id");
-CREATE INDEX "recruitment_offerletter_created_by_id_91f615cf" ON "recruitment_offerletter" ("created_by_id");
-CREATE INDEX "recruitment_offerletter_modified_by_id_0e46397c" ON "recruitment_offerletter" ("modified_by_id");
-CREATE INDEX "recruitment_jobapplication_recruitment_id_f00e34eb" ON "recruitment_jobapplication" ("recruitment_id");
-CREATE INDEX "recruitment_candidateportalupload_offer_id_fbbb00f7" ON "recruitment_candidateportalupload" ("offer_id");
-CREATE INDEX "recruitment_recruitmentapproval_approver_id_2c4f7fef" ON "recruitment_recruitmentapproval" ("approver_id");
-CREATE INDEX "recruitment_recruitmentapproval_created_by_id_9acd4cdf" ON "recruitment_recruitmentapproval" ("created_by_id");
-CREATE INDEX "recruitment_recruitmentapproval_modified_by_id_1a02107d" ON "recruitment_recruitmentapproval" ("modified_by_id");
-CREATE INDEX "recruitment_recruitmentapproval_recruitment_id_1cd75752" ON "recruitment_recruitmentapproval" ("recruitment_id");
-CREATE INDEX "recruitment_candidatescreeningprofile_screened_by_id_777c4bc0" ON "recruitment_candidatescreeningprofile" ("screened_by_id");
-CREATE UNIQUE INDEX "recruitment_interviewround_interviewers_interviewround_id_employee_id_3573b8df_uniq" ON "recruitment_interviewround_interviewers" ("interviewround_id", "employee_id");
-CREATE INDEX "recruitment_interviewround_interviewers_interviewround_id_5eecb261" ON "recruitment_interviewround_interviewers" ("interviewround_id");
-CREATE INDEX "recruitment_interviewround_interviewers_employee_id_b4ef8b0f" ON "recruitment_interviewround_interviewers" ("employee_id");
-CREATE INDEX "recruitment_interviewevaluation_candidate_id_e110261a" ON "recruitment_interviewevaluation" ("candidate_id");
-CREATE INDEX "recruitment_interviewevaluation_created_by_id_57c0cbeb" ON "recruitment_interviewevaluation" ("created_by_id");
-CREATE INDEX "recruitment_interviewevaluation_interview_id_f90464fa" ON "recruitment_interviewevaluation" ("interview_id");
-CREATE INDEX "recruitment_interviewevaluation_modified_by_id_3c465729" ON "recruitment_interviewevaluation" ("modified_by_id");
-CREATE INDEX "recruitment_interviewevaluation_panelist_id_974b1822" ON "recruitment_interviewevaluation" ("panelist_id");
-CREATE UNIQUE INDEX "recruitment_interviewevaluation_interview_id_panelist_id_round_number_ef57780b_uniq" ON "recruitment_interviewevaluation" ("interview_id", "panelist_id", "round_number");
-CREATE INDEX "recruitment_onboardingdocument_hr_acted_by_id_467a3f9f" ON "recruitment_onboardingdocument" ("hr_acted_by_id");
-CREATE INDEX "recruitment_onboardingdocument_offer_id_9bbd0891" ON "recruitment_onboardingdocument" ("offer_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_job_position_id_id_start_date_company_id_id_5247efe7_uniq" ON "recruitment_recruitment" ("job_position_id_id", "start_date", "company_id_id");
-CREATE UNIQUE INDEX "recruitment_recruitment_job_position_id_id_start_date_5785e5bf_uniq" ON "recruitment_recruitment" ("job_position_id_id", "start_date");
-CREATE INDEX "recruitment_recruitment_public_slug_38391823" ON "recruitment_recruitment" ("public_slug");
-CREATE INDEX "recruitment_recruitment_company_id_id_35c39ac1" ON "recruitment_recruitment" ("company_id_id");
-CREATE INDEX "recruitment_recruitment_created_by_id_7487d8a1" ON "recruitment_recruitment" ("created_by_id");
-CREATE INDEX "recruitment_recruitment_job_position_id_id_253cfce6" ON "recruitment_recruitment" ("job_position_id_id");
-CREATE INDEX "recruitment_recruitment_linkedin_account_id_id_ed119e75" ON "recruitment_recruitment" ("linkedin_account_id_id");
-CREATE INDEX "recruitment_recruitment_modified_by_id_3da7024d" ON "recruitment_recruitment" ("modified_by_id");
-CREATE INDEX "recruitment_recruitment_raised_by_id_1c3bda64" ON "recruitment_recruitment" ("raised_by_id");
-CREATE INDEX "recruitment_bulkrequestline_created_by_id_7086b2a3" ON "recruitment_bulkrequestline" ("created_by_id");
-CREATE INDEX "recruitment_bulkrequestline_job_position_id_866636be" ON "recruitment_bulkrequestline" ("job_position_id");
-CREATE INDEX "recruitment_bulkrequestline_modified_by_id_4ce5f301" ON "recruitment_bulkrequestline" ("modified_by_id");
-CREATE INDEX "recruitment_bulkrequestline_published_recruitment_id_2fb36fb1" ON "recruitment_bulkrequestline" ("published_recruitment_id");
-CREATE INDEX "recruitment_bulkrequestline_recruitment_id_5d9d8395" ON "recruitment_bulkrequestline" ("recruitment_id");
 CREATE INDEX "onboarding_onboardingstage_created_by_id_025988ab" ON "onboarding_onboardingstage" ("created_by_id");
 CREATE INDEX "onboarding_onboardingstage_modified_by_id_c77bd25e" ON "onboarding_onboardingstage" ("modified_by_id");
 CREATE INDEX "onboarding_onboardingstage_recruitment_id_id_d1f224a7" ON "onboarding_onboardingstage" ("recruitment_id_id");
@@ -3528,245 +2671,15 @@ CREATE UNIQUE INDEX "payroll_allowance_specific_employees_allowance_id_employee_
 CREATE INDEX "payroll_allowance_specific_employees_allowance_id_447cbbe6" ON "payroll_allowance_specific_employees" ("allowance_id");
 CREATE INDEX "payroll_allowance_specific_employees_employee_id_8537de68" ON "payroll_allowance_specific_employees" ("employee_id");
 CREATE INDEX "payroll_allowance_work_type_id_id_da9a0d44" ON "payroll_allowance" ("work_type_id_id");
-CREATE INDEX "pms_employeeobjective_created_by_id_7f721659" ON "pms_employeeobjective" ("created_by_id");
-CREATE INDEX "pms_employeeobjective_employee_id_id_15ddf5ea" ON "pms_employeeobjective" ("employee_id_id");
-CREATE UNIQUE INDEX "pms_feedback_colleague_id_feedback_id_employee_id_5917eb05_uniq" ON "pms_feedback_colleague_id" ("feedback_id", "employee_id");
-CREATE INDEX "pms_feedback_colleague_id_feedback_id_5f17190a" ON "pms_feedback_colleague_id" ("feedback_id");
-CREATE INDEX "pms_feedback_colleague_id_employee_id_929c106e" ON "pms_feedback_colleague_id" ("employee_id");
-CREATE UNIQUE INDEX "pms_feedback_employee_key_results_id_feedback_id_employeekeyresult_id_94683c65_uniq" ON "pms_feedback_employee_key_results_id" ("feedback_id", "employeekeyresult_id");
-CREATE INDEX "pms_feedback_employee_key_results_id_feedback_id_2e148291" ON "pms_feedback_employee_key_results_id" ("feedback_id");
-CREATE INDEX "pms_feedback_employee_key_results_id_employeekeyresult_id_04a18d62" ON "pms_feedback_employee_key_results_id" ("employeekeyresult_id");
-CREATE UNIQUE INDEX "pms_feedback_others_id_feedback_id_employee_id_2387a2b5_uniq" ON "pms_feedback_others_id" ("feedback_id", "employee_id");
-CREATE INDEX "pms_feedback_others_id_feedback_id_b9dde79a" ON "pms_feedback_others_id" ("feedback_id");
-CREATE INDEX "pms_feedback_others_id_employee_id_975b0597" ON "pms_feedback_others_id" ("employee_id");
-CREATE INDEX "pms_keyresult_company_id_id_aba9e43b" ON "pms_keyresult" ("company_id_id");
-CREATE INDEX "pms_keyresult_created_by_id_610bc0d5" ON "pms_keyresult" ("created_by_id");
-CREATE INDEX "pms_keyresult_modified_by_id_fb402cf1" ON "pms_keyresult" ("modified_by_id");
-CREATE INDEX "pms_meetings_company_id_id_2e4b7ae7" ON "pms_meetings" ("company_id_id");
-CREATE INDEX "pms_meetings_created_by_id_a66016da" ON "pms_meetings" ("created_by_id");
-CREATE INDEX "pms_meetings_modified_by_id_f4f4f4bf" ON "pms_meetings" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_meetings_answer_employees_meetings_id_employee_id_dc7c3906_uniq" ON "pms_meetings_answer_employees" ("meetings_id", "employee_id");
-CREATE INDEX "pms_meetings_answer_employees_meetings_id_241405c7" ON "pms_meetings_answer_employees" ("meetings_id");
-CREATE INDEX "pms_meetings_answer_employees_employee_id_770d488c" ON "pms_meetings_answer_employees" ("employee_id");
-CREATE UNIQUE INDEX "pms_meetings_employee_id_meetings_id_employee_id_2a3f7b31_uniq" ON "pms_meetings_employee_id" ("meetings_id", "employee_id");
-CREATE INDEX "pms_meetings_employee_id_meetings_id_afe63fe0" ON "pms_meetings_employee_id" ("meetings_id");
-CREATE INDEX "pms_meetings_employee_id_employee_id_31298146" ON "pms_meetings_employee_id" ("employee_id");
-CREATE UNIQUE INDEX "pms_meetings_manager_meetings_id_employee_id_df2c379c_uniq" ON "pms_meetings_manager" ("meetings_id", "employee_id");
-CREATE INDEX "pms_meetings_manager_meetings_id_477de095" ON "pms_meetings_manager" ("meetings_id");
-CREATE INDEX "pms_meetings_manager_employee_id_66475189" ON "pms_meetings_manager" ("employee_id");
-CREATE INDEX "pms_performanceimprovementplan_approved_by_id_1fe86c5f" ON "pms_performanceimprovementplan" ("approved_by_id");
-CREATE INDEX "pms_performanceimprovementplan_company_id_9c6e23ba" ON "pms_performanceimprovementplan" ("company_id");
-CREATE INDEX "pms_performanceimprovementplan_created_by_id_04cc68e1" ON "pms_performanceimprovementplan" ("created_by_id");
-CREATE INDEX "pms_performanceimprovementplan_employee_id_8070bc36" ON "pms_performanceimprovementplan" ("employee_id");
-CREATE INDEX "pms_performanceimprovementplan_initiated_by_id_879a7f1a" ON "pms_performanceimprovementplan" ("initiated_by_id");
-CREATE INDEX "pms_performanceimprovementplan_modified_by_id_fa5663f3" ON "pms_performanceimprovementplan" ("modified_by_id");
-CREATE INDEX "pms_period_created_by_id_27961755" ON "pms_period" ("created_by_id");
-CREATE INDEX "pms_period_modified_by_id_6b790b4d" ON "pms_period" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_period_company_id_period_id_company_id_6e9a8642_uniq" ON "pms_period_company_id" ("period_id", "company_id");
-CREATE INDEX "pms_period_company_id_period_id_66f72252" ON "pms_period_company_id" ("period_id");
-CREATE INDEX "pms_period_company_id_company_id_5fa497bf" ON "pms_period_company_id" ("company_id");
-CREATE INDEX "pms_question_created_by_id_2ac15bc5" ON "pms_question" ("created_by_id");
-CREATE INDEX "pms_question_modified_by_id_a7ba6fec" ON "pms_question" ("modified_by_id");
-CREATE INDEX "pms_talentcalibration_created_by_id_4207862c" ON "pms_talentcalibration" ("created_by_id");
-CREATE INDEX "pms_talentcalibration_department_id_id_36b3eddf" ON "pms_talentcalibration" ("department_id_id");
-CREATE INDEX "pms_talentcalibration_facilitator_id_b80fda2c" ON "pms_talentcalibration" ("facilitator_id");
-CREATE INDEX "pms_talentcalibration_modified_by_id_61a4d695" ON "pms_talentcalibration" ("modified_by_id");
-CREATE INDEX "pms_talentcalibration_period_id_id_28617144" ON "pms_talentcalibration" ("period_id_id");
-CREATE UNIQUE INDEX "pms_talentcalibration_participants_talentcalibration_id_employee_id_55b8fbc8_uniq" ON "pms_talentcalibration_participants" ("talentcalibration_id", "employee_id");
-CREATE INDEX "pms_talentcalibration_participants_talentcalibration_id_687eba68" ON "pms_talentcalibration_participants" ("talentcalibration_id");
-CREATE INDEX "pms_talentcalibration_participants_employee_id_e013980c" ON "pms_talentcalibration_participants" ("employee_id");
-CREATE INDEX "pms_questiontemplate_created_by_id_d6911099" ON "pms_questiontemplate" ("created_by_id");
-CREATE INDEX "pms_questiontemplate_modified_by_id_b47b4f16" ON "pms_questiontemplate" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_questiontemplate_company_id_questiontemplate_id_company_id_438940ba_uniq" ON "pms_questiontemplate_company_id" ("questiontemplate_id", "company_id");
-CREATE INDEX "pms_questiontemplate_company_id_questiontemplate_id_8b4847bb" ON "pms_questiontemplate_company_id" ("questiontemplate_id");
-CREATE INDEX "pms_questiontemplate_company_id_company_id_648e075d" ON "pms_questiontemplate_company_id" ("company_id");
-CREATE INDEX "pms_questionoptions_created_by_id_18690141" ON "pms_questionoptions" ("created_by_id");
-CREATE INDEX "pms_questionoptions_modified_by_id_4278dd85" ON "pms_questionoptions" ("modified_by_id");
-CREATE INDEX "pms_questionoptions_question_id_id_79cd1205" ON "pms_questionoptions" ("question_id_id");
-CREATE INDEX "pms_question_template_id_id_1d81b86c" ON "pms_question" ("template_id_id");
-CREATE INDEX "pms_piptemplate_company_id_db4849be" ON "pms_piptemplate" ("company_id");
-CREATE INDEX "pms_piptemplate_created_by_id_ffe6a20b" ON "pms_piptemplate" ("created_by_id");
-CREATE INDEX "pms_piptemplate_modified_by_id_037e0da2" ON "pms_piptemplate" ("modified_by_id");
-CREATE INDEX "pms_pipreview_created_by_id_02e9a042" ON "pms_pipreview" ("created_by_id");
-CREATE INDEX "pms_pipreview_modified_by_id_5bc850d8" ON "pms_pipreview" ("modified_by_id");
-CREATE INDEX "pms_pipreview_pip_id_43896a32" ON "pms_pipreview" ("pip_id");
-CREATE INDEX "pms_pipreview_reviewed_by_id_1dc91c77" ON "pms_pipreview" ("reviewed_by_id");
-CREATE INDEX "pms_pipmilestone_created_by_id_95d81f8b" ON "pms_pipmilestone" ("created_by_id");
-CREATE INDEX "pms_pipmilestone_modified_by_id_db92dff7" ON "pms_pipmilestone" ("modified_by_id");
-CREATE INDEX "pms_pipmilestone_pip_id_5c52eaf1" ON "pms_pipmilestone" ("pip_id");
-CREATE INDEX "pms_pipextension_approved_by_id_a3fbe323" ON "pms_pipextension" ("approved_by_id");
-CREATE INDEX "pms_pipextension_requested_by_id_474a1205" ON "pms_pipextension" ("requested_by_id");
-CREATE INDEX "pms_performanceimprovementplan_template_id_93fef3bd" ON "pms_performanceimprovementplan" ("template_id");
-CREATE INDEX "pms_objective_company_id_id_4df6f8ca" ON "pms_objective" ("company_id_id");
-CREATE INDEX "pms_objective_created_by_id_d0943a41" ON "pms_objective" ("created_by_id");
-CREATE INDEX "pms_objective_modified_by_id_fc79eb66" ON "pms_objective" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_objective_assignees_objective_id_employee_id_ad2dd765_uniq" ON "pms_objective_assignees" ("objective_id", "employee_id");
-CREATE INDEX "pms_objective_assignees_objective_id_f28c7dd3" ON "pms_objective_assignees" ("objective_id");
-CREATE INDEX "pms_objective_assignees_employee_id_1cf59cf6" ON "pms_objective_assignees" ("employee_id");
-CREATE UNIQUE INDEX "pms_objective_key_result_id_objective_id_keyresult_id_497b7b26_uniq" ON "pms_objective_key_result_id" ("objective_id", "keyresult_id");
-CREATE INDEX "pms_objective_key_result_id_objective_id_e5bfede7" ON "pms_objective_key_result_id" ("objective_id");
-CREATE INDEX "pms_objective_key_result_id_keyresult_id_6fd630ee" ON "pms_objective_key_result_id" ("keyresult_id");
-CREATE UNIQUE INDEX "pms_objective_managers_objective_id_employee_id_f4870c00_uniq" ON "pms_objective_managers" ("objective_id", "employee_id");
-CREATE INDEX "pms_objective_managers_objective_id_c30c1375" ON "pms_objective_managers" ("objective_id");
-CREATE INDEX "pms_objective_managers_employee_id_ff9ec02e" ON "pms_objective_managers" ("employee_id");
-CREATE INDEX "pms_meetingsanswer_employee_id_id_b151c6cb" ON "pms_meetingsanswer" ("employee_id_id");
-CREATE INDEX "pms_meetingsanswer_meeting_id_id_68d8343e" ON "pms_meetingsanswer" ("meeting_id_id");
-CREATE INDEX "pms_meetingsanswer_question_id_id_d07fab0f" ON "pms_meetingsanswer" ("question_id_id");
-CREATE INDEX "pms_meetings_question_template_id_4c5c155d" ON "pms_meetings" ("question_template_id");
-CREATE INDEX "pms_keyresultfeedback_employee_id_id_c7a3a640" ON "pms_keyresultfeedback" ("employee_id_id");
-CREATE INDEX "pms_keyresultfeedback_feedback_id_id_0e5351b6" ON "pms_keyresultfeedback" ("feedback_id_id");
-CREATE INDEX "pms_keyresultfeedback_key_result_id_id_a48b7226" ON "pms_keyresultfeedback" ("key_result_id_id");
-CREATE INDEX "pms_historicaltalentcalibration_id_85d138c3" ON "pms_historicaltalentcalibration" ("id");
-CREATE INDEX "pms_historicaltalentcalibration_history_date_e430e540" ON "pms_historicaltalentcalibration" ("history_date");
-CREATE INDEX "pms_historicaltalentcalibration_created_by_id_587628cd" ON "pms_historicaltalentcalibration" ("created_by_id");
-CREATE INDEX "pms_historicaltalentcalibration_department_id_id_d865fe78" ON "pms_historicaltalentcalibration" ("department_id_id");
-CREATE INDEX "pms_historicaltalentcalibration_facilitator_id_6669090c" ON "pms_historicaltalentcalibration" ("facilitator_id");
-CREATE INDEX "pms_historicaltalentcalibration_history_user_id_54956373" ON "pms_historicaltalentcalibration" ("history_user_id");
-CREATE INDEX "pms_historicaltalentcalibration_modified_by_id_80a11b8a" ON "pms_historicaltalentcalibration" ("modified_by_id");
-CREATE INDEX "pms_historicaltalentcalibration_period_id_id_addf4cae" ON "pms_historicaltalentcalibration" ("period_id_id");
-CREATE UNIQUE INDEX "pms_historicaltalentcalibration_history_tags_historicaltalentcalibration_id_audittag_id_45d0ecfd_uniq" ON "pms_historicaltalentcalibration_history_tags" ("historicaltalentcalibration_id", "audittag_id");
-CREATE INDEX "pms_historicaltalentcalibration_history_tags_historicaltalentcalibration_id_b2ab2d6c" ON "pms_historicaltalentcalibration_history_tags" ("historicaltalentcalibration_id");
-CREATE INDEX "pms_historicaltalentcalibration_history_tags_audittag_id_3fba45d7" ON "pms_historicaltalentcalibration_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalperformancerating_id_956a5abe" ON "pms_historicalperformancerating" ("id");
-CREATE INDEX "pms_historicalperformancerating_history_date_48e7ccdf" ON "pms_historicalperformancerating" ("history_date");
-CREATE INDEX "pms_historicalperformancerating_created_by_id_d4a86306" ON "pms_historicalperformancerating" ("created_by_id");
-CREATE INDEX "pms_historicalperformancerating_employee_id_id_e6e5b74f" ON "pms_historicalperformancerating" ("employee_id_id");
-CREATE INDEX "pms_historicalperformancerating_history_user_id_8293e553" ON "pms_historicalperformancerating" ("history_user_id");
-CREATE INDEX "pms_historicalperformancerating_manager_id_id_9e4639ec" ON "pms_historicalperformancerating" ("manager_id_id");
-CREATE INDEX "pms_historicalperformancerating_modified_by_id_1547e7ec" ON "pms_historicalperformancerating" ("modified_by_id");
-CREATE INDEX "pms_historicalperformancerating_period_id_id_db3e8277" ON "pms_historicalperformancerating" ("period_id_id");
-CREATE UNIQUE INDEX "pms_historicalperformancerating_history_tags_historicalperformancerating_id_audittag_id_3212bc32_uniq" ON "pms_historicalperformancerating_history_tags" ("historicalperformancerating_id", "audittag_id");
-CREATE INDEX "pms_historicalperformancerating_history_tags_historicalperformancerating_id_28073229" ON "pms_historicalperformancerating_history_tags" ("historicalperformancerating_id");
-CREATE INDEX "pms_historicalperformancerating_history_tags_audittag_id_ce0f943e" ON "pms_historicalperformancerating_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalobjective_id_69f74f83" ON "pms_historicalobjective" ("id");
-CREATE INDEX "pms_historicalobjective_history_date_3583f63e" ON "pms_historicalobjective" ("history_date");
-CREATE INDEX "pms_historicalobjective_company_id_id_ed3589c5" ON "pms_historicalobjective" ("company_id_id");
-CREATE INDEX "pms_historicalobjective_created_by_id_0102dc57" ON "pms_historicalobjective" ("created_by_id");
-CREATE INDEX "pms_historicalobjective_history_user_id_39aa8815" ON "pms_historicalobjective" ("history_user_id");
-CREATE INDEX "pms_historicalobjective_modified_by_id_ca8df4d1" ON "pms_historicalobjective" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_historicalobjective_history_tags_historicalobjective_id_audittag_id_b040f07c_uniq" ON "pms_historicalobjective_history_tags" ("historicalobjective_id", "audittag_id");
-CREATE INDEX "pms_historicalobjective_history_tags_historicalobjective_id_5ca7029b" ON "pms_historicalobjective_history_tags" ("historicalobjective_id");
-CREATE INDEX "pms_historicalobjective_history_tags_audittag_id_bfa7c78c" ON "pms_historicalobjective_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalkeyresult_id_946a9777" ON "pms_historicalkeyresult" ("id");
-CREATE INDEX "pms_historicalkeyresult_history_date_c8832947" ON "pms_historicalkeyresult" ("history_date");
-CREATE INDEX "pms_historicalkeyresult_company_id_id_5a76114f" ON "pms_historicalkeyresult" ("company_id_id");
-CREATE INDEX "pms_historicalkeyresult_created_by_id_04306abf" ON "pms_historicalkeyresult" ("created_by_id");
-CREATE INDEX "pms_historicalkeyresult_history_user_id_252d47dc" ON "pms_historicalkeyresult" ("history_user_id");
-CREATE INDEX "pms_historicalkeyresult_modified_by_id_b0371450" ON "pms_historicalkeyresult" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_historicalkeyresult_history_tags_historicalkeyresult_id_audittag_id_6dd852d3_uniq" ON "pms_historicalkeyresult_history_tags" ("historicalkeyresult_id", "audittag_id");
-CREATE INDEX "pms_historicalkeyresult_history_tags_historicalkeyresult_id_e3104884" ON "pms_historicalkeyresult_history_tags" ("historicalkeyresult_id");
-CREATE INDEX "pms_historicalkeyresult_history_tags_audittag_id_4f7451ad" ON "pms_historicalkeyresult_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalemployeeobjective_id_2deed8db" ON "pms_historicalemployeeobjective" ("id");
-CREATE INDEX "pms_historicalemployeeobjective_history_date_7f2fc8f7" ON "pms_historicalemployeeobjective" ("history_date");
-CREATE INDEX "pms_historicalemployeeobjective_created_by_id_bd83b3c1" ON "pms_historicalemployeeobjective" ("created_by_id");
-CREATE INDEX "pms_historicalemployeeobjective_employee_id_id_b1bf227b" ON "pms_historicalemployeeobjective" ("employee_id_id");
-CREATE INDEX "pms_historicalemployeeobjective_history_relation_id_c91ff66c" ON "pms_historicalemployeeobjective" ("history_relation_id");
-CREATE INDEX "pms_historicalemployeeobjective_history_user_id_e6a4deea" ON "pms_historicalemployeeobjective" ("history_user_id");
-CREATE INDEX "pms_historicalemployeeobjective_modified_by_id_d80ae051" ON "pms_historicalemployeeobjective" ("modified_by_id");
-CREATE INDEX "pms_historicalemployeeobjective_objective_id_id_d44f1526" ON "pms_historicalemployeeobjective" ("objective_id_id");
-CREATE UNIQUE INDEX "pms_historicalemployeeobjective_history_tags_historicalemployeeobjective_id_audittag_id_9a5033a7_uniq" ON "pms_historicalemployeeobjective_history_tags" ("historicalemployeeobjective_id", "audittag_id");
-CREATE INDEX "pms_historicalemployeeobjective_history_tags_historicalemployeeobjective_id_cee862a5" ON "pms_historicalemployeeobjective_history_tags" ("historicalemployeeobjective_id");
-CREATE INDEX "pms_historicalemployeeobjective_history_tags_audittag_id_1910337f" ON "pms_historicalemployeeobjective_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalemployeekeyresult_id_a2e1f04e" ON "pms_historicalemployeekeyresult" ("id");
-CREATE INDEX "pms_historicalemployeekeyresult_history_date_cae8e1bd" ON "pms_historicalemployeekeyresult" ("history_date");
-CREATE INDEX "pms_historicalemployeekeyresult_employee_objective_id_id_05e50ddf" ON "pms_historicalemployeekeyresult" ("employee_objective_id_id");
-CREATE INDEX "pms_historicalemployeekeyresult_history_user_id_27036f6a" ON "pms_historicalemployeekeyresult" ("history_user_id");
-CREATE INDEX "pms_historicalemployeekeyresult_key_result_id_id_0183fe0c" ON "pms_historicalemployeekeyresult" ("key_result_id_id");
-CREATE UNIQUE INDEX "pms_historicalemployeekeyresult_history_tags_historicalemployeekeyresult_id_audittag_id_4d7877d9_uniq" ON "pms_historicalemployeekeyresult_history_tags" ("historicalemployeekeyresult_id", "audittag_id");
-CREATE INDEX "pms_historicalemployeekeyresult_history_tags_historicalemployeekeyresult_id_39756650" ON "pms_historicalemployeekeyresult_history_tags" ("historicalemployeekeyresult_id");
-CREATE INDEX "pms_historicalemployeekeyresult_history_tags_audittag_id_782b2bab" ON "pms_historicalemployeekeyresult_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalcomment_id_c40180b6" ON "pms_historicalcomment" ("id");
-CREATE INDEX "pms_historicalcomment_history_date_1b11e99b" ON "pms_historicalcomment" ("history_date");
-CREATE INDEX "pms_historicalcomment_employee_id_id_e53da903" ON "pms_historicalcomment" ("employee_id_id");
-CREATE INDEX "pms_historicalcomment_employee_objective_id_id_19a86f34" ON "pms_historicalcomment" ("employee_objective_id_id");
-CREATE INDEX "pms_historicalcomment_history_user_id_105b2495" ON "pms_historicalcomment" ("history_user_id");
-CREATE UNIQUE INDEX "pms_historicalcomment_history_tags_historicalcomment_id_audittag_id_4f42d5e5_uniq" ON "pms_historicalcomment_history_tags" ("historicalcomment_id", "audittag_id");
-CREATE INDEX "pms_historicalcomment_history_tags_historicalcomment_id_7a748c3e" ON "pms_historicalcomment_history_tags" ("historicalcomment_id");
-CREATE INDEX "pms_historicalcomment_history_tags_audittag_id_8a327b8b" ON "pms_historicalcomment_history_tags" ("audittag_id");
-CREATE INDEX "pms_historicalcalibrationrating_id_e6eb9c83" ON "pms_historicalcalibrationrating" ("id");
-CREATE INDEX "pms_historicalcalibrationrating_history_date_4e09eb12" ON "pms_historicalcalibrationrating" ("history_date");
-CREATE INDEX "pms_historicalcalibrationrating_calibration_id_id_aa84b62e" ON "pms_historicalcalibrationrating" ("calibration_id_id");
-CREATE INDEX "pms_historicalcalibrationrating_created_by_id_c101f97f" ON "pms_historicalcalibrationrating" ("created_by_id");
-CREATE INDEX "pms_historicalcalibrationrating_employee_id_id_45582c6a" ON "pms_historicalcalibrationrating" ("employee_id_id");
-CREATE INDEX "pms_historicalcalibrationrating_history_user_id_e7c65aac" ON "pms_historicalcalibrationrating" ("history_user_id");
-CREATE INDEX "pms_historicalcalibrationrating_modified_by_id_bc990603" ON "pms_historicalcalibrationrating" ("modified_by_id");
-CREATE UNIQUE INDEX "pms_historicalcalibrationrating_history_tags_historicalcalibrationrating_id_audittag_id_cba0d359_uniq" ON "pms_historicalcalibrationrating_history_tags" ("historicalcalibrationrating_id", "audittag_id");
-CREATE INDEX "pms_historicalcalibrationrating_history_tags_historicalcalibrationrating_id_bb2b7500" ON "pms_historicalcalibrationrating_history_tags" ("historicalcalibrationrating_id");
-CREATE INDEX "pms_historicalcalibrationrating_history_tags_audittag_id_4a3376f5" ON "pms_historicalcalibrationrating_history_tags" ("audittag_id");
-CREATE INDEX "pms_feedback_created_by_id_5fc4765b" ON "pms_feedback" ("created_by_id");
-CREATE INDEX "pms_feedback_employee_id_id_fc981583" ON "pms_feedback" ("employee_id_id");
-CREATE INDEX "pms_feedback_manager_id_id_29e8eaa1" ON "pms_feedback" ("manager_id_id");
-CREATE INDEX "pms_feedback_modified_by_id_2d8fa73a" ON "pms_feedback" ("modified_by_id");
-CREATE INDEX "pms_feedback_question_template_id_id_55891304" ON "pms_feedback" ("question_template_id_id");
-CREATE INDEX "pms_perform_employe_0ed47a_idx" ON "pms_performanceimprovementplan" ("employee_id", "status");
-CREATE INDEX "pms_perform_start_d_d7e069_idx" ON "pms_performanceimprovementplan" ("start_date", "end_date");
-CREATE UNIQUE INDEX "pms_employeeobjective_employee_id_id_objective_id_id_43958940_uniq" ON "pms_employeeobjective" ("employee_id_id", "objective_id_id");
-CREATE UNIQUE INDEX "pms_calibrationrating_calibration_id_id_employee_id_id_225805d7_uniq" ON "pms_calibrationrating" ("calibration_id_id", "employee_id_id");
-CREATE UNIQUE INDEX "pms_feedback_subordinate_id_feedback_id_employee_id_1d1e97b3_uniq" ON "pms_feedback_subordinate_id" ("feedback_id", "employee_id");
-CREATE INDEX "pms_feedback_subordinate_id_feedback_id_cd0bc731" ON "pms_feedback_subordinate_id" ("feedback_id");
-CREATE INDEX "pms_feedback_subordinate_id_employee_id_0eff7b1a" ON "pms_feedback_subordinate_id" ("employee_id");
-CREATE UNIQUE INDEX "pms_employeeobjective_key_result_id_employeeobjective_id_keyresult_id_5805522f_uniq" ON "pms_employeeobjective_key_result_id" ("employeeobjective_id", "keyresult_id");
-CREATE INDEX "pms_employeeobjective_key_result_id_employeeobjective_id_2f7a1ea5" ON "pms_employeeobjective_key_result_id" ("employeeobjective_id");
-CREATE INDEX "pms_employeeobjective_key_result_id_keyresult_id_0561edce" ON "pms_employeeobjective_key_result_id" ("keyresult_id");
-CREATE INDEX "pms_employeeobjective_modified_by_id_e64ba2f4" ON "pms_employeeobjective" ("modified_by_id");
-CREATE INDEX "pms_employeeobjective_objective_id_id_ee2ed9a2" ON "pms_employeeobjective" ("objective_id_id");
-CREATE INDEX "pms_employeekeyresult_employee_objective_id_id_f0bbcd7f" ON "pms_employeekeyresult" ("employee_objective_id_id");
-CREATE INDEX "pms_employeekeyresult_key_result_id_id_78770afe" ON "pms_employeekeyresult" ("key_result_id_id");
-CREATE INDEX "pms_employeebonuspoint_bonus_point_id_id_e34f3f54" ON "pms_employeebonuspoint" ("bonus_point_id_id");
-CREATE INDEX "pms_employeebonuspoint_created_by_id_544d2b68" ON "pms_employeebonuspoint" ("created_by_id");
-CREATE INDEX "pms_employeebonuspoint_employee_id_id_94211f70" ON "pms_employeebonuspoint" ("employee_id_id");
-CREATE INDEX "pms_employeebonuspoint_modified_by_id_23badb59" ON "pms_employeebonuspoint" ("modified_by_id");
-CREATE INDEX "pms_comment_employee_id_id_b77179f3" ON "pms_comment" ("employee_id_id");
-CREATE INDEX "pms_comment_employee_objective_id_id_6d8ce4f2" ON "pms_comment" ("employee_objective_id_id");
-CREATE INDEX "pms_calibrationrating_calibration_id_id_352c6203" ON "pms_calibrationrating" ("calibration_id_id");
-CREATE INDEX "pms_calibrationrating_created_by_id_758fd7fd" ON "pms_calibrationrating" ("created_by_id");
-CREATE INDEX "pms_calibrationrating_employee_id_id_eb40d962" ON "pms_calibrationrating" ("employee_id_id");
-CREATE INDEX "pms_calibrationrating_modified_by_id_5ed3e7de" ON "pms_calibrationrating" ("modified_by_id");
-CREATE INDEX "pms_answer_employee_id_id_4daf966e" ON "pms_answer" ("employee_id_id");
-CREATE INDEX "pms_answer_feedback_id_id_bf251b00" ON "pms_answer" ("feedback_id_id");
-CREATE INDEX "pms_answer_question_id_id_2f05562f" ON "pms_answer" ("question_id_id");
-CREATE INDEX "pms_anonymousfeedback_department_id_id_224e48aa" ON "pms_anonymousfeedback" ("department_id_id");
-CREATE INDEX "pms_anonymousfeedback_employee_id_id_b4c009d4" ON "pms_anonymousfeedback" ("employee_id_id");
-CREATE INDEX "pms_anonymousfeedback_job_position_id_id_da5ab018" ON "pms_anonymousfeedback" ("job_position_id_id");
-CREATE UNIQUE INDEX "pms_performancerating_period_id_id_employee_id_id_manager_id_id_50d15d6a_uniq" ON "pms_performancerating" ("period_id_id", "employee_id_id", "manager_id_id");
-CREATE INDEX "pms_performancerating_created_by_id_6f6d6f0b" ON "pms_performancerating" ("created_by_id");
-CREATE INDEX "pms_performancerating_employee_id_id_5be4f4f2" ON "pms_performancerating" ("employee_id_id");
-CREATE INDEX "pms_performancerating_manager_id_id_19d761df" ON "pms_performancerating" ("manager_id_id");
-CREATE INDEX "pms_performancerating_modified_by_id_20c1b902" ON "pms_performancerating" ("modified_by_id");
-CREATE INDEX "pms_performancerating_period_id_id_0cb65e58" ON "pms_performancerating" ("period_id_id");
-CREATE INDEX "django_session_expire_date_a5c62663" ON "django_session" ("expire_date");
-CREATE INDEX "talent_criticalrole_company_id_ce24d8f6" ON "talent_criticalrole" ("company_id");
-CREATE INDEX "talent_criticalrole_department_id_d5bf771d" ON "talent_criticalrole" ("department_id");
-CREATE INDEX "talent_criticalrole_job_position_id_a3de2b55" ON "talent_criticalrole" ("job_position_id");
-CREATE INDEX "talent_talentreview_facilitator_id_be3bb404" ON "talent_talentreview" ("facilitator_id");
-CREATE UNIQUE INDEX "talent_talentreview_participants_talentreview_id_employee_id_86fe3258_uniq" ON "talent_talentreview_participants" ("talentreview_id", "employee_id");
-CREATE INDEX "talent_talentreview_participants_talentreview_id_db7c2962" ON "talent_talentreview_participants" ("talentreview_id");
-CREATE INDEX "talent_talentreview_participants_employee_id_4c886fe0" ON "talent_talentreview_participants" ("employee_id");
-CREATE INDEX "talent_successionplan_critical_role_id_fd9b683d" ON "talent_successionplan" ("critical_role_id");
-CREATE INDEX "talent_successionplan_primary_successor_id_5dc1c176" ON "talent_successionplan" ("primary_successor_id");
-CREATE INDEX "talent_successionplan_secondary_successor_id_566f9a55" ON "talent_successionplan" ("secondary_successor_id");
-CREATE INDEX "talent_retentionrisk_employee_id_9328e5c7" ON "talent_retentionrisk" ("employee_id");
-CREATE INDEX "talent_nineboxmatrix_assessed_by_id_708b2c0c" ON "talent_nineboxmatrix" ("assessed_by_id");
-CREATE INDEX "talent_nineboxmatrix_employee_id_ce229779" ON "talent_nineboxmatrix" ("employee_id");
-CREATE INDEX "talent_leadershippipeline_employee_id_d39369f8" ON "talent_leadershippipeline" ("employee_id");
-CREATE INDEX "talent_leadershippipeline_mentor_id_66f9a191" ON "talent_leadershippipeline" ("mentor_id");
-CREATE INDEX "talent_careerpath_current_position_id_7a98f35c" ON "talent_careerpath" ("current_position_id");
-CREATE INDEX "talent_careerpath_employee_id_392d618b" ON "talent_careerpath" ("employee_id");
-CREATE INDEX "talent_careerpath_target_position_id_41ad5c14" ON "talent_careerpath" ("target_position_id");
 DELETE FROM "sqlite_sequence";
 INSERT INTO "sqlite_sequence" VALUES('django_migrations',111);
-INSERT INTO "sqlite_sequence" VALUES('employee_bonuspoint',0);
 INSERT INTO "sqlite_sequence" VALUES('django_admin_log',0);
-INSERT INTO "sqlite_sequence" VALUES('leave_leaverequest',0);
-INSERT INTO "sqlite_sequence" VALUES('leave_leaveallocationrequest',0);
-INSERT INTO "sqlite_sequence" VALUES('leave_compensatoryleaverequest',0);
-INSERT INTO "sqlite_sequence" VALUES('leave_approvalrequest',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_workrecords',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_historicalattendance',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_attendancerequestcomment',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_attendanceovertime',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_attendancelatecomeearlyout',0);
-INSERT INTO "sqlite_sequence" VALUES('attendance_attendanceactivity',0);
+INSERT INTO "sqlite_sequence" VALUES('auditlog_logentry',4);
+INSERT INTO "sqlite_sequence" VALUES('django_content_type',140);
+INSERT INTO "sqlite_sequence" VALUES('auth_permission',570);
+INSERT INTO "sqlite_sequence" VALUES('auth_group',0);
+INSERT INTO "sqlite_sequence" VALUES('auth_user',2);
+INSERT INTO "sqlite_sequence" VALUES('employee_bonuspoint',0);
 INSERT INTO "sqlite_sequence" VALUES('base_worktyperequestcomment',0);
 INSERT INTO "sqlite_sequence" VALUES('base_worktyperequest',0);
 INSERT INTO "sqlite_sequence" VALUES('base_shiftrequestcomment',0);
@@ -3793,37 +2706,31 @@ INSERT INTO "sqlite_sequence" VALUES('base_driverviewed',0);
 INSERT INTO "sqlite_sequence" VALUES('base_dashboardemployeecharts',0);
 INSERT INTO "sqlite_sequence" VALUES('base_announcementview',0);
 INSERT INTO "sqlite_sequence" VALUES('base_announcementcomment',0);
-INSERT INTO "sqlite_sequence" VALUES('asset_asset',0);
-INSERT INTO "sqlite_sequence" VALUES('auditlog_logentry',21);
-INSERT INTO "sqlite_sequence" VALUES('django_content_type',325);
-INSERT INTO "sqlite_sequence" VALUES('auth_permission',1312);
-INSERT INTO "sqlite_sequence" VALUES('auth_group',0);
-INSERT INTO "sqlite_sequence" VALUES('auth_user',2);
-INSERT INTO "sqlite_sequence" VALUES('django_apscheduler_djangojobexecution',0);
-INSERT INTO "sqlite_sequence" VALUES('offboarding_employeetask',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_candidate',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_historicalcandidate',0);
+INSERT INTO "sqlite_sequence" VALUES('recruitment_offerlettertemplate',7);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_interviewschedule',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_offerletterapproval',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_medicallettertemplate',2);
-INSERT INTO "sqlite_sequence" VALUES('recruitment_visalettertemplate',2);
+INSERT INTO "sqlite_sequence" VALUES('recruitment_visalettertemplate',3);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_medicalletter',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_visaletter',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_offerapproval',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_manpowerrequest',0);
 INSERT INTO "sqlite_sequence" VALUES('employee_employee',1);
 INSERT INTO "sqlite_sequence" VALUES('employee_employeeworkinformation',1);
-INSERT INTO "sqlite_sequence" VALUES('base_employeeshiftday',7);
-INSERT INTO "sqlite_sequence" VALUES('leave_employeepastleaverestrict',1);
-INSERT INTO "sqlite_sequence" VALUES('base_biometricattendance',1);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_offerletter',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_jobapplication',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_candidateportalupload',0);
+INSERT INTO "sqlite_sequence" VALUES('base_employeeshiftday',7);
+INSERT INTO "sqlite_sequence" VALUES('attendance_attendancelatecomeearlyout',0);
+INSERT INTO "sqlite_sequence" VALUES('attendance_gracetime',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_recruitmentapproval',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_candidatescreeningprofile',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_interviewevaluation',0);
 INSERT INTO "sqlite_sequence" VALUES('recruitment_recruitment',0);
+INSERT INTO "sqlite_sequence" VALUES('asset_asset',0);
+INSERT INTO "sqlite_sequence" VALUES('django_apscheduler_djangojobexecution',0);
+INSERT INTO "sqlite_sequence" VALUES('offboarding_employeetask',0);
 INSERT INTO "sqlite_sequence" VALUES('onboarding_candidatetask',0);
-INSERT INTO "sqlite_sequence" VALUES('payroll_payrollsettings',1);
-INSERT INTO "sqlite_sequence" VALUES('pms_feedback',0);
 COMMIT;

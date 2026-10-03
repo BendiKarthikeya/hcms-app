@@ -273,7 +273,8 @@ GMAIL_REDIRECT_URI = env(
     default="http://localhost:8000/integrations/gmail/callback/",
 )
 
-LOGIN_URL = "/login"
+LOGIN_URL = "/ui/login/"
+LOGIN_REDIRECT_URL = "/ui/dashboard/"
 
 
 SIMPLE_HISTORY_REVERT_DISABLED = True

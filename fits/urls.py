@@ -34,6 +34,7 @@ def health_check(request):
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/ui/login/", permanent=False)),
+    path("login/", RedirectView.as_view(url="/ui/login/", permanent=False)),
     path("admin/", admin.site.urls),
     path("careers/", careers_view, name="careers"),
     path("accounts/", include("django.contrib.auth.urls")),
