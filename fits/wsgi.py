@@ -17,38 +17,22 @@ import django
 
 django.setup()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 tmp_db = Path("/tmp/db.sqlite3")
-db_lock = threading.Lock()
-
-
-def needs_migration(path):
-    try:
-        if not path.exists():
-            return True
-        with sqlite3.connect(str(path)) as conn:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('base_company', 'auth_user', 'django_session', 'employee_employee');"
-            )
-            count = cur.fetchone()[0]
-            return count < 4
-    except Exception:
-        return True
-
+seed_db = BASE_DIR / "seed_db.sqlite3"
 
 if os.environ.get("VERCEL"):
-    with db_lock:
-        if needs_migration(tmp_db):
-            try:
-                tmp_db.parent.mkdir(parents=True, exist_ok=True)
-                with sqlite3.connect(str(tmp_db)) as conn:
-                    conn.execute("PRAGMA journal_mode = OFF;")
-                    conn.execute("PRAGMA synchronous = OFF;")
-                from django.core.management import call_command
+    if not tmp_db.exists() or tmp_db.stat().st_size == 0:
+        try:
+            tmp_db.parent.mkdir(parents=True, exist_ok=True)
+            if seed_db.exists():
+                shutil.copyfile(seed_db, tmp_db)
+        except Exception as e:
+            print(f"Error copying seed_db to /tmp: {e}")
 
-                call_command("migrate", interactive=False, verbosity=0)
-            except Exception as e:
-                print(f"Auto-migration error on /tmp/db.sqlite3: {e}")
+import django
+
+django.setup()
 
 from django.core.wsgi import get_wsgi_application
 
