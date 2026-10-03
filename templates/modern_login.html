@@ -198,10 +198,8 @@
                 
                 <div class="modern-form-group">
                     <label class="modern-form-label" for="username">{% trans "Username" %}</label>
-                    <input type="text" id="username" name="username" class="modern-form-input"
-                           placeholder="e.g. adam.luis@fits.com" required
-                           oninput="this.value=this.value.toLowerCase()"
-                           onblur="this.value=this.value.trim().toLowerCase()" />
+                    <input type="text" id="username" name="username" class="modern-form-input" 
+                           placeholder="e.g. adam.luis@fits.com" required />
                 </div>
                 
                 <div class="modern-form-group">
@@ -280,8 +278,7 @@
             
             // Form validation
             $('.modern-login-form').on('submit', function(e) {
-                const username = $('#username').val().trim().toLowerCase();
-                $('#username').val(username);
+                const username = $('#username').val().trim();
                 const password = $('#password').val().trim();
                 
                 if (!username || !password) {

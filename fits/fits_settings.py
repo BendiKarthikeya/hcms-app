@@ -51,7 +51,6 @@ APPS = [
     "base",
     "employee",
     "fits_documents",
-    "fits_automations",
 ]
 
 NO_PERMISSION_MODALS = [

@@ -6,14 +6,17 @@ class ProjectConfig(AppConfig):
     name = "project"
 
     def ready(self):
-        from django.urls import include, path
+        try:
+            from django.urls import include, path
+            from fits.fits_settings import APP_URLS, APPS
+            from fits.urls import urlpatterns
 
-        from fits.fits_settings import APP_URLS, APPS
-        from fits.urls import urlpatterns
-
-        APPS.append("project")
-        urlpatterns.append(
-            path("project/", include("project.urls")),
-        )
-        APP_URLS.append("project.urls")
+            if "project" not in APPS:
+                APPS.append("project")
+            urlpatterns.append(
+                path("project/", include("project.urls")),
+            )
+            APP_URLS.append("project.urls")
+        except Exception:
+            pass
         super().ready()

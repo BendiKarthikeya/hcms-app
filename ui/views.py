@@ -1752,36 +1752,21 @@ def login_view(request):
         return redirect("/ui/dashboard/")
 
     if request.method == "POST":
-        username_input = request.POST.get("username", "").strip()
-        username = username_input.lower()
+        username = request.POST.get("username", "").strip().lower()
         password = request.POST.get("password", "")
         next_url = request.GET.get("next") or request.POST.get("next") or "/ui/dashboard/"
 
         user = authenticate(request, username=username, password=password)
-        if not user and "@" in username_input:
-            try:
-                matched_user = User.objects.filter(email__iexact=username_input).first()
-                if matched_user:
-                    user = authenticate(request, username=matched_user.username, password=password)
-            except Exception:
-                pass
 
         if not user:
-            try:
-                blocked = User.objects.filter(username=username, is_active=False).exists()
-            except Exception:
-                blocked = False
+            blocked = User.objects.filter(username=username, is_active=False).exists()
             if blocked:
                 messages.warning(request, _("Access Denied: Your account is blocked."))
             else:
                 messages.error(request, _("Invalid username or password."))
             return redirect("ui:login")
 
-        try:
-            employee = getattr(user, "employee_get", None)
-        except Exception:
-            employee = None
-
+        employee = getattr(user, "employee_get", None)
         is_admin_staff = bool(user.is_staff or user.is_superuser)
 
         if employee is None and not is_admin_staff:
@@ -1790,7 +1775,7 @@ def login_view(request):
                 _("An employee related to this user's credentials does not exist."),
             )
             return redirect("ui:login")
-        if employee is not None and (not getattr(employee, "is_active", True)) and not is_admin_staff:
+        if employee is not None and (not employee.is_active) and not is_admin_staff:
             messages.warning(
                 request,
                 _("This user is archived. Please contact the manager for more information."),

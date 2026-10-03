@@ -6,14 +6,14 @@ class Migration(migrations.Migration):
     dependencies = []
     operations = [
         migrations.CreateModel(
-            name="LeaveType",
+            name="GraceTime",
             fields=[
                 ("id", models.AutoField(primary_key=True)),
-                ("name", models.CharField(max_length=100)),
+                ("allowed_time", models.DurationField(default=0)),
             ],
         ),
         migrations.CreateModel(
-            name="LeaveRequest",
+            name="AttendanceLateComeEarlyOut",
             fields=[
                 ("id", models.AutoField(primary_key=True)),
             ],

@@ -164,9 +164,6 @@ CLAUDE.md
 docs/
 # Figma design references (local only)
 Figma/
-# But track downloaded Figma assets used by the app
-!static/images/figma/
 notes/
 .claude/
 .mcp.json
-.vercel

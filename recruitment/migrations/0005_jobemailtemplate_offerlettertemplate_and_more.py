@@ -112,7 +112,16 @@ class Migration(migrations.Migration):
                     options={'verbose_name': 'Offer Letter Template', 'verbose_name_plural': 'Offer Letter Templates', 'ordering': ['name']},
                 ),
             ],
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql="ALTER TABLE recruitment_offerlettertemplate RENAME COLUMN content TO body_html;",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE recruitment_offerlettertemplate RENAME COLUMN is_default TO is_active;",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
         ),
         migrations.CreateModel(
             name='OfferLetterApproval',

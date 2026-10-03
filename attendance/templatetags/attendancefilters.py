@@ -14,8 +14,15 @@ from django.forms.widgets import SelectMultiple, Textarea
 from django.template import TemplateSyntaxError
 from django.template.defaultfilters import register
 
-from attendance.models import AttendanceValidationCondition
-from attendance.views.views import strtime_seconds
+try:
+    from attendance.models import AttendanceValidationCondition
+except ImportError:
+    AttendanceValidationCondition = None
+
+try:
+    from attendance.views.views import strtime_seconds
+except Exception:
+    strtime_seconds = lambda x: 0
 
 register = template.Library()
 

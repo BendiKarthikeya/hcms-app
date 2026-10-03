@@ -1,11 +1,11 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'sitewide_chatbot/chatbot.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'sitewide_chatbot/chatbot.css' %}?v=7">
 <section
     id="fits-sitewide-chatbot"
     class="fits-chatbot"
     data-api-url="{% url 'sitewide_chatbot:chat' %}">
     <button type="button" class="fits-chatbot__launcher" aria-label="Open FITS assistant">
-        <img class="fits-chatbot__launcher-avatar" src="{% static 'sitewide_chatbot/images/ahmed-avatar.png' %}" alt="Ahmed">
+        <img class="fits-chatbot__launcher-avatar" src="{% static 'sitewide_chatbot/images/ahmed-avatar.ico' %}" alt="Ahmed">
         <span class="fits-chatbot__launcher-label">I'm Ahmed, your AI assistant</span>
     </button>
     <div class="fits-chatbot__panel" role="dialog" aria-label="FITS HCMS assistant">
@@ -43,4 +43,4 @@
         </div>
     </div>
 </section>
-<script src="{% static 'sitewide_chatbot/chatbot.js' %}?v=11" defer></script>
+<script src="{% static 'sitewide_chatbot/chatbot.js' %}?v=7" defer></script>

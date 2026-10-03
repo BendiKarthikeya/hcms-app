@@ -973,10 +973,8 @@ class WorkTypeRequestComment(FitsModel):
     WorkTypeRequestComment Model
     """
 
-    from employee.models import Employee
-
     request_id = models.ForeignKey(WorkTypeRequest, on_delete=models.CASCADE)
-    employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_id = models.ForeignKey("employee.Employee", on_delete=models.CASCADE)
     comment = models.TextField(null=True, verbose_name=_("Comment"))
     files = models.ManyToManyField(BaserequestFile, blank=True)
     objects = models.Manager()
@@ -1136,10 +1134,8 @@ class ShiftRequestComment(FitsModel):
     ShiftRequestComment Model
     """
 
-    from employee.models import Employee
-
     request_id = models.ForeignKey(ShiftRequest, on_delete=models.CASCADE)
-    employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_id = models.ForeignKey("employee.Employee", on_delete=models.CASCADE)
     files = models.ManyToManyField(BaserequestFile, blank=True)
     comment = models.TextField(null=True, verbose_name=_("Comment"))
     objects = models.Manager()
@@ -1505,10 +1501,6 @@ class Announcement(FitsModel):
     Announcement Model for storing all announcements.
     """
 
-    from employee.models import Employee
-
-    model_employee = Employee
-
     title = models.CharField(max_length=100)
     description = models.TextField(null=True)
     attachments = models.ManyToManyField(
@@ -1516,7 +1508,7 @@ class Announcement(FitsModel):
     )
     expire_date = models.DateField(null=True, blank=True)
     employees = models.ManyToManyField(
-        Employee, related_name="announcement_employees", blank=True
+        "employee.Employee", related_name="announcement_employees", blank=True
     )
     department = models.ManyToManyField(Department, blank=True)
     job_position = models.ManyToManyField(
@@ -1535,7 +1527,7 @@ class Announcement(FitsModel):
     )
 
     filtered_employees = models.ManyToManyField(
-        Employee, related_name="announcement_filtered_employees", editable=False
+        "employee.Employee", related_name="announcement_filtered_employees", editable=False
     )
     objects = FitsCompanyManager(related_company_field="company_id")
 
@@ -1576,10 +1568,8 @@ class AnnouncementComment(FitsModel):
     AnnouncementComment Model
     """
 
-    from employee.models import Employee
-
     announcement_id = models.ForeignKey(Announcement, on_delete=models.CASCADE)
-    employee_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee_id = models.ForeignKey("employee.Employee", on_delete=models.CASCADE)
     comment = models.TextField(null=True, verbose_name=_("Comment"), max_length=255)
     objects = models.Manager()
 
@@ -1635,9 +1625,7 @@ class DriverViewed(models.Model):
 
 
 class DashboardEmployeeCharts(FitsModel):
-    from employee.models import Employee
-
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey("employee.Employee", on_delete=models.CASCADE)
     charts = models.JSONField(
         verbose_name=_("Excluded Charts"), default=list, blank=True, null=True
     )
@@ -1853,10 +1841,8 @@ class PenaltyAccounts(FitsModel):
 
 
 class NotificationSound(models.Model):
-    from employee.models import Employee
-
     employee = models.OneToOneField(
-        Employee, on_delete=models.CASCADE, related_name="notification_sound"
+        "employee.Employee", on_delete=models.CASCADE, related_name="notification_sound"
     )
     sound_enabled = models.BooleanField(default=False)
 

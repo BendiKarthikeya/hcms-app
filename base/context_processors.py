@@ -223,14 +223,10 @@ def timerunner_enabled(request):
     first = None
     enabled_timerunner = True
     if apps.is_installed("attendance"):
-        try:
-            AttendanceGeneralSetting = get_fits_model_class(
-                app_label="attendance", model="attendancegeneralsetting"
-            )
-            if AttendanceGeneralSetting:
-                first = AttendanceGeneralSetting.objects.first()
-        except Exception:
-            first = None
+        AttendanceGeneralSetting = get_fits_model_class(
+            app_label="attendance", model="attendancegeneralsetting"
+        )
+        first = AttendanceGeneralSetting.objects.first()
     if first:
         enabled_timerunner = first.time_runner
     result = {"enabled_timerunner": enabled_timerunner}
@@ -248,13 +244,10 @@ def intial_notice_period(request):
     initial = 30
     first = None
     if apps.is_installed("payroll"):
-        try:
-            PayrollGeneralSetting = get_fits_model_class(
-                app_label="payroll", model="payrollgeneralsetting"
-            )
-            first = PayrollGeneralSetting.objects.first()
-        except Exception:
-            first = None
+        PayrollGeneralSetting = get_fits_model_class(
+            app_label="payroll", model="payrollgeneralsetting"
+        )
+        first = PayrollGeneralSetting.objects.first()
     if first:
         initial = first.notice_period
     result = {"get_initial_notice_period": initial}

@@ -8,10 +8,7 @@ import threading
 from datetime import date, datetime
 from itertools import chain, groupby
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.db import connection, models, transaction

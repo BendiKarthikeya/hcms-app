@@ -19,20 +19,23 @@ class AttendanceConfig(AppConfig):
     name = "attendance"
 
     def ready(self):
-        from django.urls import include, path
+        try:
+            from django.urls import include, path
+            from fits.fits_settings import APPS
+            from fits.settings import MIDDLEWARE
+            from fits.urls import urlpatterns
 
-        from fits.fits_settings import APPS
-        from fits.settings import MIDDLEWARE
-        from fits.urls import urlpatterns
+            if "attendance" not in APPS:
+                APPS.append("attendance")
+            urlpatterns.append(
+                path("attendance/", include("attendance.urls")),
+            )
+            middleware_path = "attendance.middleware.AttendanceMiddleware"
+            if middleware_path not in MIDDLEWARE:
+                MIDDLEWARE.append(middleware_path)
 
-        APPS.append("attendance")
-        urlpatterns.append(
-            path("attendance/", include("attendance.urls")),
-        )
-        middleware_path = "attendance.middleware.AttendanceMiddleware"
-        if middleware_path not in MIDDLEWARE:
-            MIDDLEWARE.append(middleware_path)
-
-        APP_URLS.append("attendance.urls")
+            APP_URLS.append("attendance.urls")
+        except Exception:
+            pass
 
         super().ready()

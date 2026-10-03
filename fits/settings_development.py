@@ -46,7 +46,7 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "contractor1@fits.one"
 
 # Recipient for "Send to Visa Department" onboarding hand-off + portal link base URL
 VISA_TEAM_EMAIL = os.environ.get("VISA_TEAM_EMAIL", "")
-SITE_URL = os.environ.get("SITE_URL", "https://hcmspro.net")
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
 # Gmail OAuth (Profile -> Integrations -> Connect Gmail)
 GMAIL_CLIENT_ID = os.environ.get("GMAIL_CLIENT_ID", "")

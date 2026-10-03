@@ -53,7 +53,7 @@ class CompanyMiddleware:
                     return getattr(
                         request.user.employee_get.employee_work_info, "company_id", None
                     )
-            except Exception:
+            except AttributeError:
                 pass
         return None
 
@@ -189,9 +189,11 @@ class CompanyMiddleware:
 
             for app_label, models in app_model_mappings.items():
                 if apps.is_installed(app_label):
-                    company_models.extend(
-                        [get_fits_model_class(app_label, model) for model in models]
-                    )
+                    for model in models:
+                        try:
+                            company_models.append(get_fits_model_class(app_label, model))
+                        except LookupError:
+                            pass
 
             cache.set(CACHE_KEY, company_models)
 

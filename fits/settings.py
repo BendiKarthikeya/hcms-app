@@ -63,33 +63,18 @@ INSTALLED_APPS = [
     "simple_history",
     "django_filters",
     "fits_audit",
+    "accessibility",
+    "fits_documents",
+    "sitewide_chatbot",
+    "project",
+    "attendance",
+    "leave",
     "base",
     "employee",
     "recruitment",
-    "leave",
-    "pms",
-    "onboarding",
-    "asset",
-    "attendance",
-    "payroll",
-    "learning",
-    "talent",
-    "expenses",
-    "report",
-    "omani_compliance",
-    "sitewide_chatbot",
     "ui",
     "widget_tweaks",
-    
-    
-
 ]
-
-if importlib.util.find_spec("django_apscheduler") is not None:
-    INSTALLED_APPS.append("django_apscheduler")
-APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
-
-APSCHEDULER_RUN_NOW_TIMEOUT = 25  # Seconds
 
 
 MIDDLEWARE = [
@@ -98,7 +83,6 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "base.middleware.TrialAccessMiddleware",
-    "fits_api.middleware.RejectBasicAuthMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -146,35 +130,17 @@ WSGI_APPLICATION = "fits.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+DATABASES = {
+    "default": env.db(
+        default=f"sqlite:///{BASE_DIR}/db.sqlite3"
+    ),
+}
 
-if not DATABASE_URL or DATABASE_URL.startswith("sqlite"):
-    db_path = "/tmp/db.sqlite3" if os.environ.get("VERCEL") else str(BASE_DIR / "db.sqlite3")
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": db_path,
-        }
-    }
-else:
-    try:
-        DATABASES = {
-            "default": env.db(
-                default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
-            ),
-        }
-        if "postgresql" in DATABASES["default"].get("ENGINE", ""):
-            DATABASES["default"]["CONN_MAX_AGE"] = 600
-            DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
-            DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
-            DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
-    except Exception:
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": str(BASE_DIR / "db.sqlite3"),
-            }
-        }
+if DATABASES["default"]["ENGINE"] != "django.db.backends.sqlite3":
+    DATABASES["default"]["CONN_MAX_AGE"] = 600
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
 
 # Add caching for dramatic performance improvements
 CACHES = {
@@ -273,6 +239,25 @@ GMAIL_REDIRECT_URI = env(
     default="http://localhost:8000/integrations/gmail/callback/",
 )
 
+# DocuSign eSignature OAuth (Integrations -> Connect DocuSign). Sandbox defaults.
+DOCUSIGN_CLIENT_ID = env("DOCUSIGN_CLIENT_ID", default="")
+DOCUSIGN_SECRET = env("DOCUSIGN_SECRET", default="")
+DOCUSIGN_ACCOUNT_ID = env("DOCUSIGN_ACCOUNT_ID", default="")
+DOCUSIGN_OAUTH_BASE = env("DOCUSIGN_OAUTH_BASE", default="https://account-d.docusign.com")
+DOCUSIGN_REDIRECT_URI = env(
+    "DOCUSIGN_REDIRECT_URI",
+    default="http://localhost:8000/integrations/docusign/callback/",
+)
+
+# Adobe Acrobat Sign OAuth (Integrations -> Connect Adobe eSign).
+ADOBE_SIGN_CLIENT_ID = env("ADOBE_SIGN_CLIENT_ID", default="")
+ADOBE_SIGN_SECRET = env("ADOBE_SIGN_SECRET", default="")
+ADOBE_SIGN_OAUTH_BASE = env("ADOBE_SIGN_OAUTH_BASE", default="https://secure.na1.adobesign.com")
+ADOBE_SIGN_REDIRECT_URI = env(
+    "ADOBE_SIGN_REDIRECT_URI",
+    default="http://localhost:8000/integrations/adobesign/callback/",
+)
+
 LOGIN_URL = "/ui/login/"
 LOGIN_REDIRECT_URL = "/ui/dashboard/"
 
@@ -313,7 +298,7 @@ LOCALE_PATHS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = env("TIME_ZONE", default="Asia/Muscat")
+TIME_ZONE = env("TIME_ZONE", default="Asia/Kolkata")
 
 USE_I18N = True
 
@@ -321,18 +306,17 @@ USE_L10N = True
 
 USE_TZ = True
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
 # Production settings
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_SSL_REDIRECT = False
+    SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 

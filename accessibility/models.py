@@ -1,23 +1,10 @@
-"""
-accessibility/models.py
-"""
-
 from django.db import models
 
-from accessibility.accessibility import ACCESSBILITY_FEATURE
-from employee.models import Employee
-from fits.models import FitsModel
 
+class DefaultAccessibility(models.Model):
+    feature = models.CharField(max_length=100)
+    employees = models.ManyToManyField("employee.Employee", blank=True)
 
-class DefaultAccessibility(FitsModel):
-    """
-    DefaultAccessibilityModel
-    """
-
-    feature = models.CharField(max_length=100, choices=ACCESSBILITY_FEATURE)
-    filter = models.JSONField()
-    exclude_all = models.BooleanField(default=False)
-    employees = models.ManyToManyField(
-        Employee, blank=True, related_name="default_accessibility"
-    )
-    is_enabled = models.BooleanField(default=True)
+    class Meta:
+        app_label = "accessibility"
+        managed = False

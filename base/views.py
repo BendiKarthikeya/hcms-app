@@ -15,10 +15,7 @@ from email.mime.image import MIMEImage
 from os import path
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
 from dateutil import parser
 from django import forms
 from django.apps import apps
@@ -588,7 +585,7 @@ def login_user(request):
         return redirect(_get_default_dashboard_url(request.user))
 
     if request.method == "POST":
-        username = (request.POST.get("username") or "").strip().lower()
+        username = request.POST.get("username")
         password = request.POST.get("password")
         next_url = request.GET.get("next", "/")
         query_params = request.GET.dict()
@@ -1225,7 +1222,7 @@ def logout_user(request):
         <script>
             localStorage.clear();
         </script>
-        <meta http-equiv="refresh" content="0;url=/ui/login/">
+        <meta http-equiv="refresh" content="0;url=/login">
     """
 
     return response

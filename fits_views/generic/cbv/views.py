@@ -9,10 +9,7 @@ import traceback
 from typing import Any
 from urllib.parse import parse_qs, urlencode
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
 from bs4 import BeautifulSoup
 from django import forms
 from django.contrib import messages
