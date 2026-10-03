@@ -1,0 +1,153 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recruitment Reports" %}{% endblock %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1280px;margin:24px auto;padding:16px;">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <h1 style="margin:0;font-size:22px;">{% trans "Recruitment Reports" %}</h1>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'export-candidates-csv' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;font-size:13px;">⬇ {% trans "Candidates CSV" %}</a>
+      <a href="{% url 'export-manpower-csv' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;font-size:13px;">⬇ {% trans "Manpower CSV" %}</a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+    {% for label,value,sub in kpi_cards %}
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:14px;">
+      <div style="color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">{{ label }}</div>
+      <div style="font-size:28px;font-weight:700;margin-top:2px;color:#111827;">{{ value }}</div>
+      {% if sub %}<div style="font-size:11px;color:#9ca3af;margin-top:2px;">{{ sub }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Charts row -->
+  <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:20px;">
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Candidates Added (last 6 months)" %}</h3>
+      <canvas id="monthlyChart" height="110"></canvas>
+    </div>
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;display:flex;flex-direction:column;align-items:center;">
+      <h3 style="margin-top:0;font-size:15px;align-self:flex-start;">{% trans "Pipeline Funnel" %}</h3>
+      <div style="width:200px;height:200px;">
+        <canvas id="funnelChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manpower Request Status — full grid -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;margin-bottom:20px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Manpower Request Status" %}</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;">
+      {% for key,val in mr_stat_items %}
+      <div style="text-align:center;padding:12px 8px;background:#f9fafb;border-radius:6px;border:1px solid #f3f4f6;">
+        <div style="font-size:24px;font-weight:700;color:
+          {% if key == 'approved' %}#16a34a
+          {% elif key == 'rejected' %}#dc2626
+          {% elif key == 'pending' %}#d97706
+          {% elif key == 'joined' or key == 'closed' %}#0891b2
+          {% else %}#374151{% endif %};">{{ val }}</div>
+        <div style="font-size:11px;color:#6b7280;text-transform:capitalize;margin-top:2px;">{{ key }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Joining Soon + Source effectiveness side by side -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+    <!-- Joining Soon -->
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Joining Soon (next 30 days)" %}</h3>
+      {% for c in joining_soon %}
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;">
+        <div>
+          <div style="font-weight:500;">{{ c.name }}</div>
+          <div style="color:#6b7280;font-size:12px;">{{ c.job_position_id|default:"—" }}</div>
+        </div>
+        <div style="color:#16a34a;font-weight:600;white-space:nowrap;">{{ c.joining_date|date:"d M Y" }}</div>
+      </div>
+      {% empty %}
+      <p style="color:#6b7280;font-size:13px;margin:0;">{% trans "No candidates joining in the next 30 days." %}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Source effectiveness -->
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Source Effectiveness" %}</h3>
+      {% for s in sources %}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:100px;font-size:13px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.source|default:"Unknown"|capfirst }}</div>
+        <div style="flex:1;background:#f3f4f6;border-radius:4px;height:16px;overflow:hidden;">
+          <div style="background:#16a34a;height:100%;width:{% if total_candidates %}{% widthratio s.count total_candidates 100 %}{% else %}0{% endif %}%;"></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;width:30px;text-align:right;">{{ s.count }}</div>
+      </div>
+      {% empty %}
+      <p style="color:#6b7280;font-size:13px;margin:0;">{% trans "No source data yet." %}</p>
+      {% endfor %}
+    </div>
+
+  </div>
+
+</div>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Monthly candidates bar chart
+const mLabels = {{ chart_labels|safe }};
+const mValues = {{ chart_values|safe }};
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: mLabels,
+    datasets: [{
+      label: 'Candidates',
+      data: mValues,
+      backgroundColor: '#16a34a',
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+    }
+  }
+});
+
+// Pipeline funnel doughnut — smaller, centred
+const fLabels = [{% for s in pipeline_stages %}"{{ s.stage_id__stage|default:'No Stage' }}",{% endfor %}];
+const fValues = [{% for s in pipeline_stages %}{{ s.count }},{% endfor %}];
+new Chart(document.getElementById('funnelChart'), {
+  type: 'doughnut',
+  data: {
+    labels: fLabels.length ? fLabels : ['No candidates'],
+    datasets: [{
+      data: fValues.length ? fValues : [1],
+      backgroundColor: ['#16a34a','#0891b2','#7c3aed','#d97706','#dc2626','#6b7280','#ec4899','#f59e0b'],
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 10 }, padding: 6, boxWidth: 10 }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

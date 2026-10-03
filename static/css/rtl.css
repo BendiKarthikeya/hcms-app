@@ -1,0 +1,319 @@
+/*
+Arabic RTL (Right-to-Left) Layout Support
+For full Arabic language support with RTL layout
+*/
+
+/* RTL Layout for Arabic Language */
+[dir="rtl"],
+[lang="ar"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* RTL Layout Adjustments */
+[dir="rtl"] .oh-wrapper,
+[lang="ar"] .oh-wrapper {
+    direction: rtl;
+}
+
+[dir="rtl"] .oh-card,
+[lang="ar"] .oh-card {
+    text-align: right;
+}
+
+[dir="rtl"] .oh-card__header,
+[lang="ar"] .oh-card__header {
+    text-align: right;
+}
+
+[dir="rtl"] .oh-card__title,
+[lang="ar"] .oh-card__title {
+    text-align: right;
+}
+
+/* Form Elements RTL */
+[dir="rtl"] .form-control,
+[lang="ar"] .form-control {
+    text-align: right;
+}
+
+[dir="rtl"] .form-label,
+[lang="ar"] .form-label {
+    text-align: right;
+}
+
+[dir="rtl"] .btn,
+[lang="ar"] .btn {
+    text-align: right;
+}
+
+/* Table RTL Support */
+[dir="rtl"] table,
+[lang="ar"] table {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] th,
+[lang="ar"] th {
+    text-align: right;
+}
+
+[dir="rtl"] td,
+[lang="ar"] td {
+    text-align: right;
+}
+
+/* Navigation RTL */
+[dir="rtl"] .navbar-nav,
+[lang="ar"] .navbar-nav {
+    direction: rtl;
+}
+
+[dir="rtl"] .nav-link,
+[lang="ar"] .nav-link {
+    text-align: right;
+}
+
+/* Dropdown RTL */
+[dir="rtl"] .dropdown-menu,
+[lang="ar"] .dropdown-menu {
+    text-align: right;
+    right: auto;
+    left: 0;
+}
+
+[dir="rtl"] .dropdown-item,
+[lang="ar"] .dropdown-item {
+    text-align: right;
+}
+
+/* Modal RTL */
+[dir="rtl"] .modal-header,
+[lang="ar"] .modal-header {
+    text-align: right;
+}
+
+[dir="rtl"] .modal-body,
+[lang="ar"] .modal-body {
+    text-align: right;
+}
+
+[dir="rtl"] .modal-footer,
+[lang="ar"] .modal-footer {
+    text-align: left; /* Keep buttons on the right in RTL */
+}
+
+/* Pagination RTL */
+[dir="rtl"] .pagination,
+[lang="ar"] .pagination {
+    direction: rtl;
+}
+
+[dir="rtl"] .page-item:first-child .page-link,
+[lang="ar"] .page-item:first-child .page-link {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+[dir="rtl"] .page-item:last-child .page-link,
+[lang="ar"] .page-item:last-child .page-link {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Badge RTL */
+[dir="rtl"] .badge,
+[lang="ar"] .badge {
+    text-align: center;
+}
+
+/* Alert RTL */
+[dir="rtl"] .alert,
+[lang="ar"] .alert {
+    text-align: right;
+}
+
+/* Card RTL */
+[dir="rtl"] .card,
+[lang="ar"] .card {
+    text-align: right;
+}
+
+[dir="rtl"] .card-header,
+[lang="ar"] .card-header {
+    text-align: right;
+}
+
+[dir="rtl"] .card-body,
+[lang="ar"] .card-body {
+    text-align: right;
+}
+
+[dir="rtl"] .card-footer,
+[lang="ar"] .card-footer {
+    text-align: right;
+}
+
+/* List Group RTL */
+[dir="rtl"] .list-group,
+[lang="ar"] .list-group {
+    text-align: right;
+}
+
+[dir="rtl"] .list-group-item,
+[lang="ar"] .list-group-item {
+    text-align: right;
+}
+
+/* Progress Bar RTL */
+[dir="rtl"] .progress,
+[lang="ar"] .progress {
+    direction: rtl;
+}
+
+/* Breadcrumb RTL */
+[dir="rtl"] .breadcrumb,
+[lang="ar"] .breadcrumb {
+    direction: rtl;
+}
+
+[dir="rtl"] .breadcrumb-item + .breadcrumb-item::before,
+[lang="ar"] .breadcrumb-item + .breadcrumb-item::before {
+    content: "\\" ; /* RTL breadcrumb separator */
+}
+
+/* Form Check RTL */
+[dir="rtl"] .form-check,
+[lang="ar"] .form-check {
+    padding-right: 1.5em;
+    padding-left: 0;
+}
+
+[dir="rtl"] .form-check-input,
+[lang="ar"] .form-check-input {
+    margin-right: -1.5em;
+    margin-left: 0;
+}
+
+/* Input Group RTL */
+[dir="rtl"] .input-group,
+[lang="ar"] .input-group {
+    direction: rtl;
+}
+
+[dir="rtl"] .input-group-text,
+[lang="ar"] .input-group-text {
+    border-left: 1px solid #dee2e6;
+    border-right: none;
+}
+
+/* Float RTL */
+[dir="rtl"] .float-start,
+[lang="ar"] .float-start {
+    float: right !important;
+}
+
+[dir="rtl"] .float-end,
+[lang="ar"] .float-end {
+    float: left !important;
+}
+
+/* Text Alignment RTL */
+[dir="rtl"] .text-start,
+[lang="ar"] .text-start {
+    text-align: right !important;
+}
+
+[dir="rtl"] .text-end,
+[lang="ar"] .text-end {
+    text-align: left !important;
+}
+
+/* Margin and Padding RTL */
+[dir="rtl"] .me-1,
+[lang="ar"] .me-1 {
+    margin-right: 0 !important;
+    margin-left: 0.25rem !important;
+}
+
+[dir="rtl"] .me-2,
+[lang="ar"] .me-2 {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .me-3,
+[lang="ar"] .me-3 {
+    margin-right: 0 !important;
+    margin-left: 1rem !important;
+}
+
+[dir="rtl"] .ms-1,
+[lang="ar"] .ms-1 {
+    margin-left: 0 !important;
+    margin-right: 0.25rem !important;
+}
+
+[dir="rtl"] .ms-2,
+[lang="ar"] .ms-2 {
+    margin-left: 0 !important;
+    margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] .ms-3,
+[lang="ar"] .ms-3 {
+    margin-left: 0 !important;
+    margin-right: 1rem !important;
+}
+
+/* Arabic Font Support */
+[dir="rtl"],
+[lang="ar"] {
+    font-family: 'Noto Sans Arabic', 'Droid Arabic Naskh', 'Traditional Arabic', Arial, sans-serif;
+}
+
+/* Arabic Typography Enhancements */
+[dir="rtl"],
+[lang="ar"] {
+    line-height: 1.8;
+    letter-spacing: 0;
+}
+
+/* RTL-specific utility classes */
+.rtl-text-right {
+    text-align: right;
+}
+
+.rtl-text-left {
+    text-align: left;
+}
+
+.rtl-float-right {
+    float: right;
+}
+
+.rtl-float-left {
+    float: left;
+}
+
+.rtl-mr-1 {
+    margin-right: 0.25rem;
+}
+
+.rtl-ml-1 {
+    margin-left: 0.25rem;
+}
+
+/* Print Styles for RTL */
+@media print {
+    [dir="rtl"],
+    [lang="ar"] {
+        direction: rtl;
+        text-align: right;
+    }
+}

@@ -1,0 +1,65 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>My Learning Plans</h1>
+
+<div class="row mt-3 mb-3">
+    <div class="col-12">
+        <a href="{% url 'learning:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="{% url 'learning:create_learning_plan' %}" class="btn btn-success">+ Create New Plan</a>
+    </div>
+</div>
+
+{% if learning_plans %}
+<div class="row mt-4">
+    {% for plan in learning_plans %}
+    <div class="col-md-6 mb-4">
+        <div class="card border-{% if plan.status == 'approved' %}success{% elif plan.status == 'pending' %}warning{% else %}danger{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">{{ plan.title }}</h5>
+                <p class="card-text">{{ plan.description|truncatewords:20 }}</p>
+                
+                <p class="mb-2">
+                    <strong>Status:</strong> 
+                    <span class="badge bg-{% if plan.status == 'approved' %}success{% elif plan.status == 'pending' %}warning{% else %}danger{% endif %}">
+                        {{ plan.get_status_display }}
+                    </span>
+                </p>
+                
+                <p class="mb-2">
+                    <strong>Duration:</strong> {{ plan.start_date }} to {{ plan.end_date }}
+                </p>
+                
+                {% if plan.learningplanitem_set.all %}
+                <p class="mb-2"><strong>Items:</strong> {{ plan.learningplanitem_set.count }}</p>
+                
+                <div class="modal-body" style="background-color: #f8f9fa; border-radius: 5px; padding: 10px;">
+                    <h6>Plan Items:</h6>
+                    <ul class="list-unstyled">
+                        {% for item in plan.learningplanitem_set.all %}
+                        <li>
+                            <input type="checkbox" {% if item.completed %}checked{% endif %}>
+                            {{ item.description }} 
+                            {% if item.course %}
+                            <small class="badge bg-info">{{ item.course.name }}</small>
+                            {% endif %}
+                            <small class="text-muted">(Due: {{ item.target_date }})</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <p class="text-muted">No items in this plan yet.</p>
+                {% endif %}
+                
+                <button class="btn btn-sm btn-primary mt-3">Edit Plan</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="alert alert-info mt-4">You have no learning plans yet. <a href="{% url 'learning:create_learning_plan' %}">Create your first plan</a>.</div>
+{% endif %}
+{% endblock %}

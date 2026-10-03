@@ -1,0 +1,332 @@
+{% extends "ui/base.html" %}
+{% block title %}AI JD Creator — HCMS{% endblock %}
+{% block active_jd %}active{% endblock %}
+
+{% block content %}
+<style>
+.jd-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.jd-top-left { display:flex; align-items:center; gap:10px; }
+.jd-back { display:flex; align-items:center; gap:4px; font-size:12px; color:#888; cursor:pointer; }
+.jd-back .material-symbols-outlined { font-size:16px; }
+.jd-title { font-size:18px; font-weight:700; color:#111; }
+.jd-subtitle { font-size:11px; color:#999; }
+
+.jd-body { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+
+/* Left panel */
+.jd-form-panel { background:#fff; border:1px solid #EFEFEF; border-radius:10px; overflow:hidden; }
+.jd-section-head { display:flex; align-items:center; gap:8px; padding:14px 16px; border-bottom:1px solid #F3F3F3; }
+.jd-section-num { width:22px; height:22px; background:#1F5F2F; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.jd-section-title { font-size:12px; font-weight:600; color:#222; }
+.jd-form-body { padding:16px; }
+.jd-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.jd-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px; }
+.jd-group { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.jd-label { font-size:11px; font-weight:500; color:#555; }
+.jd-input { height:32px; border:1px solid #E0E0E0; border-radius:6px; padding:0 10px; font-size:12px; font-family:inherit; color:#333; outline:none; background:#fff; width:100%; }
+.jd-input:focus { border-color:#A8D4B4; }
+.jd-select { height:32px; border:1px solid #E0E0E0; border-radius:6px; padding:0 8px; font-size:12px; font-family:inherit; color:#444; background:#fff; outline:none; width:100%; cursor:pointer; }
+.jd-tag-row { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; border:1px solid #E0E0E0; border-radius:6px; min-height:36px; }
+.jd-tag { display:flex; align-items:center; gap:4px; height:22px; padding:0 8px; background:#E8F0EA; border-radius:4px; font-size:11px; font-weight:500; color:#1F5F2F; }
+.jd-tag .material-symbols-outlined { font-size:12px; cursor:pointer; }
+.jd-add-tag { font-size:11px; color:#ABABAB; align-self:center; }
+.jd-note { font-size:11px; color:#888; background:#F9FCF9; border:1px solid #C8E0CE; border-radius:6px; padding:8px 12px; margin-top:4px; display:flex; align-items:flex-start; gap:6px; }
+.jd-note .material-symbols-outlined { font-size:14px; color:#278E53; flex-shrink:0; margin-top:1px; }
+.jd-form-footer { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #F3F3F3; justify-content:flex-end; }
+
+/* Right AI panel */
+.jd-ai-panel { background:#fff; border:1px solid #EFEFEF; border-radius:10px; overflow:hidden; }
+.jd-ai-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #F3F3F3; }
+.jd-ai-title { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#222; }
+.jd-ai-title .material-symbols-outlined { font-size:16px; color:#278E53; }
+.jd-ai-actions { display:flex; align-items:center; gap:6px; }
+.jd-ai-btn { width:28px; height:28px; border:1px solid #E0E0E0; border-radius:6px; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.jd-ai-btn .material-symbols-outlined { font-size:15px; color:#555; }
+.jd-ai-btn:hover { background:#F5F5F5; }
+.jd-ai-regen { height:28px; padding:0 10px; border:1px solid #C8E0CE; border-radius:6px; background:#fff; font-size:11px; font-weight:500; color:#278E53; cursor:pointer; display:flex; align-items:center; gap:4px; }
+.jd-ai-regen .material-symbols-outlined { font-size:13px; }
+.jd-ai-regen:hover { background:#F0F8F3; }
+.jd-ai-body { padding:16px; }
+.jd-ai-job-title { font-size:14px; font-weight:700; color:#111; margin-bottom:14px; }
+.jd-ai-section-h { font-size:11px; font-weight:700; color:#1F5F2F; margin:12px 0 6px; }
+.jd-ai-p { font-size:11px; color:#555; line-height:1.6; }
+.jd-ai-li { font-size:11px; color:#555; line-height:1.7; padding-left:14px; }
+.jd-ai-li li { list-style:disc; margin-bottom:2px; }
+.jd-ai-footer { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #F3F3F3; }
+.jd-use-btn { flex:1; height:34px; background:#1F5F2F; border:none; border-radius:7px; color:#fff; font-size:12px; font-weight:600; cursor:pointer; }
+.jd-use-btn:hover { background:#194f27; }
+.jd-helpful { font-size:11px; color:#AAA; display:flex; align-items:center; gap:6px; }
+.jd-helpful .material-symbols-outlined { font-size:16px; cursor:pointer; }
+.jd-helpful .material-symbols-outlined:hover { color:#278E53; }
+</style>
+
+<!-- Top bar -->
+<div class="jd-top">
+  <div class="jd-top-left">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <a id="jd-back-link" href="/ui/job-requisition/" class="jd-back"><span class="material-symbols-outlined">arrow_back</span> Back to Job Requisitions</a>
+      </div>
+      <div class="jd-title">AI Job Description Creator</div>
+      <div class="jd-subtitle">Enter role requirements and let AI generate a professional job description</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button type="button" id="jd-reset" class="ui-btn-outlined"><span class="material-symbols-outlined" style="font-size:15px">refresh</span> Reset</button>
+    <button type="button" id="jd-generate-top" class="ui-btn-primary" style="background:#1F5F2F;height:36px;padding:0 16px;border-radius:8px;gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span> Generate with AI
+    </button>
+  </div>
+</div>
+
+<div class="jd-body">
+
+  <!-- LEFT: Role Information form -->
+  <div class="jd-form-panel">
+    <div class="jd-section-head">
+      <div class="jd-section-num">1</div>
+      <div class="jd-section-title">Role Information</div>
+      <span style="font-size:10px;color:#AAA;margin-left:4px">Fill in the form below to generate your job description</span>
+    </div>
+    <div class="jd-form-body">
+      <div class="jd-row">
+        <div class="jd-group">
+          <label class="jd-label">Job Title *</label>
+          <input class="jd-input jd-f" name="title" type="text" value="Senior Frontend Developer">
+        </div>
+        <div class="jd-group">
+          <label class="jd-label">Department *</label>
+          <select class="jd-select jd-f" name="department"><option>Engineering</option><option>Information Technology</option><option>Human Resources</option><option>Finance</option><option>Operations</option><option>Legal</option><option>Projects</option></select>
+        </div>
+      </div>
+      <div class="jd-row">
+        <div class="jd-group">
+          <label class="jd-label">Experience (Years) *</label>
+          <select class="jd-select jd-f" name="experience"><option>0 – 1 Years</option><option>1 – 3 Years</option><option selected>3 – 5 Years</option><option>5 – 7 Years</option><option>7 – 10 Years</option><option>10+ Years</option></select>
+        </div>
+        <div class="jd-group">
+          <label class="jd-label">Employment Type *</label>
+          <select class="jd-select jd-f" name="employment_type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select>
+        </div>
+      </div>
+      <div class="jd-row">
+        <div class="jd-group">
+          <label class="jd-label">Education Level *</label>
+          <select class="jd-select jd-f" name="education"><option>High School</option><option>Diploma</option><option selected>Bachelor's Degree</option><option>Master's Degree</option><option>PhD</option></select>
+        </div>
+        <div class="jd-group">
+          <label class="jd-label">Field of Study</label>
+          <select class="jd-select jd-f" name="field"><option>Computer Science / IT</option><option>Engineering</option><option>Business</option><option>Finance</option><option>Law</option><option>Other</option></select>
+        </div>
+      </div>
+      <div class="jd-row">
+        <div class="jd-group">
+          <label class="jd-label">Location *</label>
+          <input class="jd-input jd-f" name="location" type="text" value="Muscat, Oman">
+        </div>
+        <div class="jd-group">
+          <label class="jd-label">Work Mode</label>
+          <select class="jd-select jd-f" name="work_mode"><option>On-site</option><option selected>Hybrid</option><option>Remote</option></select>
+        </div>
+      </div>
+      <div class="jd-row">
+        <div class="jd-group" style="grid-column:1/-1">
+          <label class="jd-label">Languages Required</label>
+          <div class="jd-tag-row">
+            <span class="jd-tag">English <span class="material-symbols-outlined">close</span></span>
+            <span class="jd-tag">Arabic (Preferred) <span class="material-symbols-outlined">close</span></span>
+            <span class="jd-add-tag">+ add language</span>
+          </div>
+        </div>
+      </div>
+      <div class="jd-group">
+        <label class="jd-label">Nationality Preference</label>
+        <select class="jd-select jd-f" name="nationality"><option>Any</option><option>Omani Only</option><option>GCC Nationals</option></select>
+      </div>
+      <div class="jd-group">
+        <label class="jd-label">Key Skills</label>
+        <div class="jd-tag-row">
+          <span class="jd-tag">React.js <span class="material-symbols-outlined">close</span></span>
+          <span class="jd-tag">TypeScript <span class="material-symbols-outlined">close</span></span>
+          <span class="jd-tag">Next.js <span class="material-symbols-outlined">close</span></span>
+          <span class="jd-tag">Tailwind CSS <span class="material-symbols-outlined">close</span></span>
+          <span class="jd-tag">REST APIs <span class="material-symbols-outlined">close</span></span>
+        </div>
+      </div>
+      <div class="jd-group">
+        <label class="jd-label">Other Requirements (Optional)</label>
+        <input class="jd-input jd-f" name="other" type="text" placeholder="e.g., Certifications, Soft Skills, Tools, etc.">
+      </div>
+      <div class="jd-note">
+        <span class="material-symbols-outlined">info</span>
+        <span>AI will use this information to generate a comprehensive job description including responsibilities, requirements and qualifications.</span>
+      </div>
+    </div>
+    <div class="jd-form-footer">
+      <a id="jd-cancel-link" href="/ui/job-requisition/" class="ui-btn-outlined">Cancel</a>
+      <button type="button" id="jd-generate-bottom" class="ui-btn-primary" style="background:#1F5F2F;height:34px;padding:0 16px;border-radius:7px;font-size:12px;gap:6px;">
+        <span class="material-symbols-outlined" style="font-size:15px">auto_awesome</span> Generate with AI
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: AI Generated JD preview -->
+  <div class="jd-ai-panel">
+    <div class="jd-ai-head">
+      <div class="jd-ai-title">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        AI Generated Job Description
+      </div>
+      <div class="jd-ai-actions">
+        <button type="button" id="jd-regenerate" class="jd-ai-regen"><span class="material-symbols-outlined">refresh</span> Regenerate</button>
+        <button type="button" id="jd-copy" class="jd-ai-btn" title="Copy"><span class="material-symbols-outlined">content_copy</span></button>
+        <button type="button" id="jd-download" class="jd-ai-btn" title="Download"><span class="material-symbols-outlined">download</span></button>
+      </div>
+    </div>
+    <div class="jd-ai-body" id="jd-ai-body">
+      <div style="font-size:10px;font-weight:600;color:#ABABAB;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Job Title</div>
+      <div class="jd-ai-job-title" id="jd-out-title">Click "Generate with AI" to draft a JD</div>
+
+      <div class="jd-ai-section-h">Role Summary</div>
+      <p class="jd-ai-p" id="jd-out-summary">Fill in the role information on the left, then press <strong>Generate with AI</strong>. The generated JD will appear here.</p>
+
+      <div class="jd-ai-section-h">Key Responsibilities</div>
+      <ul class="jd-ai-li" id="jd-out-responsibilities"><li style="color:#AAA;list-style:none">(awaiting AI output)</li></ul>
+
+      <div class="jd-ai-section-h">Requirements</div>
+      <ul class="jd-ai-li" id="jd-out-requirements"><li style="color:#AAA;list-style:none">(awaiting AI output)</li></ul>
+
+      <div class="jd-ai-section-h">Preferred Qualifications</div>
+      <ul class="jd-ai-li" id="jd-out-qualifications"><li style="color:#AAA;list-style:none">(awaiting AI output)</li></ul>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #F3F3F3;font-size:11px;color:#888;">
+      Was this helpful?
+      <button type="button" onclick="this.style.color='#1F5F2F'" title="Yes" style="border:1px solid #E0E0E0;border-radius:6px;background:#fff;padding:4px 8px;cursor:pointer;font-size:13px;">👍</button>
+      <button type="button" onclick="this.style.color='#C62828'" title="No" style="border:1px solid #E0E0E0;border-radius:6px;background:#fff;padding:4px 8px;cursor:pointer;font-size:13px;">👎</button>
+    </div>
+    <div class="jd-ai-footer">
+      <div class="jd-helpful" id="jd-status" style="font-size:11px;color:#AAA"></div>
+      <form id="jd-save-form" method="post" action="" style="margin-left:auto;">{% csrf_token %}
+        <input type="hidden" name="title" id="jd-save-title">
+        <input type="hidden" name="description" id="jd-save-desc">
+        <button type="submit" class="jd-use-btn">Use This Description</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // Pre-fill from URL params passed by the manpower request form
+  var urlParams = new URLSearchParams(window.location.search);
+  var prefillTitle = urlParams.get('title');
+  var prefillDept = urlParams.get('department');
+  var prefillPosition = urlParams.get('job_position');
+  var fromManpower = urlParams.get('back') === '1';
+
+  if (fromManpower) {
+    var backLink = '/ui/manpower-request/';
+    document.getElementById('jd-back-link').href = backLink;
+    document.getElementById('jd-back-link').childNodes[1].textContent = ' Back to Manpower Request';
+    document.getElementById('jd-cancel-link').href = backLink;
+  }
+
+  if (prefillTitle || prefillPosition) {
+    var titleInput = document.querySelector('.jd-f[name="title"]');
+    if (titleInput) titleInput.value = prefillTitle || prefillPosition;
+  }
+  if (prefillDept) {
+    var deptSelect = document.querySelector('.jd-f[name="department"]');
+    if (deptSelect) {
+      var matched = false;
+      var needle = prefillDept.toLowerCase();
+      Array.from(deptSelect.options).forEach(function(opt){
+        if (!matched && (opt.text.toLowerCase().includes(needle) || needle.includes(opt.text.toLowerCase()))) {
+          opt.selected = true;
+          matched = true;
+        }
+      });
+    }
+  }
+
+  function getCookie(name){
+    const m = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[2]) : '';
+  }
+  function collectInputs(){
+    const data = {};
+    document.querySelectorAll('.jd-f').forEach(el => { data[el.name] = el.value; });
+    return data;
+  }
+  function setBullets(ulId, items){
+    const ul = document.getElementById(ulId);
+    ul.innerHTML = '';
+    (items || []).forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = String(t).replace(/^[-*•\s]+/, '');
+      ul.appendChild(li);
+    });
+    if (!items || !items.length) {
+      ul.innerHTML = '<li style="color:#AAA;list-style:none">(no items)</li>';
+    }
+  }
+  function buildDescriptionPlain(jd){
+    let s = (jd.job_title || '') + "\n\n";
+    s += "Role Summary\n" + (jd.role_summary || '') + "\n\n";
+    s += "Key Responsibilities\n" + (jd.responsibilities || []).map(x => "- " + x).join("\n") + "\n\n";
+    s += "Requirements\n" + (jd.requirements || []).map(x => "- " + x).join("\n") + "\n\n";
+    s += "Preferred Qualifications\n" + (jd.preferred_qualifications || []).map(x => "- " + x).join("\n");
+    return s;
+  }
+  let lastJD = null;
+  async function generate(){
+    const status = document.getElementById('jd-status');
+    status.textContent = 'Generating with AI…';
+    status.style.color = '#888';
+    try {
+      const r = await fetch('/ui/jd-generate/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')},
+        body: JSON.stringify(collectInputs()),
+      });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'Generation failed');
+      const jd = j.jd || {};
+      lastJD = jd;
+      document.getElementById('jd-out-title').textContent = jd.job_title || collectInputs().title || '';
+      document.getElementById('jd-out-summary').textContent = jd.role_summary || '';
+      setBullets('jd-out-responsibilities', jd.responsibilities);
+      setBullets('jd-out-requirements', jd.requirements);
+      setBullets('jd-out-qualifications', jd.preferred_qualifications);
+      document.getElementById('jd-save-title').value = jd.job_title || collectInputs().title || '';
+      document.getElementById('jd-save-desc').value = buildDescriptionPlain(jd);
+      status.textContent = 'Generated. Edit inputs and regenerate, or click "Use This Description" to save.';
+      status.style.color = '#278E53';
+    } catch (e) {
+      status.textContent = 'Error: ' + e.message;
+      status.style.color = '#C04730';
+    }
+  }
+  document.getElementById('jd-generate-top').addEventListener('click', generate);
+  document.getElementById('jd-generate-bottom').addEventListener('click', generate);
+  document.getElementById('jd-regenerate').addEventListener('click', generate);
+  document.getElementById('jd-reset').addEventListener('click', () => { window.location.reload(); });
+  document.getElementById('jd-copy').addEventListener('click', () => {
+    if (!lastJD) return;
+    navigator.clipboard.writeText(buildDescriptionPlain(lastJD));
+    document.getElementById('jd-status').textContent = 'Copied to clipboard.';
+    document.getElementById('jd-status').style.color = '#278E53';
+  });
+  document.getElementById('jd-download').addEventListener('click', () => {
+    if (!lastJD) return;
+    const text = buildDescriptionPlain(lastJD);
+    const blob = new Blob([text], {type: 'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'job_description.txt';
+    a.click();
+  });
+})();
+</script>
+{% endblock %}

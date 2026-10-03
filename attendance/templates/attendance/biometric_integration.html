@@ -1,0 +1,180 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .bio-container {
+    padding: 2rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    color: hsl(0, 0%, 26%);
+  }
+  .bio-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: hsl(0, 0%, 26%);
+    margin-bottom: 2rem;
+  }
+  .devices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .device-card {
+    background: hsl(0, 0%, 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid hsl(213, 22%, 93%);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .device-card:hover { border-color: hsl(216, 18%, 64%); transform: translateY(-3px); }
+  .device-status {
+    position: absolute;
+    top: 1.2rem; right: 1.2rem;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .status-online { background: #22c55e; color: #22c55e; }
+  .status-offline { background: #ef4444; color: #ef4444; }
+  .status-warning { background: #f59e0b; color: #f59e0b; }
+  .device-icon { font-size: 2rem; margin-bottom: 0.7rem; }
+  .device-name { font-size: 1.1rem; font-weight: 700; color: hsl(0, 0%, 26%); }
+  .device-location { color: hsl(0, 0%, 45%); font-size: 0.85rem; margin: 0.3rem 0; }
+  .device-meta { display: flex; gap: 1rem; margin-top: 1rem; }
+  .meta-item { font-size: 0.8rem; }
+  .meta-label { color: #64748b; }
+  .meta-value { color: hsl(216, 18%, 64%); font-weight: 600; }
+  .device-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .dbtn {
+    flex: 1; padding: 0.4rem; border-radius: 6px; border: none;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  }
+  .dbtn-sync { background: hsl(213, 22%, 93%); color: hsl(216, 18%, 64%); }
+  .dbtn-config { background: hsl(0, 0%, 97.5%); color: hsl(0, 0%, 45%); }
+
+  .logs-panel {
+    background: hsl(0, 0%, 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid hsl(213, 22%, 93%);
+  }
+  .log-entry {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid hsl(213, 22%, 93%);
+    font-size: 0.85rem;
+  }
+  .log-time { color: #64748b; min-width: 140px; }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .log-msg { color: hsl(0, 0%, 45%); }
+  .log-device { color: hsl(216, 18%, 64%); font-weight: 600; margin-left: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bio-container">
+  <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:2rem;">
+    <h1 class="bio-title" style="margin:0;">{% trans "Biometric Integration" %}</h1>
+    <button style="background: hsl(216, 18%, 64%); color:white; border:none; padding:0.7rem 1.5rem; border-radius:8px; font-weight:600; cursor:pointer;">
+      + {% trans "Add Device" %}
+    </button>
+  </div>
+
+  <div class="devices-grid">
+    <div class="device-card">
+      <div class="device-status status-online"></div>
+      <div class="device-icon">🖐️</div>
+      <div class="device-name">ZKTeco Bio-12 (Main Gate)</div>
+      <div class="device-location">Ground Floor, Main Entrance</div>
+      <div class="device-meta">
+        <div class="meta-item"><div class="meta-label">Last Sync</div><div class="meta-value">2 min ago</div></div>
+        <div class="meta-item"><div class="meta-label">Records Today</div><div class="meta-value">342</div></div>
+        <div class="meta-item"><div class="meta-label">IP</div><div class="meta-value">192.168.1.21</div></div>
+      </div>
+      <div class="device-actions">
+        <button class="dbtn dbtn-sync">Sync Now</button>
+        <button class="dbtn dbtn-config">Configure</button>
+      </div>
+    </div>
+    <div class="device-card">
+      <div class="device-status status-online"></div>
+      <div class="device-icon">👁️</div>
+      <div class="device-name">FaceID-Pro (Floor 2)</div>
+      <div class="device-location">2nd Floor, East Wing</div>
+      <div class="device-meta">
+        <div class="meta-item"><div class="meta-label">Last Sync</div><div class="meta-value">5 min ago</div></div>
+        <div class="meta-item"><div class="meta-label">Records Today</div><div class="meta-value">218</div></div>
+        <div class="meta-item"><div class="meta-label">IP</div><div class="meta-value">192.168.1.45</div></div>
+      </div>
+      <div class="device-actions">
+        <button class="dbtn dbtn-sync">Sync Now</button>
+        <button class="dbtn dbtn-config">Configure</button>
+      </div>
+    </div>
+    <div class="device-card">
+      <div class="device-status status-warning"></div>
+      <div class="device-icon">🔍</div>
+      <div class="device-name">FingerPrint-X (Server Room)</div>
+      <div class="device-location">Basement, Server Room</div>
+      <div class="device-meta">
+        <div class="meta-item"><div class="meta-label">Last Sync</div><div class="meta-value">2 hrs ago</div></div>
+        <div class="meta-item"><div class="meta-label">Records Today</div><div class="meta-value">24</div></div>
+        <div class="meta-item"><div class="meta-label">IP</div><div class="meta-value">192.168.1.78</div></div>
+      </div>
+      <div class="device-actions">
+        <button class="dbtn dbtn-sync">Reconnect</button>
+        <button class="dbtn dbtn-config">Configure</button>
+      </div>
+    </div>
+    <div class="device-card">
+      <div class="device-status status-offline"></div>
+      <div class="device-icon">🚪</div>
+      <div class="device-name">ZKTeco Bio-8 (Warehouse)</div>
+      <div class="device-location">Warehouse Block C</div>
+      <div class="device-meta">
+        <div class="meta-item"><div class="meta-label">Last Sync</div><div class="meta-value">3 days ago</div></div>
+        <div class="meta-item"><div class="meta-label">Records Today</div><div class="meta-value">0</div></div>
+        <div class="meta-item"><div class="meta-label">IP</div><div class="meta-value">192.168.2.12</div></div>
+      </div>
+      <div class="device-actions">
+        <button class="dbtn dbtn-sync" style="color:#ef4444; background:rgba(239,68,68,0.1);">Offline</button>
+        <button class="dbtn dbtn-config">Configure</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="logs-panel">
+    <h3 style="color:white; margin: 0 0 1rem 0;">Recent Sync Logs</h3>
+    <div class="log-entry">
+      <span class="log-time">2026-03-21 21:58:22</span>
+      <div class="log-dot" style="background:#22c55e;"></div>
+      <span class="log-msg">Sync completed — 342 records downloaded</span>
+      <span class="log-device">ZKTeco Bio-12</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-time">2026-03-21 21:55:10</span>
+      <div class="log-dot" style="background:#22c55e;"></div>
+      <span class="log-msg">Sync completed — 218 records downloaded</span>
+      <span class="log-device">FaceID-Pro</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-time">2026-03-21 19:42:08</span>
+      <div class="log-dot" style="background:#f59e0b;"></div>
+      <span class="log-msg">Sync warning — Connection timeout (retrying...)</span>
+      <span class="log-device">FingerPrint-X</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-time">2026-03-18 09:12:00</span>
+      <div class="log-dot" style="background:#ef4444;"></div>
+      <span class="log-msg">Sync failed — Device unreachable</span>
+      <span class="log-device">ZKTeco Bio-8</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

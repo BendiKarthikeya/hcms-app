@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Approve PIP - {{ pip.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'pms/css/pip-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pip-form-container">
+    <div class="pip-form-header">
+        <h1>Approve Performance Improvement Plan</h1>
+        <p>Review and approve the PIP for {{ pip.employee.get_name }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>{{ pip.employee.get_name }}</h3>
+                <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">
+                    {{ pip.employee.designation }}
+                </p>
+            </div>
+            <span class="status-badge draft">{{ pip.status|upper }}</span>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                        Evaluation Period
+                    </strong>
+                    <p style="margin: 0; font-size: 14px;">
+                        {{ pip.start_date|date:"M d, Y" }} - {{ pip.end_date|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div>
+                    <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                        Duration
+                    </strong>
+                    <p style="margin: 0; font-size: 14px;">{{ pip.duration_days }} days</p>
+                </div>
+            </div>
+
+            {% if pip.title %}
+            <div style="margin-bottom: 20px;">
+                <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                    Title
+                </strong>
+                <p style="margin: 0; font-size: 14px;">{{ pip.title }}</p>
+            </div>
+            {% endif %}
+
+            {% if pip.objectives %}
+            <div style="margin-bottom: 20px;">
+                <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                    Objectives
+                </strong>
+                <p style="margin: 0; font-size: 14px;">{{ pip.objectives }}</p>
+            </div>
+            {% endif %}
+
+            {% if pip.expected_outcomes %}
+            <div style="margin-bottom: 20px;">
+                <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                    Expected Outcomes
+                </strong>
+                <p style="margin: 0; font-size: 14px;">{{ pip.expected_outcomes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if pip.milestones.all %}
+    <div class="milestone-progress">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">Milestones</h3>
+        {% for milestone in pip.milestones.all %}
+        <div class="milestone-item pending">
+            <div class="milestone-indicator pending">{{ forloop.counter }}</div>
+            <div class="milestone-content" style="flex: 1;">
+                <h4>{{ milestone.title }}</h4>
+                <p>Target Date: {{ milestone.target_date|date:"M d, Y" }}</p>
+                {% if milestone.description %}<p>{{ milestone.description }}</p>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" style="margin-top: 30px;">
+        {% csrf_token %}
+        
+        <div class="alert alert-info">
+            <strong>Note:</strong> Approving this PIP will activate it immediately. The employee will be notified and the evaluation period will begin.
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+                <span>Approve & Activate PIP</span>
+            </button>
+            <a href="{% url 'pip-detail' pip.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

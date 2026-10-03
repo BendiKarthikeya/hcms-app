@@ -1,0 +1,185 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .probation-container {
+    padding: 2.5rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+  }
+  .probation-header {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    color: hsl(0, 0%, 26%);
+  }
+  
+  .probation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  .probation-card {
+    background: white;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .probation-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+  
+  .probation-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 6px;
+    background: #cbd5e1;
+  }
+  .probation-card.urgent::before { background: #ef4444; }
+  .probation-card.warning::before { background: hsl(37, 90%, 47%); }
+  .probation-card.good::before { background: hsl(148, 70%, 40%); }
+  
+  .emp-name { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 0 0 0.25rem 0; }
+  .emp-role { font-size: 0.95rem; font-weight: 500; color: #64748b; margin-bottom: 1.5rem; }
+  
+  .progress-container { margin-bottom: 2rem; }
+  .progress-bar {
+    width: 100%; height: 10px;
+    background: #f1f5f9;
+    border-radius: 20px;
+    margin-top: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 20px;
+  }
+  .progress-fill.danger { background: linear-gradient(90deg, #ef4444, #fb7185); }
+  .progress-fill.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  
+  .action-block { display: flex; gap: 1rem; margin-top: auto; padding-top: 1.5rem; border-top: 1px solid #f8fafc; }
+  
+  .btn-action {
+    flex: 1; padding: 0.75rem; border-radius: 12px; border: none;
+    font-weight: 800; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+  }
+  .btn-primary { background: hsl(216, 18%, 64%); color: white; box-shadow: 0 4px 15px rgba(131, 143, 163, 0.3); }
+  .btn-primary:hover { transform: scale(1.05); }
+  .btn-outline { background: #f1f5f9; color: #475569; }
+  
+  .timeline-dots {
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="probation-container">
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2.5rem;">
+    <div>
+      <h1 class="probation-header" style="margin:0;">{% trans "Probation Intelligence" %}</h1>
+      <p style="color:#64748b; font-size:1.15rem; margin-top:0.5rem;">Managing the 30-60-90 day lifecycle of your human capital.</p>
+    </div>
+    <div style="background:white; padding:1rem 2rem; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:1px solid #f1f5f9; text-align:center;">
+       <div style="font-size:2rem; font-weight:900; color:#8b5cf6;">92%</div>
+       <div style="font-size:0.75rem; font-weight:800; color:#94a3b8; text-transform:uppercase;">Retention Rate</div>
+    </div>
+  </div>
+  
+  <div class="probation-grid">
+    <!-- Urgent Card -->
+    <div class="probation-card urgent">
+      <h3 class="emp-name">David Lee</h3>
+      <div class="emp-role">Frontend React Developer · Tech Dept.</div>
+      
+      <div class="progress-container">
+        <div class="timeline-dots">
+          <span>Hired</span> <span style="color:#ef4444;">Review Overdue</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill danger" style="width: 100%;"></div>
+        </div>
+        <div style="text-align:right; font-size:0.8rem; font-weight:800; color:#ef4444; margin-top:0.5rem;">DAY 95 / 90</div>
+      </div>
+      
+      <div class="action-block">
+        <button class="btn-action btn-primary">Final Review</button>
+        <button class="btn-action btn-outline" style="color:#ef4444;">Exit Plan</button>
+      </div>
+    </div>
+    
+    <!-- Warning Card -->
+    <div class="probation-card warning">
+      <h3 class="emp-name">Samantha Reed</h3>
+      <div class="emp-role">Product Marketing Mgr · Growth Dept.</div>
+      
+      <div class="progress-container">
+        <div class="timeline-dots">
+          <span>Hired</span> <span style="color:#f59e0b;">60-Day Review</span> <span>Confirmation</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill warn" style="width: 66%;"></div>
+        </div>
+        <div style="text-align:right; font-size:0.8rem; font-weight:800; color:#f59e0b; margin-top:0.5rem;">DAY 59 / 90</div>
+      </div>
+      
+      <div class="action-block">
+        <button class="btn-action btn-primary" style="background:#f59e0b; box-shadow:0 4px 15px rgba(245,158,11,0.3);">Goal Check</button>
+        <button class="btn-action btn-outline">Performance Log</button>
+      </div>
+    </div>
+    
+    <!-- Good Card -->
+    <div class="probation-card good">
+      <h3 class="emp-name">Raj Patel</h3>
+      <div class="emp-role">Cloud Infrastructure Eng · IT Ops</div>
+      
+      <div class="progress-container">
+        <div class="timeline-dots">
+          <span style="color:#10b981;">On Track</span> <span>Day 90</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 25%; background:#10b981;"></div>
+        </div>
+        <div style="text-align:right; font-size:0.8rem; font-weight:800; color:#64748b; margin-top:0.5rem;">DAY 22 / 90</div>
+      </div>
+      
+      <div class="action-block">
+        <button class="btn-action btn-primary" style="background:#10b981; box-shadow:0 4px 15px rgba(16,185,129,0.3);">30-Day Check</button>
+        <button class="btn-action btn-outline">View Goals</button>
+      </div>
+    </div>
+
+    <!-- Potential New Card -->
+    <div class="probation-card good">
+      <h3 class="emp-name">Emily Chen</h3>
+      <div class="emp-role">UX Researcher · Product Dept.</div>
+      
+      <div class="progress-container">
+        <div class="timeline-dots">
+          <span style="color:#10b981;">Excelling</span> <span>Day 90</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 45%; background:#10b981;"></div>
+        </div>
+        <div style="text-align:right; font-size:0.8rem; font-weight:800; color:#64748b; margin-top:0.5rem;">DAY 41 / 90</div>
+      </div>
+      
+      <div class="action-block">
+        <button class="btn-action btn-primary" style="background:#10b981; box-shadow:0 4px 15px rgba(16,185,129,0.3);">Mid-Point Check</button>
+        <button class="btn-action btn-outline">Peer Feedback</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

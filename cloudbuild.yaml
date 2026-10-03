@@ -1,0 +1,75 @@
+substitutions:
+  # These match the variables already in your Cloud Build trigger — do not rename them.
+  _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
+  _AR_PROJECT_ID: fits-387518
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _DEPLOY_REGION: asia-southeast1
+  _PLATFORM: managed
+  _SERVICE_NAME: fits-hcms
+  # Add these two in the trigger UI (+ Add variable):
+  _ALLOWED_HOSTS: "hcmspro.net,www.hcmspro.net"
+  _CSRF_ORIGINS: "https://hcmspro.net,https://www.hcmspro.net"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  # Ensure Artifact Registry repository exists (safe to re-run)
+  - name: gcr.io/cloud-builders/gcloud
+    id: ensure-repo
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        gcloud artifacts repositories describe "${_AR_REPOSITORY}" \
+          --location "${_DEPLOY_REGION}" \
+        || gcloud artifacts repositories create "${_AR_REPOSITORY}" \
+             --repository-format=docker \
+             --location "${_DEPLOY_REGION}"
+
+  # Build container image
+  - name: gcr.io/cloud-builders/docker
+    id: build
+    args:
+      - build
+      - -t
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA
+      - .
+
+  # Push image to Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    id: push
+    args:
+      - push
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA
+
+  # Deploy to Cloud Run
+  # Pre-requisites:
+  #   1. Secret Manager secrets named DATABASE_URL and SECRET_KEY must exist in fits-387518.
+  #   2. fits-hcms@fits-387518.iam.gserviceaccount.com must have roles/secretmanager.secretAccessor.
+  #   3. Cloud Build SA (49379110069@cloudbuild.gserviceaccount.com) must have roles/iam.serviceAccountUser
+  #      on fits-hcms@fits-387518.iam.gserviceaccount.com.
+  - name: gcr.io/cloud-builders/gcloud
+    id: deploy
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA
+      - --region
+      - ${_DEPLOY_REGION}
+      - --platform
+      - ${_PLATFORM}
+      - --service-account
+      - fits-hcms@fits-387518.iam.gserviceaccount.com
+      - --allow-unauthenticated
+      # Expose DATABASE_URL and SECRET_KEY from Secret Manager as environment variables
+      - --update-secrets
+      - "DATABASE_URL=DATABASE_URL:latest,SECRET_KEY=SECRET_KEY:latest"
+      # Non-sensitive overrides — tweak freely in the trigger UI
+      - --set-env-vars
+      - "DJANGO_SETTINGS_MODULE=fits.settings_production,DEBUG=False,ALLOWED_HOSTS=${_ALLOWED_HOSTS},CSRF_TRUSTED_ORIGINS=${_CSRF_ORIGINS}"
+
+images:
+  - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA

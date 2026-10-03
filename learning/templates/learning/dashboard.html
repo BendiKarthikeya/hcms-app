@@ -1,0 +1,51 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>Learning & Development Dashboard</h1>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Available Courses</h5>
+                <p class="card-text display-4">{{ courses_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Enrollments</h5>
+                <p class="card-text display-4">{{ enrollments_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Skills</h5>
+                <p class="card-text display-4">{{ skills_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Certifications</h5>
+                <p class="card-text display-4">{{ certifications_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Quick Actions</h3>
+        <a href="{% url 'learning:course_list' %}" class="btn btn-primary">Browse Courses</a>
+        <a href="{% url 'learning:my_enrollments' %}" class="btn btn-info">My Enrollments</a>
+        <a href="{% url 'learning:my_skills' %}" class="btn btn-success">My Skills</a>
+        <a href="{% url 'learning:my_certifications' %}" class="btn btn-warning">My Certificates</a>
+        <a href="{% url 'learning:my_learning_plans' %}" class="btn btn-secondary">Learning Plans</a>
+    </div>
+</div>
+{% endblock %}

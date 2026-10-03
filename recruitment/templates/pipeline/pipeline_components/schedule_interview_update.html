@@ -1,0 +1,297 @@
+{% load i18n %}
+<!-- Header -->
+<div style="padding:14px 4px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f3f4f6;margin-bottom:16px;">
+    <div style="width:32px;height:32px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">
+        <ion-icon name="create-outline" style="font-size:18px;color:#16a34a;"></ion-icon>
+    </div>
+    <span style="font-size:16px;font-weight:700;color:#1f2937;">{% trans "Scheduled Interview" %}</span>
+</div>
+
+<div id="edit-interview-modal" style="padding:0;">
+
+  <style>
+    /* Toggle switch */
+    .ei-toggle-switch { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; }
+    .ei-toggle-switch input { opacity:0; width:0; height:0; }
+    .ei-toggle-slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#d1d5db; border-radius:21px; transition:.25s; }
+    .ei-toggle-slider:before { position:absolute; content:""; height:15px; width:15px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.25s; }
+    .ei-toggle-switch input:checked + .ei-toggle-slider { background:#16a34a; }
+    .ei-toggle-switch input:checked + .ei-toggle-slider:before { transform:translateX(17px); }
+    .ei-round-row.done    { background:#f0fdf4; }
+    .ei-round-row.pending { background:#fff; }
+  </style>
+
+  <form
+      hx-post='{% url "edit-interview" interview_id %}?view={{view}}'
+      hx-target="#createTarget"
+      hx-encoding="multipart/form-data"
+      id="skillform"
+  >
+    <!-- 1. Candidate (read-only) -->
+    <div style="margin-bottom:14px;">
+      <label style="font-weight:700;font-size:14px;display:block;margin-bottom:6px;">
+        {% trans "Candidate" %} <span style="color:#dc2626;">*</span>
+      </label>
+      <div style="padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;font-size:14px;color:#111827;">
+        {{ form.instance.candidate_id.name }}
+      </div>
+      <input type="hidden" name="candidate_id" value="{{ form.instance.candidate_id.id }}">
+    </div>
+
+    <!-- 2. Interview Rounds table (replaces Interviewer / Date / Time fields) -->
+    {% if rounds %}
+    <div style="margin-bottom:14px;">
+      <label style="font-weight:700;font-size:14px;display:block;margin-bottom:8px;">
+        {% trans "Interview Rounds" %}
+      </label>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+              <th style="padding:7px 6px;text-align:center;font-weight:600;color:#374151;width:32px;">#</th>
+              <th style="padding:7px 8px;text-align:left;font-weight:600;color:#374151;min-width:90px;">{% trans "Round Name" %}</th>
+              <th style="padding:7px 8px;text-align:left;font-weight:600;color:#374151;min-width:120px;">{% trans "Interviewer" %}</th>
+              <th style="padding:7px 8px;text-align:left;font-weight:600;color:#374151;white-space:nowrap;">{% trans "Date" %}</th>
+              <th style="padding:7px 8px;text-align:left;font-weight:600;color:#374151;">{% trans "Time" %}</th>
+              <th style="padding:7px 8px;text-align:center;font-weight:600;color:#374151;white-space:nowrap;">{% trans "Completed" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for round in rounds %}
+            <tr class="ei-round-row {% if round.completed %}done{% else %}pending{% endif %}"
+                id="ei-row-{{ round.id }}"
+                style="border-bottom:1px solid #f3f4f6;">
+
+              <td style="padding:7px 6px;text-align:center;vertical-align:middle;">
+                <span style="background:#dcfce7;color:#166534;border-radius:10px;font-size:11px;padding:2px 7px;font-weight:600;">
+                  {{ round.round_number }}
+                </span>
+              </td>
+
+              <td style="padding:7px 8px;vertical-align:middle;">
+                <input type="text"
+                       name="round_{{ round.id }}_label"
+                       value="{{ round.label }}"
+                       placeholder="{% trans 'Round name' %}"
+                       style="width:100%;padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+              </td>
+
+              <td style="padding:7px 8px;vertical-align:middle;">
+                <select name="round_{{ round.id }}_interviewer[]"
+                        class="ei-round-interviewer"
+                        multiple="multiple"
+                        data-selected="{{ round.interviewer_id|default:'' }}"
+                        style="width:100%;"></select>
+              </td>
+
+              <td style="padding:7px 8px;vertical-align:middle;">
+                <input type="date"
+                       name="round_{{ round.id }}_date"
+                       value="{{ round.round_date|date:'Y-m-d'|default:'' }}"
+                       style="padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;width:100%;">
+              </td>
+
+              <td style="padding:7px 8px;vertical-align:middle;">
+                <input type="time"
+                       name="round_{{ round.id }}_time"
+                       value="{{ round.round_time|time:'H:i'|default:'' }}"
+                       style="padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;width:100%;">
+              </td>
+
+              <td style="padding:7px 8px;text-align:center;vertical-align:middle;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                  <label class="ei-toggle-switch">
+                    <input type="checkbox"
+                           name="round_{{ round.id }}_completed"
+                           id="round_{{ round.id }}"
+                           {% if round.completed %}checked{% endif %}
+                           onchange="eiToggleRow(this);">
+                    <span class="ei-toggle-slider"></span>
+                  </label>
+                  <span id="ei-status-{{ round.id }}"
+                        style="font-size:11px;font-weight:500;color:{% if round.completed %}#16a34a{% else %}#9ca3af{% endif %};">
+                    {% if round.completed %}&#10003; {% trans "Done" %}{% else %}{% trans "Pending" %}{% endif %}
+                  </span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 3. Description -->
+    <div style="margin-bottom:14px;">
+      <label style="font-weight:700;font-size:14px;display:block;margin-bottom:6px;">
+        {% trans "Description" %}
+      </label>
+      {{ form.description }}
+    </div>
+
+    <!-- 4. Interview Completed (overall) -->
+    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <label style="font-weight:700;font-size:14px;margin:0;">
+        {% trans "Is Interview Completed" %}
+      </label>
+      {{ form.completed }}
+    </div>
+
+    <!-- 5. Meeting Provider + Meeting Link -->
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="flex:0 0 160px;">
+        <label style="font-weight:700;font-size:14px;display:block;margin-bottom:6px;">
+          {% trans "Meeting Provider" %} <span style="color:#dc2626;">*</span>
+        </label>
+        {{ form.meeting_provider }}
+      </div>
+      <div style="flex:1;min-width:160px;">
+        <label style="font-weight:700;font-size:14px;display:block;margin-bottom:6px;">
+          {% trans "Online Meeting Link" %}
+        </label>
+        {{ form.online_meeting_link }}
+      </div>
+    </div>
+
+    <!-- Hidden fields — synced from per-round table via JS -->
+    <div style="display:none;" aria-hidden="true">
+      {{ form.employee_id }}
+      {{ form.interview_date }}
+      {{ form.interview_time }}
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #f3f4f6;">
+      <button type="button"
+              onclick="$('#createModal').removeClass('oh-modal--show')"
+              style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;color:#374151;font-size:13px;">
+        {% trans "Cancel" %}
+      </button>
+
+      <!-- Default Save button — shown while interview is not yet complete -->
+      <button type="submit"
+              id="ei-save-btn"
+              style="padding:8px 20px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600;font-size:13px;">
+        {% trans "Save Changes" %}
+      </button>
+
+      <!-- Proposal/Reject buttons — revealed when "Is Interview Completed" is ticked -->
+      <button type="button"
+              id="ei-create-proposal-btn"
+              hx-get="{% url 'proposal-picker' interview_id %}"
+              hx-target="#createTarget"
+              hx-swap="innerHTML"
+              style="display:none;padding:8px 20px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;font-size:13px;">
+        <ion-icon name="document-text-outline" style="vertical-align:middle;"></ion-icon>
+        {% trans "Create Proposal" %}
+      </button>
+      <button type="button"
+              id="ei-reject-candidate-btn"
+              onclick="if(confirm('{% trans 'Reject this candidate and send rejection email?' %}')){ window.location='{% url 'candidate-reject-send-email' form.instance.candidate_id.id %}'; }"
+              style="display:none;padding:8px 20px;border:none;border-radius:6px;background:#dc2626;color:#fff;cursor:pointer;font-weight:600;font-size:13px;">
+        <ion-icon name="close-circle-outline" style="vertical-align:middle;"></ion-icon>
+        {% trans "Reject Candidate" %}
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+(function () {
+    function eiSyncCompletedFlag() {
+        var $rounds = $('input[type="checkbox"][name$="_completed"]');
+        if ($rounds.length === 0) return;
+        var allDone = $rounds.length === $rounds.filter(":checked").length;
+        var $overall = $('[name="completed"]');
+        if (allDone && !$overall.is(":checked")) {
+            $overall.prop("checked", true).trigger("change");
+        } else if (!allDone && $overall.is(":checked")) {
+            $overall.prop("checked", false).trigger("change");
+        }
+    }
+
+    function eiSyncFooterButtons() {
+        var $overall = $('[name="completed"]');
+        if ($overall.is(":checked")) {
+            $("#ei-save-btn").hide();
+            $("#ei-create-proposal-btn, #ei-reject-candidate-btn").show();
+        } else {
+            $("#ei-save-btn").show();
+            $("#ei-create-proposal-btn, #ei-reject-candidate-btn").hide();
+        }
+    }
+
+    window.eiToggleRow = function (checkbox) {
+        var id = checkbox.id.replace("round_", "");
+        var $row = $("#ei-row-" + id);
+        var $status = $("#ei-status-" + id);
+        if (checkbox.checked) {
+            $row.removeClass("pending").addClass("done");
+            $status.css("color", "#16a34a").html("&#10003; {% trans 'Done' %}");
+        } else {
+            $row.removeClass("done").addClass("pending");
+            $status.css("color", "#9ca3af").text("{% trans 'Pending' %}");
+        }
+        eiSyncCompletedFlag();
+    };
+
+    // Avoid select2 init on hidden employee_id
+    $('[name=employee_id]').removeClass('oh-select oh-select-2');
+
+    function fetchManagers(candidateId) {
+        if (!candidateId) return;
+        $.ajax({
+            url: '{% url "get_managers" %}',
+            method: "GET",
+            data: { cand_id: candidateId },
+            success: function (data) {
+                var $mainSel = $("[name=employee_id]");
+                var mainSelected = $mainSel.val();
+                $mainSel.empty();
+                $.each(data.employees, function (key, value) {
+                    $mainSel.append($("<option>", { value: key, text: value }));
+                });
+                $mainSel.val(mainSelected);
+
+                $(".ei-round-interviewer").each(function () {
+                    var $sel = $(this);
+                    var preselected = $sel.data("selected");
+                    var currentVal = $sel.val();
+                    $sel.empty();
+                    $.each(data.employees, function (key, value) {
+                        $sel.append($("<option>", { value: key, text: value }));
+                    });
+                    var vals = currentVal && currentVal.length ? currentVal
+                              : (preselected ? [String(preselected)] : []);
+                    if (!vals.length) {
+                        $.each(data.employees, function (key, value) {
+                            var n = (value || '').toLowerCase();
+                            if (n.indexOf('karthikeya') !== -1 || n.indexOf('aditya') !== -1) {
+                                vals.push(String(key));
+                            }
+                        });
+                    }
+                    if (vals.length) $sel.val(vals);
+                    $sel.data("selected", "");
+                    if ($.fn.select2) {
+                        $sel.select2({ width: '100%', placeholder: '— {% trans "Select" %} —', allowClear: true });
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        var $candidateSelect = $("[name=candidate_id]");
+        fetchManagers($candidateSelect.val());
+        $candidateSelect.on("change", function () { fetchManagers(this.value); });
+
+        // Bind footer button swap to the "Is Interview Completed" checkbox
+        $('[name="completed"]').on("change", eiSyncFooterButtons);
+        eiSyncCompletedFlag();
+        eiSyncFooterButtons();
+    });
+})();
+</script>

@@ -1,0 +1,19 @@
+{% load i18n %}
+<div class="cd-kpis">
+    <div class="cd-kpi">
+        <div class="label">{% trans "Total Candidates" %}</div>
+        <div class="value">{{ kpi_total }}</div>
+    </div>
+    <div class="cd-kpi">
+        <div class="label">{% trans "New This Week" %}</div>
+        <div class="value">{{ kpi_new_week }}</div>
+    </div>
+    <div class="cd-kpi">
+        <div class="label">{% trans "In Pipeline" %}</div>
+        <div class="value">{{ kpi_in_pipeline }}</div>
+    </div>
+    <div class="cd-kpi">
+        <div class="label">{% trans "Hired This Month" %}</div>
+        <div class="value">{{ kpi_hired_month }}</div>
+    </div>
+</div>

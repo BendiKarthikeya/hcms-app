@@ -1,0 +1,279 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ pip.title }} - {% trans "Performance Improvement Plan" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                {{ pip.title }}
+            </h1>
+            <p class="text-muted">
+                {{ pip.employee.get_full_name }} 
+                | {{ pip.employee.designation }}
+                | {{ pip.employee.department.name }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pip-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Back" %}
+            </a>
+            {% if pip.status == 'draft' %}
+            <a href="{% url 'pip-update' pip.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> {% trans "Edit" %}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="alert alert-info">
+        <strong>{% trans "Status:" %}</strong>
+        {% if pip.status == 'draft' %}
+            <span class="badge bg-secondary">{% trans "Draft" %}</span>
+        {% elif pip.status == 'active' %}
+            <span class="badge bg-info">{% trans "Active" %}</span>
+        {% elif pip.status == 'under_review' %}
+            <span class="badge bg-warning">{% trans "Under Review" %}</span>
+        {% elif pip.status == 'successful' %}
+            <span class="badge bg-success">✓ {% trans "Successful" %}</span>
+        {% else %}
+            <span class="badge bg-danger">✗ {% trans "Unsuccessful" %}</span>
+        {% endif %}
+        |
+        <strong>{% trans "Progress:" %}</strong>
+        <div class="progress d-inline-block" style="width: 200px; height: 20px;">
+            <div class="progress-bar" style="width: {{ pip.progress_percentage }}%">
+                {{ pip.progress_percentage }}%
+            </div>
+        </div>
+        |
+        <strong>{% trans "Days Left:" %}</strong> {{ pip.days_remaining }}
+    </div>
+
+    <!-- Main Information -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% trans "PIP Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>{% trans "Reason:" %}</strong><br>
+                        {{ pip.reason }}
+                    </p>
+                    <hr>
+                    <p>
+                        <strong>{% trans "Period:" %}</strong><br>
+                        {{ pip.start_date|date:"M d, Y" }} - {{ pip.end_date|date:"M d, Y" }}<br>
+                        <small class="text-muted">({{ pip.days_remaining }} days remaining)</small>
+                    </p>
+                    <hr>
+                    <p>
+                        <strong>{% trans "Initiated By:" %}</strong><br>
+                        {{ pip.initiated_by.get_full_name }}
+                    </p>
+                    {% if pip.approved_by %}
+                    <hr>
+                    <p>
+                        <strong>{% trans "Approved By:" %}</strong><br>
+                        {{ pip.approved_by.get_full_name }}<br>
+                        <small class="text-muted">{{ pip.approved_date|date:"M d, Y" }}</small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{% trans "Expected Outcomes" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ pip.expected_outcomes }}</p>
+                    <hr>
+                    <strong>{% trans "Support Provided:" %}</strong>
+                    <p>{{ pip.support_provided }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Milestones -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{% trans "Performance Milestones" %}</h5>
+                <span class="badge bg-white text-info">{{ milestones.count }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if milestones %}
+            <div class="timeline">
+                {% for milestone in milestones %}
+                <div class="timeline-item {% if milestone.is_overdue %}overdue{% endif %}">
+                    <div class="timeline-marker">
+                        {% if milestone.status == 'completed' %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% elif milestone.is_overdue %}
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                        {% else %}
+                            <i class="fas fa-circle text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-content">
+                        <h6>{{ milestone.milestone_title }}</h6>
+                        <p class="text-muted">
+                            {% trans "Target Date:" %} {{ milestone.target_date|date:"M d, Y" }}
+                            {% if milestone.status == 'completed' %}
+                            | {% trans "Completed:" %} {{ milestone.completion_date|date:"M d, Y" }}
+                            {% endif %}
+                        </p>
+                        <p>{{ milestone.success_criteria }}</p>
+                        <span class="badge bg-light text-dark">{{ milestone.get_status_display }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                {% trans "No milestones defined for this PIP" %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{% trans "Progress Reviews" %}</h5>
+                {% if pip.status != 'draft' %}
+                <a href="{% url 'pip-review-create' pip.id %}" class="btn btn-sm btn-outlined-dark">
+                    <i class="fas fa-plus"></i> {% trans "Add Review" %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            {% if reviews %}
+            <div class="table-responsive">
+                <table class="table table-borderless">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Review Type" %}</th>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Rating" %}</th>
+                            <th>{% trans "Reviewer" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for review in reviews %}
+                        <tr>
+                            <td>
+                                <strong>{{ review.get_review_type_display }}</strong>
+                            </td>
+                            <td>{{ review.review_date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="rating">
+                                    {% for i in "12345" %}
+                                        {% if i <= review.overall_rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>{{ review.reviewed_by.get_full_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                {% trans "No reviews recorded yet" %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">{% trans "Actions" %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                {% if pip.status == 'draft' %}
+                    <a href="{% url 'pip-approve' pip.id %}" class="btn btn-success">
+                        <i class="fas fa-check"></i> {% trans "Approve & Activate" %}
+                    </a>
+                {% endif %}
+
+                {% if pip.status == 'active' %}
+                    <a href="{% url 'pip-review-create' pip.id %}" class="btn btn-info">
+                        <i class="fas fa-list"></i> {% trans "Add Review" %}
+                    </a>
+                    <a href="{% url 'pip-extension-request' pip.id %}" class="btn btn-warning">
+                        <i class="fas fa-hourglass-end"></i> {% trans "Request Extension" %}
+                    </a>
+                {% endif %}
+
+                {% if pip.status == 'active' or pip.status == 'under_review' %}
+                    <a href="{% url 'pip-complete' pip.id %}" class="btn btn-primary">
+                        <i class="fas fa-flag-checkered"></i> {% trans "Complete PIP" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .timeline-item.overdue {
+        background-color: #fff3cd;
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        text-align: center;
+        margin-right: 20px;
+        font-size: 24px;
+    }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-content h6 {
+        margin-bottom: 10px;
+    }
+
+    .rating {
+        font-size: 16px;
+    }
+</style>
+{% endblock %}

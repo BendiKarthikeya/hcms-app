@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}HCMS{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #F5F6FA; color: #222; font-size: 13px; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: 'Inter', sans-serif; }
+
+/* User profile lives in sidebar bottom — hide top-right navbar chip sitewide */
+.ui-navbar__user-wrap { display: none !important; }
+
+/* ── Layout ── */
+.ui-wrapper { display: flex; min-height: 100vh; }
+
+/* ══════════════════════════════
+   SIDEBAR  (257px fixed)
+══════════════════════════════ */
+.ui-sidebar {
+  width: 257px; height: 100vh;
+  background: #F9F9F9; border-right: 1px solid #D1D1D1;
+  position: fixed; top: 0; left: 0; overflow-y: auto; z-index: 200;
+  display: flex; flex-direction: column;
+}
+
+/* Logo strip */
+.ui-sidebar__logo {
+  height: 86px; border-bottom: 1px solid #D1D1D1;
+  padding: 0 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.ui-sidebar__logo-icon {
+  width: 41px; height: 41px; background: #0F752F; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 600; font-size: 20px; flex-shrink: 0;
+}
+.ui-sidebar__logo-text { font-weight: 600; font-size: 16px; color: #111; line-height: 1.2; }
+.ui-sidebar__logo-sub  { font-size: 12px; color: #606060; font-weight: 500; }
+
+/* Section label */
+.ui-sidebar__section {
+  font-weight: 600; font-size: 12px; letter-spacing: 0.06em;
+  color: #606060; padding: 16px 23px 5px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Nav item */
+.ui-sidebar__item {
+  display: flex; align-items: center; gap: 10px;
+  height: 38px; padding: 0 14px;
+  margin: 1px 8px; border-radius: 7px;
+  color: #8E8D8D; font-size: 14px; font-weight: 500;
+  transition: background 0.12s; flex-shrink: 0;
+}
+.ui-sidebar__item:hover { background: #F0F4F1; color: #0F752F; }
+.ui-sidebar__item.active { background: #E2ECE8; color: #0F752F; font-weight: 600; }
+.ui-sidebar__item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+
+/* Bottom need-help card */
+.ui-sidebar__bottom {
+  margin: 10px 10px 8px; border: 1px solid #D1D1D1; border-radius: 5px;
+  padding: 10px 14px; font-size: 12px; color: #8E8D8D;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.ui-sidebar__bottom .material-symbols-outlined { font-size: 18px; color: #8E8D8D; }
+
+/* User profile strip + popup menu */
+.ui-sidebar__user-wrap { position: relative; flex-shrink: 0; }
+.ui-sidebar__user {
+  border-top: 1px solid #D1D1D1; min-height: 70px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  cursor: pointer; transition: background 0.12s;
+}
+.ui-sidebar__user:hover { background: #F4F6F4; }
+.ui-sidebar__user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: #0F752F;
+  color: #fff; font-weight: 600; font-size: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ui-sidebar__user-name { font-size: 13px; font-weight: 600; color: #111; line-height: 1.2; }
+.ui-sidebar__user-role { font-size: 11px; color: #8E8D8D; font-weight: 500; }
+.ui-sidebar__user-expand { margin-left: auto; color: #8E8D8D; transition: transform 0.2s; }
+.ui-sidebar__user-expand .material-symbols-outlined { font-size: 16px; }
+.ui-sidebar__user-wrap.open .ui-sidebar__user-expand { transform: rotate(180deg); }
+
+/* Popup menu above the user strip */
+.ui-sidebar__user-menu {
+  position: absolute; bottom: calc(100% + 4px); left: 8px; right: 8px;
+  background: #fff; border: 1px solid #E8E8E8; border-radius: 10px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.10); padding: 6px;
+  display: none; z-index: 300;
+}
+.ui-sidebar__user-wrap.open .ui-sidebar__user-menu { display: block; }
+.ui-sidebar__user-menu-head {
+  padding: 8px 10px 10px; border-bottom: 1px solid #F2F2F2; margin-bottom: 4px;
+}
+.ui-sidebar__user-menu-name  { font-size: 12px; font-weight: 600; color: #111; }
+.ui-sidebar__user-menu-email { font-size: 11px; color: #999; margin-top: 2px; }
+.ui-sidebar__user-menu-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: 6px; font-size: 12px; color: #444; cursor: pointer;
+  background: none; border: none; width: 100%; text-align: left;
+  font-family: 'Inter', sans-serif; text-decoration: none;
+}
+.ui-sidebar__user-menu-item:hover { background: #F4F6F4; color: #0F752F; }
+.ui-sidebar__user-menu-item .material-symbols-outlined { font-size: 15px; color: #888; }
+.ui-sidebar__user-menu-item:hover .material-symbols-outlined { color: #0F752F; }
+.ui-sidebar__user-menu-divider { height: 1px; background: #F0F0F0; margin: 4px 0; }
+.ui-sidebar__user-menu-item--danger { color: #C04730; }
+.ui-sidebar__user-menu-item--danger:hover { background: #FFF2EF; color: #C04730; }
+.ui-sidebar__user-menu-item--danger .material-symbols-outlined { color: #C04730; }
+
+/* ══════════════════════════════
+   MAIN
+══════════════════════════════ */
+.ui-main { margin-left: 257px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ══════════════════════════════
+   NAVBAR
+══════════════════════════════ */
+.ui-navbar {
+  height: 86px; background: #fff; border-bottom: 1px solid #C8C8C8;
+  display: flex; align-items: center; padding: 0 24px;
+  position: sticky; top: 0; z-index: 100; gap: 12px;
+}
+.ui-navbar__hamburger {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  color: #666; border: none; background: none;
+}
+.ui-navbar__hamburger .material-symbols-outlined { font-size: 20px; }
+
+.ui-navbar__search-wrap {
+  background: #fff; border: 1px solid #CDCDCD; border-radius: 10px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 14px; height: 56px; width: 420px;
+}
+.ui-navbar__search-wrap input {
+  border: none; outline: none; font-family: 'Inter', sans-serif;
+  font-size: 12px; color: #444; width: 100%; background: transparent;
+}
+.ui-navbar__search-wrap .material-symbols-outlined { color: #ABABAB; font-size: 16px; }
+.ui-navbar__kbd {
+  font-size: 10px; color: #ABABAB; border: 1px solid #E0E0E0;
+  border-radius: 3px; padding: 1px 4px; white-space: nowrap;
+}
+
+.ui-navbar__spacer { flex: 1; }
+
+.ui-navbar__timer {
+  display: flex; align-items: center; gap: 6px; border: 1px solid #76B590;
+  border-radius: 8px; padding: 0 12px; height: 55px; font-size: 16px; color: #0F2F0F;
+}
+.ui-navbar__timer-dot { width: 10px; height: 10px; background: #0F752F; border-radius: 50%; }
+
+.ui-navbar__icon-btn {
+  width: 34px; height: 34px; border: 1px solid #E8E8E8; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: #666; background: #fff;
+}
+.ui-navbar__icon-btn .material-symbols-outlined { font-size: 18px; }
+.ui-navbar__icon-btn:hover { background: #F5F5F5; }
+
+.ui-navbar__user {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid #E8E8E8; border-radius: 6px; padding: 0 10px; height: 34px; cursor: pointer;
+  position: relative;
+}
+.ui-navbar__user-wrap { position: relative; }
+.ui-navbar__menu {
+  position: absolute; top: 40px; right: 0; min-width: 200px;
+  background: #fff; border: 1px solid #E8E8E8; border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08); padding: 6px; z-index: 500;
+  display: none;
+}
+.ui-navbar__menu.open { display: block; }
+.ui-navbar__menu-header {
+  padding: 8px 10px 10px; border-bottom: 1px solid #F2F2F2; margin-bottom: 6px;
+}
+.ui-navbar__menu-name { font-size: 12px; font-weight: 600; color: #111; }
+.ui-navbar__menu-email { font-size: 11px; color: #999; margin-top: 2px; }
+.ui-navbar__menu-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: 6px; font-size: 12px; color: #444; cursor: pointer;
+  background: none; border: none; width: 100%; text-align: left; font-family: inherit;
+}
+.ui-navbar__menu-item:hover { background: #F4F6F4; color: #0F752F; }
+.ui-navbar__menu-item .material-symbols-outlined { font-size: 16px; color: #888; }
+.ui-navbar__menu-item:hover .material-symbols-outlined { color: #0F752F; }
+.ui-navbar__menu-divider { height: 1px; background: #F0F0F0; margin: 4px 0; }
+.ui-navbar__menu-item--danger { color: #C04730; }
+.ui-navbar__menu-item--danger:hover { background: #FFF2EF; color: #C04730; }
+.ui-navbar__menu-item--danger .material-symbols-outlined { color: #C04730; }
+.ui-navbar__search-form { display: flex; flex: 0 0 auto; }
+.ui-navbar__avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #0F752F; color: #fff; font-weight: 600; font-size: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ui-navbar__username { font-size: 12px; font-weight: 500; color: #333; }
+.ui-navbar__role { font-size: 10px; color: #999; }
+.ui-navbar__user .material-symbols-outlined { font-size: 16px; color: #999; }
+
+/* ══════════════════════════════
+   CONTENT AREA
+══════════════════════════════ */
+.ui-content { padding: 20px 24px; flex: 1; }
+
+/* Page header */
+.ui-page-header { margin-bottom: 18px; display: flex; align-items: flex-start; justify-content: space-between; }
+.ui-page-header__left {}
+.ui-breadcrumb { font-size: 11px; color: #999; margin-bottom: 4px; display: flex; align-items: center; gap: 3px; }
+.ui-breadcrumb .material-symbols-outlined { font-size: 14px; }
+.ui-page-title { font-weight: 600; font-size: 20px; color: #111; line-height: 1.2; }
+.ui-page-subtitle { font-weight: 400; font-size: 12px; color: #999; margin-top: 3px; }
+
+/* Toolbar */
+.ui-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.ui-toolbar__left { flex: 1; display: flex; align-items: center; gap: 8px; }
+
+/* Buttons */
+.ui-btn-primary {
+  background: #208E3D; color: #fff; border: none; border-radius: 7px;
+  height: 34px; padding: 0 14px; font-weight: 600; font-size: 12px;
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.ui-btn-primary:hover { background: #1a7533; }
+.ui-btn-outlined {
+  background: #fff; color: #333; border: 1px solid #D0D0D0; border-radius: 7px;
+  height: 34px; padding: 0 12px; font-weight: 500; font-size: 12px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.ui-btn-outlined:hover { background: #F8F8F8; }
+.ui-btn-danger {
+  background: #fff; color: #E33F3F; border: 1px solid #D70D0D; border-radius: 7px;
+  height: 40px; padding: 0 20px; font-weight: 600; font-size: 14px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ui-btn-approve {
+  background: #208E3D; color: #fff; border: none; border-radius: 7px;
+  height: 40px; padding: 0 20px; font-weight: 600; font-size: 14px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ui-btn-approve:hover { background: #1a7533; }
+
+/* CTA button loading spinner */
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+.ui-btn-spin {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+  border-radius: 50%; animation: ui-spin 0.7s linear infinite; flex-shrink: 0;
+}
+.ui-btn-outlined .ui-btn-spin, .ui-btn-danger .ui-btn-spin {
+  border-color: rgba(50,50,50,0.2); border-top-color: #444;
+}
+.ui-btn--loading { opacity: 0.75; pointer-events: none; }
+
+/* ── KPI Cards ── */
+.ui-kpi-row { display: flex; gap: 14px; margin-bottom: 18px; }
+.ui-kpi-card {
+  background: #fff; border: 1px solid #EFEFEF; border-radius: 10px;
+  padding: 14px 16px; flex: 1;
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 12px;
+}
+.ui-kpi-icon {
+  grid-row: 1 / 3; align-self: center;
+  width: 40px; height: 40px; background: #0F752F; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.ui-kpi-icon .material-symbols-outlined { font-size: 20px; }
+.ui-kpi-label { font-weight: 500; font-size: 11px; color: #999; align-self: end; }
+.ui-kpi-value { font-weight: 700; font-size: 28px; color: #111; line-height: 1.1; }
+.ui-kpi-trend { grid-column: 1 / 3; font-size: 10px; color: #999; margin-top: 8px; display: flex; align-items: center; gap: 3px; }
+.ui-kpi-trend .up { color: #02952E; font-weight: 600; }
+.ui-kpi-trend .down { color: #C04730; font-weight: 600; }
+.ui-kpi-trend .material-symbols-outlined { font-size: 12px; }
+
+/* ── Cards / Panels ── */
+.ui-card {
+  background: #fff; border: 1px solid #EFEFEF; border-radius: 10px; overflow: hidden;
+}
+.ui-card__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px; border-bottom: 1px solid #F0F0F0;
+}
+.ui-card__title { font-weight: 600; font-size: 13px; color: #111; }
+.ui-card__link  { font-size: 11px; color: #0F752F; font-weight: 500; }
+.ui-card__body  { padding: 14px 16px; }
+
+/* ── Table ── */
+.ui-table-card {
+  background: #fff; border: 1px solid #EFEFEF; border-radius: 10px; overflow: hidden;
+}
+.ui-table-card + .ui-table-card { margin-top: 16px; }
+.ui-table-card__title {
+  font-weight: 600; font-size: 13px; color: #111;
+  padding: 14px 16px 10px; border-bottom: 1px solid #F0F0F0;
+}
+.ui-table-filter-row {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-bottom: 1px solid #EFEFEF;
+}
+.ui-table-search {
+  flex: 1; max-width: 360px; border: 1px solid #E0E0E0; border-radius: 6px;
+  height: 32px; padding: 0 10px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none;
+}
+.ui-table-search:focus { border-color: #76B590; }
+.ui-filter-pill {
+  height: 32px; padding: 0 12px; border: 1px solid #E0E0E0; border-radius: 6px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  background: #fff; color: #555; white-space: nowrap;
+}
+.ui-filter-pill.active { border-color: #0F752F; color: #0F752F; background: #EEF6F0; }
+
+.ui-table { width: 100%; border-collapse: collapse; }
+.ui-table thead tr { background: #FAFAFA; height: 38px; }
+.ui-table thead th {
+  padding: 0 14px; font-weight: 600; font-size: 11px; color: #888;
+  text-align: left; border-bottom: 1px solid #EFEFEF; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.ui-table tbody tr { height: 52px; border-bottom: 1px solid #F5F5F5; transition: background 0.1s; }
+.ui-table tbody tr:last-child { border-bottom: none; }
+.ui-table tbody tr:hover { background: #FAFCFA; }
+.ui-table tbody td { padding: 0 14px; font-size: 12px; color: #333; }
+
+/* ── Status pills ── */
+.ui-pill {
+  display: inline-flex; align-items: center; padding: 3px 8px;
+  border-radius: 12px; font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.ui-pill--green  { background: #E8F5EE; color: #1F8A50; }
+.ui-pill--grey   { background: #F2F2F2; color: #666; }
+.ui-pill--amber  { background: #FFF8EC; color: #B07600; }
+.ui-pill--blue   { background: #EBF4FF; color: #1565C0; }
+.ui-pill--red    { background: #FFF0F0; color: #C62828; }
+.ui-pill--purple { background: #F3E8FF; color: #6A1B9A; }
+
+/* ── Action icons ── */
+.ui-action-group { display: flex; align-items: center; gap: 4px; }
+.ui-action-btn {
+  width: 28px; height: 28px; border-radius: 5px; border: none;
+  background: transparent; display: flex; align-items: center; justify-content: center; color: #888;
+}
+.ui-action-btn .material-symbols-outlined { font-size: 15px; }
+.ui-action-btn:hover { background: #EEF6F0; color: #0F752F; }
+
+/* ── Pagination ── */
+.ui-pagination-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-top: 1px solid #F0F0F0;
+}
+.ui-pagination-label { font-size: 11px; color: #999; }
+.ui-pagination-view-all { font-weight: 600; font-size: 11px; color: #0F752F; }
+.ui-pagination-btns { display: flex; gap: 4px; }
+.ui-pagination-btn {
+  width: 28px; height: 28px; border: 1px solid #E0E0E0; border-radius: 5px;
+  background: #fff; font-size: 12px; color: #555; display: flex;
+  align-items: center; justify-content: center;
+}
+.ui-pagination-btn:hover { border-color: #0F752F; color: #0F752F; }
+.ui-pagination-btn.active { border-color: #0F752F; color: #0F752F; font-weight: 600; background: #EEF6F0; }
+
+/* ── Panel ── */
+.ui-panel {
+  background: #fff; border: 1px solid #EFEFEF; border-radius: 10px; padding: 20px 22px;
+}
+.ui-panel__title { font-weight: 600; font-size: 13px; color: #111; margin-bottom: 14px; }
+.ui-kv-row { display: flex; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #F5F5F5; }
+.ui-kv-row:last-child { border-bottom: none; }
+.ui-kv-label { font-size: 12px; color: #888; width: 180px; flex-shrink: 0; }
+.ui-kv-value { font-size: 12px; color: #222; font-weight: 500; }
+
+/* ── Form fields ── */
+.ui-form-group { margin-bottom: 14px; }
+.ui-form-label { font-weight: 500; font-size: 12px; color: #333; margin-bottom: 5px; display: block; }
+.ui-form-input, .ui-form-select, .ui-form-textarea {
+  width: 100%; border: 1px solid #E0E0E0; border-radius: 6px;
+  padding: 8px 10px; font-family: 'Inter', sans-serif; font-size: 12px;
+  color: #333; outline: none; background: #fff;
+}
+.ui-form-input:focus, .ui-form-select:focus, .ui-form-textarea:focus { border-color: #76B590; }
+.ui-form-textarea { resize: vertical; min-height: 80px; }
+.ui-form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ui-form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* ── Misc ── */
+.ui-divider { height: 1px; background: #F0F0F0; margin: 16px 0; }
+.ui-section-title { font-weight: 600; font-size: 13px; color: #111; margin-bottom: 12px; }
+
+/* Candidate avatar chip */
+.ui-avatar-chip { display: flex; align-items: center; gap: 8px; }
+.ui-avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: #0F752F;
+  color: #fff; font-weight: 600; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ui-avatar-chip .name { font-weight: 500; font-size: 12px; color: #111; }
+.ui-avatar-chip .sub  { font-size: 11px; color: #999; }
+
+/* ── Grid helpers ── */
+.ui-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ui-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.ui-grid-23 { display: grid; grid-template-columns: 2fr 3fr; gap: 16px; }
+.ui-grid-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+</style>
+</head>
+
+<body>
+<div class="ui-wrapper">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="ui-sidebar">
+
+    <!-- Logo -->
+    <div class="ui-sidebar__logo">
+      <div class="ui-sidebar__logo-icon">F</div>
+      <div>
+        <div class="ui-sidebar__logo-text">FITS HCMS</div>
+        <div class="ui-sidebar__logo-sub">Enterprise HRMS</div>
+      </div>
+    </div>
+
+    <!-- RECRUITMENT -->
+    <div class="ui-sidebar__section">Recruitment</div>
+    <a href="/ui/dashboard/"         class="ui-sidebar__item {% block active_dashboard %}{% endblock %}"><span class="material-symbols-outlined">dashboard</span> Dashboard</a>
+    <a href="/ui/job-requisition/"   class="ui-sidebar__item {% block active_job_req %}{% endblock %}"><span class="material-symbols-outlined">work</span> Job Requisition</a>
+    <a href="/ui/manpower-request/"  class="ui-sidebar__item {% block active_manpower %}{% endblock %}"><span class="material-symbols-outlined">person_add</span> Raise Recruitment</a>
+    <a href="/ui/approvals/"         class="ui-sidebar__item {% block active_approvals %}{% endblock %}"><span class="material-symbols-outlined">task_alt</span> Approvals</a>
+    <a href="/ui/candidates/"        class="ui-sidebar__item {% block active_candidates %}{% endblock %}"><span class="material-symbols-outlined">people</span> Candidates</a>
+    <a href="/ui/interview/"         class="ui-sidebar__item {% block active_interview %}{% endblock %}"><span class="material-symbols-outlined">calendar_month</span> Interviews</a>
+    <a href="/ui/offers/"            class="ui-sidebar__item {% block active_offers %}{% endblock %}"><span class="material-symbols-outlined">handshake</span> Offers</a>
+    <a href="/ui/proposals/"         class="ui-sidebar__item {% block active_proposals %}{% endblock %}"><span class="material-symbols-outlined">description</span> Proposals</a>
+    <a href="/ui/report-analysis/"   class="ui-sidebar__item {% block active_report %}{% endblock %}"><span class="material-symbols-outlined">bar_chart</span> Report &amp; Analysis</a>
+
+    <!-- HR OPERATIONS -->
+    <div class="ui-sidebar__section">HR Operations</div>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">badge</span> Employees</a>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">beach_access</span> Attendance & Leave</a>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">emoji_events</span> Performance</a>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">payments</span> Payroll</a>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">policy</span> Policies</a>
+
+    <!-- SYSTEM -->
+    <div class="ui-sidebar__section">System</div>
+    <a href="#" class="ui-sidebar__item"><span class="material-symbols-outlined">settings</span> Settings</a>
+
+    <div class="ui-sidebar__bottom" style="margin-top:auto;">
+      <span class="material-symbols-outlined">help</span>
+      <div>
+        <div style="font-weight:600;font-size:13px;color:#333;">Need Help?</div>
+        <div style="font-size:11px;color:#8E8D8D;">Contact administrator</div>
+      </div>
+    </div>
+
+    <div class="ui-sidebar__user-wrap" id="sidebarUserWrap">
+      <!-- Popup menu (opens above) -->
+      <div class="ui-sidebar__user-menu" id="sidebarUserMenu">
+        <div class="ui-sidebar__user-menu-head">
+          <div class="ui-sidebar__user-menu-name">{{ request.user.get_full_name|default:request.user.username|default:"User" }}</div>
+          <div class="ui-sidebar__user-menu-email">{{ request.user.email|default:"—" }}</div>
+        </div>
+        <a href="/ui/profile/"       class="ui-sidebar__user-menu-item"><span class="material-symbols-outlined">person</span> Profile</a>
+        <a href="/ui/notifications/" class="ui-sidebar__user-menu-item"><span class="material-symbols-outlined">notifications</span> Notifications</a>
+        <a href="/ui/settings/"      class="ui-sidebar__user-menu-item"><span class="material-symbols-outlined">settings</span> Settings</a>
+        <div class="ui-sidebar__user-menu-divider"></div>
+        <form action="/logout" method="post" style="margin:0;">{% csrf_token %}
+          <button type="submit" class="ui-sidebar__user-menu-item ui-sidebar__user-menu-item--danger">
+            <span class="material-symbols-outlined">logout</span> Logout
+          </button>
+        </form>
+      </div>
+      <!-- User strip -->
+      <div class="ui-sidebar__user" id="sidebarUserBtn">
+        <div class="ui-sidebar__user-avatar">
+          {% with u=request.user %}{{ u.first_name|default:u.username|slice:":1"|upper|default:"U" }}{% endwith %}
+        </div>
+        <div>
+          <div class="ui-sidebar__user-name">{{ request.user.get_full_name|default:request.user.username|default:"User" }}</div>
+          <div class="ui-sidebar__user-role">{% if request.user.is_superuser %}Administrator{% else %}HR Manager{% endif %}</div>
+        </div>
+        <div class="ui-sidebar__user-expand"><span class="material-symbols-outlined">expand_less</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="ui-main">
+
+    <!-- Navbar -->
+    <header class="ui-navbar">
+      <button class="ui-navbar__hamburger"><span class="material-symbols-outlined">menu</span></button>
+
+      <form class="ui-navbar__search-wrap ui-navbar__search-form" action="/ui/candidates/" method="get" role="search">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" name="q" placeholder="Search Anything…" value="{{ request.GET.q|default:'' }}">
+        <span class="ui-navbar__kbd">⌘ + K</span>
+      </form>
+
+      <div class="ui-navbar__spacer"></div>
+
+      <div class="ui-navbar__timer" id="uiTimer" role="button" title="Click to start / pause">
+        <div class="ui-navbar__timer-dot"></div>
+        <span id="uiTimerLabel">00:00:00</span>
+        <span class="material-symbols-outlined" id="uiTimerIcon" style="font-size:14px;color:#999">play_arrow</span>
+      </div>
+
+      <a href="/ui/notifications/" class="ui-navbar__icon-btn" title="Notifications" style="position:relative;">
+        <span class="material-symbols-outlined">notifications</span>
+        <span style="position:absolute;top:-4px;right:-4px;background:#D82323;color:#fff;border-radius:50%;width:17px;height:17px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Inter',sans-serif;">2</span>
+      </a>
+      <a href="/i18n/setlang/" class="ui-navbar__icon-btn" title="Language"><span class="material-symbols-outlined">language</span></a>
+
+      <div class="ui-navbar__user-wrap">
+        <div class="ui-navbar__user" id="uiUserBtn">
+          <div class="ui-navbar__avatar">{% with u=request.user %}{{ u.first_name|default:u.username|slice:":1"|upper|default:"A" }}{% endwith %}</div>
+          <div>
+            <div class="ui-navbar__username">{{ request.user.get_full_name|default:request.user.username|default:"Guest" }}</div>
+            <div class="ui-navbar__role">{% if request.user.is_superuser %}Administrator{% else %}{{ request.user.email|default:"User" }}{% endif %}</div>
+          </div>
+          <span class="material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="ui-navbar__menu" id="uiUserMenu">
+          <div class="ui-navbar__menu-header">
+            <div class="ui-navbar__menu-name">{{ request.user.get_full_name|default:request.user.username|default:"Guest" }}</div>
+            <div class="ui-navbar__menu-email">{{ request.user.email|default:"—" }}</div>
+          </div>
+          <a href="/ui/profile/" class="ui-navbar__menu-item"><span class="material-symbols-outlined">person</span> Profile</a>
+          <a href="/ui/notifications/" class="ui-navbar__menu-item"><span class="material-symbols-outlined">notifications</span> Notifications</a>
+          <a href="/ui/integrations/" class="ui-navbar__menu-item"><span class="material-symbols-outlined">extension</span> Integrations</a>
+          <a href="/ui/settings/" class="ui-navbar__menu-item"><span class="material-symbols-outlined">settings</span> Settings</a>
+          <div class="ui-navbar__menu-divider"></div>
+          <form action="/logout" method="post" style="margin:0;">{% csrf_token %}
+            <button type="submit" class="ui-navbar__menu-item ui-navbar__menu-item--danger"><span class="material-symbols-outlined">logout</span> Logout</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <script>
+    (function(){
+      // Navbar user menu (top-right)
+      var btn = document.getElementById('uiUserBtn');
+      var menu = document.getElementById('uiUserMenu');
+      if (btn && menu) {
+        btn.addEventListener('click', function(e){ e.stopPropagation(); menu.classList.toggle('open'); });
+        document.addEventListener('click', function(e){
+          if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove('open');
+        });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') menu.classList.remove('open'); });
+      }
+
+      // Sidebar user menu (bottom-left)
+      var sbBtn  = document.getElementById('sidebarUserBtn');
+      var sbWrap = document.getElementById('sidebarUserWrap');
+      if (sbBtn && sbWrap) {
+        sbBtn.addEventListener('click', function(e){ e.stopPropagation(); sbWrap.classList.toggle('open'); });
+        document.addEventListener('click', function(e){
+          if (!sbWrap.contains(e.target)) sbWrap.classList.remove('open');
+        });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') sbWrap.classList.remove('open'); });
+      }
+
+      var timerEl = document.getElementById('uiTimer');
+      var label = document.getElementById('uiTimerLabel');
+      var icon = document.getElementById('uiTimerIcon');
+      if (timerEl && label && icon) {
+        var seconds = parseInt(sessionStorage.getItem('uiTimerSec') || '0', 10);
+        var running = sessionStorage.getItem('uiTimerRun') === '1';
+        var iv = null;
+        function fmt(s){ var h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60; return [h,m,sec].map(function(n){return n<10?'0'+n:n;}).join(':'); }
+        function tick(){ seconds++; label.textContent = fmt(seconds); sessionStorage.setItem('uiTimerSec', seconds); }
+        function start(){ if (iv) return; iv = setInterval(tick, 1000); running = true; icon.textContent = 'pause'; sessionStorage.setItem('uiTimerRun','1'); }
+        function stop(){ if (iv) clearInterval(iv); iv = null; running = false; icon.textContent = 'play_arrow'; sessionStorage.setItem('uiTimerRun','0'); }
+        label.textContent = fmt(seconds);
+        if (running) start();
+        timerEl.addEventListener('click', function(){ running ? stop() : start(); });
+      }
+
+      // CTA button loading spinner on form submit
+      (function(){
+        var _last = null;
+        document.addEventListener('click', function(e){
+          var b = e.target.closest('button[type="submit"]');
+          if (b) _last = b;
+        }, true);
+        document.addEventListener('submit', function(){
+          var btn = _last; _last = null;
+          if (!btn) return;
+          if (!btn.matches('.ui-btn-primary,.ui-btn-approve,.ui-btn-danger,.ui-btn-outlined')) return;
+          btn.disabled = true;
+          btn.innerHTML = '<span class="ui-btn-spin"></span>';
+        });
+      })();
+    })();
+    </script>
+
+    <!-- Page content -->
+    <main class="ui-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+</div>
+{% include "sitewide_chatbot/widget.html" %}
+</body>
+</html>

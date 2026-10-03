@@ -1,0 +1,15 @@
+{% extends "index.html" %}{% load i18n %}{% block title %}{% trans "Send Rejection Email" %}{% endblock %}
+{% block content %}<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''"><div class="oh-wrapper">
+<div style="max-width:580px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <h2 style="margin-top:0;">{% trans "Send Rejection Email" %}: {{ candidate.name }}</h2>
+    <form method="post">{% csrf_token %}
+      <label style="font-size:12px;color:#6b7280;">{% trans "Optional personalised message" %}</label>
+      <textarea name="reason" rows="4" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin:3px 0 12px;resize:vertical;box-sizing:border-box;" placeholder="{% trans 'e.g. We will keep your profile on file for future opportunities.' %}"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <a href="javascript:history.back()" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:8px 14px;border-radius:6px;background:#dc2626;color:#fff;border:none;cursor:pointer;">{% trans "Send Rejection" %}</button>
+      </div>
+    </form>
+  </div>
+</div></div></main>{% endblock %}

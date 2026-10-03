@@ -1,0 +1,457 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ c.name }} — Communication — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Breadcrumb ─────────────────────────────────────────────────────────── -->
+<div class="ui-breadcrumb" style="margin-bottom:16px">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D;text-decoration:none">Back to Candidates</a>
+  <span style="color:#ccc;margin:0 6px">/</span>
+  <a href="/ui/candidate/{{ c.id }}/" style="color:#6D6D6D;text-decoration:none">{{ c.name }}</a>
+  <span style="color:#ccc;margin:0 6px">/</span>
+  <span style="color:#111">Communication</span>
+</div>
+
+<!-- ── Candidate Header ───────────────────────────────────────────────────── -->
+<div class="ccom-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="ui-avatar" style="width:64px;height:64px;font-size:22px;flex-shrink:0">
+      {{ c.name|slice:":2"|upper }}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:20px;font-weight:700;color:#111">{{ c.name }}</span>
+        {% if c.canceled %}
+          <span class="ui-pill ui-pill--red" style="font-size:12px">Rejected</span>
+        {% elif c.hired %}
+          <span class="ui-pill ui-pill--blue" style="font-size:12px">Hired</span>
+        {% else %}
+          <span class="ui-pill ui-pill--green" style="font-size:12px">Active</span>
+        {% endif %}
+      </div>
+      <div style="font-size:13px;color:#555;margin-top:3px">
+        {% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id }}{% else %}—{% endif %}
+        {% if c.recruitment_id and c.recruitment_id.reference_number %}&nbsp;·&nbsp;<span style="color:#888">{{ c.recruitment_id.reference_number }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <button type="button" id="composeBtn" class="ui-btn-outlined"
+            style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+      <span class="material-symbols-outlined" style="font-size:16px">mail</span>Compose Email
+    </button>
+    {% if not c.canceled and not c.hired %}
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}"
+       class="ui-btn-primary"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span>Send Offer
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Sub-tab navigation (matches candidate_detail.html tab style) ───────── -->
+<div class="cdet-tabs">
+  <a href="/ui/candidate/{{ c.id }}/?tab=profile"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">account_circle</span>Profile
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/?tab=documents"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">file_copy</span>Documents
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/?tab=interviews"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">calendar_month</span>Interviews
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/communication/"
+     class="cdet-tab active" style="text-decoration:none">
+    <span class="material-symbols-outlined">forum</span>Communication
+  </a>
+  <a href="{% url 'ui:candidate-offer' c.id %}"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">handshake</span>Offer
+  </a>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── Two-pane communication layout ─────────────────────────────────────── -->
+<div class="ccom-layout">
+
+  <!-- Left pane: thread list -->
+  <div class="ccom-sidebar">
+    <div class="ccom-sidebar__header">
+      <span style="font-size:13px;font-weight:600;color:#111">
+        {{ communications|length|default:"0" }} message{% if communications|length != 1 %}s{% endif %}
+      </span>
+      <span style="font-size:12px;color:#999">{{ c.email|default:"" }}</span>
+    </div>
+
+    {% if communications %}
+    <div class="ccom-list" id="commList">
+      {% for comm in communications %}
+      <div class="ccom-item {% if forloop.first %}ccom-item--active{% endif %}"
+           data-index="{{ forloop.counter0 }}"
+           onclick="selectThread({{ forloop.counter0 }})">
+        <div class="ccom-item__top">
+          <span class="ccom-item__from">
+            {% if comm.direction == "outbound" %}You → {{ c.name }}{% else %}{{ c.name }} → You{% endif %}
+          </span>
+          <span class="ccom-item__date">
+            {{ comm.created_at|date:"d M Y" }}
+          </span>
+        </div>
+        <div class="ccom-item__subject">{{ comm.subject|default:"(no subject)" }}</div>
+        <div class="ccom-item__snippet">{{ comm.body|default:comm.content|default:""|truncatechars:72 }}</div>
+        <div class="ccom-item__footer">
+          <span class="ccom-item__email">{{ comm.recipient|default:c.email|default:"" }}</span>
+          {% if comm.status == "received" %}
+            <span class="ui-pill ui-pill--green" style="font-size:10px">Received</span>
+          {% elif comm.status == "sent" %}
+            <span class="ui-pill ui-pill--blue" style="font-size:10px">Sent</span>
+          {% elif comm.status == "failed" %}
+            <span class="ui-pill ui-pill--red" style="font-size:10px">Failed</span>
+          {% elif comm.status == "opened" %}
+            <span class="ui-pill ui-pill--amber" style="font-size:10px">Opened</span>
+          {% else %}
+            <span class="ui-pill ui-pill--grey" style="font-size:10px">{{ comm.status|default:"Sent"|capfirst }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty state for thread list -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center">
+      <span class="material-symbols-outlined" style="font-size:40px;color:#D0D0D0;margin-bottom:10px">inbox</span>
+      <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:4px">No messages yet</div>
+      <div style="font-size:12px;color:#999">Compose an email to start the conversation</div>
+    </div>
+    {% endif %}
+  </div><!-- /sidebar -->
+
+  <!-- Right pane: email preview -->
+  <div class="ccom-preview" id="previewPane">
+    {% if communications %}
+    {% for comm in communications %}
+    <div class="ccom-msg {% if not forloop.first %}d-none{% endif %}" id="msg-{{ forloop.counter0 }}">
+      <!-- Preview header -->
+      <div class="ccom-preview__header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px">
+              {{ comm.subject|default:"(no subject)" }}
+            </div>
+            <div style="font-size:12px;color:#666;line-height:1.7">
+              <span style="font-weight:600;color:#333">
+                {% if comm.direction == "outbound" %}From:{% else %}From:{% endif %}
+              </span>
+              {% if comm.direction == "outbound" %}{{ request.user.get_full_name|default:request.user.email }}
+              {% else %}{{ c.name }} &lt;{{ c.email|default:"" }}&gt;{% endif %}
+            </div>
+            <div style="font-size:12px;color:#666">
+              <span style="font-weight:600;color:#333">To:</span>
+              {% if comm.direction == "outbound" %}{{ c.name }} &lt;{{ comm.recipient|default:c.email|default:"" }}&gt;
+              {% else %}{{ request.user.get_full_name|default:request.user.email }}{% endif %}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;color:#555;font-weight:500">{{ comm.created_at|date:"d M Y" }}</div>
+            <div style="font-size:11px;color:#999;margin-top:2px">{{ comm.created_at|time:"g:i A" }}</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          {% if comm.status == "received" %}
+            <span class="ui-pill ui-pill--green">Received</span>
+          {% elif comm.status == "sent" %}
+            <span class="ui-pill ui-pill--blue">Sent</span>
+          {% elif comm.status == "failed" %}
+            <span class="ui-pill ui-pill--red">Failed</span>
+          {% elif comm.status == "opened" %}
+            <span class="ui-pill ui-pill--amber">Opened</span>
+          {% else %}
+            <span class="ui-pill ui-pill--grey">{{ comm.status|default:"Sent"|capfirst }}</span>
+          {% endif %}
+          {% if comm.email_type %}
+            <span class="ui-pill ui-pill--grey" style="font-size:11px">{{ comm.email_type|capfirst }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Email body -->
+      <div class="ccom-preview__body">
+        {% if comm.body %}
+          <div style="white-space:pre-wrap;line-height:1.7;color:#333;font-size:14px">{{ comm.body }}</div>
+        {% elif comm.content %}
+          <div style="white-space:pre-wrap;line-height:1.7;color:#333;font-size:14px">{{ comm.content }}</div>
+        {% else %}
+          <div style="color:#999;font-size:13px;font-style:italic">No message body.</div>
+        {% endif %}
+      </div>
+
+      <!-- Preview footer actions -->
+      <div class="ccom-preview__footer">
+        <button type="button" class="ui-btn-outlined"
+                style="height:34px;padding:0 14px;font-size:12px;display:inline-flex;align-items:center;gap:5px"
+                onclick="document.getElementById('composeBtn').click()">
+          <span class="material-symbols-outlined" style="font-size:15px">reply</span>Reply
+        </button>
+        <button type="button"
+                style="height:34px;padding:0 12px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:#555">
+          <span class="material-symbols-outlined" style="font-size:15px">forward</span>Forward
+        </button>
+      </div>
+    </div><!-- /msg -->
+    {% endfor %}
+
+    {% else %}
+    <!-- Empty preview state -->
+    <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;text-align:center">
+      <span class="material-symbols-outlined" style="font-size:52px;color:#D0D0D0;margin-bottom:14px">mark_email_unread</span>
+      <div style="font-size:15px;font-weight:600;color:#666;margin-bottom:6px">No messages to display</div>
+      <div style="font-size:13px;color:#999;margin-bottom:20px">
+        Start the conversation by composing an email to {{ c.name }}.
+      </div>
+      <button type="button" id="composeBtn2" class="ui-btn-primary"
+              style="height:38px;padding:0 18px;font-size:13px;display:inline-flex;align-items:center;gap:6px"
+              onclick="document.getElementById('composeModal').classList.add('open')">
+        <span class="material-symbols-outlined" style="font-size:16px">edit</span>Compose Email
+      </button>
+    </div>
+    {% endif %}
+  </div><!-- /preview -->
+</div><!-- /layout -->
+
+<!-- ── Compose Modal ──────────────────────────────────────────────────────── -->
+<div id="composeModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:flex-end;justify-content:flex-end;padding:24px"
+     onclick="if(event.target===this)this.classList.remove('open')">
+  <div style="background:#fff;border-radius:12px;width:540px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;max-height:80vh">
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #F0F0F0">
+      <div style="font-size:14px;font-weight:700;color:#111">New Message</div>
+      <button type="button" onclick="document.getElementById('composeModal').classList.remove('open')"
+              style="width:28px;height:28px;border:none;background:none;cursor:pointer;color:#999;font-size:20px;line-height:1">&#x2715;</button>
+    </div>
+    <!-- Modal form -->
+    <form method="post" action="#" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      {% csrf_token %}
+      <div style="padding:16px 20px;border-bottom:1px solid #F5F5F5">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <label style="font-size:12px;font-weight:600;color:#888;width:40px">To</label>
+          <input type="email" name="to" value="{{ c.email }}" readonly
+                 style="flex:1;border:none;font-size:13px;color:#333;background:#F7F7F7;border-radius:4px;padding:6px 10px;outline:none">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:12px;font-weight:600;color:#888;width:40px">Subject</label>
+          <input type="text" name="subject" placeholder="Email subject…"
+                 style="flex:1;border:none;border-bottom:1px solid #E8E8E8;font-size:13px;color:#333;padding:6px 0;outline:none;background:none">
+        </div>
+      </div>
+      <textarea name="body" placeholder="Write your message…"
+                style="flex:1;border:none;padding:16px 20px;font-size:13px;color:#333;font-family:inherit;resize:none;outline:none;line-height:1.7;overflow-y:auto"
+                rows="8"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid #F0F0F0">
+        <div style="display:flex;gap:8px">
+          <button type="button"
+                  style="width:32px;height:32px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"
+                  title="Attach file">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#666">attach_file</span>
+          </button>
+          <button type="button"
+                  style="width:32px;height:32px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"
+                  title="Insert template">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#666">insert_drive_file</span>
+          </button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="button" onclick="document.getElementById('composeModal').classList.remove('open')"
+                  style="height:34px;padding:0 14px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555">
+            Discard
+          </button>
+          <button type="submit"
+                  class="ui-btn-primary"
+                  style="height:34px;padding:0 18px;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+            <span class="material-symbols-outlined" style="font-size:15px">send</span>Send
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Styles ─────────────────────────────────────────────────────────────── -->
+<style>
+/* Breadcrumb */
+.ui-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6D6D6D;
+}
+.ui-breadcrumb .material-symbols-outlined { font-size: 18px; color: #999; }
+
+/* Header card */
+.ccom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 22px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+}
+
+/* Tab bar — reuse cdet-tab from candidate_detail */
+.cdet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #EFEFEF;
+  margin-bottom: 24px;
+}
+.cdet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.cdet-tab .material-symbols-outlined { font-size: 17px; }
+.cdet-tab:hover { color: #278E53; }
+.cdet-tab.active { color: #278E53; border-bottom-color: #278E53; font-weight: 600; }
+
+/* Two-pane layout */
+.ccom-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 0;
+  border: 1px solid #EFEFEF;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  min-height: 560px;
+}
+
+/* Left pane */
+.ccom-sidebar {
+  border-right: 1px solid #F0F0F0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ccom-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #F0F0F0;
+  background: #FAFAFA;
+}
+
+/* Thread list */
+.ccom-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.ccom-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ccom-item:hover { background: #F8F8F8; }
+.ccom-item--active { background: #F0F8F4; border-left: 3px solid #278E53; }
+.ccom-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+.ccom-item__from { font-size: 13px; font-weight: 600; color: #111; }
+.ccom-item__date { font-size: 11px; color: #999; flex-shrink: 0; margin-left: 8px; }
+.ccom-item__subject { font-size: 12px; font-weight: 500; color: #333; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ccom-item__snippet { font-size: 11px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; }
+.ccom-item__footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ccom-item__email { font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Right pane: preview */
+.ccom-preview { display: flex; flex-direction: column; overflow: hidden; }
+.ccom-msg { display: flex; flex-direction: column; height: 100%; }
+.ccom-msg.d-none { display: none; }
+.ccom-preview__header {
+  padding: 18px 22px;
+  border-bottom: 1px solid #F0F0F0;
+  background: #FAFAFA;
+}
+.ccom-preview__body {
+  flex: 1;
+  padding: 22px 24px;
+  overflow-y: auto;
+}
+.ccom-preview__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid #F0F0F0;
+  background: #FAFAFA;
+}
+
+/* Compose modal */
+#composeModal.open { display: flex; }
+
+/* Responsive collapse */
+@media (max-width: 900px) {
+  .ccom-layout { grid-template-columns: 1fr; }
+  .ccom-sidebar { border-right: none; border-bottom: 1px solid #F0F0F0; max-height: 320px; }
+}
+</style>
+
+<!-- ── JS: thread selection + compose modal ───────────────────────────────── -->
+<script>
+(function () {
+  var items = document.querySelectorAll(".ccom-item");
+  var msgs  = document.querySelectorAll(".ccom-msg");
+
+  window.selectThread = function (idx) {
+    items.forEach(function (el, i) {
+      el.classList.toggle("ccom-item--active", i === idx);
+    });
+    msgs.forEach(function (el, i) {
+      el.classList.toggle("d-none", i !== idx);
+    });
+  };
+
+  // Compose button(s) open modal
+  function openCompose() {
+    document.getElementById("composeModal").classList.add("open");
+  }
+  var composeBtn = document.getElementById("composeBtn");
+  if (composeBtn) composeBtn.addEventListener("click", openCompose);
+  var composeBtn2 = document.getElementById("composeBtn2");
+  if (composeBtn2) composeBtn2.addEventListener("click", openCompose);
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,507 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}{{ cand.name|default:"Candidate" }} — Interviews — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Breadcrumb ──────────────────────────────────────────────────────────── -->
+<div class="ui-breadcrumb" style="margin-bottom:16px">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D;text-decoration:none">Back to Candidates</a>
+</div>
+
+<!-- ── Profile Header ─────────────────────────────────────────────────────── -->
+<div class="cdet-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="ui-avatar" style="width:80px;height:80px;font-size:28px;flex-shrink:0">
+      {{ cand.name|slice:":2"|upper|default:"AJ" }}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:22px;font-weight:700;color:#111">{{ cand.name|default:"Alex Johnson" }}</span>
+        <span class="ui-pill ui-pill--green" style="font-size:12px">Active</span>
+      </div>
+      <div style="font-size:14px;color:#555;margin-top:4px">
+        {{ cand.job_position|default:"Senior Frontend Developer" }}
+        &nbsp;&middot;&nbsp;
+        <span style="color:#888">{{ cand.req_ref|default:"REQ-2026-343" }}</span>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <a href="mailto:{{ cand.email|default:'#' }}" class="ui-btn-outlined"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">mail</span>Compose Email
+    </a>
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ cand.id|default:1 }}"
+       class="ui-btn-primary"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span>Send Offer
+    </a>
+    <button type="button" onclick="document.getElementById('editIcon').classList.toggle('open')"
+            style="width:36px;height:36px;border:1px solid #E0E0E0;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#555">edit_square</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── Tab Bar ─────────────────────────────────────────────────────────────── -->
+<div class="cdet-tabs">
+  <button class="cdet-tab" data-tab="profile" onclick="location.href='/ui/candidate/{{ cand.id|default:1 }}/profile/'">
+    <span class="material-symbols-outlined">account_circle</span>Profile
+  </button>
+  <button class="cdet-tab" data-tab="documents" onclick="location.href='/ui/candidate/{{ cand.id|default:1 }}/documents/'">
+    <span class="material-symbols-outlined">file_copy</span>Documents
+  </button>
+  <button class="cdet-tab active" data-tab="interviews">
+    <span class="material-symbols-outlined">personal_video</span>Interviews
+  </button>
+  <button class="cdet-tab" data-tab="communication" onclick="location.href='/ui/candidate/{{ cand.id|default:1 }}/communication/'">
+    <span class="material-symbols-outlined">forum</span>Communication
+  </button>
+  <button class="cdet-tab" data-tab="offer" onclick="location.href='/ui/candidate/{{ cand.id|default:1 }}/offer-view/'">
+    <span class="material-symbols-outlined">handshake</span>Offer
+  </button>
+</div>
+
+<!-- ── Interview Schedule Table ───────────────────────────────────────────── -->
+<div class="ui-panel" style="padding:0;overflow:hidden;border-radius:20px">
+
+  <!-- Table header bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #F0F0F0">
+    <div class="ui-panel__title" style="margin-bottom:0">Interview Schedule</div>
+    <a href="/ui/interview-creator/?candidate={{ cand.id|default:1 }}"
+       class="ui-btn-primary"
+       style="height:32px;padding:0 14px;font-size:12px;display:inline-flex;align-items:center;gap:4px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:15px">add</span>Schedule Interview
+    </a>
+  </div>
+
+  <!-- Table -->
+  <table class="ui-table" style="margin:0">
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Interviewer</th>
+        <th>Date &amp; Time</th>
+        <th>Rating</th>
+        <th>Feedback</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- Row 1: Screening Interview — Completed -->
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#278E53;flex-shrink:0">tv_signin</span>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#111">Screening Interview</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Initial screening by recruiter</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px">SW</div>
+            <div>
+              <div class="name">Sarah Williams</div>
+              <div class="sub">HR Recruiter</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">
+          <div style="font-weight:500;color:#111">May 11, 2026</div>
+          <div style="color:#888;margin-top:2px">10:00 AM</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div style="display:flex;gap:2px">
+              {% for i in "12345" %}
+              <span class="material-symbols-outlined" style="font-size:14px;{% if forloop.counter <= 4 %}color:#F59E0B{% else %}color:#D0D0D0{% endif %}">star</span>
+              {% endfor %}
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#278E53;margin-left:2px">4.5/5</span>
+          </div>
+        </td>
+        <td style="max-width:220px">
+          <div style="font-size:12px;color:#333;line-height:1.5">
+            Good Communication and profile match. Shortlisted for next round.
+          </div>
+        </td>
+        <td>
+          <span class="ui-pill ui-pill--green" style="font-size:11px">Completed</span>
+        </td>
+      </tr>
+
+      <!-- Row 2: Technical Interview — Completed -->
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#1565C0;flex-shrink:0">code</span>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#111">Technical Interview</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Deep-dive on technical skills</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#E3F2FD;color:#1565C0">DT</div>
+            <div>
+              <div class="name">David Thompson</div>
+              <div class="sub">Tech Lead</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">
+          <div style="font-weight:500;color:#111">May 22, 2026</div>
+          <div style="color:#888;margin-top:2px">10:00 AM</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div style="display:flex;gap:2px">
+              {% for i in "12345" %}
+              <span class="material-symbols-outlined" style="font-size:14px;{% if forloop.counter <= 4 %}color:#F59E0B{% else %}color:#D0D0D0{% endif %}">star</span>
+              {% endfor %}
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#278E53;margin-left:2px">4/5</span>
+          </div>
+        </td>
+        <td style="max-width:220px">
+          <div style="font-size:12px;color:#333;line-height:1.5">
+            Strong in React and TypeScript. Needs improvement in systems design.
+          </div>
+          <a href="/ui/interview/2/evaluate/" style="font-size:11px;color:#278E53;text-decoration:none;display:inline-flex;align-items:center;gap:2px;margin-top:4px">
+            <span class="material-symbols-outlined" style="font-size:13px">open_in_new</span>View full evaluation
+          </a>
+        </td>
+        <td>
+          <span class="ui-pill ui-pill--green" style="font-size:11px">Completed</span>
+        </td>
+      </tr>
+
+      <!-- Row 3: HR Interview — Completed -->
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#7B1FA2;flex-shrink:0">people</span>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#111">HR Interview</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Cultural fit &amp; HR evaluation</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#F3E5F5;color:#7B1FA2">LT</div>
+            <div>
+              <div class="name">Linda Turner</div>
+              <div class="sub">HR Manager</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">
+          <div style="font-weight:500;color:#111">May 24, 2026</div>
+          <div style="color:#888;margin-top:2px">10:00 AM</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div style="display:flex;gap:2px">
+              {% for i in "12345" %}
+              <span class="material-symbols-outlined" style="font-size:14px;{% if forloop.counter <= 4 %}color:#F59E0B{% else %}color:#D0D0D0{% endif %}">star</span>
+              {% endfor %}
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#278E53;margin-left:2px">4/5</span>
+          </div>
+        </td>
+        <td style="max-width:220px">
+          <div style="font-size:12px;color:#333;line-height:1.5">
+            Good communication and profile match. Shortlisted for next round.
+          </div>
+          <a href="/ui/interview/3/evaluate/" style="font-size:11px;color:#278E53;text-decoration:none;display:inline-flex;align-items:center;gap:2px;margin-top:4px">
+            <span class="material-symbols-outlined" style="font-size:13px">open_in_new</span>View full evaluation
+          </a>
+        </td>
+        <td>
+          <span class="ui-pill ui-pill--green" style="font-size:11px">Completed</span>
+        </td>
+      </tr>
+
+      <!-- Row 4: Managerial Interview — Completed -->
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#E65100;flex-shrink:0">tv_signin</span>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#111">Managerial Interview</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Leadership &amp; team fit assessment</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#FFF3E0;color:#E65100">MJ</div>
+            <div>
+              <div class="name">Mark Johnson</div>
+              <div class="sub">HR Recruiter</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">
+          <div style="font-weight:500;color:#111">May 25, 2026</div>
+          <div style="color:#888;margin-top:2px">10:00 AM</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div style="display:flex;gap:2px">
+              {% for i in "12345" %}
+              <span class="material-symbols-outlined" style="font-size:14px;{% if forloop.counter <= 4 %}color:#F59E0B{% else %}color:#D0D0D0{% endif %}">star</span>
+              {% endfor %}
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#278E53;margin-left:2px">4/5</span>
+          </div>
+        </td>
+        <td style="max-width:220px">
+          <div style="font-size:12px;color:#333;line-height:1.5">
+            Good problem solving and leadership potential.
+          </div>
+        </td>
+        <td>
+          <span class="ui-pill ui-pill--green" style="font-size:11px">Completed</span>
+        </td>
+      </tr>
+
+      <!-- Row 5: Final Interview — Scheduled -->
+      <tr class="ciw-row--scheduled">
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#F59E0B;flex-shrink:0">stars</span>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#111">Final Interview</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Executive &amp; final decision</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#E8F5ED;color:#1F5F2F">SW</div>
+            <div>
+              <div class="name">Sarah Williams</div>
+              <div class="sub">HR Recruiter</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:13px">
+          <div style="font-weight:500;color:#111">Jun 2, 2026</div>
+          <div style="color:#888;margin-top:2px">11:00 AM</div>
+        </td>
+        <td>
+          <div style="display:flex;gap:2px">
+            {% for i in "12345" %}
+            <span class="material-symbols-outlined" style="font-size:14px;color:#D0D0D0">star</span>
+            {% endfor %}
+          </div>
+          <div style="font-size:11px;color:#BBB;margin-top:2px">Not evaluated yet</div>
+        </td>
+        <td style="max-width:220px">
+          <div style="font-size:12px;color:#BBB;font-style:italic">—</div>
+        </td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+            <span class="ui-pill ui-pill--amber" style="font-size:11px">Scheduled</span>
+            <div style="display:flex;gap:6px">
+              <a href="/ui/interview/5/edit/" style="height:26px;padding:0 8px;border:1px solid #E0E0E0;border-radius:5px;background:#fff;font-size:11px;font-weight:500;color:#333;display:inline-flex;align-items:center;gap:3px;text-decoration:none">
+                <span class="material-symbols-outlined" style="font-size:13px">edit</span>Edit
+              </a>
+              <a href="/ui/interview/5/evaluate/" style="height:26px;padding:0 8px;border:1px solid #278E53;border-radius:5px;background:#fff;font-size:11px;font-weight:500;color:#278E53;display:inline-flex;align-items:center;gap:3px;text-decoration:none">
+                <span class="material-symbols-outlined" style="font-size:13px">rate_review</span>Evaluate
+              </a>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <!-- Scale note -->
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:#FAFAFA;border-top:1px solid #F0F0F0;border-radius:0 0 20px 20px">
+    <span class="material-symbols-outlined" style="font-size:16px;color:#999">info</span>
+    <span style="font-size:11px;color:#888">
+      Scores are on a scale of <strong>1 (Poor)</strong> to <strong>5 (Excellent)</strong>
+    </span>
+  </div>
+
+</div>
+
+<!-- ── Interview Rounds Summary ────────────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;margin-top:24px;align-items:start">
+
+  <!-- Left: Round progress timeline -->
+  <div class="ui-panel">
+    <div class="ui-panel__title" style="margin-bottom:16px">Round Progress</div>
+    <div style="display:flex;flex-direction:column;gap:0">
+
+      {% with rounds="Screening Interview,Technical Interview,HR Interview,Managerial Interview,Final Interview" %}
+      {% for round in rounds|split:"," %}
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+            {% if forloop.counter <= 4 %}background:#278E53{% else %}background:#F59E0B{% endif %}">
+            {% if forloop.counter <= 4 %}
+            <span class="material-symbols-outlined" style="font-size:16px;color:#fff">check</span>
+            {% else %}
+            <span class="material-symbols-outlined" style="font-size:16px;color:#fff">pending</span>
+            {% endif %}
+          </div>
+          {% if not forloop.last %}
+          <div style="width:2px;height:28px;{% if forloop.counter <= 4 %}background:#278E53{% else %}background:#E0E0E0{% endif %}"></div>
+          {% endif %}
+        </div>
+        <div style="padding-bottom:{% if forloop.last %}0{% else %}8{% endif %}px;flex:1">
+          <div style="font-size:13px;font-weight:{% if forloop.counter == 5 %}600{% else %}500{% endif %};color:#{% if forloop.counter <= 4 %}111{% else %}666{% endif %}">
+            {{ round }}
+          </div>
+          {% if forloop.counter <= 4 %}
+          <div style="font-size:11px;color:#888;margin-top:2px">Completed</div>
+          {% else %}
+          <div style="font-size:11px;color:#F59E0B;margin-top:2px;font-weight:600">Scheduled — Jun 2, 2026</div>
+          {% endif %}
+        </div>
+        {% if forloop.counter <= 4 %}
+        <span style="font-size:11px;font-weight:600;color:#278E53;margin-top:6px">4+/5</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endwith %}
+
+    </div>
+  </div>
+
+  <!-- Right: Aggregate scores + next action -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Aggregate score -->
+    <div class="ui-panel">
+      <div class="ui-panel__title" style="font-size:13px;margin-bottom:12px">Aggregate Score</div>
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:42px;font-weight:700;color:#278E53">4.1</div>
+        <div style="font-size:12px;color:#888">Average across all rounds</div>
+        <div style="display:flex;justify-content:center;gap:3px;margin-top:6px">
+          {% for i in "12345" %}
+          <span class="material-symbols-outlined" style="font-size:18px;{% if forloop.counter <= 4 %}color:#F59E0B{% else %}color:#E0E0E0{% endif %}">star</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="ui-divider"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+        {% with criteria="Technical Skills,Communication,Problem Solving,Cultural Fit" scores="4,5,4,4" %}
+        {% for label in criteria|split:"," %}
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="color:#555">{{ label }}</span>
+            <span style="font-weight:600;color:#111">4/5</span>
+          </div>
+          <div style="height:4px;background:#F0F0F0;border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:80%;background:#278E53;border-radius:2px"></div>
+          </div>
+        </div>
+        {% endfor %}
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- Next action -->
+    <div class="ui-panel" style="background:#F0F8F4;border-color:#C8E6CF">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#278E53">task_alt</span>
+        <span style="font-size:13px;font-weight:600;color:#1F5F2F">All rounds almost done</span>
+      </div>
+      <div style="font-size:12px;color:#444;margin-bottom:12px;line-height:1.6">
+        1 interview remaining. Once completed you can generate an employment proposal or offer letter.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="/ui/interview-creator/?candidate={{ cand.id|default:1 }}"
+           class="ui-btn-primary" style="height:34px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:15px">add</span>Schedule Final Interview
+        </a>
+        <a href="{% url 'ui:offer-creator' %}?candidate={{ cand.id|default:1 }}"
+           class="ui-btn-outlined" style="height:34px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:15px">description</span>Create Offer Letter
+        </a>
+      </div>
+    </div>
+
+    <!-- Panel members -->
+    <div class="ui-panel">
+      <div class="ui-panel__title" style="font-size:13px;margin-bottom:10px">Interview Panel</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        {% with panel="Sarah Williams:HR Recruiter:SW,David Thompson:Tech Lead:DT,Linda Turner:HR Manager:LT,Mark Johnson:Dept Manager:MJ" %}
+        {% for member in panel|split:"," %}
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="ui-avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">
+            {{ member|slice:"0:2"|upper }}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500;color:#111">{{ member|truncatechars:25 }}</div>
+          </div>
+          <span class="ui-pill ui-pill--green" style="font-size:10px;flex-shrink:0">Done</span>
+        </div>
+        {% endfor %}
+        {% endwith %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Styles ──────────────────────────────────────────────────────────────── -->
+<style>
+/* Reuse candidate detail header styles */
+.cdet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+}
+
+.cdet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #EFEFEF;
+  margin-bottom: 24px;
+}
+.cdet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.cdet-tab .material-symbols-outlined { font-size: 17px; }
+.cdet-tab:hover { color: #278E53; }
+.cdet-tab.active { color: #278E53; border-bottom-color: #278E53; font-weight: 600; }
+
+/* Scheduled row highlight */
+.ciw-row--scheduled td { background: #FFFBF0; }
+</style>
+
+{% endblock %}

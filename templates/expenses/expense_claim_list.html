@@ -1,0 +1,61 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="oh-card__header">
+            <h2 class="oh-card__title">{% trans "Expense Claims" %}</h2>
+        </div>
+        <div class="oh-card__body">
+            {% if expense_claims %}
+                <div class="oh-table">
+                    <table class="oh-table__table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Employee" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Category" %}</th>
+                                <th>{% trans "Expense Date" %}</th>
+                                <th>{% trans "Amount" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in expense_claims %}
+                            <tr>
+                                <td>{{ claim.employee }}</td>
+                                <td>{{ claim.description|truncatewords:5 }}</td>
+                                <td>{{ claim.category.name }}</td>
+                                <td>{{ claim.expense_date }}</td>
+                                <td>{{ claim.amount }} {{ claim.currency }}</td>
+                                <td>
+                                    <span class="oh-badge oh-badge--{% if claim.status == 'paid' %}success{% elif claim.status == 'rejected' %}danger{% elif claim.status == 'pending' %}warning{% else %}info{% endif %}">
+                                        {{ claim.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'expenses:expense_claim_detail' claim.id %}" class="oh-btn oh-btn--small oh-btn--info">
+                                        {% trans "View" %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="oh-empty">
+                    <div class="oh-empty__icon">
+                        <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                    </div>
+                    <h5 class="oh-empty__title">{% trans "No expense claims found" %}</h5>
+                    <p class="oh-empty__subtitle">{% trans "There are no expense claims available at the moment." %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

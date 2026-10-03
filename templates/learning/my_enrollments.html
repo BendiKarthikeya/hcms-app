@@ -1,0 +1,99 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:dashboard' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Dashboard" %}
+                    </a>
+                    <h1 class="oh-page-title">{% trans "My Course Enrollments" %}</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <a href="{% url 'learning:course_list' %}" class="oh-btn oh-btn--primary oh-btn--shadow">
+                        <ion-icon name="school-outline" class="mr-1"></ion-icon>{% trans "Browse More Courses" %}
+                    </a>
+                </div>
+            </div>
+
+            {% if enrollments %}
+            <div class="oh-card" style="border-radius: 8px;">
+                <div class="table-responsive" style="padding: 1.5rem;">
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead style="background-color: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Course" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Status" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Enrollment Date" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Progress" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Score" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enr in enrollments %}
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 1rem; color: #333;"><strong>{{ enr.course.name }}</strong></td>
+                                <td style="padding: 1rem;">
+                                    <span class="oh-badge {% if enr.status == 'approved' %}oh-badge--success{% elif enr.status == 'pending' %}oh-badge--warning{% else %}oh-badge--danger{% endif %}">
+                                        {{ enr.get_status_display }}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; color: #666; font-size: 0.9rem;">{{ enr.enrollment_date|date:"M d, Y" }}</td>
+                                <td style="padding: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div style="flex: 1; height: 8px; background-color: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                            <div style="height: 100%; background-color: #28a745; width: {{ enr.progress_percentage }}%;"></div>
+                                        </div>
+                                        <span style="font-size: 0.85rem; color: #666;">{{ enr.progress_percentage }}%</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem; color: #666;">{{ enr.final_score|default:"—" }}</td>
+                                <td style="padding: 1rem;">
+                                    <a href="{% url 'learning:course_detail' enr.course.pk %}" class="oh-btn oh-btn--secondary oh-btn--shadow" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                        <ion-icon name="eye-outline"></ion-icon>{% trans "View" %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">{% trans "First" %}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{% trans "Last" %}</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div style="text-align: center; padding: 3rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📚</div>
+                <p style="color: #666; margin-bottom: 1.5rem;">{% trans "You have no course enrollments yet." %}</p>
+                <a href="{% url 'learning:course_list' %}" class="oh-btn oh-btn--primary oh-btn--shadow">
+                    <ion-icon name="school-outline"></ion-icon>{% trans "Browse Courses" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

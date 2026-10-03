@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — FITS HCMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+<style>
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Inter',sans-serif; background:#F5F6FA; color:#222; min-height:100vh; }
+
+.lg-wrap { display:grid; grid-template-columns:1fr 1fr; min-height:100vh; }
+
+/* ───── Brand panel (left) ───── */
+.lg-brand {
+  background: linear-gradient(135deg,#1F5F2F 0%,#278E53 60%,#4DC55C 130%);
+  color:#fff; padding:48px 56px; display:flex; flex-direction:column; justify-content:space-between;
+  position:relative; overflow:hidden;
+}
+.lg-brand::before, .lg-brand::after {
+  content:''; position:absolute; border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.lg-brand::before { width:340px; height:340px; top:-100px; right:-80px; }
+.lg-brand::after  { width:260px; height:260px; bottom:-90px; left:-60px; background:rgba(255,255,255,0.04); }
+
+.lg-logo { display:flex; align-items:center; gap:12px; z-index:1; }
+.lg-logo__icon { width:42px; height:42px; background:#fff; color:#1F5F2F; border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+.lg-logo__text { font-weight:700; font-size:16px; line-height:1.1; }
+.lg-logo__sub  { font-size:11px; opacity:0.8; }
+
+.lg-headline { z-index:1; max-width:420px; }
+.lg-headline h1 { font-size:34px; font-weight:700; line-height:1.2; margin-bottom:14px; }
+.lg-headline p { font-size:13px; line-height:1.65; opacity:0.92; }
+
+.lg-feats { z-index:1; display:flex; flex-direction:column; gap:14px; }
+.lg-feat { display:flex; align-items:center; gap:12px; font-size:13px; }
+.lg-feat__icon { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; }
+.lg-feat__icon .material-symbols-outlined { font-size:16px; }
+
+/* ───── Form panel (right) ───── */
+.lg-form-wrap { display:flex; align-items:center; justify-content:center; padding:48px 40px; }
+.lg-form { width:100%; max-width:380px; }
+.lg-form__title { font-size:24px; font-weight:700; color:#111; margin-bottom:6px; }
+.lg-form__sub { font-size:13px; color:#888; margin-bottom:28px; }
+
+.lg-msgs { margin-bottom:14px; }
+.lg-msg { font-size:12px; padding:9px 12px; border-radius:6px; margin-bottom:6px; }
+.lg-msg--error   { background:#FFF0EE; color:#C04730; border:1px solid #F4C7BF; }
+.lg-msg--warning { background:#FFF8EC; color:#B07600; border:1px solid #F2DBA1; }
+.lg-msg--success { background:#E8F5ED; color:#1F8A50; border:1px solid #B7DEC5; }
+.lg-msg--info    { background:#EBF4FF; color:#1565C0; border:1px solid #C9DDF5; }
+
+.lg-field { margin-bottom:16px; }
+.lg-label { display:block; font-size:12px; font-weight:500; color:#333; margin-bottom:6px; }
+.lg-input-wrap { position:relative; }
+.lg-input-wrap .material-symbols-outlined { position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:18px; color:#999; }
+.lg-input {
+  width:100%; height:42px; padding:0 14px 0 38px; border:1px solid #DCDCDC; border-radius:7px;
+  font-family:'Inter',sans-serif; font-size:13px; color:#222; outline:none; background:#fff;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.lg-input:focus { border-color:#278E53; box-shadow:0 0 0 3px rgba(39,142,83,0.12); }
+.lg-toggle { position:absolute; right:0; top:0; bottom:0; width:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#999; background:none; border:none; padding:0; border-radius:0 7px 7px 0; }
+.lg-toggle:hover { color:#555; }
+.lg-input--has-toggle { padding-right:44px; }
+
+.lg-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; font-size:12px; }
+.lg-remember { display:flex; align-items:center; gap:7px; color:#444; cursor:pointer; }
+.lg-remember input { accent-color:#278E53; width:14px; height:14px; }
+.lg-forgot { color:#278E53; font-weight:600; text-decoration:none; }
+.lg-forgot:hover { text-decoration:underline; }
+
+.lg-submit {
+  width:100%; height:44px; border:none; border-radius:8px; background:#1F5F2F; color:#fff;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:7px;
+  transition:background 0.15s;
+}
+.lg-submit:hover { background:#175024; }
+
+.lg-divider { display:flex; align-items:center; gap:10px; margin:20px 0; color:#BBB; font-size:11px; }
+.lg-divider::before, .lg-divider::after { content:''; flex:1; height:1px; background:#EEE; }
+
+.lg-foot { text-align:center; font-size:12px; color:#888; margin-top:18px; }
+.lg-foot a { color:#278E53; font-weight:600; text-decoration:none; }
+
+@media (max-width: 900px) {
+  .lg-wrap { grid-template-columns:1fr; }
+  .lg-brand { padding:36px 32px; min-height:auto; }
+  .lg-headline h1 { font-size:26px; }
+  .lg-form-wrap { padding:36px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="lg-wrap">
+
+  <!-- Brand panel -->
+  <aside class="lg-brand">
+    <div class="lg-logo">
+      <div class="lg-logo__icon">F</div>
+      <div>
+        <div class="lg-logo__text">FITS HCMS</div>
+        <div class="lg-logo__sub">Enterprise HRMS</div>
+      </div>
+    </div>
+
+    <div class="lg-headline">
+      <h1>Welcome back to your HR command center.</h1>
+      <p>Manage recruitment, approvals, interviews, offers, and onboarding from a single, unified workspace.</p>
+    </div>
+
+    <div class="lg-feats">
+      <div class="lg-feat">
+        <div class="lg-feat__icon"><span class="material-symbols-outlined">verified</span></div>
+        <span>Multi-step approvals with audit trail</span>
+      </div>
+      <div class="lg-feat">
+        <div class="lg-feat__icon"><span class="material-symbols-outlined">groups</span></div>
+        <span>Candidate pipeline &amp; interview rounds</span>
+      </div>
+      <div class="lg-feat">
+        <div class="lg-feat__icon"><span class="material-symbols-outlined">draw</span></div>
+        <span>E-sign offers &amp; employment proposals</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Form panel -->
+  <section class="lg-form-wrap">
+    <div class="lg-form">
+      <div class="lg-form__title">Sign in to your account</div>
+      <div class="lg-form__sub">Enter your credentials to continue</div>
+
+      {% if messages %}
+      <div class="lg-msgs">
+        {% for m in messages %}
+          <div class="lg-msg lg-msg--{{ m.tags|default:'info' }}">{{ m }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'ui:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" autocomplete="on">
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        <div class="lg-field">
+          <label class="lg-label" for="lg-username">Email or username</label>
+          <div class="lg-input-wrap">
+            <span class="material-symbols-outlined">mail</span>
+            <input class="lg-input" id="lg-username" type="text" name="username" placeholder="you@company.com" required autofocus
+              oninput="this.value=this.value.toLowerCase()"
+              onblur="this.value=this.value.trim().toLowerCase()">
+          </div>
+        </div>
+
+        <div class="lg-field">
+          <label class="lg-label" for="lg-password">Password</label>
+          <div class="lg-input-wrap">
+            <span class="material-symbols-outlined">lock</span>
+            <input class="lg-input lg-input--has-toggle" id="lg-password" type="password" name="password" placeholder="••••••••" required>
+            <button type="button" class="lg-toggle" id="lg-pwd-toggle" tabindex="-1" aria-label="Toggle password visibility">
+              <span class="material-symbols-outlined" style="font-size:18px">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg-row">
+          <label class="lg-remember"><input type="checkbox" name="remember"> Remember me</label>
+          <a class="lg-forgot" href="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button class="lg-submit" type="submit">
+          Sign in <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+        </button>
+      </form>
+
+      <div class="lg-foot">
+        Need help? <a href="mailto:hr@fits.com">Contact administrator</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var t = document.getElementById('lg-pwd-toggle');
+  var p = document.getElementById('lg-password');
+  if (t && p) {
+    var icon = t.querySelector('.material-symbols-outlined');
+    t.addEventListener('click', function(){
+      var show = p.type === 'password';
+      p.type = show ? 'text' : 'password';
+      if (icon) icon.textContent = show ? 'visibility_off' : 'visibility';
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+{% load i18n static %}
+{# Partial used by the "Proposals" tab on /recruitment/interview-view/ #}
+
+<style>
+  .ep-mini-tbl { width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
+  .ep-mini-tbl th { background:#f9fafb; text-align:left; padding:9px 11px; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb; }
+  .ep-mini-tbl td { padding:9px 11px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+  .ep-pill { display:inline-block; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; margin-right:4px; }
+  .ep-pill-active   { background:#dcfce7; color:#166534; }
+  .ep-pill-waiting  { background:#f3f4f6; color:#6b7280; }
+  .ep-pill-approved { background:#dbeafe; color:#1d4ed8; }
+  .ep-pill-rejected { background:#fef3c7; color:#b45309; }
+
+  /* Workflow modal */
+  .pp-workflow-modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:99999; }
+  .pp-workflow-modal.show { display:flex; }
+  .pp-workflow-card { width:90vw; max-width:900px; max-height:90vh; overflow-y:auto; background:#fff; border-radius:16px; padding:24px 28px; box-shadow:0 20px 60px rgba(0,0,0,.3); transform:scale(0.92); opacity:0; transition:all .35s ease; }
+  .pp-workflow-modal.show .pp-workflow-card { transform:scale(1); opacity:1; }
+  .pp-workflow-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; }
+  .pp-flow-step { opacity:0; transform:translateY(15px); padding:10px 16px; border-radius:999px; font-weight:500; border:2px solid transparent; transition:all .6s ease; white-space:nowrap; font-size:13px; }
+  .pp-flow-step.approved { background:#d1fae5; border-color:#10b981; color:#065f46; }
+  .pp-flow-step.current  { background:#fef3c7; border-color:#f59e0b; color:#92400e; }
+  .pp-flow-step.rejected { background:#fee2e2; border-color:#ef4444; color:#991b1b; }
+  .pp-flow-step.waiting  { background:#f3f4f6; border-color:#e5e7eb; color:#9ca3af; }
+  .pp-flow-arrow { opacity:0; transform:translateY(15px); font-size:22px; color:#6b7280; transition:all .6s ease; align-self:flex-start; margin-top:10px; }
+  .pp-flow-step.show, .pp-flow-arrow.show, .pp-reason.show { opacity:1; transform:translateY(0); }
+  .pp-reason { display:flex; flex-direction:column; align-items:center; margin-top:6px; opacity:0; transform:translateY(-6px); transition:all .5s ease; gap:4px; }
+  .pp-reason-text { padding:5px 10px; border-radius:999px; font-size:11px; white-space:nowrap; }
+  .pp-reason-time { background:#e0f2fe; color:#075985; }
+  .pp-reason-fb { background:#fee2e2; color:#991b1b; max-width:240px; white-space:normal; text-align:center; }
+</style>
+
+{% if rows %}
+<table class="ep-mini-tbl">
+  <thead>
+    <tr>
+      <th>{% trans "No." %}</th>
+      <th>{% trans "Candidate" %}</th>
+      <th>{% trans "Template" %}</th>
+      <th>{% trans "Status" %}</th>
+      <th>{% trans "Chain" %}</th>
+      <th>{% trans "Actions" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td><strong>{{ r.proposal.proposal_no }}</strong></td>
+      <td>{{ r.proposal.candidate.name }}</td>
+      <td>{{ r.proposal.get_template_type_display }}</td>
+      <td>{{ r.proposal.get_status_display }}</td>
+      <td>
+        {% if r.chain %}
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+            {% for step in r.chain %}
+              <span class="ep-pill ep-pill-{{ step.display_status }}" title="{{ step.role_label }} — {{ step.approver.get_full_name }}">{{ step.sequence }}</span>
+            {% endfor %}
+            <button type="button"
+                    onclick='openProposalWorkflow({{ r.proposal.id }})'
+                    style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px;">
+              <ion-icon name="git-branch-outline" style="font-size:13px;"></ion-icon>{% trans "Track" %}
+            </button>
+          </div>
+        {% else %}
+          <span style="color:#9ca3af;font-size:11px;">{% trans "No chain" %}</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{% url 'proposal-detail' r.proposal.id %}" style="color:#2563eb;font-size:12px;">{% trans "Open" %}</a>
+        {% if r.all_approved %}
+          &middot;
+          <a href="{% url 'proposal-convert-offer' r.proposal.id %}" style="color:#16a34a;font-size:12px;">{% trans "Create Offer" %}</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{# Per-row chain JSON for modal #}
+<script>
+window.PROPOSAL_CHAINS = window.PROPOSAL_CHAINS || {};
+{% for r in rows %}
+window.PROPOSAL_CHAINS[{{ r.proposal.id }}] = {
+  candidate: "{{ r.proposal.candidate.name|escapejs }}",
+  template: "{{ r.proposal.get_template_type_display|escapejs }}",
+  steps: [
+    {% for step in r.chain %}
+    {
+      seq: {{ step.sequence }},
+      role: "{{ step.role_label|escapejs }}",
+      approver: "{{ step.approver.get_full_name|default:'—'|escapejs }}",
+      status: "{{ step.display_status }}",
+      acted_at: "{{ step.acted_at|date:'d M Y H:i'|default:''|escapejs }}",
+      feedback: "{{ step.feedback|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+};
+{% endfor %}
+</script>
+
+<div id="ppWorkflowModal" class="pp-workflow-modal">
+  <div class="pp-workflow-card">
+    <div class="pp-workflow-header">
+      <div>
+        <h5 style="margin:0;">{% trans "Proposal E-Sign Workflow" %}</h5>
+        <p id="ppWorkflowSubtitle" style="font-size:12px;color:#6b7280;margin:2px 0 0;"></p>
+      </div>
+      <span onclick="closeProposalWorkflow()" style="cursor:pointer;font-size:22px;color:#9ca3af;line-height:1;">&times;</span>
+    </div>
+    <div id="ppWorkflowContent" style="padding:24px 0 8px;display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;min-height:80px;"></div>
+  </div>
+</div>
+
+<script>
+function openProposalWorkflow(id) {
+  const d = window.PROPOSAL_CHAINS[id];
+  if (!d) return;
+  const modal = document.getElementById('ppWorkflowModal');
+  const container = document.getElementById('ppWorkflowContent');
+  document.getElementById('ppWorkflowSubtitle').textContent = d.candidate + ' · ' + d.template;
+  container.innerHTML = '';
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  if (!d.steps.length) {
+    container.innerHTML = '<p style="color:#9ca3af;font-size:13px;">{% trans "No approval chain configured." %}</p>';
+    return;
+  }
+
+  d.steps.forEach((s, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    const cls = s.status === 'approved' ? 'approved'
+              : s.status === 'rejected' ? 'rejected'
+              : s.status === 'active'   ? 'current' : 'waiting';
+    const pill = document.createElement('div');
+    pill.className = 'pp-flow-step ' + cls;
+    pill.innerHTML = 'Step ' + s.seq + ': ' + s.role + '<br><span style="font-size:11px;font-weight:400;opacity:.85;">' + s.approver + '</span>';
+    wrap.appendChild(pill);
+
+    if (s.acted_at) {
+      const t = document.createElement('div');
+      t.className = 'pp-reason';
+      t.innerHTML = '<span class="pp-reason-text pp-reason-time">' + s.acted_at + '</span>';
+      wrap.appendChild(t);
+    }
+    if (s.feedback) {
+      const fb = document.createElement('div');
+      fb.className = 'pp-reason';
+      fb.innerHTML = '<span class="pp-reason-text pp-reason-fb">&ldquo;' + s.feedback + '&rdquo;</span>';
+      wrap.appendChild(fb);
+    }
+
+    container.appendChild(wrap);
+
+    if (i < d.steps.length - 1) {
+      const arr = document.createElement('div');
+      arr.className = 'pp-flow-arrow';
+      arr.textContent = '→';
+      container.appendChild(arr);
+    }
+  });
+
+  container.querySelectorAll('.pp-flow-step, .pp-flow-arrow, .pp-reason').forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), i * 250);
+  });
+}
+
+function closeProposalWorkflow() {
+  const modal = document.getElementById('ppWorkflowModal');
+  modal.classList.remove('show');
+  setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+document.getElementById('ppWorkflowModal').addEventListener('click', function(e) {
+  if (e.target === this) closeProposalWorkflow();
+});
+</script>
+
+{% else %}
+  <div style="padding:24px;text-align:center;color:#6b7280;font-size:13px;">
+    {% trans "No proposals yet." %}
+  </div>
+{% endif %}

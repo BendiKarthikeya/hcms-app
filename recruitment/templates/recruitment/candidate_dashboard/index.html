@@ -1,0 +1,249 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Candidate Dashboard" %}{% endblock %}
+
+{% block styles %}
+<style>
+    .cd-wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+    .cd-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+    .cd-header h1 { font-size: 22px; margin: 0; }
+    .cd-header-actions { display:flex; gap:8px; align-items:center; }
+    .cd-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .cd-kpi { background:#fff; border:1px solid hsl(213,22%,93%); border-radius:8px; padding:14px 16px; }
+    .cd-kpi .label { color:#6b7280; font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+    .cd-kpi .value { font-size: 24px; font-weight: 600; margin-top:4px; }
+    .cd-card { background:#fff; border:1px solid hsl(213,22%,93%); border-radius:8px; padding:14px 16px; }
+    .cd-card h2 { font-size:15px; margin:0 0 10px; }
+    .cd-drop { border:2px dashed #cbd5e1; border-radius:10px; padding:28px; text-align:center; transition: background .2s, border-color .2s; cursor:pointer; }
+    .cd-drop.is-drag { background:#eef2ff; border-color:#6366f1; }
+    .cd-drop input[type=file] { display:none; }
+    .cd-drop .hint { color:#6b7280; font-size:12px; margin-top:6px; }
+    .cd-fields { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:12px; }
+    .cd-fields select, .cd-fields input { padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; width:100%; }
+    .cd-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+    .cd-btn { padding:8px 14px; border-radius:6px; border:none; cursor:pointer; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:5px; font-size:13px; }
+    .cd-btn--primary { background:#16a34a; color:#fff; }
+    .cd-btn--secondary { background:#e5e7eb; color:#111827; }
+    .cd-btn--upload { background:#2563eb; color:#fff; }
+    .cd-table { width:100%; border-collapse: collapse; }
+    .cd-table th, .cd-table td { padding:8px 10px; text-align:left; border-bottom:1px solid #f3f4f6; font-size:13px; }
+    .cd-table th { background:#f9fafb; color:#374151; font-weight:600; }
+    .cd-search { display:flex; gap:8px; }
+    .cd-search input { flex:1; padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; }
+    .cd-pager { display:flex; gap:6px; justify-content:flex-end; margin-top:12px; }
+    .cd-pager a, .cd-pager span { padding:4px 10px; border-radius:4px; border:1px solid #e5e7eb; font-size:12px; text-decoration:none; color:#374151; }
+    .cd-pager .current { background:#16a34a; color:#fff; border-color:#16a34a; }
+    .file-list { margin-top:10px; max-height: 120px; overflow-y:auto; text-align:left; font-size:12px; color:#374151; }
+    .file-list li { padding:2px 0; }
+
+    /* Upload modal */
+    .cd-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; align-items:center; justify-content:center; }
+    .cd-modal-overlay.open { display:flex; }
+    .cd-modal { background:#fff; border-radius:10px; width:100%; max-width:520px; padding:24px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .cd-modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .cd-modal-header h3 { margin:0; font-size:16px; }
+    .cd-modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:#6b7280; line-height:1; padding:0; }
+    .cd-modal-close:hover { color:#111; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div class="cd-wrap">
+
+    <div class="cd-header">
+        <h1>{% trans "Candidate Dashboard" %}</h1>
+        <div class="cd-header-actions">
+            <button type="button" class="cd-btn cd-btn--upload" onclick="document.getElementById('cd-upload-modal').classList.add('open')">
+                ⬆ {% trans "Upload CVs" %}
+            </button>
+            <a href="{% url 'candidate-create' %}" class="cd-btn cd-btn--secondary">{% trans "Manual Create" %}</a>
+        </div>
+    </div>
+
+    {% include "recruitment/candidate_dashboard/_kpis.html" %}
+
+    <div class="cd-card">
+        <h2>{% trans "Candidates" %}</h2>
+
+        <!-- Advanced search -->
+        <form method="get" action="{% url 'candidate-dashboard' %}">
+          <div class="cd-search" style="margin-bottom:8px;">
+            <input type="text" name="q" value="{{ q }}" placeholder="{% trans 'Name, email or mobile' %}" />
+            <button type="submit" class="cd-btn cd-btn--secondary">{% trans "Search" %}</button>
+            <button type="button" onclick="this.closest('form').querySelector('.adv-filters').style.display=(this.closest('form').querySelector('.adv-filters').style.display==='none'?'grid':'none')" class="cd-btn cd-btn--secondary">⚙ {% trans "Filters" %}</button>
+          </div>
+          <div class="adv-filters" style="display:{% if filters.position or filters.nationality or filters.exp_min or filters.exp_max or filters.stage or filters.source or filters.recruitment or filters.avail_before or filters.phase %}grid{% else %}none{% endif %};grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:8px;">
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Position" %}</label>
+              <select name="position" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "Any" %}</option>
+                {% for jp in job_positions %}<option value="{{ jp.id }}" {% if filters.position == jp.id|stringformat:'s' %}selected{% endif %}>{{ jp.job_position }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Nationality" %}</label>
+              <select name="nationality" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "Any" %}</option>
+                <option value="omani" {% if filters.nationality == 'omani' %}selected{% endif %}>{% trans "Omani" %}</option>
+                <option value="expat" {% if filters.nationality == 'expat' %}selected{% endif %}>{% trans "Expat" %}</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Exp. Min (yrs)" %}</label>
+              <input type="number" name="exp_min" min="0" step="0.5" value="{{ filters.exp_min }}" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Exp. Max (yrs)" %}</label>
+              <input type="number" name="exp_max" min="0" step="0.5" value="{{ filters.exp_max }}" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Stage" %}</label>
+              <select name="stage" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "Any" %}</option>
+                {% for s in stages %}<option value="{{ s.id }}" {% if filters.stage == s.id|stringformat:'s' %}selected{% endif %}>{{ s.stage }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Source" %}</label>
+              <select name="source" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "Any" %}</option>
+                {% for s in sources %}<option value="{{ s }}" {% if filters.source == s %}selected{% endif %}>{{ s|capfirst }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Available by" %}</label>
+              <input type="date" name="avail_before" value="{{ filters.avail_before }}" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Recruitment" %}</label>
+              <select name="recruitment" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "Any" %}</option>
+                {% for r in open_recruitments %}<option value="{{ r.id }}" {% if filters.recruitment == r.id|stringformat:'s' %}selected{% endif %}>{{ r.title|default:r.job_position_id }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Phase" %}</label>
+              <select name="phase" style="width:100%;padding:5px;border:1px solid #d1d5db;border-radius:5px;margin-top:2px;">
+                <option value="">{% trans "All Phases" %}</option>
+                <option value="application" {% if filters.phase == 'application' %}selected{% endif %}>{% trans "Application" %}</option>
+                <option value="interview" {% if filters.phase == 'interview' %}selected{% endif %}>{% trans "Interview" %}</option>
+                <option value="proposal" {% if filters.phase == 'proposal' %}selected{% endif %}>{% trans "Proposal" %}</option>
+                <option value="offer_letter" {% if filters.phase == 'offer_letter' %}selected{% endif %}>{% trans "Offer Letter" %}</option>
+                <option value="hired" {% if filters.phase == 'hired' %}selected{% endif %}>{% trans "Hired" %}</option>
+                <option value="cancelled" {% if filters.phase == 'cancelled' %}selected{% endif %}>{% trans "Cancelled" %}</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:6px;">
+              <button type="submit" class="cd-btn cd-btn--primary" style="flex:1;">{% trans "Apply" %}</button>
+              <a href="{% url 'candidate-dashboard' %}" class="cd-btn cd-btn--secondary">{% trans "Clear" %}</a>
+            </div>
+          </div>
+        </form>
+
+        <!-- Phase quick-filter pills -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;margin-bottom:4px;">
+          {% with base_url="?q="|add:q %}
+          <a href="{{ base_url }}" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if not filters.phase %}background:#1d4ed8;color:#fff;border:1px solid #1d4ed8;{% else %}background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;{% endif %}">{% trans "All" %}</a>
+          <a href="{{ base_url }}&phase=application" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'application' %}background:#1d4ed8;color:#fff;border:1px solid #1d4ed8;{% else %}background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;{% endif %}">{% trans "Application" %}</a>
+          <a href="{{ base_url }}&phase=interview" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'interview' %}background:#a16207;color:#fff;border:1px solid #a16207;{% else %}background:#fefce8;color:#a16207;border:1px solid #fde68a;{% endif %}">{% trans "Interview" %}</a>
+          <a href="{{ base_url }}&phase=proposal" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'proposal' %}background:#7c3aed;color:#fff;border:1px solid #7c3aed;{% else %}background:#fdf4ff;color:#7c3aed;border:1px solid #e9d5ff;{% endif %}">{% trans "Proposal" %}</a>
+          <a href="{{ base_url }}&phase=offer_letter" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'offer_letter' %}background:#166534;color:#fff;border:1px solid #166534;{% else %}background:#eff9f0;color:#166534;border:1px solid #bbf7d0;{% endif %}">{% trans "Offer Letter" %}</a>
+          <a href="{{ base_url }}&phase=hired" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'hired' %}background:#14532d;color:#fff;border:1px solid #14532d;{% else %}background:#f0fdf4;color:#14532d;border:1px solid #bbf7d0;{% endif %}">{% trans "Hired" %}</a>
+          <a href="{{ base_url }}&phase=cancelled" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;text-decoration:none;{% if filters.phase == 'cancelled' %}background:#b91c1c;color:#fff;border:1px solid #b91c1c;{% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;{% endif %}">{% trans "Cancelled" %}</a>
+          {% endwith %}
+        </div>
+
+        <div style="margin-top:8px;">
+            {% include "recruitment/candidate_dashboard/_table.html" %}
+        </div>
+    </div>
+
+</div>
+</div>
+</main>
+
+<!-- Upload CVs Modal -->
+<div id="cd-upload-modal" class="cd-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="cd-modal">
+    <div class="cd-modal-header">
+      <h3>⬆ {% trans "Upload CVs" %}</h3>
+      <button class="cd-modal-close" onclick="document.getElementById('cd-upload-modal').classList.remove('open')">&times;</button>
+    </div>
+    <form method="post" action="{% url 'cv-upload-bulk' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <label for="cd-file-input" id="cd-drop" class="cd-drop">
+        <div style="font-size:32px;">⬆️</div>
+        <div style="font-weight:600;margin-top:4px;">{% trans "Drop CVs here or click to browse" %}</div>
+        <div class="hint">{% trans "PDF only. Multiple files supported. One candidate is created per file." %}</div>
+        <input id="cd-file-input" type="file" name="files" multiple accept=".pdf,application/pdf" required>
+        <div id="cd-file-list"></div>
+      </label>
+      <div class="cd-fields">
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Recruitment (optional)" %}</label>
+          <select name="recruitment_id">
+            <option value="">{% trans "— None —" %}</option>
+            {% for rec in open_recruitments %}
+              <option value="{{ rec.id }}">{{ rec.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Default Stage (optional)" %}</label>
+          <select name="stage_id">
+            <option value="">{% trans "— Auto (Initial) —" %}</option>
+            {% for s in stages %}
+              <option value="{{ s.id }}">{{ s.stage }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="cd-actions">
+        <a href="{% url 'cv-upload-single' %}" class="cd-btn cd-btn--secondary">{% trans "Single Upload" %}</a>
+        <button type="submit" class="cd-btn cd-btn--primary">{% trans "Upload" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+    const drop = document.getElementById('cd-drop');
+    const input = document.getElementById('cd-file-input');
+    const list = document.getElementById('cd-file-list');
+    if (!drop || !input) return;
+
+    function renderFiles(files) {
+        list.innerHTML = '';
+        if (!files || !files.length) return;
+        const ul = document.createElement('ul');
+        ul.className = 'file-list';
+        Array.from(files).forEach(f => {
+            const li = document.createElement('li');
+            li.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+            ul.appendChild(li);
+        });
+        list.appendChild(ul);
+    }
+
+    drop.addEventListener('click', () => input.click());
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-drag'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-drag'));
+    drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.classList.remove('is-drag');
+        input.files = e.dataTransfer.files;
+        renderFiles(input.files);
+    });
+    input.addEventListener('change', () => renderFiles(input.files));
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') document.getElementById('cd-upload-modal').classList.remove('open');
+    });
+})();
+</script>
+{% endblock %}

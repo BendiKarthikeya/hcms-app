@@ -1,0 +1,63 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Offer Letters" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1100px;margin:24px auto;padding:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h1 style="margin:0;font-size:22px;">{% trans "Offer Letters" %}</h1>
+    <div style="display:flex;gap:10px;">
+      <a href="{% url 'offer-approval-inbox' %}" style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;text-decoration:none;font-size:13px;">{% trans "Approval Inbox" %}</a>
+      <a href="{% url 'candidate-dashboard' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;font-size:13px;">{% trans "← Candidates" %}</a>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Ref" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Candidate" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Position" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Salary" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Joining Date" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Status" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Actions" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:9px 10px;font-size:12px;color:#6b7280;font-family:monospace;">{{ offer.offer_no }}</td>
+          <td style="padding:9px 10px;font-size:13px;font-weight:500;">{{ offer.candidate_id.name }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ offer.position }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ offer.currency }} {{ offer.basic_salary }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ offer.joining_date|date:"d M Y" }}</td>
+          <td style="padding:9px 10px;">
+            <span style="padding:2px 10px;border-radius:12px;font-size:11px;background:
+              {% if offer.status == 'accepted' %}#dcfce7
+              {% elif offer.status == 'rejected' %}#fee2e2
+              {% elif offer.status == 'sent' %}#dbeafe
+              {% elif offer.status == 'pending_approval' %}#fef9c3
+              {% elif offer.status == 'joined' %}#d1fae5
+              {% else %}#f3f4f6{% endif %};">
+              {{ offer.get_status_display }}
+            </span>
+          </td>
+          <td style="padding:9px 10px;">
+            <a href="{% url 'offer-detail' offer.id %}" style="color:#16a34a;font-size:13px;">{% trans "View" %}</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="padding:24px;text-align:center;color:#6b7280;">
+          {% trans "No offer letters yet." %} {% trans "Go to" %} <a href="{% url 'candidate-dashboard' %}" style="color:#16a34a;">{% trans "Candidates" %}</a> {% trans "and click 'Create Offer' on a candidate." %}
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

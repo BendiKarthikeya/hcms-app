@@ -1,0 +1,200 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .eval-container {
+    padding: 2.5rem;
+    background: #fdfbfb;
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+  }
+  .eval-header {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 2.5rem;
+    color: #111827;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .eval-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 3rem;
+  }
+  .eval-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+  }
+  
+  .candidate-profile {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .avatar {
+    width: 100px; height: 100px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #a5b4fc, #e879f9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 800;
+    box-shadow: 0 10px 20px rgba(165,180,252,0.3);
+  }
+  
+  .score-bar {
+    margin-bottom: 2rem;
+  }
+  .score-label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  .score-track {
+    height: 14px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 10px;
+    transition: width 1s ease-out;
+  }
+  
+  .comments-box {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 157px;
+    margin-top: 1rem;
+    background: #f8fafc;
+    transition: all 0.3s;
+  }
+  .comments-box:focus { border-color: #4f46e5; outline: none; background: white; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+  
+  .action-container { display: flex; gap: 1rem; margin-top: 2rem; }
+  .action-btn {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 1.05rem;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-submit { background: #4f46e5; color: white; box-shadow: 0 4px 15px rgba(79,70,229,0.3); }
+  .btn-submit:hover { background: #4338ca; transform: translateY(-2px); }
+  .btn-reject { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+  .btn-reject:hover { background: #fecaca; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="eval-container">
+  <h1 class="eval-header">{% trans "Candidate Decision Science" %}</h1>
+  
+  <div class="eval-grid">
+    <div class="eval-card">
+      <div class="candidate-profile">
+        <div class="avatar">SJ</div>
+        <div>
+          <h2 style="margin:0; font-size:1.8rem; color:#1e293b; font-weight:800;">Sarah Jenkins</h2>
+          <p style="margin:0.2rem 0 0 0; color:#64748b; font-size:1.05rem; font-weight:500;">Staff Data Scientist Role</p>
+          <span style="display:inline-block; margin-top:0.75rem; background:#ecfdf5; color:#059669; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:700;">Panel Interview Stage</span>
+        </div>
+      </div>
+      
+      <div style="height: 350px;">
+        <canvas id="evalSpider"></canvas>
+      </div>
+    </div>
+    
+    <div class="eval-card">
+      <h3 style="margin-top:0; font-size:1.4rem; font-weight:800; margin-bottom: 2rem; color:#1e293b;">Competency Matrix</h3>
+      
+      <div class="score-bar">
+        <div class="score-label"><span>Statistical Modelling / ML</span> <span>9.5 / 10</span></div>
+        <div class="score-track"><div class="score-fill" style="width: 95%;"></div></div>
+      </div>
+      
+      <div class="score-bar">
+        <div class="score-label"><span>Strategic Thinking</span> <span>8.2 / 10</span></div>
+        <div class="score-track"><div class="score-fill" style="width: 82%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div></div>
+      </div>
+      
+      <div class="score-bar">
+        <div class="score-label"><span>Leadership Potential</span> <span>7.0 / 10</span></div>
+        <div class="score-track"><div class="score-fill" style="width: 70%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div></div>
+      </div>
+      
+      <div class="score-bar">
+        <div class="score-label"><span>Stakeholder Management</span> <span>8.8 / 10</span></div>
+        <div class="score-track"><div class="score-fill" style="width: 88%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div></div>
+      </div>
+      
+      <h4 style="margin-top:2.5rem; margin-bottom:0.75rem; font-weight:800; color:#1e293b;">Interview Evidence & Notes</h4>
+      <textarea class="comments-box" placeholder="Detail any critical observations, strengths, or reservations..."></textarea>
+      
+      <div class="action-container">
+        <button class="action-btn btn-submit">Submit Recommendation</button>
+        <button class="action-btn btn-reject">Not a Fit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    new Chart(document.getElementById('evalSpider'), {
+      type: 'radar',
+      data: {
+        labels: ['Stats / ML', 'Strategy', 'Culture', 'Leadership', 'Domain', 'Execution'],
+        datasets: [{
+          label: 'Current Candidate',
+          data: [9.5, 8.2, 8.0, 7.0, 9.0, 8.5],
+          backgroundColor: 'rgba(79, 70, 229, 0.4)',
+          borderColor: '#4f46e5',
+          pointBackgroundColor: '#4f46e5',
+          borderWidth: 3
+        }, {
+          label: 'Benchmark',
+          data: [7.5, 7.5, 8.5, 7.5, 7.0, 7.5],
+          backgroundColor: 'rgba(148, 163, 184, 0.2)',
+          borderColor: '#94a3b8',
+          pointBackgroundColor: '#94a3b8',
+          borderDash: [5, 5]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' } } } },
+        scales: {
+          r: { min: 4, max: 10, ticks: { display: false }, grid: { color: '#f1f5f9' }, pointLabels: { font: { size: 12, weight: 'bold' } } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

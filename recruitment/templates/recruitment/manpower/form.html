@@ -1,0 +1,69 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "New Manpower Request" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:760px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <h2 style="margin-top:0;">{% trans "New Manpower Request" %}</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Department" %}</label>
+          <select name="department" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            <option value="">{% trans "— Select —" %}</option>
+            {% for d in departments %}<option value="{{ d.id }}">{{ d.department }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Job Position" %}</label>
+          <select name="job_position" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            <option value="">{% trans "— Select —" %}</option>
+            {% for j in job_positions %}<option value="{{ j.id }}">{{ j.job_position }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Grade / Level" %}</label>
+          <input type="text" name="grade" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;" placeholder="e.g. Grade 4">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Positions Required" %}</label>
+          <input type="number" name="positions_count" min="1" value="1" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Employment Type" %}</label>
+          <select name="employment_type" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in employment_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Nationality Preference" %}</label>
+          <select name="nationality_preference" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in nationality_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Budget Code" %}</label>
+          <input type="text" name="budget_code" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Expected Join Date" %}</label>
+          <input type="date" name="expected_join_date" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <label style="font-size:12px;color:#6b7280;">{% trans "Justification" %} *</label>
+        <textarea name="justification" rows="4" required style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+        <a href="{% url 'manpower-list' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Save Draft" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

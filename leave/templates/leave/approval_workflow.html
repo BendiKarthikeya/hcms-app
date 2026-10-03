@@ -1,0 +1,167 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .workflow-container {
+    padding: 2rem;
+    background: #f8fafc;
+    min-height: calc(100vh - 60px);
+  }
+  .page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: hsl(0, 0%, 26%);
+    margin-bottom: 2rem;
+  }
+  .workflow-board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+  }
+  .stage-column {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    min-width: 130px;
+  }
+  .stage-header {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .request-card {
+    background: hsl(0, 0%, 97.5%);
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-bottom: 0.7rem;
+    border: 1px solid #e2e8f0;
+    font-size: 0.82rem;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .request-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .req-name { font-weight: 700; color: #1e293b; }
+  .req-days { color: #64748b; font-size: 0.78rem; margin-top: 0.2rem; }
+  .req-type { display:inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-top: 0.3rem; }
+
+  .stats-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    flex: 1;
+    background: white;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    text-align: center;
+    border-top: 4px solid;
+  }
+  .stat-num { font-size: 2.5rem; font-weight: 900; }
+  .stat-lbl { font-size: 0.85rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-top: 0.3rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workflow-container">
+  <h1 class="page-title">{% trans "7-Stage Leave Approval Workflow" %}</h1>
+
+  <div class="stats-row">
+    <div class="stat-card" style="border-color: hsl(216, 18%, 64%);">
+      <div class="stat-num" style="color:hsl(216, 18%, 64%);">24</div>
+      <div class="stat-lbl">{% trans "Pending" %}</div>
+    </div>
+    <div class="stat-card" style="border-color: hsl(37, 90%, 47%);">
+      <div class="stat-num" style="color:hsl(37, 90%, 47%);">8</div>
+      <div class="stat-lbl">{% trans "In Review" %}</div>
+    </div>
+    <div class="stat-card" style="border-color: hsl(148, 70%, 40%);">
+      <div class="stat-num" style="color:hsl(148, 70%, 40%);">142</div>
+      <div class="stat-lbl">{% trans "Approved (YTD)" %}</div>
+    </div>
+    <div class="stat-card" style="border-color: hsl(1, 64%, 49%);">
+      <div class="stat-num" style="color:hsl(1, 64%, 49%);">12</div>
+      <div class="stat-lbl">{% trans "Rejected (YTD)" %}</div>
+    </div>
+    <div class="stat-card" style="border-color: hsl(216, 18%, 64%);">
+      <div class="stat-num" style="color:hsl(216, 18%, 64%);">1.2d</div>
+      <div class="stat-lbl">{% trans "Avg. Processing Time" %}</div>
+    </div>
+  </div>
+
+  <div class="workflow-board">
+    <div class="stage-column">
+      <div class="stage-header" style="background:#3b82f6;">Stage 1: Submitted</div>
+      <div class="request-card">
+        <div class="req-name">Ahmed K.</div>
+        <div class="req-days">5 days • Apr 10–15</div>
+        <span class="req-type" style="background:#dbeafe; color:#2563eb;">Annual</span>
+      </div>
+      <div class="request-card">
+        <div class="req-name">Sara M.</div>
+        <div class="req-days">2 days • Apr 12–13</div>
+        <span class="req-type" style="background:#fef9c3; color:#a16207;">Sick</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#8b5cf6;">Stage 2: HR Check</div>
+      <div class="request-card">
+        <div class="req-name">James P.</div>
+        <div class="req-days">10 days • Apr 5–18</div>
+        <span class="req-type" style="background:#dbeafe; color:#2563eb;">Annual</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#f59e0b;">Stage 3: Line Mgr</div>
+      <div class="request-card">
+        <div class="req-name">Lena R.</div>
+        <div class="req-days">3 days • Apr 8–10</div>
+        <span class="req-type" style="background:#dcfce7; color:#16a34a;">Emergency</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#06b6d4;">Stage 4: Dept Head</div>
+      <div class="request-card">
+        <div class="req-name">Omar S.</div>
+        <div class="req-days">14 days • Apr 1–18</div>
+        <span class="req-type" style="background:#ede9fe; color:#7c3aed;">Maternity</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#10b981;">Stage 5: Finance</div>
+      <div class="request-card">
+        <div class="req-name">Diana C.</div>
+        <div class="req-days">7 days • Mar 28–Apr 4</div>
+        <span class="req-type" style="background:#dbeafe; color:#2563eb;">Annual</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#0f172a;">Stage 6: CEO</div>
+      <div class="request-card">
+        <div class="req-name">VP Marketing</div>
+        <div class="req-days">21 days • Entire April</div>
+        <span class="req-type" style="background:#fee2e2; color:#dc2626;">Long Leave</span>
+      </div>
+    </div>
+    <div class="stage-column">
+      <div class="stage-header" style="background:#16a34a;">Stage 7: Final</div>
+      <div class="request-card" style="border-color: #bbf7d0;">
+        <div class="req-name">Tom H. ✓</div>
+        <div class="req-days">5 days • Mar 25–29</div>
+        <span class="req-type" style="background:#dcfce7; color:#16a34a;">Approved</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,456 @@
+{% load i18n %} {% load static %}
+<style>
+  /* Hide widget's internal nav (label + filter handled manually) */
+  #managersSelectArea .oh-main__topbar { display: none !important; }
+  /* Grey only the select area, not the checkbox row */
+  #managersSelectArea.managers-disabled {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+</style>
+<script>
+    function skillChange(selectElement) {
+        var selectedSkill = selectElement.val();
+        var parentForm = selectElement.parents().closest("form");
+        if (selectedSkill && selectedSkill.includes("create")) {
+            let dynamicskills = $("#dynamicSkills");
+            var view = parentForm.serialize();
+            dynamicskills.attr("hx-vals", `{"data":"${view}"}`);
+            dynamicskills.click();
+        }
+    }
+    $(document).ready(function(){
+        $("[name= 'skills']").on("change", function(){
+            skillChange($(this))
+        })
+    });
+    {% if dynamic %}
+    setTimeout(function () {
+      $('#dynamicCreateModal').removeClass('oh-modal--show');
+    }, 500);
+  {% endif %}
+</script>
+<script>
+    $(document).ready(function() {
+        function formatOption(option) {
+            if (!option.id) {
+                return option.text;
+            }
+            var $option = $('<span></span>').text(option.text);
+            {% comment %} if (option.id === 'create') {
+                $option.addClass('text-info');
+            } {% endcomment %}
+            return $option;
+        }
+        $('[name = "skills"]').select2({
+            templateResult: formatOption,
+            templateSelection: formatOption
+        });
+    });
+</script>
+{% if messages %}
+<div class="oh-wrapper">
+  {% for message in messages %}
+  <div class="oh-alert-container">
+    <div class="oh-alert oh-alert--animated {{message.tags}}">
+      {{ message }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="oh-modal__dialog-header">
+    <h5 class="oh-modal__dialog-title" id="addRecruitmentModalLabel"
+      >{% if duplicate %}{% trans "Duplicate" %}{% else %}{% trans "Create" %}{% endif %} {{form.verbose_name}}</span
+    >
+    <button class="oh-modal__close" aria-label="Close" >
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+</div>
+<div class="oh-modal__dialog-body" id="addRecruitmentModalBody">
+    <form
+        action="{% url 'recruitment-create' %}"
+        method="post"
+        enctype="multipart/form-data"
+        class="oh-general__tab-target oh-profile-section"
+    >
+        <div>
+            {% csrf_token %}
+            {% if raised_from_employee %}
+                <input type="hidden" name="raised_from_employee" value="True" />
+            {% endif %}
+            <div class="row" id="recruitmentUpdateContainer">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+                    {% for error in form.non_field_errors %}
+                    <ul class="errorlist">
+                        <li>{{error}}</li>
+                    </ul>
+                    {% endfor %}
+                    <label
+                        class="oh-label required-star"
+                        for="{{form.title.id_for_label}}"
+                        >{{form.title.label}}</label
+                    >
+                    {{form.title}} {{form.title.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                        <label class="oh-label required-star" for="{{form.description.id_for_label}}"
+                            style="margin:0;">{{form.description.label}}</label>
+                        <button type="button" onclick="openJdModal()"
+                            style="border:1px solid #6d28d9;background:none;color:#6d28d9;border-radius:6px;
+                                   padding:3px 10px;font-size:12px;cursor:pointer;white-space:nowrap;">
+                            Generate with AI
+                        </button>
+                    </div>
+                    {{form.description}} {{form.description.errors}}
+                </div>
+                <!-- Shared header: Job Position label | Managers label + Filter -->
+                <div class="col-12" style="margin-bottom:6px;">
+                    <div style="display:flex;align-items:flex-end;gap:0;">
+                        <div style="flex:1;padding-right:12px;">
+                            <label class="oh-label required-star mb-0"
+                                for="{{form.open_positions.id_for_label}}">
+                                {{form.open_positions.label}}
+                            </label>
+                        </div>
+                        <div style="flex:1;display:flex;align-items:center;justify-content:space-between;">
+                            <label class="oh-label required-star mb-0"
+                                for="{{form.recruitment_managers.id_for_label}}" id="managersLabel">
+                                {{form.recruitment_managers.label}}
+                            </label>
+                            <button type="button" id="managersFilterTrigger"
+                                style="border:none;background:none;color:#ef4444;font-size:12px;
+                                       font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;">
+                                <ion-icon name="filter-outline" style="font-size:14px;"></ion-icon>
+                                {% trans "Filter" %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Inputs row -->
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6" id="openPositionUpdateContainer">
+                    {{form.open_positions}} {{form.open_positions.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <div id="managersSelectArea">
+                        {{form.recruitment_managers}}
+                        {{form.recruitment_managers.errors}}
+                    </div>
+                    <div class="mt-2">
+                        <label class="oh-label" for="{{ form.use_hierarchy.id_for_label }}"
+                               style="display:flex;align-items:center;gap:6px;">
+                            {{ form.use_hierarchy }}
+                            Auto-assign managers from reporting hierarchy
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+                    <label class="oh-label" for="{{form.justification.id_for_label}}"
+                        >{{form.justification.label}}</label
+                    >
+                    {{form.justification}} {{form.justification.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.start_date.id_for_label}}"
+                        >{{form.start_date.label}}</label
+                    >
+                    {{form.start_date}} {{form.start_date.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.end_date.id_for_label}}"
+                        >{{form.end_date.label}}</label
+                    >
+                    {{form.end_date}} {{form.end_date.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.vacancy.id_for_label}}"
+                        >{{form.vacancy.label}}</label
+                    >
+                    {{form.vacancy}} {{form.vacancy.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.company_id.id_for_label}}"
+                        >{{form.company_id.label}}</label
+                    >
+                    {{form.company_id}} {{form.company_id.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.posting_type.id_for_label}}">
+                        {% trans "Posting Type" %}
+                    </label>
+                    <div class="w-100 d-flex" style="align-items:center; gap:8px;">
+                        <span id="postingTypeLabelInternal" style="font-size:13px;color:#555;">{% trans "Internal" %}</span>
+                        <div class="oh-switch">{{form.posting_type}}</div>
+                        <span id="postingTypeLabelExternal" style="font-size:13px;color:#555;">{% trans "External" %}</span>
+                    </div>
+                    {{form.posting_type.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.grade.id_for_label}}">{{form.grade.label}}</label>
+                    {{form.grade}} {{form.grade.errors}}
+                    <span id="gradeLevelHint" style="font-size:12px;color:#0a7;display:block;margin-top:4px;"></span>
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.band.id_for_label}}">{{form.band.label}}</label>
+                    {{form.band}} {{form.band.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.budget.id_for_label}}">{{form.budget.label}}</label>
+                    {{form.budget}} {{form.budget.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.employment_type.id_for_label}}">{{form.employment_type.label}}</label>
+                    {{form.employment_type}} {{form.employment_type.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.location.id_for_label}}">{{form.location.label}}</label>
+                    {{form.location}} {{form.location.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.expat_allowed.id_for_label}}">{{form.expat_allowed.label}}</label>
+                    <div class="w-100 d-flex" style="align-items:center; gap:8px;">
+                        <div class="oh-switch">{{form.expat_allowed}}</div>
+                        <span style="font-size:12px;color:#888;">{% trans "Allow expatriate candidates" %}</span>
+                    </div>
+                    {{form.expat_allowed.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                    <label class="oh-label" for="{{form.budget_available.id_for_label}}">
+                        {% trans "Budget Available?" %}
+                    </label>
+                    <div class="w-100 d-flex" style="align-items:center;">
+                        <div class="oh-switch">{{form.budget_available}}</div>
+                        <span id="budgetStatusText" style="margin-left:10px;font-size:12px;color:#888;"></span>
+                    </div>
+                    {{form.budget_available.errors}}
+                </div>
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12" id="budgetDocumentSection" style="display:none;">
+                    <label class="oh-label required-star" for="{{form.budget_document.id_for_label}}">
+                        {% trans "Upload Budget Document" %}
+                    </label>
+                    {{form.budget_document}}
+                    {{form.budget_document.errors}}
+                    <div style="font-size:12px;color:#888;margin-top:4px;">
+                        {% trans "Required when the selected job position is not in a privileged department." %}
+                    </div>
+                </div>
+
+                {# Department map consumed by the recompute JS below #}
+                <script id="job-pos-dept-map" type="application/json">{ {% for jp in form.open_positions.field.queryset %}{% if not forloop.first %}, {% endif %}"{{ jp.id }}": "{{ jp.department_id.department|default:''|escapejs }}"{% endfor %} }</script>
+            </div>
+        </div>
+        <div class="d-flex flex-row-reverse w-100 align-items-right mt-4">
+            <button
+                type="submit"
+                id="recruitmentSaveBtn"
+                class="oh-btn oh-btn--secondary pl-5 pr-5"
+                hx-post="{% url 'recruitment-create' %}"
+                hx-target="#objectCreateModalTarget"
+            >
+                {% trans "Save" %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+  $(".oh-general__tab-target.oh-profile-section [name=description]").hide();
+</script>
+
+<script>
+// Hierarchy toggle — greys only the select area, not the checkbox
+(function(){
+  const cb          = document.getElementById("id_use_hierarchy");
+  const selectArea  = document.getElementById("managersSelectArea");
+  const managerLabel = document.getElementById("managersLabel");
+
+  function toggle(){
+    if (!cb) return;
+    const disabled = cb.checked;
+    if (selectArea) selectArea.classList.toggle("managers-disabled", disabled);
+    if (managerLabel) managerLabel.style.opacity = disabled ? "0.4" : "";
+  }
+
+  if (cb) {
+    cb.addEventListener("change", toggle);
+    toggle();
+  }
+
+  // Wire up manual Filter button to trigger the widget's hidden hx button
+  const filterBtn = document.getElementById("managersFilterTrigger");
+  if (filterBtn) {
+    filterBtn.addEventListener("click", function() {
+      const hxBtn = document.querySelector("#managersSelectArea #hxButton");
+      if (hxBtn) hxBtn.click();
+    });
+  }
+})();
+
+// Budget-available gate: derive toggle + Save state from selected job positions.
+(function(){
+  const mapEl = document.getElementById("job-pos-dept-map");
+  let DEPT_MAP = {};
+  try { DEPT_MAP = JSON.parse(mapEl.textContent); } catch(e) {}
+  const PRIVILEGED = ["executive", "execution", "ceo", "sales", "hr"];
+
+  const jobPosSel    = document.querySelector("[name=open_positions]");
+  const budgetToggle = document.getElementById("id_budget_available");
+  const docSection   = document.getElementById("budgetDocumentSection");
+  const fileInput    = document.querySelector("[name=budget_document]");
+  const saveBtn      = document.getElementById("recruitmentSaveBtn");
+  const statusText   = document.getElementById("budgetStatusText");
+
+  function selectedIds(){
+    if (!jobPosSel) return [];
+    if (window.jQuery && jQuery(jobPosSel).val) {
+      const v = jQuery(jobPosSel).val();
+      if (v) return [].concat(v);
+    }
+    return Array.from(jobPosSel.selectedOptions || []).map(o => o.value);
+  }
+
+  function recompute(){
+    const ids = selectedIds();
+    const available = ids.some(id => {
+      const dept = (DEPT_MAP[id] || "").trim().toLowerCase();
+      return dept && PRIVILEGED.some(kw => dept.indexOf(kw) !== -1);
+    });
+    if (budgetToggle) budgetToggle.checked = available;
+    if (docSection)   docSection.style.display = available ? "none" : "";
+    const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+    if (saveBtn) saveBtn.disabled = !available && !hasFile;
+    if (statusText) statusText.textContent = available
+      ? "(privileged department)"
+      : (hasFile ? "(document attached)" : "(upload budget document to enable save)");
+  }
+
+  if (jobPosSel) {
+    if (window.jQuery) jQuery(jobPosSel).on("change", recompute);
+    jobPosSel.addEventListener("change", recompute);
+  }
+  if (fileInput) fileInput.addEventListener("change", recompute);
+  recompute();
+})();
+</script>
+
+<script>
+// Live "Above/Below General Manager" hint based on the selected post grade.
+(function () {
+  var grade = document.getElementById("id_grade");
+  var hint = document.getElementById("gradeLevelHint");
+  if (!grade || !hint) return;
+  var BELOW = ["A", "B", "C"], ABOVE = ["D", "E", "F"];
+  function update() {
+    var g = (grade.value || "").trim().toUpperCase();
+    if (ABOVE.indexOf(g) !== -1) {
+      hint.textContent = "{% trans 'Above General Manager' %} — {% trans 'approval: HR Head → CEO' %}";
+    } else if (BELOW.indexOf(g) !== -1) {
+      hint.textContent = "{% trans 'Below General Manager' %} — {% trans 'approval: HR Head only' %}";
+    } else {
+      hint.textContent = "";
+    }
+  }
+  grade.addEventListener("change", update);
+  if (window.jQuery) jQuery(grade).on("change", update);
+  update();
+})();
+</script>
+
+<!-- AI JD BUILDER MODAL -->
+<div id="aiJdModal"
+  style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+         background:rgba(0,0,0,0.65);z-index:999999;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:520px;width:92%;
+              box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;max-height:90vh;overflow-y:auto;">
+    <button onclick="closeJdModal()"
+      style="position:absolute;top:14px;right:18px;border:none;background:none;font-size:22px;cursor:pointer;">×</button>
+    <h5 style="margin:0 0 20px;font-weight:700;">AI Job Description Builder</h5>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Years of Experience</label>
+      <input id="jdExp" type="text" class="oh-input w-100" placeholder="e.g. 5+ years" />
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Education Level</label>
+      <input id="jdEdu" type="text" class="oh-input w-100" placeholder="e.g. Bachelor's degree" />
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Field of Study / Specialisation</label>
+      <input id="jdField" type="text" class="oh-input w-100" placeholder="e.g. Civil Engineering" />
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Languages Required</label>
+      <input id="jdLang" type="text" class="oh-input w-100" placeholder="e.g. Arabic and English" />
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Nationality Preference <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+      <input id="jdNat" type="text" class="oh-input w-100" placeholder="e.g. Any / Omani / Egyptian" />
+    </div>
+
+    <div id="jdGenerating" style="display:none;text-align:center;padding:10px;color:#3b82f6;font-size:14px;">
+      Generating job description…
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="oh-btn oh-btn--light" onclick="closeJdModal()">Cancel</button>
+      <button type="button" id="jdGenerateBtn" class="oh-btn oh-btn--secondary" onclick="generateJD()">
+        Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openJdModal() {
+  document.getElementById("aiJdModal").style.display = "flex";
+}
+function closeJdModal() {
+  document.getElementById("aiJdModal").style.display = "none";
+}
+
+function generateJD() {
+  const title = document.querySelector("[name='title']")?.value || "";
+  const exp    = document.getElementById("jdExp").value.trim();
+  const edu    = document.getElementById("jdEdu").value.trim();
+  const field  = document.getElementById("jdField").value.trim();
+  const lang   = document.getElementById("jdLang").value.trim();
+  const nat    = document.getElementById("jdNat").value.trim();
+
+  if (!exp && !edu && !field) {
+    alert("Please fill in at least Experience, Education, or Field of Study.");
+    return;
+  }
+
+  document.getElementById("jdGenerating").style.display = "block";
+  document.getElementById("jdGenerateBtn").disabled = true;
+
+  const csrf = (document.cookie.split('; ').find(r => r.startsWith('csrftoken=')) || '').split('=')[1];
+  fetch('/recruitment/api/generate-jd/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify({ title, experience: exp, education: edu, field_of_study: field, languages: lang, nationality: nat })
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById("jdGenerating").style.display = "none";
+    document.getElementById("jdGenerateBtn").disabled = false;
+    if (data.success) {
+      // Set Summernote content
+      const $desc = $('[name="description"]');
+      if ($desc.length && $desc.summernote) {
+        $desc.summernote('code', data.jd);
+      } else {
+        $desc.val(data.jd);
+      }
+      closeJdModal();
+    } else {
+      alert(data.error || "Generation failed. Please try again.");
+    }
+  })
+  .catch(() => {
+    document.getElementById("jdGenerating").style.display = "none";
+    document.getElementById("jdGenerateBtn").disabled = false;
+    alert("Network error. Please try again.");
+  });
+}
+</script>

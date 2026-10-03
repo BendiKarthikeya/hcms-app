@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Generate WPS File{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>Generate WPS File</h1>
+        <p>Create a new Wage Protection System file for bank submission</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.payroll_period.id_for_label }}">
+                    Payroll Period <span class="required">*</span>
+                </label>
+                {{ form.payroll_period }}
+                {% if form.payroll_period.errors %}<div class="error-message">{{ form.payroll_period.errors.0 }}</div>{% endif %}
+                <small>Select the payroll period for this WPS file</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.payment_date.id_for_label }}">
+                    Payment Date <span class="required">*</span>
+                </label>
+                {{ form.payment_date }}
+                {% if form.payment_date.errors %}<div class="error-message">{{ form.payment_date.errors.0 }}</div>{% endif %}
+                <small>Date when salary will be disbursed</small>
+            </div>
+        </div>
+
+        <div class="file-stats">
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="number" id="employee-count">0</div>
+                <div class="label">Active Employees</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">💰</div>
+                <div class="number" id="total-amount">OMR 0</div>
+                <div class="label">Total Payroll</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📄</div>
+                <div class="number" id="file-size">0 KB</div>
+                <div class="label">File Size</div>
+            </div>
+        </div>
+
+        <div class="wps-process">
+            <div class="wps-step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Generate</div>
+            </div>
+            <div class="wps-step">
+                <div class="step-number">2</div>
+                <div class="step-label">Approve</div>
+            </div>
+            <div class="wps-step">
+                <div class="step-number">3</div>
+                <div class="step-label">Submit</div>
+            </div>
+            <div class="wps-step">
+                <div class="step-number">4</div>
+                <div class="step-label">Process</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>ℹ️ WPS File Generation:</strong>
+            <p>The system will extract payroll data for all active employees and create a CBM-compliant file for Central Bank of Oman submission.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Generate WPS File</button>
+            <a href="{% url 'wps-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

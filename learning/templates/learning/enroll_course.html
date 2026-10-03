@@ -1,0 +1,59 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>Enroll in Course</h1>
+
+<div class="row mt-4">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5>Confirm Enrollment</h5>
+                <p class="text-muted">You are about to enroll in the following course:</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-0"><strong>Course:</strong> (Will be auto-filled)</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_course" class="form-label">Select Course</label>
+                        {{ form.course }}
+                        {% if form.course.errors %}
+                        <div class="alert alert-danger mt-2">{{ form.course.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">Notes (Optional)</label>
+                        {{ form.notes }}
+                        <small class="form-text text-muted">Add any notes about your enrollment, goals, or special requests.</small>
+                        {% if form.notes.errors %}
+                        <div class="alert alert-danger mt-2">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Your enrollment request will be sent for approval. You will be notified once it is reviewed.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'learning:course_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Enrollment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    select, textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

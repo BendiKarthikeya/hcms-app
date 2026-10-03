@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}WPS File {{ wps_file.file_reference }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>WPS File Details</h1>
+        <p>Wage Protection System file for {{ wps_file.payroll_period }}</p>
+    </div>
+
+    <div class="file-status-box">
+        <h3>File Status: <span class="status-badge {% if wps_file.status == 'generated' %}generated{% elif wps_file.status == 'approved' %}approved{% elif wps_file.status == 'submitted' %}submitted{% elif wps_file.status == 'processed' %}processed{% endif %}">{{ wps_file.get_status_display }}</span></h3>
+        
+        <div class="status-info">
+            <div class="status-field">
+                <div class="label">File Reference</div>
+                <div class="value">{{ wps_file.file_reference }}</div>
+            </div>
+            <div class="status-field">
+                <div class="label">Created On</div>
+                <div class="value">{{ wps_file.created_at|date:"M d, Y H:i" }}</div>
+            </div>
+        </div>
+
+        <div class="status-info">
+            <div class="status-field">
+                <div class="label">Payment Date</div>
+                <div class="value">{{ wps_file.payment_date|date:"M d, Y" }}</div>
+            </div>
+            <div class="status-field">
+                <div class="label">Payroll Period</div>
+                <div class="value">{{ wps_file.payroll_period }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="file-info-card">
+        <h4>File Summary</h4>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">Total Employees</div>
+                <div class="value">{{ wps_file.total_employees }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Total Salary Amount</div>
+                <div class="value">OMR {{ wps_file.total_amount }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">File Format</div>
+                <div class="value">CBM (Central Bank of Oman)</div>
+            </div>
+            <div class="info-item">
+                <div class="label">File Size</div>
+                <div class="value">{{ wps_file.file_size }} KB</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wps-process">
+        <div class="wps-step completed">
+            <div class="step-number">✓</div>
+            <div class="step-label">Generate</div>
+        </div>
+        <div class="wps-step {% if wps_file.status in 'approved,submitted,processed' %}completed{% else %}active{% endif %}">
+            <div class="step-number">2</div>
+            <div class="step-label">Approve</div>
+        </div>
+        <div class="wps-step {% if wps_file.status in 'submitted,processed' %}completed{% elif wps_file.status == 'submitted' %}active{% endif %}">
+            <div class="step-number">3</div>
+            <div class="step-label">Submit</div>
+        </div>
+        <div class="wps-step {% if wps_file.status == 'processed' %}completed{% endif %}">
+            <div class="step-number">4</div>
+            <div class="step-label">Process</div>
+        </div>
+    </div>
+
+    {% if wps_file.compliance_status %}
+    <div class="file-info-card">
+        <h4>Compliance Status</h4>
+        <p>
+            <span class="compliance-badge {% if wps_file.compliance_status == 'compliant' %}compliant{% elif wps_file.compliance_status == 'non_compliant' %}non-compliant{% else %}pending{% endif %}">
+                {{ wps_file.get_compliance_status_display }}
+            </span>
+        </p>
+        {% if wps_file.compliance_notes %}
+        <p style="margin-top: 10px; font-size: 13px; color: var(--text-dark);">{{ wps_file.compliance_notes }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="form-actions" style="margin-top: 30px;">
+        {% if wps_file.status == 'generated' %}
+            <a href="{% url 'wps-approve' wps_file.id %}" class="btn btn-success">Approve File</a>
+        {% elif wps_file.status == 'approved' %}
+            <a href="{% url 'wps-submit' wps_file.id %}" class="btn btn-primary">Submit to Bank</a>
+        {% elif wps_file.status == 'submitted' %}
+            <a href="{% url 'wps-process-response' wps_file.id %}" class="btn btn-primary">Process Response</a>
+        {% endif %}
+
+        <button onclick="window.print()" class="btn btn-secondary">Print Report</button>
+        <a href="{% url 'wps-list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+{% endblock %}

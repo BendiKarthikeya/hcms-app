@@ -1,0 +1,193 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .mobile-container {
+    padding: 2rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    color: hsl(0, 0%, 26%);
+  }
+  .page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: hsl(0, 0%, 26%);
+    margin-bottom: 0.5rem;
+  }
+  .stats-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: hsl(0, 0%, 100%);
+    border: 1px solid hsl(213, 22%, 93%);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    min-width: 150px;
+  }
+  .stat-num { font-size: 2rem; font-weight: 900; }
+  .stat-label { font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; margin-top: 0.2rem; }
+
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .panel {
+    background: hsl(0, 0%, 100%);
+    border: 1px solid hsl(213, 22%, 93%);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  .panel-title { font-size: 1.1rem; font-weight: 700; color: hsl(0, 0%, 26%); margin-bottom: 1rem; }
+
+  .activity-feed { display: flex; flex-direction: column; gap: 0.8rem; }
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    background: hsl(0, 0%, 97.5%);
+    border-radius: 10px;
+    border: 1px solid hsl(213, 22%, 93%);
+  }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .act-info { flex: 1; }
+  .act-name { font-weight: 600; color: hsl(0, 0%, 26%); font-size: 0.9rem; }
+  .act-detail { color: #94a3b8; font-size: 0.78rem; }
+  .act-time { font-size: 0.75rem; color: #64748b; }
+  .act-badge {
+    padding: 0.2rem 0.6rem; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 700;
+  }
+
+  .geo-map {
+    height: 200px;
+    background: hsl(0, 0%, 97.5%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
+    border: 1px solid hsl(213, 22%, 93%);
+    font-size: 0.9rem;
+    color: #64748b;
+    position: relative;
+    overflow: hidden;
+  }
+  .geo-ping {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #e94560;
+    box-shadow: 0 0 0 6px rgba(233,69,96,0.3);
+    animation: ping 1.5s ease-in-out infinite;
+  }
+  @keyframes ping { 0%, 100% { box-shadow: 0 0 0 0 rgba(233,69,96,0.5); } 50% { box-shadow: 0 0 0 14px rgba(233,69,96,0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mobile-container">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h1 class="page-title">{% trans "Mobile Clock-In / Clock-Out" %}</h1>
+    <div style="background:hsl(0, 75%, 97%); border:1px solid hsl(1, 64%, 49%); border-radius:8px; padding:0.5rem 1rem; font-size:0.85rem; font-weight:600; color:hsl(1, 64%, 49%);">
+      Live Feed
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="stat-num" style="color:hsl(148, 70%, 40%);">284</div>
+      <div class="stat-label">Clocked In</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:hsl(37, 90%, 47%);">42</div>
+      <div class="stat-label">Late Check-in</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:hsl(1, 64%, 49%);">18</div>
+      <div class="stat-label">Absent Today</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:hsl(216, 18%, 64%);">95%</div>
+      <div class="stat-label">Location Verified</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:#a78bfa;">156</div>
+      <div class="stat-label">Clocked Out</div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="panel">
+      <div class="panel-title">Live Clock-In Activity</div>
+      <div class="activity-feed">
+        <div class="activity-item">
+          <div class="avatar" style="background:rgba(59,130,246,0.2); color:#3b82f6;">AK</div>
+          <div class="act-info">
+            <div class="act-name">Ahmed Khalil</div>
+            <div class="act-detail">Engineering Dept. • iOS App</div>
+          </div>
+          <span class="act-badge" style="background:rgba(34,197,94,0.15); color:#22c55e;">In</span>
+          <div class="act-time">09:02 AM</div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar" style="background:rgba(233,69,96,0.2); color:#e94560;">SM</div>
+          <div class="act-info">
+            <div class="act-name">Sara Mohammed</div>
+            <div class="act-detail">HR Dept. • Android App</div>
+          </div>
+          <span class="act-badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">Late</span>
+          <div class="act-time">09:45 AM</div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar" style="background:rgba(167,139,250,0.2); color:#a78bfa;">JR</div>
+          <div class="act-info">
+            <div class="act-name">James Robertson</div>
+            <div class="act-detail">Finance Dept. • Web</div>
+          </div>
+          <span class="act-badge" style="background:rgba(239,68,68,0.15); color:#ef4444;">Out</span>
+          <div class="act-time">06:11 PM</div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar" style="background:rgba(34,197,94,0.2); color:#22c55e;">LP</div>
+          <div class="act-info">
+            <div class="act-name">Lena Park</div>
+            <div class="act-detail">Sales Dept. • iOS App</div>
+          </div>
+          <span class="act-badge" style="background:rgba(34,197,94,0.15); color:#22c55e;">In</span>
+          <div class="act-time">08:58 AM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Geo-Location Verification</div>
+      <p style="color:#94a3b8; font-size:0.85rem; margin:0 0 0.5rem 0;">Real-time map of employee check-in locations. Active geofencing radius: 200m.</p>
+      <div class="geo-map">
+        <div class="geo-ping" style="top:35%; left:40%;"></div>
+        <div class="geo-ping" style="top:55%; left:60%;"></div>
+        <div class="geo-ping" style="top:45%; left:55%;"></div>
+        <span style="position:absolute; bottom:1rem; right:1rem; font-size:0.78rem; color:#64748b;">Geofence radius: 200m</span>
+      </div>
+      <div style="display:flex; gap:1rem; margin-top:1rem;">
+        <div style="flex:1; text-align:center; background:rgba(34,197,94,0.1); border-radius:8px; padding:0.8rem;">
+          <div style="font-size:1.5rem; font-weight:800; color:#22c55e;">270</div>
+          <div style="font-size:0.75rem; color:#64748b;">Inside Geofence</div>
+        </div>
+        <div style="flex:1; text-align:center; background:rgba(239,68,68,0.1); border-radius:8px; padding:0.8rem;">
+          <div style="font-size:1.5rem; font-weight:800; color:#ef4444;">14</div>
+          <div style="font-size:0.75rem; color:#64748b;">Outside Geofence</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

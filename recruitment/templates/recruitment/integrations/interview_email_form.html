@@ -1,0 +1,19 @@
+{% extends "index.html" %}{% load i18n %}{% block title %}{% trans "Send Interview Invite" %}{% endblock %}
+{% block content %}<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''"><div class="oh-wrapper">
+<div style="max-width:580px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <h2 style="margin-top:0;">{% trans "Send Interview Invitation" %}: {{ candidate.name }}</h2>
+    <form method="post">{% csrf_token %}
+      <label style="font-size:12px;color:#6b7280;">{% trans "Interview Date" %}</label>
+      <input type="date" name="interview_date" required style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin:3px 0 10px;box-sizing:border-box;">
+      <label style="font-size:12px;color:#6b7280;">{% trans "Interview Time" %}</label>
+      <input type="time" name="interview_time" required style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin:3px 0 10px;box-sizing:border-box;">
+      <label style="font-size:12px;color:#6b7280;">{% trans "Meeting Link (optional)" %}</label>
+      <input type="url" name="meeting_link" placeholder="https://zoom.us/..." style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin:3px 0 10px;box-sizing:border-box;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <a href="javascript:history.back()" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Send Email" %}</button>
+      </div>
+    </form>
+  </div>
+</div></div></main>{% endblock %}

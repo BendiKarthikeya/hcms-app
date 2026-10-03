@@ -1,0 +1,92 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Panel Evaluation" %} — {{ candidate.name }}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:800px;margin:24px auto;padding:16px;">
+  <a href="{% url 'interview-view' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Back to Interviews" %}</a>
+  <h1 style="font-size:20px;margin:8px 0 4px;">{% trans "Panel Evaluation" %}: {{ candidate.name }}</h1>
+  <p style="color:#6b7280;font-size:13px;margin:0 0 20px;">
+    {{ interview.interview_date }} · {{ interview.interview_time }}
+    {% if interview.online_meeting_link %} · <a href="{{ interview.online_meeting_link }}" target="_blank">{% trans "Join Meeting" %}</a>{% endif %}
+  </p>
+
+  {% if existing %}<div style="background:#fef3c7;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:13px;">{% trans "You have already submitted an evaluation. Submitting again will update it." %}</div>{% endif %}
+
+  {% if hr_override_justification %}
+  <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#4338ca;margin-bottom:4px;">
+      📝 {% trans "HR Override Justification" %}
+    </div>
+    <div style="font-size:13px;color:#1e293b;white-space:pre-wrap;line-height:1.6;">{{ hr_override_justification }}</div>
+  </div>
+  {% endif %}
+
+  <form method="post">{% csrf_token %}
+    <!-- Criteria scores -->
+    {% if criteria %}
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;margin-bottom:16px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Criteria Scores" %}</h3>
+      {% for c in criteria %}
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <label style="font-size:13px;font-weight:500;">{{ c.name }}</label>
+          <span style="font-size:12px;color:#6b7280;">{% trans "Max" %}: {{ c.max_score }}</span>
+        </div>
+        {% if c.description %}<div style="font-size:12px;color:#6b7280;margin-bottom:4px;">{{ c.description }}</div>{% endif %}
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="range" name="score_{{ c.id }}" min="0" max="{{ c.max_score }}" value="{% if existing %}{% for s in existing.scores.all %}{% if s.criteria_id == c.id %}{{ s.score }}{% endif %}{% endfor %}{% else %}5{% endif %}"
+            oninput="this.nextElementSibling.textContent=this.value"
+            style="flex:1;">
+          <span style="width:24px;text-align:center;font-weight:600;">5</span>
+        </div>
+        <input type="text" name="comment_{{ c.id }}" placeholder="{% trans 'Comment (optional)' %}"
+          style="width:100%;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;font-size:12px;margin-top:4px;box-sizing:border-box;">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Overall -->
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;margin-bottom:16px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Overall Assessment" %}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Overall Score (0–10)" %}</label>
+          <input type="number" name="overall_score" min="0" max="10" step="0.5"
+            value="{{ existing.overall_score|default:'5' }}"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Recommendation" %}</label>
+          <select name="recommendation" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
+            {% for val,label in recommendation_choices %}
+            <option value="{{ val }}" {% if existing.recommendation == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Strengths" %}</label>
+          <textarea name="strengths" rows="3" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;">{{ existing.strengths|default:'' }}</textarea>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Areas for Improvement" %}</label>
+          <textarea name="weaknesses" rows="3" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;">{{ existing.weaknesses|default:'' }}</textarea>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Interview Notes / Evidence" %}</label>
+          <textarea name="notes" rows="4" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;">{{ existing.notes|default:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <a href="{% url 'interview-evaluation-summary' interview_id=interview.id %}" style="padding:9px 16px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "View Summary" %}</a>
+      <button type="submit" style="padding:9px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Submit Evaluation" %}</button>
+    </div>
+  </form>
+</div>
+</div>
+</main>
+{% endblock %}

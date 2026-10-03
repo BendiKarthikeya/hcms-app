@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Bulk Import" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:640px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <h2 style="margin-top:0;">{% trans "Bulk Import" %}: {{ import_type|title }}</h2>
+    <p style="font-size:13px;color:#6b7280;">{% trans "Upload a CSV file. Click Preview to validate rows before committing." %}
+    <a href="{{ template_url }}" style="color:#16a34a;">{% trans "Download template" %}</a></p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="csv_file" accept=".csv" required style="display:block;margin-bottom:14px;padding:8px;border:1px dashed #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;">
+      <div style="display:flex;gap:8px;">
+        <button name="action" value="preview" style="padding:9px 16px;border-radius:6px;background:#e5e7eb;border:none;cursor:pointer;">{% trans "Preview" %}</button>
+        <button name="action" value="commit" style="padding:9px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Import Now" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

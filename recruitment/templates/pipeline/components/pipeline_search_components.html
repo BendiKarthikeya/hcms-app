@@ -1,0 +1,216 @@
+{% load i18n recruitmentfilters %}
+{% include 'pipeline/pipeline_tabs.html' %}
+{% include "filter_tags.html" %}
+
+<div class="oh-tabs__contents">
+  {% for dept, dept_recs in dept_groups %}
+    <div class="oh-tabs__content oh-tabs__content" id="tab_dept_{{ forloop.counter }}">
+
+      {# Job-posting sub-tabs for this department #}
+      <div style="display:flex;gap:0;border-bottom:1px solid #e5e7eb;margin-bottom:12px;flex-wrap:wrap;">
+        {% for rec in dept_recs %}
+          {% if request.user|stage_manages:rec or perms.recruitment.view_recruitment %}
+            <button
+              id="jobTabBtn_{{ rec.id }}"
+              onclick="switchJobTab({{ forloop.parentloop.counter }}, {{ rec.id }})"
+              style="padding:6px 18px;border:none;background:none;font-size:13px;cursor:pointer;
+                     border-bottom:3px solid transparent;margin-bottom:-1px;
+                     {% if forloop.first %}font-weight:600;border-bottom-color:#3b82f6;color:#3b82f6;{% else %}color:#6b7280;{% endif %}
+                     {% if rec.closed %}text-decoration:line-through;{% endif %}
+                     {% if request.user|recruitment_manages:rec %}background-color:hsl(38.08deg 100% 50% / 8%);{% endif %}">
+              {{ rec }}
+              <span style="background:#6b7280;color:white;border-radius:999px;
+                           font-size:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;"
+                    title="{{ rec.stage_set.count }} {% trans 'Stages' %}">
+                {{ rec.stage_set.count }}
+              </span>
+              {% if perms.recruitment.change_recruitment or request.user|recruitment_manages:rec or perms.recruitment.add_candidate or perms.recruitment.delete_recruitment %}
+                <span class="oh-dropdown" x-data="{open: false}" style="display:inline-block;vertical-align:middle;">
+                  <button class="oh-btn oh-stop-prop oh-btn--transparent oh-accordion-meta__btn"
+                    @click.stop="open = !open" @click.outside="open = false" title="{% trans 'Actions' %}"
+                    style="padding:0 4px;line-height:1;min-width:unset;">
+                    <ion-icon name="ellipsis-vertical"></ion-icon>
+                  </button>
+                  <div class="oh-dropdown__menu oh-dropdown__menu--right" x-show="open" style="display:none;min-width:160px;">
+                    <ul class="oh-dropdown__items">
+                      {% if perms.recruitment.change_recruitment or request.user|recruitment_manages:rec %}
+                        <li class="oh-dropdown__item">
+                          <a hx-get="{% url 'recruitment-update-pipeline' rec.id %}" hx-target="#objectUpdateModalTarget"
+                             data-toggle="oh-modal-toggle" data-target="#objectUpdateModal" class="oh-dropdown__link">
+                            {% trans "Edit" %}
+                          </a>
+                        </li>
+                      {% endif %}
+                      {% if not rec.closed %}
+                        {% if perms.recruitment.change_recruitment or request.user|recruitment_manages:rec %}
+                          <li class="oh-dropdown__item">
+                            <a href="{% url 'recruitment-close-pipeline' rec.id %}" class="oh-dropdown__link"
+                               onclick="return confirm('{% trans "Are you sure you want to close this recruitment?" %}');">
+                              {% trans "Close" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                        {% if perms.recruitment.add_candidate or request.user|recruitment_manages:rec %}
+                          <li class="oh-dropdown__item">
+                            <a hx-get="{% url 'view-bulk-resume' %}?rec_id={{ rec.id }}"
+                               hx-target="#bulkResumeUploadBody"
+                               data-toggle="oh-modal-toggle" data-target="#bulkResumeUpload"
+                               class="oh-dropdown__link">
+                              {% trans "Resume Shortlisting" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% else %}
+                        {% if perms.recruitment.change_recruitment or request.user|recruitment_manages:rec %}
+                          <li class="oh-dropdown__item">
+                            <a href="{% url 'recruitment-reopen-pipeline' rec.id %}" class="oh-dropdown__link"
+                               onclick="return confirm('{% trans "Are you sure you want to reopen this recruitment?" %}');">
+                              {% trans "Reopen" %}
+                            </a>
+                          </li>
+                        {% endif %}
+                      {% endif %}
+                      {% if perms.recruitment.delete_recruitment %}
+                        <li class="oh-dropdown__item">
+                          <form action="{% url 'recruitment-delete-pipeline' rec.id %}" method="post"
+                                onsubmit="return confirm('{% trans "Are you sure you want to delete this recruitment?" %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="oh-dropdown__link oh-dropdown__link--danger">
+                              {% trans "Delete" %}
+                            </button>
+                          </form>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                </span>
+              {% endif %}
+            </button>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {# Reload helpers & job-posting panels #}
+      {% for rec in dept_recs %}
+        {% for stage in rec.stage_set.all %}
+          <button hidden class="reload-badge"
+            hx-get="{% url 'get-stage-count' %}?stage_id={{ stage.id }}"
+            hx-target="#stageCount{{ stage.id }}"
+            id="reloadBadge{{ stage.id }}">{{ stage }}</button>
+        {% endfor %}
+        <button id="stageReloadContainer{{ rec.id }}" hidden
+          hx-get="{% url 'pipeline-stages-component' 'list' %}?rec_id={{ rec.id }}"
+          hx-target="#stageContainer{{ rec.id }}"></button>
+
+        {% if request.user|stage_manages:rec or perms.recruitment.view_recruitment %}
+          <div id="jobPanel_{{ rec.id }}"
+               style="{% if not forloop.first %}display:none;{% endif %}">
+            {% if request.user|recruitment_manages:rec or perms.recruitment.add_stage %}
+              <div class="d-flex" style="flex-direction:row-reverse;">
+                <button class="oh-btn oh-btn--secondary"
+                  data-target="#objectCreateModal" data-toggle="oh-modal-toggle"
+                  hx-get="{% url 'rec-stage-create' %}?recruitment_id={{ rec.id }}"
+                  hx-target="#objectCreateModalTarget">
+                  <ion-icon class="me-1" name="add-outline"></ion-icon>
+                  {% trans 'Stage' %}
+                </button>
+              </div>
+            {% endif %}
+            <div class="pt-3 stage-badges" id="stageContainer{{ rec.id }}"
+                 hx-trigger="load"
+                 hx-get="{% url 'pipeline-stages-component' 'list' %}?rec_id={{ rec.id }}">
+              <div class="animated-background"></div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+  {% endfor %}
+</div>
+
+<div class="oh-wrapper mb-5">
+  <div class="oh-pagination">
+    <span class="oh-pagination__page" data-toggle="modal" data-target="#addEmployeeModal">
+      {% trans "Page" %} {{ recruitment.number }} {% trans "of" %} {{ recruitment.paginator.num_pages }}.
+    </span>
+    <nav class="oh-pagination__nav">
+      <div class="oh-pagination__input-container me-3">
+        <span class="oh-pagination__label me-1">{% trans "Page" %}</span>
+        <input type="number" name="page" class="oh-pagination__input"
+          value="{{ recruitment.number }}"
+          hx-target="#pipelineSearchContainer"
+          hx-get="{% url 'pipeline-search' %}?{{ pd }}"
+          min="1" />
+        <span class="oh-pagination__label">{% trans "of" %} {{ recruitment.paginator.num_pages }}</span>
+      </div>
+      <ul class="oh-pagination__items">
+        {% if recruitment.has_previous %}
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page=1"
+               class="oh-pagination__link">{% trans "First" %}</a>
+          </li>
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.previous_page_number }}"
+               class="oh-pagination__link">{% trans "Previous" %}</a>
+          </li>
+        {% endif %}
+        {% if recruitment.has_next %}
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.next_page_number }}"
+               class="oh-pagination__link">{% trans "Next" %}</a>
+          </li>
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.paginator.num_pages }}"
+               class="oh-pagination__link">{% trans "Last" %}</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<script>
+function switchJobTab(deptCounter, recId) {
+  // Hide all job panels in this dept tab
+  var deptPanel = document.getElementById('tab_dept_' + deptCounter);
+  if (!deptPanel) return;
+  deptPanel.querySelectorAll('[id^="jobPanel_"]').forEach(function(p) {
+    p.style.display = 'none';
+  });
+  // Deactivate all job tab buttons in this dept tab
+  deptPanel.querySelectorAll('[id^="jobTabBtn_"]').forEach(function(b) {
+    b.style.fontWeight = '';
+    b.style.borderBottomColor = 'transparent';
+    b.style.color = '#6b7280';
+  });
+  // Show selected panel
+  var panel = document.getElementById('jobPanel_' + recId);
+  if (panel) panel.style.display = '';
+  // Activate selected button
+  var btn = document.getElementById('jobTabBtn_' + recId);
+  if (btn) { btn.style.fontWeight = '600'; btn.style.borderBottomColor = '#3b82f6'; btn.style.color = '#3b82f6'; }
+}
+
+$(document).ready(function () {
+  var activeTab = localStorage.getItem('activeTabRecruitment');
+  if (activeTab != null && $('[data-target="' + activeTab + '"]').length) {
+    var tab = $('[data-target="' + activeTab + '"]');
+    var tabContent = $(activeTab);
+    tab.attr('class', 'oh-tabs__tab oh-tabs__tab--active');
+    tabContent.attr('class', 'oh-tabs__content oh-tabs__content--active');
+  } else {
+    $('.oh-tabs__tab:first').click();
+  }
+  $('.oh-tabs__tab').click(function() {
+    var activeTab = $(this).attr('data-target');
+    localStorage.setItem('activeTabRecruitment', activeTab);
+    $('.oh-tabs__tab').removeClass('fw-bold');
+    $(this).addClass('fw-bold');
+  });
+});
+</script>

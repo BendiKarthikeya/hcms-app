@@ -1,0 +1,100 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:dashboard' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Dashboard" %}
+                    </a>
+                    <h1 class="oh-page-title">{% trans "My Learning Plans" %}</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <a href="{% url 'learning:create_learning_plan' %}" class="oh-btn oh-btn--success oh-btn--shadow">
+                        <ion-icon name="add-outline" class="mr-1"></ion-icon>{% trans "Create New Plan" %}
+                    </a>
+                </div>
+            </div>
+
+            {% if learning_plans %}
+            <div class="oh-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                {% for plan in learning_plans %}
+                <div class="oh-card" style="border-radius: 8px; border-left: 4px solid {% if plan.status == 'approved' %}#28a745{% elif plan.status == 'pending' %}#ffc107{% else %}#dc3545{% endif %};">
+                    <div class="oh-card__header" style="padding: 1.5rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h5 class="oh-card__title" style="margin: 0; font-weight: 600;">{{ plan.title }}</h5>
+                            <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 0;">{{ plan.description|truncatewords:20 }}</p>
+                        </div>
+                        <span class="oh-badge {% if plan.status == 'approved' %}oh-badge--success{% elif plan.status == 'pending' %}oh-badge--warning{% else %}oh-badge--danger{% endif %}" style="margin-left: 1rem;">
+                            {{ plan.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="oh-card__body" style="padding: 1.5rem;">
+                        <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.9rem; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #ddd;">
+                                <strong style="color: #555;">{% trans "Duration" %}:</strong>
+                                <span style="color: #333;">{{ plan.start_date|date:"M d" }} - {{ plan.end_date|date:"M d, Y" }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                                <strong style="color: #555;">{% trans "Items" %}:</strong>
+                                <span class="oh-badge oh-badge--neutral">{{ plan.learningplanitem_set.count }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if plan.learningplanitem_set.all %}
+                        <div style="background-color: #f8f9fa; border-radius: 6px; padding: 1rem;">
+                            <h6 style="margin-top: 0; font-weight: 600; margin-bottom: 0.75rem; color: #333;">{% trans "Plan Items" %}:</h6>
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
+                                {% for item in plan.learningplanitem_set.all|slice:":3" %}
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid #e0e0e0;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" {% if item.completed %}checked{% endif %} disabled style="cursor: not-allowed;">
+                                        <span style="color: #333; font-size: 0.9rem;">{{ item.description }}</span>
+                                    </div>
+                                    {% if item.course %}
+                                    <div style="margin-left: 1.5rem; margin-top: 0.3rem;">
+                                        <span class="oh-badge oh-badge--neutral" style="font-size: 0.75rem;">{{ item.course.name }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <small style="color: #999; display: block; margin-left: 1.5rem; margin-top: 0.3rem; font-size: 0.85rem;">{% trans "Due" %}: {{ item.target_date|date:"M d, Y" }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% if plan.learningplanitem_set.count > 3 %}
+                            <div style="color: #999; font-size: 0.85rem; margin-top: 0.5rem; text-align: center;">+ {{ plan.learningplanitem_set.count|add:"-3" }} {% trans "more" %}</div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <p style="color: #999; font-size: 0.9rem; margin: 0;">{% trans "No items in this plan yet." %}</p>
+                        {% endif %}
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <a href="#" class="oh-btn oh-btn--primary oh-btn--shadow w-100" style="text-align: center;">
+                                <ion-icon name="create-outline"></ion-icon>{% trans "Edit Plan" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div style="text-align: center; padding: 3rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📋</div>
+                <p style="color: #666; margin-bottom: 1.5rem;">{% trans "You have no learning plans yet." %}</p>
+                <a href="{% url 'learning:create_learning_plan' %}" class="oh-btn oh-btn--success oh-btn--shadow">
+                    <ion-icon name="add-outline"></ion-icon>{% trans "Create Your First Plan" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

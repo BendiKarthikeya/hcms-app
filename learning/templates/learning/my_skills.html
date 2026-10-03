@@ -1,0 +1,61 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>My Skills</h1>
+
+<div class="row mt-3 mb-3">
+    <div class="col-12">
+        <a href="{% url 'learning:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSkillModal">+ Add Skill</button>
+    </div>
+</div>
+
+{% if skills %}
+<div class="row mt-4">
+    {% for skill in skills %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ skill.skill.name }}</h5>
+                <p class="card-text">{{ skill.skill.description|default:"No description" }}</p>
+                <p>
+                    <strong>Proficiency:</strong> 
+                    <span class="badge bg-primary">{{ skill.get_proficiency_level_display }}</span>
+                </p>
+                <p>
+                    <strong>Years of Experience:</strong> {{ skill.years_experience }} years
+                </p>
+                <p class="small text-muted">
+                    Last used: {{ skill.last_used|default:"—" }}
+                </p>
+                {% if skill.verified_by %}
+                <p><strong style="color: green;">✓ Verified</strong> by {{ skill.verified_by.get_full_name }} on {{ skill.verification_date }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="alert alert-info mt-4">You have no skills added yet. <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSkillModal">Add your first skill</button></div>
+{% endif %}
+
+<!-- Add Skill Modal -->
+<div class="modal fade" id="addSkillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Skill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Skill management coming soon. Contact HR to add or modify your skills.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1019 @@
+{% extends "ui/base.html" %}
+{% block title %}Create Manpower Request — HCMS{% endblock %}
+{% block active_manpower %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Top nav row ── -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+  <a href="/ui/job-requisition/" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#6D6D6D;text-decoration:none">
+    <span class="material-symbols-outlined" style="font-size:18px;transform:rotate(270deg)">keyboard_arrow_up</span>
+    Back to Job Requisitions
+  </a>
+  <div style="display:flex;gap:10px">
+    <button type="button" onclick="resetForm()"
+      style="display:inline-flex;align-items:center;gap:7px;height:43px;padding:0 18px;border:1px solid #acacac;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#282828;cursor:pointer">
+      <span class="material-symbols-outlined" style="font-size:18px">sync</span> Reset
+    </button>
+    <button type="button" onclick="openBulkModal()"
+      style="display:inline-flex;align-items:center;gap:7px;height:43px;padding:0 18px;border:1px solid #208E3D;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#208E3D;cursor:pointer">
+      <span class="material-symbols-outlined" style="font-size:18px">library_add</span> Bulk Request
+    </button>
+    <button type="submit" form="mrForm"
+      style="display:inline-flex;align-items:center;gap:7px;height:43px;padding:0 20px;background:#208E3D;border:none;border-radius:10px;font-size:14px;font-weight:600;color:#fff;cursor:pointer">
+      <span class="material-symbols-outlined" style="font-size:18px">send</span> Send Request
+    </button>
+  </div>
+</div>
+
+<!-- ── Page heading ── -->
+<div style="margin-bottom:22px">
+  <div style="font-size:26px;font-weight:600;color:#111;line-height:1.2;margin-bottom:4px">Create Manpower Request</div>
+  <div style="font-size:14px;color:#7F7F7F;font-weight:400">Raise a new manpower request for your department or team</div>
+</div>
+
+<!-- ── Django messages ── -->
+{% if messages %}
+{% for msg in messages %}
+<div style="margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;
+  {% if 'error' in msg.tags %}background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;
+  {% else %}background:#F0FDF4;border:1px solid #86EFAC;color:#166534;{% endif %}">
+  <span class="material-symbols-outlined" style="font-size:16px">{% if 'error' in msg.tags %}error{% else %}check_circle{% endif %}</span>
+  {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── Main grid: form | summary ── -->
+<form method="post" id="mrForm" onsubmit="return true">
+  {% csrf_token %}
+  <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:22px;align-items:start">
+
+    <!-- ════════════════════ LEFT: form cards ════════════════════ -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Card 1: Request Details -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">1</div>
+          <span style="font-size:18px;font-weight:600;color:#111">Request Details</span>
+        </div>
+        <div class="mr-card-body" style="grid-template-columns:1fr 1fr">
+
+          <!-- Request Title (full width) -->
+          <div class="mr-field mr-span-2">
+            <label class="mr-label">Request Title <span class="mr-req">*</span></label>
+            <input type="text" name="title" id="f_title" required
+              placeholder="e.g. Senior Frontend Developer"
+              value="{{ prefill_title }}"
+              class="mr-input" oninput="sync('s_title',this.value||'—')">
+          </div>
+
+          <!-- Department | Request Type -->
+          <div class="mr-field">
+            <label class="mr-label">Department <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="department" id="f_dept" required class="mr-select" onchange="syncSelect('s_dept','f_dept')">
+                <option value="">— Select —</option>
+                {% for d in departments %}<option value="{{ d.id }}">{{ d }}</option>{% endfor %}
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Request Type <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="request_type" id="f_type" required class="mr-select" onchange="syncSelect('s_type','f_type')">
+                <option value="new_hiring">New Hiring</option>
+                <option value="replacement">Replacement</option>
+                <option value="contract">Contract</option>
+                <option value="expansion">Expansion</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Business Justification (full width) -->
+          <div class="mr-field mr-span-2">
+            <label class="mr-label">Business Justification</label>
+            <div style="position:relative">
+              <textarea name="justification" id="f_just" rows="5" maxlength="500"
+                placeholder="Describe the business need for this position…"
+                class="mr-input" style="resize:vertical;min-height:100px"
+                oninput="syncJust()">{{ prefill_justification }}</textarea>
+              <span id="justCount" style="position:absolute;bottom:8px;right:10px;font-size:11px;color:#9CA3AF">0 / 500</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Card 2: Position Details -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">2</div>
+          <span style="font-size:18px;font-weight:600;color:#111">Position Details</span>
+        </div>
+        <div class="mr-card-body">
+
+          <!-- Job Title | No of Positions -->
+          <div class="mr-field" style="grid-column:span 2">
+            <label class="mr-label">Job Title <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="job_position" id="f_position" required class="mr-select" onchange="syncSelect('s_position','f_position')">
+                <option value="">— Select position —</option>
+                {% for jp in job_positions %}<option value="{{ jp.id }}">{{ jp }}</option>{% endfor %}
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">No of Positions <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="vacancy" id="f_vacancy" required class="mr-select" onchange="sync('s_vacancy',this.value)">
+                {% for n in "12345678910"|make_list %}{% if n != '0' %}<option value="{{ n }}">{{ n }}</option>{% endif %}{% endfor %}
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Employment Type | Work Location | Work Mode -->
+          <div class="mr-field">
+            <label class="mr-label">Employment Type <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="employment_type" id="f_emptype" required class="mr-select" onchange="syncSelect('s_emptype','f_emptype')">
+                <option value="full_time">Full Time</option>
+                <option value="part_time">Part Time</option>
+                <option value="contract">Contract</option>
+                <option value="internship">Internship</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Work Location <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="work_location" id="f_location" required class="mr-select" onchange="syncSelect('s_location','f_location')">
+                <option value="">— Select —</option>
+                <option value="Muscat HQ">Muscat HQ</option>
+                <option value="Dubai">Dubai</option>
+                <option value="Abu Dhabi">Abu Dhabi</option>
+                <option value="Riyadh">Riyadh</option>
+                <option value="Remote">Remote</option>
+                <option value="Other">Other</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Work Mode <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="work_mode" id="f_workmode" required class="mr-select" onchange="syncSelect('s_workmode','f_workmode')">
+                <option value="On-site">On-site</option>
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Experience | Expected Joining | Priority -->
+          <div class="mr-field">
+            <label class="mr-label">Experience (years) <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="experience" id="f_exp" required class="mr-select" onchange="syncSelect('s_exp','f_exp')">
+                <option value="">— Select —</option>
+                <option value="0-1 yr">0 – 1 yr</option>
+                <option value="1-3 yrs">1 – 3 yrs</option>
+                <option value="3-5 yrs">3 – 5 yrs</option>
+                <option value="5-7 yrs">5 – 7 yrs</option>
+                <option value="7+ yrs">7+ yrs</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Joining Date <span class="mr-req">*</span></label>
+            <input type="date" name="start_date" id="f_date" required class="mr-input" onchange="sync('s_date',this.value||'—')">
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Priority <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="priority" id="f_priority" required class="mr-select" onchange="syncPriority()">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Grade (full width) — drives the offer-letter approval cycle -->
+          <div class="mr-field mr-span-3">
+            <label class="mr-label">Grade <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="grade" id="f_grade" required class="mr-select" onchange="syncGrade()">
+                <option value="">— Select grade —</option>
+                {% for code, label in grade_choices %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+            <span id="gradeHint" style="font-size:11.5px;color:#6B7280;margin-top:2px">
+              Grades A–C route to the HR Head; grades D–F also require CEO sign-off. This sets the offer-letter approval cycle.
+            </span>
+          </div>
+
+          <!-- Budget (full width, with period selector) -->
+          <div class="mr-field mr-span-3">
+            <label class="mr-label">Budget <span class="mr-req">*</span></label>
+            <div style="display:flex;gap:10px">
+              <input type="text" name="budget" id="f_budget" placeholder="e.g. $4000"
+                class="mr-input" style="flex:1" oninput="sync('s_budget',this.value||'—')">
+              <div class="mr-select-wrap" style="width:160px;flex-shrink:0">
+                <select name="budget_period" class="mr-select">
+                  <option value="monthly">Monthly</option>
+                  <option value="annually">Annually</option>
+                </select>
+                <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Card 3: Role Information -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">3</div>
+          <span style="font-size:18px;font-weight:600;color:#111">Role Information</span>
+        </div>
+        <div class="mr-card-body" style="grid-template-columns:1fr 1fr">
+
+          <!-- Education Level | Field of Study -->
+          <div class="mr-field">
+            <label class="mr-label">Education Level <span class="mr-req">*</span></label>
+            <div class="mr-select-wrap">
+              <select name="jd_education" id="jd_education" class="mr-select">
+                <option value="">— Select —</option>
+                <option value="High School">High School</option>
+                <option value="Diploma">Diploma</option>
+                <option value="Bachelor's Degree">Bachelor's Degree</option>
+                <option value="Master's Degree">Master's Degree</option>
+                <option value="PhD">PhD</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Field of Study <span class="mr-req">*</span></label>
+            <input type="text" name="jd_field" id="jd_field" class="mr-input" placeholder="e.g. Computer Science / IT">
+          </div>
+
+          <!-- Languages Required | Nationality Preference -->
+          <div class="mr-field">
+            <label class="mr-label">Languages Required</label>
+            <div id="jdLangWrap"
+              style="display:flex;flex-wrap:wrap;gap:6px;min-height:42px;padding:7px 12px;border:1px solid #E5E7EB;border-radius:8px;cursor:text;align-items:center;background:#fff;transition:border-color .15s"
+              onclick="document.getElementById('jdLangInput').focus()"
+              onfocusin="this.style.borderColor='#0F752F'" onfocusout="this.style.borderColor='#E5E7EB'">
+              <input type="text" id="jdLangInput"
+                placeholder="Type language + Enter…"
+                style="border:none;outline:none;font-size:13px;font-family:inherit;min-width:120px;flex:1;background:transparent;padding:2px 0"
+                onkeydown="addLang(event)">
+            </div>
+            <input type="hidden" name="jd_languages" id="jd_languages">
+          </div>
+          <div class="mr-field">
+            <label class="mr-label">Nationality Preference</label>
+            <div class="mr-select-wrap">
+              <select name="jd_nationality" id="jd_nationality" class="mr-select">
+                <option value="Any">Any</option>
+                <option value="Omani">Omani</option>
+                <option value="GCC National">GCC National</option>
+                <option value="Arab National">Arab National</option>
+                <option value="Expat">Expat</option>
+              </select>
+              <span class="mr-select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <!-- Skills Required (full width) -->
+          <div class="mr-field mr-span-2">
+            <label class="mr-label">Skills Required <span class="mr-req">*</span></label>
+            <div id="skillsWrap"
+              style="display:flex;flex-wrap:wrap;gap:8px;min-height:42px;padding:8px 12px;border:1px solid #E5E7EB;border-radius:8px;cursor:text;align-items:center;background:#fff;transition:border-color .15s"
+              onclick="document.getElementById('skillInput').focus()"
+              onfocusin="this.style.borderColor='#0F752F'" onfocusout="this.style.borderColor='#E5E7EB'">
+              <input type="text" id="skillInput"
+                placeholder="Type skill and press Enter or comma…"
+                style="border:none;outline:none;font-size:13px;font-family:inherit;min-width:140px;flex:1;background:transparent;padding:2px 0"
+                onkeydown="addSkill(event)">
+            </div>
+            <input type="hidden" name="skills" id="f_skills">
+          </div>
+
+          <!-- Job Description rich text (full width) -->
+          <div class="mr-field mr-span-2">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+              <label class="mr-label">Job Description</label>
+              <button type="button" id="btnGenerateJD" onclick="generateJD()"
+                style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;background:#208E3D;border:none;border-radius:8px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">
+                <span class="material-symbols-outlined" style="font-size:15px">auto_awesome</span>
+                Generate JD with AI
+              </button>
+            </div>
+            <!-- Rich text toolbar -->
+            <div style="display:flex;gap:4px;padding:6px 10px;border:1px solid #E5E7EB;border-bottom:none;border-radius:8px 8px 0 0;background:#FAFAFA">
+              <button type="button" onclick="document.execCommand('bold')"
+                style="width:28px;height:28px;border:1px solid #E5E7EB;border-radius:5px;background:#fff;cursor:pointer;font-weight:700;font-size:13px;color:#374151" title="Bold"><b>B</b></button>
+              <button type="button" onclick="document.execCommand('italic')"
+                style="width:28px;height:28px;border:1px solid #E5E7EB;border-radius:5px;background:#fff;cursor:pointer;font-size:13px;font-style:italic;color:#374151" title="Italic"><i>I</i></button>
+              <button type="button" onclick="document.execCommand('insertUnorderedList')"
+                style="width:28px;height:28px;border:1px solid #E5E7EB;border-radius:5px;background:#fff;cursor:pointer;font-size:13px;color:#374151" title="Bullet list">•≡</button>
+              <button type="button" onclick="document.execCommand('insertOrderedList')"
+                style="width:28px;height:28px;border:1px solid #E5E7EB;border-radius:5px;background:#fff;cursor:pointer;font-size:13px;color:#374151" title="Numbered list">1≡</button>
+            </div>
+            <div id="jdEditor" contenteditable="true"
+              style="min-height:120px;padding:10px 13px;border:1px solid #E5E7EB;border-radius:0 0 8px 8px;font-size:14px;font-family:inherit;color:#111827;outline:none;background:#fff;line-height:1.6"
+              onfocus="this.style.borderColor='#0F752F'" onfocusout="this.style.borderColor='#E5E7EB'"
+              oninput="syncJdEditor()"></div>
+            <input type="hidden" name="job_description" id="f_job_description">
+          </div>
+
+          <!-- Other Requirements (full width) -->
+          <div class="mr-field mr-span-2">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <label class="mr-label">Other Requirements <span style="font-weight:400;color:#9CA3AF">(Optional)</span></label>
+              <span id="otherCount" style="font-size:12px;color:#9CA3AF">0 / 500</span>
+            </div>
+            <textarea name="jd_other" id="jd_other" rows="4" maxlength="500"
+              placeholder="e.g., Certifications, Soft Skills, Tools, etc."
+              class="mr-input" style="resize:vertical;min-height:90px"
+              oninput="document.getElementById('otherCount').textContent=this.value.length+' / 500'"></textarea>
+          </div>
+
+
+        </div>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- ════════════════════ RIGHT: summary + AI JD ════════════════════ -->
+    <div style="position:sticky;top:16px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Request Summary (default visible) -->
+      <div id="panelSummary" class="mr-card" style="padding:0">
+        <div style="padding:22px 24px 16px;border-bottom:1px solid #F0F0F0">
+          <div style="font-size:20px;font-weight:600;color:#202020">Request Summary</div>
+        </div>
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:0">
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Request Title</span><span class="mr-sum-val" id="s_title">—</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Department</span><span class="mr-sum-val" id="s_dept">—</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Request Type</span><span class="mr-sum-val" id="s_type">New Hiring</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Priority</span>
+            <span class="mr-sum-val" id="s_priority_wrap" style="display:flex;align-items:center;gap:6px">
+              <span id="s_priority_dot" style="width:10px;height:10px;border-radius:50%;background:#F2A72D;flex-shrink:0;display:inline-block"></span>
+              <span id="s_priority">Medium</span>
+            </span>
+          </div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Position</span><span class="mr-sum-val" id="s_position">—</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Employment Time</span><span class="mr-sum-val" id="s_emptype">Full Time</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">workspace_premium</span></div><span class="mr-sum-key">Grade</span><span class="mr-sum-val" id="s_grade">—</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Work Mode</span><span class="mr-sum-val" id="s_workmode">On-site</span></div>
+          <div class="mr-sum-row"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Budget</span><span class="mr-sum-val" id="s_budget">—</span></div>
+          <div class="mr-sum-row" style="border-bottom:none"><div class="mr-sum-icon"><span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">person</span></div><span class="mr-sum-key">Business Need</span><span class="mr-sum-val" id="s_just">—</span></div>
+        </div>
+        <div style="margin:8px 18px 18px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center">
+          <span class="material-symbols-outlined" style="font-size:28px;color:#10B981;flex-shrink:0">check_circle</span>
+          <span style="font-size:13px;color:#374151;line-height:1.5">This request will be forwarded to your reporting manager for approval</span>
+        </div>
+      </div>
+
+      <!-- AI Generated JD panel (hidden until Generate clicked) -->
+      <div id="panelAIJD" class="mr-card" style="padding:0;display:none">
+        <!-- Header -->
+        <div style="padding:16px 20px 14px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:10px">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#10B981">auto_awesome</span>
+          <span style="font-size:16px;font-weight:700;color:#111;flex:1">AI Generated Job Description</span>
+          <!-- Regenerate with counter -->
+          <button type="button" id="btnRegenerate" onclick="regenerateJD()"
+            style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:1px solid #ACACAC;border-radius:8px;background:#fff;font-size:13px;font-weight:500;color:#282828;cursor:pointer;font-family:inherit">
+            <span class="material-symbols-outlined" style="font-size:16px">sync</span>
+            Regenerate
+            <span id="regenCounter" style="font-size:11px;color:#9CA3AF">(<span id="regenLeft">3</span> left)</span>
+          </button>
+          <!-- Copy -->
+          <button type="button" onclick="copyJD()"
+            style="width:36px;height:36px;border:1px solid #ACACAC;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Copy">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#555">content_copy</span>
+          </button>
+        </div>
+
+        <!-- JD content area -->
+        <div id="jdContent" style="padding:18px 22px;max-height:520px;overflow-y:auto;font-size:14px;color:#303030;line-height:1.65">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:12px 20px;border-top:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:#6D6D6D">Was this helpful?</span>
+            <button type="button" onclick="this.style.color='#10B981'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#9CA3AF">👍</button>
+            <button type="button" onclick="this.style.color='#EF4444'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#9CA3AF">👎</button>
+          </div>
+          <button type="button" onclick="useJDDescription()"
+            style="height:38px;padding:0 18px;background:#208E3D;border:none;border-radius:8px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit">
+            Use This Description
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /right -->
+
+  </div>
+</form>
+
+<style>
+/* ── Card ── */
+.mr-card {
+  background:#fff;border:1px solid #D8D8D8;border-radius:14px;overflow:hidden;
+}
+.mr-card-header {
+  display:flex;align-items:center;gap:12px;
+  padding:22px 24px 18px;border-bottom:1px solid #E5E7EB;
+}
+.mr-card-body {
+  padding:20px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;
+}
+.mr-badge {
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(16,185,129,0.1);color:#10B981;
+  font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ── Fields ── */
+.mr-field { display:flex;flex-direction:column;gap:6px }
+.mr-span-2 { grid-column:span 2 }
+.mr-span-3 { grid-column:span 3 }
+.mr-label { font-size:14px;font-weight:500;color:#111827 }
+.mr-req   { color:#FB2C36 }
+.mr-input {
+  padding:9px 13px;border:1px solid #E5E7EB;border-radius:8px;
+  font-size:14px;font-family:inherit;color:#111827;outline:none;
+  width:100%;box-sizing:border-box;background:#fff;transition:border-color .15s;
+}
+.mr-input:focus { border-color:#0F752F;box-shadow:0 0 0 3px rgba(15,117,47,.07) }
+.mr-select-wrap { position:relative }
+.mr-select {
+  width:100%;padding:9px 36px 9px 13px;border:1px solid #E5E7EB;border-radius:8px;
+  font-size:14px;font-family:inherit;color:#111827;outline:none;background:#fff;
+  appearance:none;-webkit-appearance:none;cursor:pointer;transition:border-color .15s;
+  box-sizing:border-box;
+}
+.mr-select:focus { border-color:#0F752F;box-shadow:0 0 0 3px rgba(15,117,47,.07) }
+.mr-select-arrow {
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:16px;color:#6B7280;pointer-events:none;
+}
+
+/* ── Skill chips ── */
+.skill-chip {
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(16,185,129,0.1);color:#10B981;
+  border-radius:8px;padding:4px 8px;font-size:12px;font-weight:400;
+}
+.skill-chip button {
+  background:none;border:none;color:#10B981;cursor:pointer;
+  font-size:14px;line-height:1;padding:0;display:flex;align-items:center;
+}
+
+/* ── JD editor ── */
+#jdEditor ul, #jdEditor ol { padding-left:20px }
+#jdEditor li { margin-bottom:4px }
+#jdEditor:empty:before { content:attr(placeholder);color:#9CA3AF;pointer-events:none }
+
+/* ── AI JD content ── */
+.jd-section-title { font-size:15px;font-weight:700;color:#202020;margin:14px 0 6px }
+.jd-section-title:first-child { margin-top:0 }
+.jd-job-title { font-size:18px;font-weight:700;color:#111;margin-bottom:4px }
+.jd-meta { font-size:12px;color:#9CA3AF;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #F0F0F0 }
+.jd-summary { color:#303030;margin-bottom:14px;line-height:1.65 }
+.jd-list { list-style:disc;padding-left:18px;margin:0 0 14px }
+.jd-list li { margin-bottom:5px;color:#303030 }
+
+/* ── Generate button loading ── */
+#btnGenerateJD.loading { opacity:.7;cursor:wait }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+/* ── Summary panel ── */
+.mr-sum-row {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 6px;border-bottom:1px solid #F3F4F6;
+}
+.mr-sum-icon {
+  width:36px;height:37px;border-radius:6px;background:#F0F0F0;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.mr-sum-key { font-size:13px;color:#303030;font-weight:400;min-width:130px;flex-shrink:0 }
+.mr-sum-val { font-size:13px;color:#303030;font-weight:400;flex:1;text-align:right;word-break:break-word }
+</style>
+
+<script>
+/* ── Summary sync helpers ── */
+function sync(id, val){ const el=document.getElementById(id); if(el) el.textContent = val||'—' }
+function syncSelect(sid, fid){
+  const sel=document.getElementById(fid);
+  sync(sid, sel.options[sel.selectedIndex]?.text||'—');
+}
+
+function syncJust(){
+  const ta=document.getElementById('f_just');
+  document.getElementById('justCount').textContent = ta.value.length + ' / 500';
+  sync('s_just', ta.value.trim()||'—');
+}
+
+/* Grade → summary + approval-cycle hint. A–C route to HR Head;
+   D–F additionally require CEO sign-off in the offer-letter cycle. */
+function syncGrade(){
+  const sel=document.getElementById('f_grade');
+  const code=sel.value;
+  const txt=sel.options[sel.selectedIndex]?.text||'—';
+  sync('s_grade', code ? txt : '—');
+  const hint=document.getElementById('gradeHint');
+  if(!code){
+    hint.textContent='Grades A–C route to the HR Head; grades D–F also require CEO sign-off. This sets the offer-letter approval cycle.';
+  } else if('DEF'.includes(code)){
+    hint.textContent='Above General Manager — offer-letter approval cycle: HR Head → CEO.';
+  } else {
+    hint.textContent='Below General Manager — offer-letter approval cycle: HR Head.';
+  }
+}
+
+const PRIORITY_COLORS = { low:'#6B7280', medium:'#F2A72D', high:'#EF4444' };
+function syncPriority(){
+  const sel=document.getElementById('f_priority');
+  const val=sel.value, txt=sel.options[sel.selectedIndex]?.text||'—';
+  document.getElementById('s_priority').textContent = txt;
+  document.getElementById('s_priority_dot').style.background = PRIORITY_COLORS[val]||'#6B7280';
+}
+
+/* ── Skills chip input ── */
+let skills=[];
+function addSkill(e){
+  if(e.key!=='Enter'&&e.key!==',') return;
+  e.preventDefault();
+  const raw=e.target.value.trim().replace(/,$/,'');
+  if(!raw||skills.includes(raw)){ e.target.value=''; return; }
+  skills.push(raw);
+  renderChips();
+  e.target.value='';
+}
+function removeSkill(s){
+  skills=skills.filter(x=>x!==s);
+  renderChips();
+}
+function renderChips(){
+  const wrap=document.getElementById('skillsWrap');
+  wrap.querySelectorAll('.skill-chip').forEach(el=>el.remove());
+  const inp=document.getElementById('skillInput');
+  skills.forEach(s=>{
+    const chip=document.createElement('span');
+    chip.className='skill-chip';
+    chip.innerHTML=s+'<button type="button" onclick="removeSkill(\''+s.replace(/'/g,"\\'")+'\')" title="Remove"><span class="material-symbols-outlined" style="font-size:13px">close</span></button>';
+    wrap.insertBefore(chip,inp);
+  });
+  document.getElementById('f_skills').value=skills.join(',');
+}
+
+/* ── Reset ── */
+function resetForm(){
+  document.getElementById('mrForm').reset();
+  skills=[]; renderChips();
+  jdLangs=[]; renderLangs();
+  syncPriority();
+  syncSelect('s_dept','f_dept');
+  syncSelect('s_type','f_type');
+  syncSelect('s_position','f_position');
+  syncSelect('s_emptype','f_emptype');
+  syncSelect('s_location','f_location');
+  syncSelect('s_workmode','f_workmode');
+  syncSelect('s_exp','f_exp');
+  sync('s_title','—'); sync('s_budget','—'); sync('s_date','—'); sync('s_just','—'); sync('s_vacancy','1');
+  document.getElementById('justCount').textContent='0 / 500';
+  document.getElementById('jdEditor').innerHTML='';
+  document.getElementById('f_job_description').value='';
+  regenRemaining=3; updateRegenBtn();
+  showSummary();
+}
+
+/* ── JD editor sync ── */
+function syncJdEditor(){
+  document.getElementById('f_job_description').value = document.getElementById('jdEditor').innerHTML;
+}
+
+/* ── Languages chip input ── */
+let jdLangs=[];
+function addLang(e){
+  if(e.key!=='Enter'&&e.key!==',') return;
+  e.preventDefault();
+  const raw=e.target.value.trim().replace(/,$/,'');
+  if(!raw||jdLangs.includes(raw)){ e.target.value=''; return; }
+  jdLangs.push(raw); renderLangs(); e.target.value='';
+}
+function removeLang(l){
+  jdLangs=jdLangs.filter(x=>x!==l); renderLangs();
+}
+function renderLangs(){
+  const wrap=document.getElementById('jdLangWrap');
+  wrap.querySelectorAll('.skill-chip').forEach(el=>el.remove());
+  const inp=document.getElementById('jdLangInput');
+  jdLangs.forEach(l=>{
+    const chip=document.createElement('span');
+    chip.className='skill-chip';
+    chip.innerHTML=l+'<button type="button" onclick="removeLang(\''+l.replace(/'/g,"\\'")+'\')" title="Remove"><span class="material-symbols-outlined" style="font-size:13px">close</span></button>';
+    wrap.insertBefore(chip,inp);
+  });
+  document.getElementById('jd_languages').value=jdLangs.join(', ');
+}
+
+/* ── Panel toggle helpers ── */
+function showSummary(){
+  document.getElementById('panelSummary').style.display='';
+  document.getElementById('panelAIJD').style.display='none';
+}
+function showAIJD(){
+  document.getElementById('panelSummary').style.display='none';
+  document.getElementById('panelAIJD').style.display='';
+}
+
+/* ── Regenerate counter ── */
+let regenRemaining=3;
+function updateRegenBtn(){
+  const btn=document.getElementById('btnRegenerate');
+  const left=document.getElementById('regenLeft');
+  left.textContent=regenRemaining;
+  if(regenRemaining<=0){ btn.disabled=true; btn.style.opacity='0.45'; btn.style.cursor='not-allowed'; }
+  else { btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+}
+
+/* ── JD copy ── */
+function copyJD(){
+  const txt=document.getElementById('jdContent').innerText;
+  navigator.clipboard.writeText(txt).catch(()=>{});
+}
+
+/* ── Render AI JD into panel ── */
+function renderJD(jd){
+  const el=document.getElementById('jdContent');
+  let html='';
+  html+=`<div class="jd-job-title">${escHtml(jd.job_title||'')}</div>`;
+  html+=`<div class="jd-meta">AI Generated · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>`;
+  if(jd.role_summary){
+    html+=`<div class="jd-section-title">Role Summary</div><p class="jd-summary">${escHtml(jd.role_summary)}</p>`;
+  }
+  if(jd.responsibilities&&jd.responsibilities.length){
+    html+=`<div class="jd-section-title">Key Responsibilities</div><ul class="jd-list">`;
+    jd.responsibilities.forEach(r=>{ html+=`<li>${escHtml(r)}</li>`; });
+    html+=`</ul>`;
+  }
+  if(jd.requirements&&jd.requirements.length){
+    html+=`<div class="jd-section-title">Requirements</div><ul class="jd-list">`;
+    jd.requirements.forEach(r=>{ html+=`<li>${escHtml(r)}</li>`; });
+    html+=`</ul>`;
+  }
+  if(jd.preferred_qualifications&&jd.preferred_qualifications.length){
+    html+=`<div class="jd-section-title">Preferred Qualifications</div><ul class="jd-list">`;
+    jd.preferred_qualifications.forEach(r=>{ html+=`<li>${escHtml(r)}</li>`; });
+    html+=`</ul>`;
+  }
+  el.innerHTML=html;
+}
+function escHtml(s){ const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+/* ── Collect form data for JD API ── */
+function collectJDPayload(){
+  const posSelect=document.getElementById('f_position');
+  const posText=posSelect?posSelect.options[posSelect.selectedIndex]?.text||'':'';
+  const deptSelect=document.getElementById('f_dept');
+  const deptText=deptSelect?deptSelect.options[deptSelect.selectedIndex]?.text||'':'';
+  const expSelect=document.getElementById('f_exp');
+  const expText=expSelect?expSelect.options[expSelect.selectedIndex]?.text||'':'';
+  const empSelect=document.getElementById('f_emptype');
+  const empText=empSelect?empSelect.options[empSelect.selectedIndex]?.text||'':'';
+  const locSelect=document.getElementById('f_location');
+  const locText=locSelect?locSelect.options[locSelect.selectedIndex]?.text||'':'';
+  const wmSelect=document.getElementById('f_workmode');
+  const wmText=wmSelect?wmSelect.options[wmSelect.selectedIndex]?.text||'':'';
+  return {
+    title:       document.getElementById('f_title')?.value || posText,
+    department:  deptText,
+    experience:  expText,
+    employment_type: empText,
+    education:   document.getElementById('jd_education')?.value||'',
+    field:       document.getElementById('jd_field')?.value||'',
+    location:    locText,
+    work_mode:   wmText,
+    languages:   document.getElementById('jd_languages')?.value||'',
+    nationality: document.getElementById('jd_nationality')?.value||'',
+    skills:      document.getElementById('f_skills')?.value||'',
+    other:       document.getElementById('jd_other')?.value||'',
+  };
+}
+
+/* ── Generate JD ── */
+async function generateJD(){
+  // Validate mandatory fields before calling AI
+  const missing=[];
+  const posEl=document.getElementById('f_position');
+  const titleEl=document.getElementById('f_title');
+  if((!posEl||!posEl.value)&&(!titleEl||!titleEl.value.trim())) missing.push('Job Title');
+  if(!document.getElementById('f_dept')?.value) missing.push('Department');
+  if(!document.getElementById('f_exp')?.value) missing.push('Experience (years)');
+  if(!document.getElementById('f_emptype')?.value) missing.push('Employment Type');
+  if(!document.getElementById('f_location')?.value) missing.push('Work Location');
+  if(!document.getElementById('jd_education')?.value) missing.push('Education Level');
+  if(!(document.getElementById('jd_field')?.value||'').trim()) missing.push('Field of Study');
+  if(missing.length){
+    alert('Please fill in the following required fields before generating:\n\n• '+missing.join('\n• '));
+    return;
+  }
+  const btn=document.getElementById('btnGenerateJD');
+  btn.classList.add('loading');
+  btn.innerHTML='<span class="material-symbols-outlined" style="font-size:15px;animation:spin 1s linear infinite">sync</span> Generating…';
+  try {
+    const resp=await fetch('/ui/jd-generate/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+      body:JSON.stringify(collectJDPayload())
+    });
+    const data=await resp.json();
+    if(data.ok&&data.jd){
+      lastJD=data.jd;
+      renderJD(data.jd);
+      showAIJD();
+    } else {
+      alert('Generation failed: '+(data.error||'Unknown error'));
+    }
+  } catch(e){
+    alert('Network error. Please try again.');
+  } finally {
+    btn.classList.remove('loading');
+    btn.innerHTML='<span class="material-symbols-outlined" style="font-size:15px">auto_awesome</span> Generate JD with AI';
+  }
+}
+
+/* ── Regenerate (max 3) ── */
+let lastJD=null;
+async function regenerateJD(){
+  if(regenRemaining<=0) return;
+  regenRemaining--;
+  updateRegenBtn();
+  const btn=document.getElementById('btnRegenerate');
+  btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px;animation:spin 1s linear infinite">sync</span> Generating…';
+  try {
+    const resp=await fetch('/ui/jd-generate/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+      body:JSON.stringify(collectJDPayload())
+    });
+    const data=await resp.json();
+    if(data.ok&&data.jd){ lastJD=data.jd; renderJD(data.jd); }
+    else alert('Regeneration failed: '+(data.error||'Unknown error'));
+  } catch(e){
+    alert('Network error. Please try again.');
+  } finally {
+    btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">sync</span> Regenerate <span id="regenCounter" style="font-size:11px;color:#9CA3AF">(<span id="regenLeft">'+regenRemaining+'</span> left)</span>';
+    if(regenRemaining<=0){ btn.disabled=true; btn.style.opacity='0.45'; }
+  }
+}
+
+/* ── Use This Description → populate editor + show summary ── */
+function useJDDescription(){
+  if(!lastJD) return;
+  const ed=document.getElementById('jdEditor');
+  let html='';
+  if(lastJD.role_summary) html+=`<p><strong>Role Summary</strong><br>${escHtml(lastJD.role_summary)}</p>`;
+  if(lastJD.responsibilities&&lastJD.responsibilities.length){
+    html+=`<p><strong>Key Responsibilities</strong></p><ul>`+lastJD.responsibilities.map(r=>`<li>${escHtml(r)}</li>`).join('')+'</ul>';
+  }
+  if(lastJD.requirements&&lastJD.requirements.length){
+    html+=`<p><strong>Requirements</strong></p><ul>`+lastJD.requirements.map(r=>`<li>${escHtml(r)}</li>`).join('')+'</ul>';
+  }
+  if(lastJD.preferred_qualifications&&lastJD.preferred_qualifications.length){
+    html+=`<p><strong>Preferred Qualifications</strong></p><ul>`+lastJD.preferred_qualifications.map(r=>`<li>${escHtml(r)}</li>`).join('')+'</ul>';
+  }
+  ed.innerHTML=html;
+  document.getElementById('f_job_description').value=html;
+  showSummary();
+  ed.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ── CSRF helper ── */
+function getCsrf(){
+  return document.querySelector('[name=csrfmiddlewaretoken]')?.value||'';
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  syncPriority();
+  {% if prefill_title %}sync('s_title','{{ prefill_title|escapejs }}');{% endif %}
+  {% if prefill_justification %}sync('s_just','{{ prefill_justification|escapejs }}');syncJust();{% endif %}
+});
+</script>
+
+<!-- ════════════ Bulk Request modal ════════════ -->
+<style>
+.bulk-overlay { display:none; position:fixed; inset:0; background:rgba(17,24,39,.45); z-index:10000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px; }
+.bulk-overlay.open { display:flex; }
+.bulk-modal { background:#fff; border-radius:14px; width:100%; max-width:680px; box-shadow:0 24px 70px rgba(0,0,0,.28); }
+.bulk-modal__hd { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid #EFEFEF; }
+.bulk-modal__hd h3 { font-size:17px; font-weight:700; color:#111; margin:0; }
+.bulk-modal__hd p { font-size:12px; color:#888; margin:2px 0 0; }
+.bulk-x { border:none; background:none; cursor:pointer; color:#888; font-size:22px; line-height:1; }
+.bulk-body { padding:18px 24px; }
+.bulk-field { margin-bottom:14px; }
+.bulk-field label { display:block; font-size:12px; font-weight:600; color:#444; margin-bottom:5px; }
+.bulk-field input, .bulk-field select, .bulk-field textarea { width:100%; height:40px; border:1px solid #d9d9d9; border-radius:8px; padding:0 12px; font-size:13px; outline:none; }
+.bulk-field textarea { height:64px; padding:8px 12px; resize:vertical; }
+.bulk-row3 { display:flex; gap:12px; }
+.bulk-row3 > div { flex:1; }
+.bulk-upload { display:flex; align-items:center; gap:10px; background:#F5FAF6; border:1px dashed #A8D4B4; border-radius:8px; padding:12px 14px; margin-bottom:14px; }
+.bulk-upload .material-symbols-outlined { color:#208E3D; }
+.bulk-upload__txt { flex:1; font-size:12px; color:#5a6b5e; }
+.bulk-upload__btn { font-size:12px; font-weight:600; color:#208E3D; border:1px solid #A8D4B4; border-radius:6px; padding:6px 12px; background:#fff; cursor:pointer; }
+.bulk-lines { border:1px solid #EFEFEF; border-radius:8px; overflow:hidden; }
+.bulk-lines__hdr, .bulk-line { display:grid; grid-template-columns: 1fr 110px 36px; gap:10px; align-items:center; padding:8px 12px; }
+.bulk-lines__hdr { background:#FAFAFA; font-size:11px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:.04em; }
+.bulk-line input { height:36px; border:1px solid #d9d9d9; border-radius:7px; padding:0 10px; font-size:13px; outline:none; width:100%; }
+.bulk-line__del { border:none; background:none; cursor:pointer; color:#C04730; font-size:18px; line-height:1; }
+.bulk-addrow { margin-top:10px; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#208E3D; border:1px dashed #A8D4B4; border-radius:8px; padding:8px 14px; background:#fff; cursor:pointer; }
+.bulk-summary { font-size:12px; color:#5a6b5e; margin-top:12px; }
+.bulk-ft { display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid #EFEFEF; }
+.bulk-ft__cancel { height:42px; padding:0 18px; border:1px solid #d9d9d9; border-radius:9px; background:#fff; font-size:14px; font-weight:600; color:#555; cursor:pointer; }
+.bulk-ft__submit { height:42px; padding:0 22px; border:none; border-radius:9px; background:#208E3D; color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+</style>
+
+<div class="bulk-overlay" id="bulkOverlay">
+  <div class="bulk-modal">
+    <div class="bulk-modal__hd">
+      <div>
+        <h3>Bulk Recruitment Request</h3>
+        <p>Group several positions under one request — a single approval covers them all.</p>
+      </div>
+      <button type="button" class="bulk-x" onclick="closeBulkModal()">&times;</button>
+    </div>
+
+    <form id="bulkForm" method="post" action="{% url 'ui:bulk-request' %}">
+      {% csrf_token %}
+      <div class="bulk-body">
+
+        <div class="bulk-row3">
+          <div class="bulk-field">
+            <label>Start Date</label>
+            <input type="date" name="start_date" required>
+          </div>
+          <div class="bulk-field">
+            <label>Employment Type</label>
+            <select name="employment_type">
+              <option value="full_time">Full Time</option>
+              <option value="contract">Contract</option>
+            </select>
+          </div>
+          <div class="bulk-field">
+            <label>Work Location</label>
+            <input type="text" name="work_location" placeholder="e.g. Muscat">
+          </div>
+        </div>
+
+        <div class="bulk-field">
+          <label>Justification (applies to the whole request)</label>
+          <textarea name="justification" placeholder="Business reason for these positions…"></textarea>
+        </div>
+
+        <!-- CSV upload -->
+        <div class="bulk-upload">
+          <span class="material-symbols-outlined">upload_file</span>
+          <div class="bulk-upload__txt">
+            Upload a CSV/Excel with columns <strong>Position, Quantity</strong> — rows are added below.
+          </div>
+          <button type="button" class="bulk-upload__btn" onclick="document.getElementById('bulkCsv').click()">Choose file</button>
+          <input type="file" id="bulkCsv" accept=".csv,.txt,.xlsx,.xls" style="display:none" onchange="bulkParseCsv(this)">
+        </div>
+
+        <!-- Manual lines -->
+        <div class="bulk-lines">
+          <div class="bulk-lines__hdr">
+            <div>Position / Title</div><div>Vacancies</div><div></div>
+          </div>
+          <div id="bulkLines"></div>
+        </div>
+        <button type="button" class="bulk-addrow" onclick="bulkAddRow()">
+          <span class="material-symbols-outlined" style="font-size:17px">add</span> Add position
+        </button>
+
+        <div class="bulk-summary" id="bulkSummary">No positions added yet.</div>
+      </div>
+
+      <div class="bulk-ft">
+        <button type="button" class="bulk-ft__cancel" onclick="closeBulkModal()">Cancel</button>
+        <button type="submit" class="bulk-ft__submit">
+          <span class="material-symbols-outlined" style="font-size:17px;vertical-align:-3px">send</span>
+          Submit Bulk Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var linesEl;
+
+  function rowHtml(title, qty) {
+    var t = (title || '').replace(/"/g, '&quot;');
+    var q = qty || 1;
+    return '<div class="bulk-line">'
+      + '<input type="text" name="line_title[]" placeholder="e.g. Electrician" value="' + t + '">'
+      + '<input type="number" name="line_vacancy[]" min="1" value="' + q + '" oninput="bulkSummary()">'
+      + '<input type="hidden" name="line_position[]" value="">'
+      + '<button type="button" class="bulk-line__del" title="Remove" onclick="this.closest(\'.bulk-line\').remove();bulkSummary()">&times;</button>'
+      + '</div>';
+  }
+
+  window.bulkAddRow = function (title, qty) {
+    linesEl = linesEl || document.getElementById('bulkLines');
+    linesEl.insertAdjacentHTML('beforeend', rowHtml(title, qty));
+    bulkSummary();
+  };
+
+  window.bulkSummary = function () {
+    var rows = document.querySelectorAll('#bulkLines .bulk-line');
+    var positions = 0, total = 0;
+    rows.forEach(function (r) {
+      var t = r.querySelector('[name="line_title[]"]').value.trim();
+      var q = parseInt(r.querySelector('[name="line_vacancy[]"]').value, 10) || 0;
+      if (t) { positions++; total += q; }
+    });
+    var el = document.getElementById('bulkSummary');
+    el.textContent = positions
+      ? positions + ' position' + (positions > 1 ? 's' : '') + ' · ' + total + ' total vacancies · one approval'
+      : 'No positions added yet.';
+  };
+
+  // Parse a CSV (Position,Quantity per line). Header row auto-detected & skipped.
+  window.bulkParseCsv = function (input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var name = (file.name || '').toLowerCase();
+    if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+      alert('Excel detected. Please re-save it as CSV (File → Save As → CSV) and upload that.\nExpected columns: Position, Quantity.');
+      input.value = '';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var text = String(e.target.result || '');
+      var rows = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+      var added = 0;
+      rows.forEach(function (line, i) {
+        var parts = line.split(/[,;\t]/);
+        var title = (parts[0] || '').trim().replace(/^"|"$/g, '');
+        var qty = parseInt((parts[1] || '1').replace(/[^\d]/g, ''), 10) || 1;
+        if (!title) return;
+        // skip a header row like "Position,Quantity"
+        if (i === 0 && /position|title|role/i.test(title) && (parts.length < 2 || isNaN(parseInt(parts[1], 10)))) return;
+        bulkAddRow(title, qty);
+        added++;
+      });
+      input.value = '';
+      if (!added) alert('No valid rows found. Use: Position,Quantity (one per line).');
+    };
+    reader.readAsText(file);
+  };
+
+  window.openBulkModal = function () {
+    linesEl = document.getElementById('bulkLines');
+    if (!linesEl.children.length) { bulkAddRow('', 1); }
+    var d = document.getElementById('bulkForm').querySelector('[name="start_date"]');
+    var src = document.getElementById('f_date');
+    if (src && src.value && !d.value) d.value = src.value;
+    document.getElementById('bulkOverlay').classList.add('open');
+  };
+  window.closeBulkModal = function () {
+    document.getElementById('bulkOverlay').classList.remove('open');
+  };
+
+  document.getElementById('bulkForm').addEventListener('submit', function (e) {
+    var any = Array.from(document.querySelectorAll('#bulkLines [name="line_title[]"]'))
+      .some(function (i) { return i.value.trim(); });
+    if (!any) { e.preventDefault(); alert('Add at least one position.'); }
+  });
+})();
+</script>
+{% endblock %}

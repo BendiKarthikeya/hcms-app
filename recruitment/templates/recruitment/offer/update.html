@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Update Offer Status" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:640px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <a href="{% url 'offer-tracking' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Back to tracking" %}</a>
+    <h2 style="margin:8px 0 16px;">{{ offer.candidate_id.name }} – {% trans "Clearance Status" %}</h2>
+    <form method="post">{% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Medical Status" %}</label>
+          <select name="medical_status" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in choices %}
+            <option value="{{ val }}" {% if current.medical_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Visa Status" %}</label>
+          <select name="visa_status" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in choices %}
+            <option value="{{ val }}" {% if current.visa_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Labour Clearance" %}</label>
+          <select name="labour_clearance_status" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in choices %}
+            <option value="{{ val }}" {% if current.labour_clearance_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;">{% trans "Documents %" %}</label>
+          <input type="number" name="documents_completion_pct" min="0" max="100"
+            value="{{ offer.documents_completion_pct }}"
+            style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;box-sizing:border-box;">
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;">{% trans "Joining Status" %}</label>
+          <select name="joining_status" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:3px;">
+            {% for val,label in joining_choices %}
+            <option value="{{ val }}" {% if offer.joining_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+        <a href="{% url 'offer-tracking' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Save" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

@@ -1,0 +1,721 @@
+{% extends "ui/base.html" %}
+{% block title %}Candidate Pipeline — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Page Header ────────────────────────────────────────────────────────── -->
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Recruitment Pipeline</div>
+    <div class="ui-page-subtitle">Browse and manage candidates across all job requisitions</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="ui-btn-outlined">
+      <span class="material-symbols-outlined" style="font-size:18px">upload</span> Export
+    </button>
+    <a href="/ui/job-requisition/" class="ui-btn-primary">
+      <span style="font-size:20px;line-height:1;margin-right:2px">+</span> Create Requisition
+    </a>
+  </div>
+</div>
+
+<!-- ── KPI Row ────────────────────────────────────────────────────────────── -->
+<div class="ui-kpi-row">
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">people</span></div>
+    <div class="ui-kpi-label">Total Candidates</div>
+    <div class="ui-kpi-value">{{ stats.total|default:"248" }}</div>
+    <div class="ui-kpi-trend"><span class="up material-symbols-outlined">arrow_upward</span><span class="up">20%</span>&nbsp;from last month</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">add</span></div>
+    <div class="ui-kpi-label">New This Month</div>
+    <div class="ui-kpi-value">{{ stats.new_this_month|default:"58" }}</div>
+    <div class="ui-kpi-trend"><span class="up material-symbols-outlined">arrow_upward</span><span class="up">13%</span>&nbsp;from last month</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">pending</span></div>
+    <div class="ui-kpi-label">In Progress</div>
+    <div class="ui-kpi-value">{{ stats.in_progress|default:"126" }}</div>
+    <div class="ui-kpi-trend"><span class="up material-symbols-outlined">arrow_upward</span><span class="up">20%</span>&nbsp;from last month</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">how_to_reg</span></div>
+    <div class="ui-kpi-label">Shortlisted</div>
+    <div class="ui-kpi-value">{{ stats.shortlisted|default:"32" }}</div>
+    <div class="ui-kpi-trend"><span class="up material-symbols-outlined">arrow_upward</span><span class="up">13%</span>&nbsp;from last month</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">dangerous</span></div>
+    <div class="ui-kpi-label">Rejected</div>
+    <div class="ui-kpi-value">{{ stats.rejected|default:"90" }}</div>
+    <div class="ui-kpi-trend"><span class="down material-symbols-outlined" style="transform:rotate(180deg)">arrow_upward</span><span class="down">25%</span>&nbsp;from last month</div>
+  </div>
+</div>
+
+<!-- ── View Toggle + Hint bar ─────────────────────────────────────────────── -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div style="display:flex;border:1px solid #E0E0E0;border-radius:8px;overflow:hidden">
+    <a href="/ui/candidates/"
+       style="padding:7px 16px;font-size:13px;color:#666;background:#fff;text-decoration:none;border-right:1px solid #E0E0E0">
+      Candidate List
+    </a>
+    <span style="padding:7px 16px;font-size:13px;font-weight:600;color:#278E53;background:#F0F8F4;border-bottom:3px solid #278E53;cursor:default">
+      Candidate Pipeline
+    </span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid #E8E8E8;border-radius:8px;background:#FAFAFA;font-size:12px;color:#555">
+    <span class="material-symbols-outlined" style="font-size:18px;color:#278E53">swipe_up</span>
+    Drag and drop candidates to move between stages &nbsp;&middot;&nbsp;
+    <span style="color:#888">Changes are auto saved</span>
+  </div>
+</div>
+
+<!-- ── Kanban Board ───────────────────────────────────────────────────────── -->
+<div class="pipeline-board">
+
+  <!-- ── Column: New Application ──────────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="new_application">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">New Application</span>
+        <span class="pipeline-count">{{ col_counts.new_application|default:"28" }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="pipeline-col-menu-btn" title="Column options"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+      </div>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--accent"></div>
+    <div class="pipeline-col__cards" id="col-new">
+      <!-- Card -->
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">AJ</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Alex Johnson</div>
+            <div class="pipeline-card__role">Senior Frontend Developer</div>
+          </div>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 13, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/1/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <!-- Card -->
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E8EAF6;color:#3949AB">SR</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Sara Rahman</div>
+            <div class="pipeline-card__role">Product Manager</div>
+          </div>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2198</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 15, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--direct">Direct</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/2/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <!-- Card -->
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#FFF3E0;color:#E65100">KA</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Khalid Al-Rashidi</div>
+            <div class="pipeline-card__role">Data Analyst</div>
+          </div>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2201</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 17, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/3/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pipeline-add-btn">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">add</span>
+      <span style="color:#278E53;font-size:12px;font-weight:500">Add Candidate</span>
+    </button>
+  </div>
+
+  <!-- ── Column: Screening ────────────────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="screening">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">Screening</span>
+        <span class="pipeline-count">{{ col_counts.screening|default:"32" }}</span>
+      </div>
+      <button class="pipeline-col-menu-btn"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--accent"></div>
+    <div class="pipeline-col__cards" id="col-screening">
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E8F5ED;color:#1F5F2F">FH</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Fatima Hassan</div>
+            <div class="pipeline-card__role">UX Designer</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">88%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2300</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 10, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--referral">Referral</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/4/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E3F2FD;color:#1565C0">MB</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Mohammed Bakr</div>
+            <div class="pipeline-card__role">Backend Engineer</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--medium">72%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 11, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/5/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#F3E5F5;color:#6A1B9A">NW</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Nour Wahab</div>
+            <div class="pipeline-card__role">HR Specialist</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">91%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2145</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 12, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--direct">Direct</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/6/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <button class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></button>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pipeline-add-btn">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">add</span>
+      <span style="color:#278E53;font-size:12px;font-weight:500">Add Candidate</span>
+    </button>
+  </div>
+
+  <!-- ── Column: Technical Interview ─────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="technical_interview">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">Technical Interview</span>
+        <span class="pipeline-count">{{ col_counts.technical_interview|default:"18" }}</span>
+      </div>
+      <button class="pipeline-col-menu-btn"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--accent"></div>
+    <div class="pipeline-col__cards" id="col-technical">
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E8F5ED;color:#1F5F2F">AJ</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Aisha Al-Junaid</div>
+            <div class="pipeline-card__role">DevOps Engineer</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">85%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 13, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/7/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <a href="/ui/interview-creator/?candidate=7" class="ui-action-btn" title="Schedule interview"><span class="material-symbols-outlined">calendar_add_on</span></a>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-card pipeline-card--active" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">OT</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Omar Tariq</div>
+            <div class="pipeline-card__role">Senior Frontend Developer</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">93%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 13, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--referral">Referral</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/8/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <a href="/ui/candidate/8/interviews/" class="ui-action-btn" title="View interviews"><span class="material-symbols-outlined">rate_review</span></a>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pipeline-add-btn">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">add</span>
+      <span style="color:#278E53;font-size:12px;font-weight:500">Add Candidate</span>
+    </button>
+  </div>
+
+  <!-- ── Column: HR Interview ─────────────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="hr_interview">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">HR Interview</span>
+        <span class="pipeline-count">{{ col_counts.hr_interview|default:"24" }}</span>
+      </div>
+      <button class="pipeline-col-menu-btn"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--accent"></div>
+    <div class="pipeline-col__cards" id="col-hr">
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#FFF3E0;color:#E65100">LM</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Layla Mansoor</div>
+            <div class="pipeline-card__role">Finance Analyst</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--medium">78%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2100</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 8, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--direct">Direct</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/9/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <a href="/ui/candidate/9/interviews/" class="ui-action-btn" title="View interviews"><span class="material-symbols-outlined">rate_review</span></a>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E3F2FD;color:#1565C0">ZA</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Zaid Al-Balushi</div>
+            <div class="pipeline-card__role">Cloud Architect</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">82%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 9, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/10/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <a href="/ui/candidate/10/interviews/" class="ui-action-btn" title="View interviews"><span class="material-symbols-outlined">rate_review</span></a>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pipeline-add-btn">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">add</span>
+      <span style="color:#278E53;font-size:12px;font-weight:500">Add Candidate</span>
+    </button>
+  </div>
+
+  <!-- ── Column: Offer ────────────────────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="offer">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">Offer</span>
+        <span class="pipeline-count">{{ col_counts.offer|default:"18" }}</span>
+      </div>
+      <button class="pipeline-col-menu-btn"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--accent"></div>
+    <div class="pipeline-col__cards" id="col-offer">
+      <div class="pipeline-card" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#E8F5ED;color:#1F5F2F">RS</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Rania Saleh</div>
+            <div class="pipeline-card__role">Operations Manager</div>
+          </div>
+          <span class="ai-score-badge ai-score-badge--high">89%</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2090</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>May 5, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill pipeline-source-pill--referral">Referral</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/11/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+            <a href="{% url 'ui:offer-creator' %}?candidate=11" class="ui-action-btn" title="Create offer"><span class="material-symbols-outlined">handshake</span></a>
+            <button class="ui-action-btn" title="Move stage"><span class="material-symbols-outlined">arrow_outward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pipeline-add-btn">
+      <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">add</span>
+      <span style="color:#278E53;font-size:12px;font-weight:500">Add Candidate</span>
+    </button>
+  </div>
+
+  <!-- ── Column: Hired ────────────────────────────────────────────────────── -->
+  <div class="pipeline-col" data-stage="hired">
+    <div class="pipeline-col__header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:#111">Hired</span>
+        <span class="pipeline-count pipeline-count--hired">{{ col_counts.hired|default:"8" }}</span>
+      </div>
+      <button class="pipeline-col-menu-btn"><span class="material-symbols-outlined" style="font-size:18px;color:#999">more_horiz</span></button>
+    </div>
+    <div class="pipeline-col__line pipeline-col__line--hired"></div>
+    <div class="pipeline-col__cards" id="col-hired">
+      <div class="pipeline-card pipeline-card--hired" draggable="true">
+        <div class="pipeline-card__top">
+          <div class="ui-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0;background:#278E53;color:#fff">YA</div>
+          <div style="flex:1;min-width:0">
+            <div class="pipeline-card__name">Yousef Al-Amri</div>
+            <div class="pipeline-card__role">Software Engineer</div>
+          </div>
+          <span class="ui-pill ui-pill--blue" style="font-size:10px;white-space:nowrap">Hired</span>
+        </div>
+        <div class="pipeline-card__meta">
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999">work</span>
+          <span>REQ-2026-2323</span>
+          <span class="material-symbols-outlined" style="font-size:13px;color:#999;margin-left:6px">calendar_today</span>
+          <span>Apr 28, 2026</span>
+        </div>
+        <div class="pipeline-card__footer">
+          <span class="pipeline-source-pill">LinkedIn</span>
+          <div class="pipeline-card__actions">
+            <a href="/ui/candidate/12/" class="ui-action-btn" title="View profile"><span class="material-symbols-outlined">arrow_outward</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pipeline-board -->
+
+<!-- ── Styles ──────────────────────────────────────────────────────────────── -->
+<style>
+/* Board container — horizontal scroll */
+.pipeline-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 24px;
+  align-items: flex-start;
+}
+.pipeline-board::-webkit-scrollbar { height: 6px; }
+.pipeline-board::-webkit-scrollbar-track { background: #F1F3F4; border-radius: 4px; }
+.pipeline-board::-webkit-scrollbar-thumb { background: #C8D0D8; border-radius: 4px; }
+
+/* Column */
+.pipeline-col {
+  flex: 0 0 248px;
+  min-width: 248px;
+  background: #F8F9FA;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pipeline-col__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 0;
+}
+.pipeline-col__line {
+  height: 3px;
+  margin: 10px 14px 0;
+  border-radius: 2px;
+}
+.pipeline-col__line--accent { background: #278E53; }
+.pipeline-col__line--hired  { background: #1565C0; }
+
+/* Cards container */
+.pipeline-col__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 4px;
+  min-height: 80px;
+}
+
+/* Candidate count badge */
+.pipeline-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  background: #fff;
+  border: 1px solid #E0E0E0;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #444;
+}
+.pipeline-count--hired { background: #E3F2FD; border-color: #BBDEFB; color: #1565C0; }
+
+/* Column menu button */
+.pipeline-col-menu-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+.pipeline-col-menu-btn:hover { background: #EBEBEB; }
+
+/* Add candidate footer button */
+.pipeline-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-top: 1px dashed #E0E0E0;
+  margin-top: 4px;
+  transition: background 0.1s;
+}
+.pipeline-add-btn:hover { background: #F0F8F4; }
+
+/* Individual card */
+.pipeline-card {
+  background: #fff;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: grab;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.pipeline-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  border-color: #CCCCCC;
+}
+.pipeline-card:active { cursor: grabbing; }
+.pipeline-card--active {
+  border-color: #278E53;
+  box-shadow: 0 0 0 2px rgba(39,142,83,.12);
+}
+.pipeline-card--hired { opacity: 0.85; }
+
+.pipeline-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pipeline-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pipeline-card__role {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pipeline-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #777;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.pipeline-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pipeline-card__actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pipeline-card:hover .pipeline-card__actions { opacity: 1; }
+.pipeline-card__actions .ui-action-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #555;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.1s;
+}
+.pipeline-card__actions .ui-action-btn:hover { background: #F0F0F0; color: #278E53; }
+.pipeline-card__actions .ui-action-btn .material-symbols-outlined { font-size: 15px; }
+
+/* Source pills */
+.pipeline-source-pill {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #EEF2FB;
+  color: #3B5AC6;
+}
+.pipeline-source-pill--direct   { background: #F1F3F4; color: #555; }
+.pipeline-source-pill--referral { background: #FFF8E7; color: #92600A; }
+
+/* AI score badge */
+.ai-score-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.ai-score-badge--high   { background: #E8F5ED; color: #1F5F2F; }
+.ai-score-badge--medium { background: #FFF3E0; color: #92600A; }
+.ai-score-badge--low    { background: #FFEBEE; color: #C62828; }
+
+/* Drag-over highlight */
+.pipeline-col__cards.drag-over {
+  background: #F0F8F4;
+  border-radius: 8px;
+  outline: 2px dashed #278E53;
+}
+</style>
+
+<!-- ── Drag & Drop JS ──────────────────────────────────────────────────────── -->
+<script>
+(function () {
+  var dragging = null;
+
+  document.querySelectorAll(".pipeline-card").forEach(function (card) {
+    card.addEventListener("dragstart", function (e) {
+      dragging = card;
+      setTimeout(function () { card.style.opacity = "0.5"; }, 0);
+    });
+    card.addEventListener("dragend", function () {
+      card.style.opacity = "1";
+      dragging = null;
+      document.querySelectorAll(".pipeline-col__cards").forEach(function (c) {
+        c.classList.remove("drag-over");
+      });
+    });
+  });
+
+  document.querySelectorAll(".pipeline-col__cards").forEach(function (zone) {
+    zone.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", function () {
+      zone.classList.remove("drag-over");
+    });
+    zone.addEventListener("drop", function (e) {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (dragging && !zone.contains(dragging)) {
+        zone.appendChild(dragging);
+        // In production: HTMX POST to update stage
+      }
+    });
+  });
+})();
+</script>
+
+{% endblock %}

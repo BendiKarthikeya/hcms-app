@@ -1,0 +1,186 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+{% include 'recruitment/proposals/_proposal_pdf_shared.html' %}
+
+<div class="ep-doc">
+
+  <div class="ep-toolbar">
+    <a href="{% url 'proposal-list' %}" class="ep-btn ep-btn-grey">
+      <ion-icon name="arrow-back-outline"></ion-icon> {% trans "Back" %}
+    </a>
+    {% if not proposal.is_terminal %}
+      <a href="{% url 'proposal-edit' proposal.id %}" class="ep-btn ep-btn-grey">
+        <ion-icon name="create-outline"></ion-icon> {% trans "Edit" %}
+      </a>
+    {% endif %}
+    {% if is_my_turn %}
+      <button class="ep-btn ep-btn-green" onclick="openEsign({{ proposal.id }}, '{{ proposal.proposal_no }}')">
+        <ion-icon name="pen-outline"></ion-icon> {% trans "E-Sign" %}
+      </button>
+      <button class="ep-btn ep-btn-red" onclick="openFeedback({{ proposal.id }})">
+        <ion-icon name="close-circle-outline"></ion-icon> {% trans "Reject" %}
+      </button>
+    {% endif %}
+    {% if proposal.status == "approved" %}
+      <a href="{% url 'proposal-convert-offer' proposal.id %}" class="ep-btn ep-btn-blue">
+        <ion-icon name="document-text-outline"></ion-icon> {% trans "Create Offer Letter" %}
+      </a>
+    {% endif %}
+  </div>
+
+  <h2>الشركة الوطنية العمانية للهندسة و الاستثمار ( ش م ع ع )</h2>
+  <h2>Oman National Engineering &amp; Investment Company (SAOG)</h2>
+  <div class="ep-sub">EMPLOYMENT PROPOSAL FORM<br>("S-O-M" Grade — Contractual)</div>
+  <div style="text-align:right;font-size:11px;color:#6b7280;margin-bottom:10px;">HR&amp;A/EPF-S/V4/R/July 2022 — {{ proposal.proposal_no }}</div>
+
+  <div class="ep-sec-title">General</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">Post Applied for</td><td>{{ proposal.post_applied_for }}</td>
+        <td class="lbl">Grade Group</td><td>{{ proposal.grade_group }}</td></tr>
+    <tr><td class="lbl">Div. / Dept.</td><td>{{ proposal.division_department }}</td>
+        <td class="lbl">Post Location</td><td>{{ proposal.post_location }}</td></tr>
+    <tr><td class="lbl">Contractual</td>
+        <td><span class="{% if proposal.contractual %}ep-check-on{% else %}ep-check-off{% endif %}">YES</span>
+            <span class="{% if not proposal.contractual %}ep-check-on{% else %}ep-check-off{% endif %}">NO</span></td>
+        <td class="lbl">Contract Name</td><td>{{ proposal.contract_name }}</td></tr>
+    <tr><td class="lbl">Contract Period</td>
+        <td>From {{ proposal.contract_period_from|date:"d-M-Y" }} To {{ proposal.contract_period_to|date:"d-M-Y" }}</td>
+        <td class="lbl">Job No.</td><td>{{ proposal.job_no }}</td></tr>
+    <tr><td class="lbl">Reporting to</td><td>{{ proposal.reporting_to }}</td>
+        <td class="lbl">Staff No. / GSM</td><td>{{ proposal.reporting_staff_no }} / {{ proposal.gsm_cpn_no }}</td></tr>
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Brief (Recruitment)</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">New Appointment</td>
+        <td>{% if proposal.is_new_appointment %}YES{% else %}NO{% endif %}</td>
+        <td class="lbl">Replacement for Staff No.</td><td>{{ proposal.replacement_staff_no }}</td></tr>
+    <tr><td class="lbl">Candidate Referred</td>
+        <td colspan="3">{{ proposal.get_candidate_referred_display|default:'—' }} {% if proposal.referral_staff_number %}({{ proposal.referral_staff_number }}){% endif %}</td></tr>
+    <tr><td class="lbl">Consultancy Reg.</td>
+        <td colspan="3">{{ proposal.get_consultancy_reg_display|default:'—' }} {% if proposal.consultancy_other %}({{ proposal.consultancy_other }}){% endif %}</td></tr>
+    <tr><td class="lbl">Employment Contract</td>
+        <td colspan="3">
+          {% if proposal.employment_contract_type == 'temporary' %}
+            ☑ Temporary — {{ proposal.employment_contract_months|default:'__' }} months
+          {% else %}
+            ☑ Permanent
+          {% endif %}
+        </td></tr>
+    <tr><td class="lbl">Relative in company?</td>
+        <td colspan="3">{% if proposal.has_relative_in_company %}YES — {{ proposal.relative_name }} / {{ proposal.relative_staff_no }} / {{ proposal.relative_location }}{% else %}NO{% endif %}</td></tr>
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Summary of Resume</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">Application Date</td><td>{{ proposal.application_date|date:"d-M-Y" }}</td>
+        <td class="lbl">Interview Date</td><td>{{ proposal.interview_date|date:"d-M-Y" }}</td></tr>
+    <tr><td class="lbl">Name of Applicant</td><td>{{ proposal.applicant_name }}</td>
+        <td class="lbl">Nationality</td><td>{{ proposal.nationality }}</td></tr>
+    <tr><td class="lbl">Present Employer</td><td>{{ proposal.present_employer }}</td>
+        <td class="lbl">Local Transfer</td><td>{% if proposal.local_transfer %}YES{% else %}NO{% endif %}</td></tr>
+    <tr><td class="lbl">Marital Status</td><td>{{ proposal.get_marital_status_display|default:'—' }}</td>
+        <td class="lbl">Date of Birth</td><td>{{ proposal.dob|date:"d-M-Y" }}</td></tr>
+    <tr><td class="lbl">Place of Birth</td><td>{{ proposal.place_of_birth }}</td>
+        <td class="lbl">Qualification (Academic)</td><td>{{ proposal.qualification_academic }}</td></tr>
+    <tr><td class="lbl">Professional / Technical</td><td>{{ proposal.qualification_professional }}</td>
+        <td class="lbl">Experience (Overseas yrs)</td><td>{{ proposal.experience_overseas_years|default:'—' }}</td></tr>
+    <tr><td class="lbl">Languages</td>
+        <td>{% if proposal.lang_arabic %}Arabic {% endif %}{% if proposal.lang_english %}English {% endif %}{{ proposal.lang_others }}</td>
+        <td class="lbl">Driving License</td><td>{{ proposal.get_driving_license_display|default:'—' }}</td></tr>
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Salary Recommendation — Salary OMR ({{ proposal.get_salary_budgeted_display|default:'—' }})</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">Salary Description</td>
+        <td style="font-weight:600;background:#f9fafb;">Proposed</td>
+        <td style="font-weight:600;background:#f9fafb;">HR Suggestion</td>
+        <td style="font-weight:600;background:#f9fafb;">Remarks</td></tr>
+    <tr><td class="lbl">Basic Salary</td><td>{{ proposal.basic_salary|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.basic_salary.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.basic_salary.ceo|default:'—' }}</td></tr>
+    <tr><td class="lbl">HRA (Inc. E&amp;W, Tel. &amp; GSM)</td><td>{{ proposal.hra_allowance|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.hra_allowance.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.hra_allowance.ceo|default:'—' }}</td></tr>
+    <tr><td class="lbl">Transport Allowance</td><td>{{ proposal.transport_allowance|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.transport_allowance.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.transport_allowance.ceo|default:'—' }}</td></tr>
+    <tr><td class="lbl">Addl. Resp. Allowance</td><td>{{ proposal.addl_resp_allowance|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.addl_resp_allowance.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.addl_resp_allowance.ceo|default:'—' }}</td></tr>
+    <tr><td class="lbl">Food Allowance</td><td>{{ proposal.food_allowance|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.food_allowance.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.food_allowance.ceo|default:'—' }}</td></tr>
+    <tr><td class="lbl">Living Standard Allowance (LSA) — {{ proposal.get_lsa_tier_display }}</td>
+        <td>{{ proposal.lsa_allowance|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.lsa_allowance.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.lsa_allowance.ceo|default:'—' }}</td></tr>
+    <tr style="background:#f9fafb;font-weight:700;"><td>Gross Salary →</td>
+        <td>{{ proposal.gross_salary|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.gross_salary.hrc|default:'—' }}</td>
+        <td>{{ proposal.salary_columns_json.gross_salary.ceo|default:'—' }}</td></tr>
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Notes</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">Contract Period</td>
+        <td colspan="3">From {{ proposal.contract_period_from|date:"d-M-Y" }} to {{ proposal.contract_period_to|date:"d-M-Y" }}</td></tr>
+    <tr><td class="lbl">Air Passage Sector</td>
+        <td colspan="3">From {{ proposal.air_passage_from }} to {{ proposal.air_passage_to }} (Entitlement: {{ proposal.air_passage_months|default:'—' }} months)</td></tr>
+    <tr><td class="lbl">Family Status</td>
+        <td colspan="3">{{ proposal.get_family_status_display|default:'—' }}</td></tr>
+    <tr><td class="lbl">Medical Clause</td>
+        <td colspan="3">{% if proposal.medical_clause %}As per Company's medical insurance policy and Oman Labour Law.{% else %}—{% endif %}</td></tr>
+    <tr><td class="lbl">Salary Increase Clause</td>
+        <td colspan="3">{{ proposal.salary_increase_clause|linebreaksbr|default:'—' }}</td></tr>
+    <tr><td class="lbl">HOD's Comments</td>
+        <td colspan="3">{{ proposal.hod_comments|linebreaksbr|default:'—' }}</td></tr>
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Approvals by Circular (E-Sign Chain)</div>
+  <table class="ep-tbl">
+    {% for step in chain %}
+      <tr>
+        <td class="lbl" style="width:38%;">{{ step.role_label }}</td>
+        <td style="width:32%;">{{ step.approver.get_full_name }}</td>
+        <td style="width:30%;">
+          <div class="ep-sign-box">
+            {% if step.signature_image %}
+              <img src="{{ step.signature_image }}" alt="signature">
+              <span style="font-size:10px;color:#6b7280;">{{ step.acted_at|date:"d-M-Y H:i" }}</span>
+            {% else %}
+              <span class="ep-pill ep-pill-{{ step.display_status }}">
+                {% if step.display_status == 'active' %}{% trans "Awaiting Signature" %}
+                {% elif step.display_status == 'waiting' %}{% trans "Waiting" %}
+                {% elif step.display_status == 'approved' %}{% trans "Approved" %}
+                {% elif step.display_status == 'rejected' %}{% trans "Rejected" %}
+                {% endif %}
+              </span>
+            {% endif %}
+            {% if step.feedback %}
+              <span style="font-size:10px;color:#b45309;">{% trans "Feedback" %}: {{ step.feedback }}</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <div class="ep-sec-title" style="margin-top:8px;">Final Approval</div>
+  <table class="ep-tbl">
+    <tr><td style="text-align:center;font-weight:700;">General Manager HR&amp;A</td></tr>
+    <tr><td style="height:60px;text-align:center;">
+      {% for s in chain %}{% if s.role_key == "gm_hra" and s.signature_image %}<img src="{{ s.signature_image }}" style="max-height:55px;">{% endif %}{% endfor %}
+    </td></tr>
+  </table>
+
+  <p style="font-size:10px;color:#6b7280;margin-top:8px;">
+    Note: 1) "S – O - M" Grade: Final approval by the Head of HR for all contractual proposals.<br>
+    &nbsp;&nbsp;&nbsp;&nbsp; 2) Any change in this form must be signed by any 3 members at least, otherwise it is considered as void.
+  </p>
+</div>
+
+{% include 'recruitment/proposals/proposal_esign_modal.html' %}
+
+{% endblock %}

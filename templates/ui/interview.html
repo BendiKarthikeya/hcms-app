@@ -1,0 +1,443 @@
+{% extends "ui/base.html" %}
+{% block title %}Interviews — HCMS{% endblock %}
+{% block active_interview %}active{% endblock %}
+
+{% block content %}
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Interviews</div>
+    <div class="ui-page-subtitle">Schedule, manage and track interviews</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="ui-btn-outlined">
+      <span class="material-symbols-outlined" style="font-size:18px">upload</span> Export
+    </button>
+    <a href="/ui/interview-creator/" class="ui-btn-primary" style="background:#208E3D;text-decoration:none;">
+      <span style="font-size:20px;line-height:1;margin-right:2px">+</span> Schedule an Interview
+    </a>
+  </div>
+</div>
+
+<!-- KPI cards -->
+<div class="ui-kpi-row">
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">calendar_month</span></div>
+    <div class="ui-kpi-label">Total Interviews</div>
+    <div class="ui-kpi-value">{{ stats.total }}</div>
+    <div class="ui-kpi-trend ui-kpi-trend--neutral">All time</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">event_available</span></div>
+    <div class="ui-kpi-label">Scheduled</div>
+    <div class="ui-kpi-value">{{ stats.scheduled }}</div>
+    <div class="ui-kpi-trend ui-kpi-trend--neutral">Pending completion</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">check_circle</span></div>
+    <div class="ui-kpi-label">Completed</div>
+    <div class="ui-kpi-value">{{ stats.completed }}</div>
+    <div class="ui-kpi-trend ui-kpi-trend--neutral">All time</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">upcoming</span></div>
+    <div class="ui-kpi-label">Upcoming</div>
+    <div class="ui-kpi-value">{{ stats.upcoming }}</div>
+    <div class="ui-kpi-trend ui-kpi-trend--neutral">Future dates</div>
+  </div>
+  <div class="ui-kpi-card">
+    <div class="ui-kpi-icon"><span class="material-symbols-outlined">event_busy</span></div>
+    <div class="ui-kpi-label">Cancelled</div>
+    <div class="ui-kpi-value">{{ stats.cancelled }}</div>
+    <div class="ui-kpi-trend ui-kpi-trend--neutral">Withdrawn</div>
+  </div>
+</div>
+
+<!-- Shortlisted Candidates -->
+<div class="ui-table-card">
+  <div class="ui-table-card__title">Shortlisted Candidates</div>
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th>Candidate</th>
+        <th>Job Title</th>
+        <th>Stage</th>
+        <th>Source</th>
+        <th>Applied On</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in sh_page %}
+      <tr>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar">{{ c.name|slice:":2"|upper|default:"—" }}</div>
+            <div>
+              <div class="name">{{ c.name|default:"—" }}</div>
+              <div class="sub">{{ c.email|default:"" }}</div>
+              {% if c.phone %}<div class="sub">{{ c.phone }}</div>{% endif %}
+              {% if c.requisition_id_display %}<div class="sub" style="color:#555;font-size:11px">{{ c.requisition_id_display }}</div>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-size:13px;font-weight:500;color:#111">{% if c.recruitment_id %}{{ c.recruitment_id.title|default:"—" }}{% elif c.job_position_id %}{{ c.job_position_id.job_position }}{% else %}—{% endif %}</div>
+        </td>
+        <td>
+          {% if c.has_interview %}
+            <span class="ui-pill ui-pill--green">Interview Scheduled</span>
+          {% else %}
+            <span class="ui-pill ui-pill--amber">Shortlisted</span>
+            <div style="font-size:11px;color:#888;margin-top:3px">Pending schedule</div>
+          {% endif %}
+        </td>
+        <td style="color:#555;font-size:13px">{{ c.source|default:"Direct" }}</td>
+        <td style="color:#555;font-size:13px">{{ c.created_at|date:"d M Y" }}</td>
+        <td>
+          <div style="display:flex;gap:8px;align-items:center">
+            {% if c.has_interview %}
+              <a href="/ui/interview/{{ c.interview_id }}/evaluate/" class="ui-btn-primary" style="font-size:12px;padding:6px 12px;border-radius:7px;white-space:nowrap;background:#0F752F;text-decoration:none;">
+                View Interview
+              </a>
+            {% else %}
+              <a href="/ui/interview-creator/?candidate={{ c.id }}" class="ui-btn-primary" style="font-size:12px;padding:6px 12px;border-radius:7px;white-space:nowrap;background:#208E3D;text-decoration:none;">
+                Schedule Interview
+              </a>
+            {% endif %}
+            <button class="ui-more-btn" title="More actions">⋮</button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No shortlisted candidates.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="ui-pagination-row">
+    <span class="ui-pagination-label">
+      Showing page {{ sh_page.number }} of {{ sh_page.paginator.num_pages }}
+      &nbsp;·&nbsp; {{ sh_page.paginator.count }} total
+    </span>
+    <div class="ui-pagination-btns">
+      {% if sh_page.has_previous %}
+      <a href="?sh_page={{ sh_page.previous_page_number }}&sc_page={{ sc_page.number }}" class="ui-pagination-btn">‹</a>
+      {% else %}
+      <button class="ui-pagination-btn" disabled>‹</button>
+      {% endif %}
+      {% for p in sh_page_range %}
+        {% if p == sh_page.number %}
+          <button class="ui-pagination-btn active">{{ p }}</button>
+        {% elif p == "…" %}
+          <button class="ui-pagination-btn" disabled>…</button>
+        {% else %}
+          <a href="?sh_page={{ p }}&sc_page={{ sc_page.number }}" class="ui-pagination-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if sh_page.has_next %}
+      <a href="?sh_page={{ sh_page.next_page_number }}&sc_page={{ sc_page.number }}" class="ui-pagination-btn">›</a>
+      {% else %}
+      <button class="ui-pagination-btn" disabled>›</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Scheduled Interviews -->
+<div class="ui-table-card" id="scheduled">
+  <div class="ui-table-card__title">Scheduled Interviews</div>
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th>Candidate</th>
+        <th>Job Title</th>
+        <th>Stage</th>
+        <th>Source</th>
+        <th>Interviewer</th>
+        <th>Date & Time</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for iv in sc_page %}
+      <tr>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar">{{ iv.candidate_id.name|slice:":2"|upper|default:"—" }}</div>
+            <div>
+              <div class="name">{{ iv.candidate_id.name|default:"—" }}</div>
+              <div class="sub">{{ iv.candidate_id.email|default:"" }}</div>
+              {% if iv.candidate_id.phone %}<div class="sub">{{ iv.candidate_id.phone }}</div>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-size:13px;font-weight:500;color:#111">{% if iv.candidate_id.recruitment_id %}{{ iv.candidate_id.recruitment_id.title|default:"—" }}{% elif iv.candidate_id.job_position_id %}{{ iv.candidate_id.job_position_id.job_position }}{% else %}—{% endif %}</div>
+          <div style="font-size:11px;color:#888">{{ iv.candidate_id.recruitment_id.requisition_id|default:"" }}</div>
+        </td>
+        <td>
+          {% if iv.completed %}<span class="ui-pill ui-pill--green">Completed</span>
+          {% elif iv.interview_date >= today %}<span class="ui-pill ui-pill--grey">Upcoming</span>
+          {% else %}<span class="ui-pill ui-pill--grey">New</span>{% endif %}
+          {% if iv.rounds.all %}<div style="font-size:11px;color:#888;margin-top:3px">{{ iv.rounds.count }} round{{ iv.rounds.count|pluralize }}</div>{% endif %}
+        </td>
+        <td style="color:#555;font-size:13px">{{ iv.candidate_id.source|default:"LinkedIn" }}</td>
+        <td>
+          {% with emps=iv.employee_id.all %}
+          {% for emp in emps|slice:":2" %}
+          <div class="ui-avatar-chip" style="margin-bottom:2px">
+            <div class="ui-avatar" style="width:26px;height:26px;font-size:11px">{{ emp|stringformat:"s"|slice:":2"|upper }}</div>
+            <span style="font-size:12px">{{ emp }}</span>
+          </div>
+          {% empty %}—{% endfor %}
+          {% if emps|length > 2 %}
+          <span style="font-size:11px;color:#278E53;font-weight:500;margin-top:2px;display:block">+{{ emps|length|add:"-2" }} more</span>
+          {% endif %}
+          {% endwith %}
+        </td>
+        <td>
+          <div style="font-size:13px;color:#111;font-weight:500">{{ iv.interview_date|date:"d M Y" }}</div>
+          {% if iv.interview_time %}<div style="font-size:11px;color:#888">{{ iv.interview_time|time:"g:i A" }}</div>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:8px;align-items:center">
+            <a class="ui-action-btn" title="Evaluate" href="/ui/interview/{{ iv.id }}/evaluate/"><span class="material-symbols-outlined">rate_review</span></a>
+            <a class="ui-action-btn" title="Edit" href="/ui/interview/{{ iv.id }}/edit/"><span class="material-symbols-outlined">edit</span></a>
+            <div class="ui-menu-wrap">
+              <button type="button" class="ui-more-btn" title="More" onclick="uiToggleMenu(event, this)">⋮</button>
+              <div class="ui-menu" hidden>
+                <a class="ui-menu-item" href="/ui/interview/{{ iv.id }}/evaluate/">
+                  <span class="material-symbols-outlined">rate_review</span> Evaluate
+                </a>
+                <a class="ui-menu-item" href="/ui/interview/{{ iv.id }}/edit/">
+                  <span class="material-symbols-outlined">edit</span> Edit
+                </a>
+                <button type="button" class="ui-menu-item" style="color:#dc2626;width:100%"
+                        onclick="event.stopPropagation(); openDeleteInterviewModal('/ui/interview/{{ iv.id }}/delete/');">
+                  <span class="material-symbols-outlined">delete</span> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:#999;padding:24px;">No scheduled interviews.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="ui-pagination-row">
+    <span class="ui-pagination-label">
+      Showing page {{ sc_page.number }} of {{ sc_page.paginator.num_pages }}
+      &nbsp;·&nbsp; {{ sc_page.paginator.count }} total
+    </span>
+    <div class="ui-pagination-btns">
+      {% if sc_page.has_previous %}
+      <a href="?sh_page={{ sh_page.number }}&sc_page={{ sc_page.previous_page_number }}#scheduled" class="ui-pagination-btn">‹</a>
+      {% else %}
+      <button class="ui-pagination-btn" disabled>‹</button>
+      {% endif %}
+      {% for p in sc_page_range %}
+        {% if p == sc_page.number %}
+          <button class="ui-pagination-btn active">{{ p }}</button>
+        {% elif p == "…" %}
+          <button class="ui-pagination-btn" disabled>…</button>
+        {% else %}
+          <a href="?sh_page={{ sh_page.number }}&sc_page={{ p }}#scheduled" class="ui-pagination-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if sc_page.has_next %}
+      <a href="?sh_page={{ sh_page.number }}&sc_page={{ sc_page.next_page_number }}#scheduled" class="ui-pagination-btn">›</a>
+      {% else %}
+      <button class="ui-pagination-btn" disabled>›</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Employment Proposals -->
+<div class="ui-table-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div class="ui-table-card__title">Employment Proposals</div>
+    <a href="/ui/proposals/" style="font-size:12px;color:#278E53;font-weight:500;text-decoration:none">View All →</a>
+  </div>
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th>Proposal No</th>
+        <th>Candidate</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in proposals %}
+      <tr>
+        <td style="font-size:12px;font-weight:600;color:#222">{{ p.proposal_no }}</td>
+        <td><div class="ui-avatar-chip"><div class="ui-avatar">{{ p.candidate.name|slice:":2"|upper }}</div><div><div class="name">{{ p.candidate.name }}</div><div class="sub">{{ p.candidate.email|default:"" }}</div></div></div></td>
+        <td style="font-size:12px;color:#555">{{ p.get_template_type_display }}</td>
+        <td>
+          {% if p.status == "approved" %}<span class="ui-pill ui-pill--green">Approved</span>
+          {% elif p.status == "rejected" %}<span class="ui-pill ui-pill--red">Rejected</span>
+          {% elif p.status == "pending" %}<span class="ui-pill ui-pill--amber">Pending Approval</span>
+          {% elif p.status == "converted" %}<span class="ui-pill ui-pill--blue">Converted</span>
+          {% else %}<span class="ui-pill ui-pill--grey">Draft</span>{% endif %}
+        </td>
+        <td style="font-size:12px;color:#555">{{ p.created_at|date:"d M Y" }}</td>
+        <td><div class="ui-action-group">
+          <a class="ui-action-btn" title="View &amp; Sign" href="/ui/proposal/{{ p.id }}/"><span class="material-symbols-outlined">visibility</span></a>
+          {% if p.status == "approved" %}<a class="ui-action-btn" title="Create Offer" href="/ui/offer-creator/?candidate={{ p.candidate_id }}"><span class="material-symbols-outlined">handshake</span></a>{% endif %}
+        </div></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">No proposals yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+.ui-page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+.ui-more-btn {
+  width:32px; height:32px; border:1px solid #878787; border-radius:6px;
+  background:#fff; cursor:pointer; font-size:16px; display:flex; align-items:center;
+  justify-content:center; color:#555; flex-shrink:0;
+}
+.ui-more-btn:hover { background:#f5f5f5; }
+.ui-action-btn { position:relative; }
+.ui-action-btn[title]:hover::after {
+  content:attr(title); position:absolute; bottom:calc(100% + 6px); left:50%;
+  transform:translateX(-50%); background:#1f2937; color:#fff; font-size:11px;
+  white-space:nowrap; padding:4px 8px; border-radius:5px; pointer-events:none; z-index:100;
+}
+.ui-action-btn[title]:hover::before {
+  content:''; position:absolute; bottom:calc(100% + 1px); left:50%;
+  transform:translateX(-50%); border:5px solid transparent;
+  border-top-color:#1f2937; pointer-events:none; z-index:100;
+}
+.ui-menu-wrap { position:relative; flex-shrink:0; }
+.ui-menu {
+  position:absolute; right:0; top:calc(100% + 4px); min-width:180px;
+  background:#fff; border:1px solid #e5e7eb; border-radius:8px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12); padding:6px; z-index:200;
+}
+.ui-menu-item {
+  display:flex; align-items:center; gap:8px; width:100%;
+  padding:8px 10px; font-size:13px; color:#374151; text-decoration:none;
+  background:none; border:none; border-radius:6px; cursor:pointer; text-align:left;
+}
+.ui-menu-item:hover { background:#f3f4f6; }
+.ui-menu-item .material-symbols-outlined { font-size:18px; }
+.ui-menu-item--disabled { color:#9ca3af !important; cursor:not-allowed; }
+.ui-menu-item--disabled:hover { background:#f9fafb; }
+/* --- Confirm / notify modal --- */
+.ui-modal-overlay { position:fixed; inset:0; background:rgba(17,24,39,.45); display:flex;
+  align-items:center; justify-content:center; z-index:1000; }
+.ui-modal-overlay[hidden] { display:none; }
+.ui-modal { background:#fff; border-radius:14px; max-width:380px; width:90%; padding:24px;
+  text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.ui-modal-icon { width:48px; height:48px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center; margin:0 auto 14px; }
+.ui-modal-icon .material-symbols-outlined { font-size:26px; }
+.ui-modal-icon--info { background:#eff6ff; color:#2563eb; }
+.ui-modal-icon--confirm { background:#ecfdf5; color:#16a34a; }
+.ui-modal-title { margin:0 0 6px; font-size:17px; font-weight:600; color:#111827; }
+.ui-modal-msg { margin:0 0 20px; font-size:14px; color:#6b7280; line-height:1.5; }
+.ui-modal-actions { display:flex; gap:10px; justify-content:center; }
+.ui-btn { padding:9px 18px; border-radius:8px; font-size:14px; font-weight:500;
+  cursor:pointer; border:1px solid transparent; }
+.ui-btn-primary { background:#2563eb; color:#fff; }
+.ui-btn-primary:hover { background:#1d4ed8; }
+.ui-btn-ghost { background:#fff; color:#374151; border-color:#d1d5db; }
+.ui-btn-ghost:hover { background:#f3f4f6; }
+</style>
+<div id="ui-modal-overlay" class="ui-modal-overlay" hidden onclick="if(event.target===this)uiCloseModal();">
+  <div class="ui-modal" role="dialog" aria-modal="true">
+    <div class="ui-modal-icon ui-modal-icon--confirm" id="ui-modal-icon"><span class="material-symbols-outlined">help</span></div>
+    <h3 class="ui-modal-title" id="ui-modal-title">Confirm</h3>
+    <p class="ui-modal-msg" id="ui-modal-msg"></p>
+    <div class="ui-modal-actions" id="ui-modal-actions"></div>
+  </div>
+</div>
+<script>
+function uiToggleMenu(ev, btn) {
+  ev.stopPropagation();
+  var menu = btn.nextElementSibling;
+  var isOpen = !menu.hidden;
+  document.querySelectorAll('.ui-menu').forEach(function (m) { m.hidden = true; });
+  menu.hidden = isOpen;
+}
+document.addEventListener('click', function () {
+  document.querySelectorAll('.ui-menu').forEach(function (m) { m.hidden = true; });
+});
+
+/* ---- In-page modal (replaces browser alert/confirm) ---- */
+function uiCloseModal() {
+  var o = document.getElementById('ui-modal-overlay');
+  if (o) o.hidden = true;
+}
+function uiNotify(message, title) {
+  document.getElementById('ui-modal-title').textContent = title || 'Heads up';
+  document.getElementById('ui-modal-msg').textContent = message;
+  var icon = document.getElementById('ui-modal-icon');
+  icon.className = 'ui-modal-icon ui-modal-icon--info';
+  icon.innerHTML = '<span class="material-symbols-outlined">info</span>';
+  var actions = document.getElementById('ui-modal-actions');
+  actions.innerHTML = '';
+  var ok = document.createElement('button');
+  ok.className = 'ui-btn ui-btn-primary';
+  ok.textContent = 'OK';
+  ok.onclick = uiCloseModal;
+  actions.appendChild(ok);
+  document.getElementById('ui-modal-overlay').hidden = false;
+}
+function uiConfirm(opts) {
+  document.getElementById('ui-modal-title').textContent = opts.title || 'Are you sure?';
+  document.getElementById('ui-modal-msg').textContent = opts.message || '';
+  var icon = document.getElementById('ui-modal-icon');
+  icon.className = 'ui-modal-icon ui-modal-icon--confirm';
+  icon.innerHTML = '<span class="material-symbols-outlined">' + (opts.icon || 'help') + '</span>';
+  var actions = document.getElementById('ui-modal-actions');
+  actions.innerHTML = '';
+  var cancel = document.createElement('button');
+  cancel.className = 'ui-btn ui-btn-ghost';
+  cancel.textContent = opts.cancelText || 'Cancel';
+  cancel.onclick = uiCloseModal;
+  var confirmBtn = document.createElement('button');
+  confirmBtn.className = 'ui-btn ui-btn-primary';
+  confirmBtn.textContent = opts.confirmText || 'Confirm';
+  confirmBtn.onclick = function () { uiCloseModal(); if (opts.onConfirm) opts.onConfirm(); };
+  actions.appendChild(cancel);
+  actions.appendChild(confirmBtn);
+  document.getElementById('ui-modal-overlay').hidden = false;
+}
+function openDeleteInterviewModal(url) {
+  document.getElementById('deleteInterviewForm').action = url;
+  document.getElementById('deleteInterviewModal').style.display = 'flex';
+}
+function closeDeleteInterviewModal() {
+  document.getElementById('deleteInterviewModal').style.display = 'none';
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') { uiCloseModal(); closeDeleteInterviewModal(); }
+});
+</script>
+
+<div id="deleteInterviewModal" onclick="if(event.target===this)closeDeleteInterviewModal();"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    <h3 style="margin:0 0 10px;font-size:17px;font-weight:600;color:#111827;">Delete Interview</h3>
+    <p style="margin:0 0 22px;font-size:14px;color:#6b7280;line-height:1.5;">Are you sure you want to delete this interview? This action cannot be undone.</p>
+    <form method="post" id="deleteInterviewForm">
+      {% csrf_token %}
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" onclick="closeDeleteInterviewModal();"
+                style="padding:9px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;">Cancel</button>
+        <button type="submit"
+                style="padding:9px 18px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;background:#dc2626;color:#fff;">Yes, Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

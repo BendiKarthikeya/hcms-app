@@ -1,0 +1,44 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Offer Tracking" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1100px;margin:24px auto;padding:16px;">
+  <h1 style="font-size:22px;margin-bottom:16px;">{% trans "Offer & Onboarding Tracking" %}</h1>
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          {% for col in columns %}
+          <th style="padding:10px;text-align:left;font-size:12px;color:#374151;">{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for ol in offers %}
+        <tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:9px 10px;font-size:13px;">{{ ol.candidate_id.name }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ ol.position }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ ol.joining_date|date:"d M Y" }}</td>
+          {% for status in ol.clearance_statuses %}
+          <td style="padding:9px 10px;">
+            <span style="padding:2px 8px;border-radius:10px;font-size:11px;background:{% if status == 'cleared' %}#dcfce7{% elif status == 'blocked' %}#fee2e2{% elif status == 'in_progress' %}#fef3c7{% else %}#f3f4f6{% endif %};">{{ status|capfirst }}</span>
+          </td>
+          {% endfor %}
+          <td style="padding:9px 10px;font-size:13px;">{{ ol.documents_completion_pct }}%</td>
+          <td style="padding:9px 10px;">
+            <span style="padding:2px 8px;border-radius:10px;font-size:11px;background:{% if ol.joining_status == 'joined' %}#dcfce7{% elif ol.joining_status == 'no_show' %}#fee2e2{% else %}#f3f4f6{% endif %};">{{ ol.get_joining_status_display }}</span>
+          </td>
+          <td style="padding:9px 10px;"><a href="{% url 'offer-update' ol.id %}" style="color:#16a34a;font-size:13px;">{% trans "Update" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" style="padding:24px;text-align:center;color:#6b7280;">{% trans "No accepted offers yet." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

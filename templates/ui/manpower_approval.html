@@ -1,0 +1,678 @@
+{% extends "ui/base.html" %}
+{% block title %}REQ-{{ rec.id }} — HCMS{% endblock %}
+{% block active_manpower_appr %}active{% endblock %}
+
+{% block content %}
+<style>
+/* No-scroll viewport-fit layout */
+.ui-main    { height: 100vh !important; overflow: hidden !important; }
+.ui-content { height: calc(100vh - 86px); overflow: hidden; padding: 14px 24px 10px;
+              display: flex; flex-direction: column; }
+
+/* ── Breadcrumb ── */
+.ma-back {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 13px; color: #6D6D6D; text-decoration: none;
+  margin-bottom: 10px; flex-shrink: 0;
+}
+.ma-back .material-symbols-outlined { font-size: 18px; transform: rotate(270deg); }
+.ma-back:hover { color: #0F752F; }
+
+/* ── Page header ── */
+.ma-header { margin-bottom: 14px; flex-shrink: 0; }
+.ma-header__title { font-size: 26px; font-weight: 700; color: #111; line-height: 1.2; }
+.ma-header__sub   { font-size: 14px; color: #7F7F7F; margin-top: 3px; }
+
+/* ── Two-column grid ── */
+.ma-grid {
+  display: grid; grid-template-columns: 1fr 0.9fr;
+  gap: 20px; flex: 1; min-height: 0;
+}
+
+/* ── Cards ── */
+.ma-card {
+  background: #fff; border: 1px solid #D8D8D8; border-radius: 14px;
+  overflow: hidden; display: flex; flex-direction: column; min-height: 0;
+}
+.ma-card__head {
+  padding: 20px 24px 16px; border-bottom: 1px solid #EFEFEF; flex-shrink: 0;
+}
+.ma-card__title { font-size: 20px; font-weight: 600; color: #202020; }
+.ma-card__sub   { font-size: 14px; color: #7F7F7F; margin-top: 4px; }
+.ma-card__body  { padding: 16px 20px 16px; flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
+
+/* ── Summary rows ── */
+.ma-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 4px; border-bottom: 1px solid #F3F4F6;
+}
+.ma-row-icon {
+  width: 36px; height: 37px; background: #F0F0F0; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ma-row-icon .material-symbols-outlined { font-size: 16px; color: #6B7280; }
+.ma-row-key { font-size: 14px; color: #303030; min-width: 155px; flex-shrink: 0; }
+.ma-row-val { font-size: 14px; color: #303030; flex: 1; text-align: right; word-break: break-word; }
+
+/* ── Info banner ── */
+.ma-info-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 8px; padding: 12px 14px; margin-top: auto; flex-shrink: 0;
+}
+.ma-info-banner .material-symbols-outlined { font-size: 28px; color: #10B981; flex-shrink: 0; }
+.ma-info-banner__text { font-size: 13px; color: #374151; line-height: 1.5; }
+
+/* ── Approval chain ── */
+.ma-chain { flex: 1; display: flex; flex-direction: column; }
+
+/* Each step row */
+.ma-step {
+  display: flex; gap: 14px;
+  position: relative;
+  padding-bottom: 24px;
+}
+.ma-step:last-child { padding-bottom: 0; }
+
+/* Vertical connector line drawn from centre of marker downward */
+.ma-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 20px;          /* (41px marker / 2) - (2px line / 2) */
+  top: 41px;           /* bottom edge of marker */
+  bottom: 0;
+  width: 2px;
+  background: #CCCCCC;
+  z-index: 0;
+}
+.ma-step.step-signed:not(:last-child)::before { background: #0F752F; }
+
+/* Step marker circle */
+.ma-marker {
+  flex-shrink: 0; width: 41px; height: 41px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; position: relative; z-index: 1;
+}
+.ma-marker--signed   { background: #0F752F; color: #fff; }
+.ma-marker--signed .material-symbols-outlined { font-size: 24px; }
+.ma-marker--pending  { background: #D2D2D2; color: #111; }
+.ma-marker--active   { background: #D2D2D2; color: #111; }
+.ma-marker--rejected { background: #C04730; color: #fff; }
+.ma-marker--rejected .material-symbols-outlined { font-size: 22px; }
+.ma-marker--warning  { background: #F59E0B; color: #fff; box-shadow: 0 0 0 4px #FEF3C7; }
+.ma-marker--overdue  { background: #EF4444; color: #fff; box-shadow: 0 0 0 4px #FEE2E2; }
+.ma-marker--late     { background: #F97316; color: #fff; }
+
+/* Step content — NO border-bottom, spacing handled by parent padding-bottom */
+.ma-step__body { flex: 1; min-width: 0; }
+
+.ma-step__row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; padding-top: 5px; margin-bottom: 2px;
+}
+.ma-step__role { font-size: 16px; font-weight: 700; color: #202020; line-height: 1.3; }
+.ma-step__name { font-size: 14px; color: #111; }
+.ma-step__note { font-size: 13px; color: #606060; margin-top: 3px; }
+
+/* Status badges */
+.ma-badge {
+  height: 27px; padding: 0 14px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+  display: inline-flex; align-items: center; flex-shrink: 0;
+}
+.ma-badge--signed   { background: #E2ECE8; color: #0F752F; }
+.ma-badge--pending  { background: #F5F0ED; color: #E0812E; }
+.ma-badge--active   { background: #F5F0ED; color: #E0812E; }
+.ma-badge--rejected { background: #FEE2E2; color: #C04730; }
+
+/* ── Active step: action UI ── */
+.ma-action-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-top: 14px;
+}
+.ma-comment {
+  width: 100%; min-height: 100px; padding: 14px 16px;
+  border: 1px solid #A7A7A7; border-radius: 18px;
+  font-family: 'Inter', sans-serif; font-size: 13px; color: #333;
+  resize: none; outline: none; background: #fff;
+}
+.ma-comment::placeholder { color: #8E8D8D; }
+.ma-comment:focus { border-color: #0F752F; }
+
+.ma-sig-wrap { position: relative; }
+.ma-sig-canvas {
+  width: 100%; height: 100px;
+  border: 1px solid #A7A7A7; border-radius: 12px;
+  background: #fff; cursor: crosshair; display: block;
+}
+.ma-sig-clear {
+  font-size: 11px; color: #888; background: none; border: none;
+  padding: 4px 0; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+.ma-sig-clear:hover { color: #333; }
+
+.ma-action-btns {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-top: 14px;
+}
+.ma-btn-reject {
+  height: 47px; border: 1px solid #D70D0D; border-radius: 10px;
+  background: #fff; color: #E33F3F; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; font-family: 'Inter', sans-serif; width: 100%;
+}
+.ma-btn-reject:hover { background: #FFF2EF; }
+.ma-btn-approve {
+  height: 47px; border: none; border-radius: 10px;
+  background: #208E3D; color: #fff; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; font-family: 'Inter', sans-serif; width: 100%;
+}
+.ma-btn-approve:hover { background: #0F752F; }
+
+/* ── HR Actions Panel ── */
+.hr-actions-panel {
+  margin-top: 16px; padding: 16px; flex-shrink: 0;
+  background: #FFFAF1; border: 1px solid #F2DBA1; border-radius: 12px;
+}
+.hr-actions-title {
+  font-size: 12px; font-weight: 700; color: #B07600; letter-spacing: 0.05em;
+  text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hr-actions-title .material-symbols-outlined { font-size: 15px; }
+
+/* Integration tile grid */
+.hr-tiles {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Individual tile */
+.hr-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 10px 4px 9px; border-radius: 10px; border: 1px solid #E8E8E8;
+  background: #fff; cursor: pointer; font-family: 'Inter', sans-serif;
+  text-align: center; transition: border-color 0.15s, box-shadow 0.15s;
+  position: relative; width: 100%;
+}
+.hr-tile--active:not([disabled]):hover {
+  border-color: #0F752F; box-shadow: 0 2px 8px rgba(15,117,47,0.13);
+}
+.hr-tile--active[disabled] { cursor: default; }
+.hr-tile--locked { opacity: 0.42; cursor: not-allowed !important; }
+
+.hr-tile__icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hr-tile__icon .material-symbols-outlined { font-size: 15px; }
+.hr-tile__name {
+  font-size: 10px; font-weight: 600; color: #374151; line-height: 1.3;
+  word-break: break-word;
+}
+.hr-tile__badge {
+  font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  letter-spacing: 0.03em; white-space: nowrap;
+}
+.hr-tile__badge--post   { background: #F0FFF4; color: #1F8A50; border: 1px solid #A8D4B4; }
+.hr-tile__badge--posted { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+.hr-tile__badge--link   { background: #F3F4F6; color: #9CA3AF; border: 1px solid #E5E7EB; }
+
+/* Tooltip wrapper for disabled tiles */
+.hr-tile-tip { position: relative; }
+.hr-tile-tip::after {
+  content: attr(data-tooltip);
+  position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
+  background: #1F2937; color: #fff; font-size: 10px; font-family: 'Inter', sans-serif;
+  white-space: nowrap; padding: 4px 9px; border-radius: 5px;
+  pointer-events: none; z-index: 200; opacity: 0; transition: opacity 0.12s;
+}
+.hr-tile-tip::before {
+  content: '';
+  position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%);
+  border: 4px solid transparent; border-top-color: #1F2937;
+  pointer-events: none; z-index: 200; opacity: 0; transition: opacity 0.12s;
+}
+.hr-tile-tip:hover::after,
+.hr-tile-tip:hover::before { opacity: 1; }
+
+/* Careers link */
+.hr-careers-link {
+  display: flex; align-items: center; gap: 5px; font-size: 12px;
+  color: #0F752F; margin-bottom: 12px; text-decoration: none; font-weight: 500;
+}
+.hr-careers-link:hover { color: #085F22; text-decoration: underline; }
+.hr-careers-link .material-symbols-outlined { font-size: 13px; }
+
+/* Feedback textarea & button */
+.hr-feedback-area {
+  width: 100%; padding: 9px 11px; font-size: 12px;
+  border: 1px solid #E5E7EB; border-radius: 8px;
+  font-family: 'Inter', sans-serif; resize: none; outline: none;
+  background: #fff; color: #374151; transition: border-color 0.15s;
+  margin-bottom: 8px; display: block; box-sizing: border-box;
+}
+.hr-feedback-area::placeholder { color: #9CA3AF; }
+.hr-feedback-area:focus { border-color: #D0A840; }
+.hr-send-btn {
+  width: 100%; height: 34px; font-size: 12px; font-weight: 600;
+  border: 1px solid #D0A840; border-radius: 8px;
+  background: #fff; color: #B07600; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: background 0.15s;
+}
+.hr-send-btn:hover { background: #FFF8E6; }
+</style>
+
+<!-- Breadcrumb -->
+<a href="{% if request.GET.from == 'job_requisition' %}/ui/job-requisition/{% else %}/ui/approvals/{% endif %}" class="ma-back">
+  <span class="material-symbols-outlined">keyboard_arrow_up</span>
+  {% if request.GET.from == 'job_requisition' %}Back to Job Requisitions{% else %}Back to Approval{% endif %}
+</a>
+
+<!-- Page header -->
+<div class="ma-header">
+  <div class="ma-header__title">REQ-{{ rec.id }}</div>
+  <div class="ma-header__sub">Raise a new manpower request for your department or team</div>
+</div>
+
+<!-- Two-column layout -->
+<div class="ma-grid">
+
+  <!-- ════ LEFT: Request Summary ════ -->
+  <div class="ma-card">
+    <div class="ma-card__head">
+      <div class="ma-card__title">Request Summary</div>
+    </div>
+    <div class="ma-card__body">
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Request Title</span>
+        <span class="ma-row-val">{{ rec.title|default:"—" }}</span>
+      </div>
+
+      {% if bulk_lines %}
+      <div style="margin:8px 0 14px;padding:12px 14px;background:#F5FAF6;border:1px solid #DCEEE2;border-radius:10px">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#1F5F2F;margin-bottom:8px">
+          <span class="material-symbols-outlined" style="font-size:16px">library_add</span>
+          Bulk request — {{ bulk_lines|length }} position{{ bulk_lines|length|pluralize }}, one approval
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead>
+            <tr style="color:#6b7c70;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em">
+              <th style="text-align:left;padding:4px 6px">Position</th>
+              <th style="text-align:right;padding:4px 6px">Vacancies</th>
+              <th style="text-align:center;padding:4px 6px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in bulk_lines %}
+            <tr style="border-top:1px solid #E3EFE7">
+              <td style="text-align:left;padding:6px;color:#222;font-weight:600">{{ line.title }}</td>
+              <td style="text-align:right;padding:6px;color:#444">{{ line.vacancy }}</td>
+              <td style="text-align:center;padding:6px">
+                {% if line.published_recruitment_id %}
+                  <span style="font-size:10px;font-weight:600;color:#278E53;background:#E8F5ED;padding:2px 8px;border-radius:10px">Published</span>
+                {% else %}
+                  <span style="font-size:10px;font-weight:600;color:#888;background:#F2F2F2;padding:2px 8px;border-radius:10px">Pending approval</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Department</span>
+        <span class="ma-row-val">
+          {% if rec.job_position_id and rec.job_position_id.department_id %}{{ rec.job_position_id.department_id.department }}{% else %}—{% endif %}
+        </span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Request Type</span>
+        <span class="ma-row-val">{{ rec.get_employment_type_display|default:"New Hiring" }}</span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">workspace_premium</span></div>
+        <span class="ma-row-key">Grade</span>
+        <span class="ma-row-val" style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+          {% if rec.grade == "D" or rec.grade == "E" or rec.grade == "F" %}
+            <span style="width:10px;height:10px;border-radius:50%;background:#EF4444;flex-shrink:0;display:inline-block"></span>
+            {{ rec.grade }} · Above GM (HR Head → CEO)
+          {% elif rec.grade == "A" or rec.grade == "B" or rec.grade == "C" %}
+            <span style="width:10px;height:10px;border-radius:50%;background:#10B981;flex-shrink:0;display:inline-block"></span>
+            {{ rec.grade }} · Below GM (HR Head)
+          {% else %}
+            —
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Position</span>
+        <span class="ma-row-val">{% if rec.job_position_id %}{{ rec.job_position_id.job_position }}{% else %}{{ rec.title|default:"—" }}{% endif %}</span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Employment Time</span>
+        <span class="ma-row-val">{{ rec.get_employment_type_display|default:"Full Time" }}</span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Work Mode</span>
+        <span class="ma-row-val">{{ rec.band|default:rec.location|default:"—" }}</span>
+      </div>
+
+      <div class="ma-row">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Budget</span>
+        <span class="ma-row-val">{% if rec.budget %}${{ rec.budget|floatformat:0 }}{% else %}—{% endif %}</span>
+      </div>
+
+      <div class="ma-row" style="border-bottom:none">
+        <div class="ma-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="ma-row-key">Business Need</span>
+        <span class="ma-row-val">{{ rec.justification|default:"—"|truncatechars:80 }}</span>
+      </div>
+
+      <!-- Info banner -->
+      <div class="ma-info-banner" style="margin-top:16px">
+        <span class="material-symbols-outlined">check_circle_outline</span>
+        <span class="ma-info-banner__text">This request will be forwarded to your reporting manager for approval</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ RIGHT: Approval Chain ════ -->
+  <div class="ma-card">
+    <div class="ma-card__head">
+      <div class="ma-card__title">Approval Chain</div>
+      <div class="ma-card__sub">Sequential approval and e-sign process</div>
+    </div>
+    <div class="ma-card__body">
+      <div class="ma-chain">
+
+        {% for step in chain %}
+
+        <div class="ma-step{% if step.display_status == 'approved' %} step-signed{% endif %}">
+          <!-- Marker -->
+          <div class="ma-marker
+            {% if step.display_status == 'approved' %}{% if step.sla_status == 'late' %}ma-marker--late{% else %}ma-marker--signed{% endif %}
+            {% elif step.display_status == 'rejected' %}ma-marker--rejected
+            {% elif step.display_status == 'active' %}{% if step.sla_status == 'warning' %}ma-marker--warning{% elif step.sla_status == 'overdue' %}ma-marker--overdue{% else %}ma-marker--active{% endif %}
+            {% else %}ma-marker--pending{% endif %}">
+            {% if step.display_status == 'approved' %}
+              <span class="material-symbols-outlined">check_circle</span>
+            {% elif step.display_status == 'rejected' %}
+              <span class="material-symbols-outlined">cancel</span>
+            {% else %}
+              {{ step.sequence }}
+            {% endif %}
+          </div>
+
+          <!-- Step body -->
+          <div class="ma-step__body">
+            <div class="ma-step__row">
+              <div>
+                <div class="ma-step__role">{{ step.sequence }}. {{ step.approver_role }}</div>
+                {% if step.approver_role != step.approver_name %}<div class="ma-step__name">{{ step.approver_name }}</div>{% endif %}
+                {% if step.requested_at and step.display_status != 'waiting' %}
+                  <div class="ma-step__note">Received on {{ step.requested_at|date:"M d, Y g:i A" }}</div>
+                {% endif %}
+                {% if step.approved_at %}
+                  <div class="ma-step__note">
+                    {% if step.display_status == 'approved' %}Signed on{% elif step.display_status == 'rejected' %}Rejected on{% else %}Actioned on{% endif %}
+                    {{ step.approved_at|date:"M d, Y g:i A" }}
+                  </div>
+                  {% if step.sla_status == 'late' %}<div class="ma-step__note" style="color:#F97316">Signed after SLA deadline (48h)</div>{% endif %}
+                {% endif %}
+                {% if step.is_my_active %}
+                  <div class="ma-step__note" style="color:#E0812E;margin-top:2px">Please review and sign below</div>
+                  {% if step.sla_status == 'warning' %}<div class="ma-step__note" style="color:#F59E0B">Approaching SLA deadline (48h)</div>
+                  {% elif step.sla_status == 'overdue' %}<div class="ma-step__note" style="color:#EF4444">SLA deadline exceeded (48h)</div>{% endif %}
+                {% endif %}
+              </div>
+              <span class="ma-badge
+                {% if step.display_status == 'approved' %}ma-badge--signed
+                {% elif step.display_status == 'rejected' %}ma-badge--rejected
+                {% elif step.display_status == 'active' %}ma-badge--active
+                {% else %}ma-badge--pending{% endif %}">
+                {% if step.display_status == 'approved' %}Signed
+                {% elif step.display_status == 'rejected' %}Rejected
+                {% else %}Pending{% endif %}
+              </span>
+            </div>
+
+            {% if step.comments %}
+            <div style="margin-top:8px;font-size:13px;color:{% if step.display_status == 'rejected' %}#A02929{% else %}#606060{% endif %};padding:9px 14px;background:{% if step.display_status == 'rejected' %}#FFF1EF{% else %}#F7F7F7{% endif %};border-radius:8px;border-left:3px solid {% if step.display_status == 'rejected' %}#C04730{% elif step.display_status == 'approved' %}#0F752F{% else %}#D0D0D0{% endif %};line-height:1.5">
+              <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:{% if step.display_status == 'rejected' %}#C04730{% elif step.display_status == 'approved' %}#0F752F{% else %}#888{% endif %};display:block;margin-bottom:3px">Feedback</span>
+              {{ step.comments }}
+            </div>
+            {% endif %}
+
+            {% if step.is_my_active %}
+            <!-- Action area: comment + signature pad -->
+            <div class="ma-action-grid">
+              <textarea id="comment-{{ step.approval_id }}" class="ma-comment"
+                        placeholder="Comment your feedback and reviews here"></textarea>
+              <div class="ma-sig-wrap">
+                <canvas id="sig-{{ step.approval_id }}" class="ma-sig-canvas"
+                        data-appr="{{ step.approval_id }}"></canvas>
+                <button type="button" class="ma-sig-clear"
+                        onclick="clearSig('{{ step.approval_id }}')">Clear</button>
+              </div>
+            </div>
+            <!-- Action buttons -->
+            <div class="ma-action-btns">
+              <form method="post" action="/recruitment/received-recruitments/reject/{{ step.approval_id }}/"
+                    onsubmit="var c=document.getElementById('comment-{{ step.approval_id }}').value.trim();if(!c){alert('Please add a reason for rejection.');return false;}this.querySelector('[name=comments]').value=c;">
+                {% csrf_token %}
+                <input type="hidden" name="comments">
+                <button type="submit" class="ma-btn-reject">
+                  <span class="material-symbols-outlined" style="font-size:18px">dangerous</span>
+                  Reject
+                </button>
+              </form>
+              <form id="mpApprove-{{ step.approval_id }}" method="post" action="/recruitment/received-recruitments/approve/{{ step.approval_id }}/"
+                    onsubmit="var s=getSig('{{ step.approval_id }}');if(!s){alert('Please draw your signature first.');return false;}this.querySelector('[name=signature_data]').value=s;this.querySelector('[name=comments]').value=document.getElementById('comment-{{ step.approval_id }}').value;">
+                {% csrf_token %}
+                <input type="hidden" name="comments">
+                <input type="hidden" name="signature_data" id="mpSig-{{ step.approval_id }}">
+                <button type="submit" class="ma-btn-approve">
+                  Sign &amp; Approve
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </div><!-- /ma-step__body -->
+        </div><!-- /ma-step -->
+        {% empty %}
+        <div style="text-align:center;color:#888;font-size:13px;padding:20px 0">No approval steps configured.</div>
+        {% endfor %}
+
+      </div><!-- /ma-chain -->
+
+      <!-- Info banner -->
+      <div class="ma-info-banner" style="margin-top:16px;flex-shrink:0">
+        <span class="material-symbols-outlined">check_circle_outline</span>
+        <span class="ma-info-banner__text">Approval notification will be sent to the approval chain members</span>
+      </div>
+
+      <!-- HR Actions (if HR user) -->
+      {% if is_hr %}
+      <div class="hr-actions-panel">
+        <div class="hr-actions-title">
+          <span class="material-symbols-outlined">hub</span>
+          HR Actions
+        </div>
+
+        {% if rec.approval_status == "approved" %}
+        <!-- Integration tiles -->
+        <div class="hr-tiles">
+
+          <!-- Careers Page — ACTIVE -->
+          <button type="button" id="pub-careers-{{ rec.id }}" data-channel="Careers"
+                  data-url="{% url 'ui:recruitment-publish' rec.id 'careers' %}"
+                  {% if rec.public_slug %}disabled{% endif %}
+                  class="pub-btn hr-tile hr-tile--active">
+            <span class="hr-tile__icon" style="background:#E8F5ED;color:#0F752F">
+              <span class="material-symbols-outlined">work</span>
+            </span>
+            <span class="hr-tile__name">Careers</span>
+            <span class="hr-tile__badge {% if rec.public_slug %}hr-tile__badge--posted{% else %}hr-tile__badge--post{% endif %}">
+              {% if rec.public_slug %}Posted{% else %}Post{% endif %}
+            </span>
+          </button>
+
+          <!-- LinkedIn — ACTIVE -->
+          <button type="button" id="pub-linkedin-{{ rec.id }}" data-channel="LinkedIn"
+                  data-url="{% url 'ui:recruitment-publish' rec.id 'linkedin' %}"
+                  {% if rec.published_to_linkedin %}disabled{% endif %}
+                  class="pub-btn hr-tile hr-tile--active">
+            <span class="hr-tile__icon" style="background:#E3F0FF;color:#1565C0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+            </span>
+            <span class="hr-tile__name">LinkedIn</span>
+            <span class="hr-tile__badge {% if rec.published_to_linkedin %}hr-tile__badge--posted{% else %}hr-tile__badge--post{% endif %}">
+              {% if rec.published_to_linkedin %}Posted{% else %}Post{% endif %}
+            </span>
+          </button>
+
+          <!-- Indeed — INACTIVE -->
+          <span class="hr-tile-tip" data-tooltip="Account not linked">
+            <button type="button" class="hr-tile hr-tile--locked" disabled>
+              <span class="hr-tile__icon" style="background:#F3F4F6;color:#9CA3AF">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+              </span>
+              <span class="hr-tile__name">Indeed</span>
+              <span class="hr-tile__badge hr-tile__badge--link">Link</span>
+            </button>
+          </span>
+
+          <!-- Naukri Gulf — INACTIVE -->
+          <span class="hr-tile-tip" data-tooltip="Account not linked">
+            <button type="button" class="hr-tile hr-tile--locked" disabled>
+              <span class="hr-tile__icon" style="background:#F3F4F6;color:#9CA3AF">
+                <span class="material-symbols-outlined">language</span>
+              </span>
+              <span class="hr-tile__name">Naukri Gulf</span>
+              <span class="hr-tile__badge hr-tile__badge--link">Link</span>
+            </button>
+          </span>
+
+          <!-- Recruitment Agency — INACTIVE -->
+          <span class="hr-tile-tip" data-tooltip="Account not linked">
+            <button type="button" class="hr-tile hr-tile--locked" disabled>
+              <span class="hr-tile__icon" style="background:#F3F4F6;color:#9CA3AF">
+                <span class="material-symbols-outlined">groups</span>
+              </span>
+              <span class="hr-tile__name">Agency</span>
+              <span class="hr-tile__badge hr-tile__badge--link">Link</span>
+            </button>
+          </span>
+
+        </div><!-- /hr-tiles -->
+
+        {% if rec.public_slug %}
+        <a href="/recruitment/careers/" target="_blank" class="hr-careers-link">
+          <span class="material-symbols-outlined">open_in_new</span>
+          View Careers Page
+        </a>
+        {% endif %}
+        {% endif %}
+
+        <!-- HR Feedback -->
+        <form method="post" action="{% url 'ui:recruitment-feedback' rec.id %}">
+          {% csrf_token %}
+          <textarea name="hr_feedback" rows="3" class="hr-feedback-area"
+                    placeholder="Feedback to requester…">{{ rec.hr_feedback|default:"" }}</textarea>
+          <button type="submit" class="hr-send-btn">Send HR Feedback</button>
+        </form>
+      </div>
+      {% endif %}
+
+    </div><!-- /ma-card__body -->
+  </div><!-- /ma-card -->
+
+</div><!-- /ma-grid -->
+
+<!-- Publish toast -->
+<div id="pubToast" style="display:none;position:fixed;bottom:24px;right:24px;background:#1F5F2F;color:#fff;padding:12px 18px;border-radius:8px;font-size:12px;z-index:9100;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:380px"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>
+<script>
+(function () {
+  /* ── Signature pads ── */
+  var pads = {};
+  document.querySelectorAll('canvas[data-appr]').forEach(function (canvas) {
+    var id = canvas.dataset.appr;
+    var pad = new SignaturePad(canvas, { minWidth: 1, maxWidth: 2.5, penColor: '#1F2937' });
+    pads[id] = pad;
+    function resize() {
+      var ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width  = canvas.offsetWidth  * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').scale(ratio, ratio);
+      pad.clear();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+  });
+  window.clearSig = function (id) { if (pads[id]) pads[id].clear(); };
+  window.getSig   = function (id) {
+    var p = pads[id];
+    return (p && !p.isEmpty()) ? p.toDataURL('image/png') : '';
+  };
+
+  /* ── Publish buttons ── */
+  function getCookie(n) { var m = document.cookie.match(new RegExp('(^|; )' + n + '=([^;]+)')); return m ? decodeURIComponent(m[2]) : ''; }
+  function showToast(msg, err) {
+    var t = document.getElementById('pubToast');
+    t.textContent = msg; t.style.background = err ? '#C04730' : '#1F5F2F';
+    t.style.display = 'block';
+    clearTimeout(window._tt); window._tt = setTimeout(function () { t.style.display = 'none'; }, 4000);
+  }
+  document.querySelectorAll('.pub-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (this.disabled) return;
+      var b = this, label = b.dataset.channel, url = b.dataset.url;
+      b.disabled = true; b.style.opacity = '0.6';
+      fetch(url, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (data) {
+          if (data && data.success) {
+            b.textContent = '✅ ' + label; b.style.background = '#E8F5ED'; b.style.color = '#1F8A50';
+            showToast('Published to ' + label + '!');
+            if (label === 'Careers' && data.public_slug) {
+              var existing = document.querySelector('.hr-careers-link');
+              if (!existing) {
+                var a = document.createElement('a');
+                a.href = '/recruitment/careers/';
+                a.target = '_blank';
+                a.className = 'hr-careers-link';
+                a.innerHTML = '<span class="material-symbols-outlined">open_in_new</span> View Careers Page';
+                b.closest('.hr-tiles').insertAdjacentElement('afterend', a);
+              }
+            }
+          } else {
+            b.disabled = false; b.style.opacity = '1';
+            showToast((data && data.error) || 'Failed to publish to ' + label, true);
+          }
+        })
+        .catch(function () { b.disabled = false; b.style.opacity = '1'; showToast('Network error', true); });
+    });
+  });
+})();
+</script>
+{% endblock %}

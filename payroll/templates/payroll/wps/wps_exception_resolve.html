@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Resolve WPS Exception{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>Resolve WPS Exception</h1>
+        <p>Mark exception as resolved and document the fix</p>
+    </div>
+
+    <div class="exception-item" style="margin-bottom: 20px;">
+        <h5>{{ exception.error_code }}</h5>
+        <p><strong>Message:</strong> {{ exception.error_message }}</p>
+        <p><strong>Affected Employees:</strong> {{ exception.affected_employees }}</p>
+        <p><strong>File Reference:</strong> {{ exception.wps_file.file_reference }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.resolution_method.id_for_label }}">
+                Resolution Method <span class="required">*</span>
+            </label>
+            {{ form.resolution_method }}
+            {% if form.resolution_method.errors %}<div class="error-message">{{ form.resolution_method.errors.0 }}</div>{% endif %}
+            <small>How was this exception resolved?</small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.resolution_notes.id_for_label }}">
+                Resolution Notes <span class="required">*</span>
+            </label>
+            {{ form.resolution_notes }}
+            {% if form.resolution_notes.errors %}<div class="error-message">{{ form.resolution_notes.errors.0 }}</div>{% endif %}
+            <small>Provide details on how the error was corrected</small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.resubmit_required.id_for_label }}">
+                <input type="checkbox" id="{{ form.resubmit_required.id_for_label }}" name="resubmit_required">
+                File needs to be resubmitted
+            </label>
+            <small>Check if file requires resubmission to bank</small>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>✓ Resolution Documentation</strong>
+            <p>This information will be recorded for audit and future reference.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">Mark as Resolved</button>
+            <a href="{% url 'wps-exception-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

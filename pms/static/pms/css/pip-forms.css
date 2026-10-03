@@ -1,0 +1,545 @@
+/* ==========================================
+   PIP (Performance Improvement Plan) Forms CSS
+   =========================================== */
+
+:root {
+    --primary-color: #1f2937;
+    --secondary-color: #3b82f6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --light-bg: #f9fafb;
+    --border-color: #e5e7eb;
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+}
+
+/* Form Container */
+.pip-form-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.pip-form-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.pip-form-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 10px 0;
+}
+
+.pip-form-header p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* Form Fields */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.form-group label .required {
+    color: var(--danger-color);
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="date"],
+.form-group input[type="datetime-local"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: white;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-group small {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+    border-color: var(--danger-color);
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.form-group .error-message {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Two Column Layout */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Buttons */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+    background-color: var(--light-bg);
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #d97706;
+    box-shadow: 0 4px 6px rgba(217, 119, 6, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Formset Styling */
+.formset-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: var(--light-bg);
+    border-radius: 8px;
+}
+
+.formset-container h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.formset-item {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.formset-item h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 15px 0;
+}
+
+.add-row-btn {
+    background: var(--secondary-color);
+    color: white;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+}
+
+.add-row-btn:hover {
+    background: #2563eb;
+}
+
+.remove-row-btn {
+    background: var(--danger-color);
+    color: white;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+}
+
+.remove-row-btn:hover {
+    background: #dc2626;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.draft {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.active {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.successful {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.unsuccessful {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    border-left-color: var(--success-color);
+    color: #15803d;
+}
+
+.alert-error {
+    background-color: #fef2f2;
+    border-left-color: var(--danger-color);
+    color: #991b1b;
+}
+
+.alert-info {
+    background-color: #f0f9ff;
+    border-left-color: var(--secondary-color);
+    color: #1e40af;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    border-left-color: var(--warning-color);
+    color: #92400e;
+}
+
+/* Card Grid */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.card-body {
+    font-size: 14px;
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.card-footer {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
+}
+
+/* Milestone Progress */
+.milestone-progress {
+    margin-top: 20px;
+}
+
+.milestone-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.milestone-item.completed {
+    background-color: #f0fdf4;
+    border-color: var(--success-color);
+}
+
+.milestone-item.pending {
+    background-color: #f0f9ff;
+    border-color: var(--secondary-color);
+}
+
+.milestone-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: 600;
+    color: white;
+}
+
+.milestone-indicator.completed {
+    background-color: var(--success-color);
+}
+
+.milestone-indicator.pending {
+    background-color: var(--secondary-color);
+}
+
+.milestone-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0 0 5px 0;
+}
+
+.milestone-content p {
+    font-size: 12px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* Statistics */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+/* Table Styling */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container thead {
+    background-color: var(--light-bg);
+}
+
+.table-container th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table-container td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.table-container tbody tr:hover {
+    background-color: var(--light-bg);
+}
+
+/* Loading State */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner {
+    border: 3px solid var(--light-bg);
+    border-top: 3px solid var(--secondary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pip-form-container {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table-container {
+        font-size: 12px;
+    }
+
+    .table-container th,
+    .table-container td {
+        padding: 8px;
+    }
+}

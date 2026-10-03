@@ -1,0 +1,70 @@
+{% load i18n %}
+{% if messages %}
+    <script>
+        $('.filterButton')[0].click()
+        setTimeout(function () { $('.oh-modal__close').click(); }, 1000);
+    </script>
+{% endif %}
+<form hx-post="{% url 'create-interview-schedule' %}" hx-target="#createTarget" hx-encoding="multipart/form-data"
+    id="skillform">
+    {{form.as_p}}
+
+    <!-- Interview Rounds -->
+    <div style="margin-top:16px;">
+        <label style="font-weight:600;font-size:14px;">{% trans "Interview Rounds" %}</label>
+        <p style="font-size:12px;color:#6b7280;margin:2px 0 8px;">{% trans "Add one or more rounds for this interview (e.g. HR Screen, Technical, Final)." %}</p>
+        <div id="rounds-container">
+            <div class="round-row" style="display:flex;gap:8px;margin-bottom:6px;">
+                <input type="text" name="round_label[]" placeholder="{% trans 'Round label (e.g. HR Screen)' %}"
+                       style="flex:1;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+                <button type="button" onclick="removeRound(this)"
+                        style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f3f4f6;cursor:pointer;color:#6b7280;">✕</button>
+            </div>
+        </div>
+        <button type="button" onclick="addRound()"
+                style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;padding:0;margin-top:2px;">
+            + {% trans "Add Round" %}
+        </button>
+    </div>
+</form>
+<script>
+    $("#skillform .col-md-6").toggleClass("col-md-6");
+
+    $('[name=candidate_id]').change(function () {
+        var candidate_id = $('[name=candidate_id]').val();
+        var selectedmanagers = $('[name=employee_id]').val();
+
+        $.ajax({
+            url: "{% url 'get_managers' %}",
+            method: 'GET',
+            data: { 'cand_id': candidate_id },
+            success: function (data) {
+                $('[name=employee_id]').empty();
+                $.each(data.employees, function (key, value) {
+                    $('[name=employee_id]').append($('<option>', { value: key, text: value }));
+                });
+                if (selectedmanagers) {
+                    $('[name=employee_id]').val(selectedmanagers);
+                }
+            }
+        });
+    });
+
+    function addRound() {
+        var row = document.createElement('div');
+        row.className = 'round-row';
+        row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;';
+        row.innerHTML = '<input type="text" name="round_label[]" placeholder="{% trans "Round label (e.g. Technical)" %}" style="flex:1;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">'
+                      + '<button type="button" onclick="removeRound(this)" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f3f4f6;cursor:pointer;color:#6b7280;">✕</button>';
+        document.getElementById('rounds-container').appendChild(row);
+    }
+
+    function removeRound(btn) {
+        var container = document.getElementById('rounds-container');
+        if (container.querySelectorAll('.round-row').length > 1) {
+            btn.parentElement.remove();
+        } else {
+            btn.previousElementSibling.value = '';
+        }
+    }
+</script>

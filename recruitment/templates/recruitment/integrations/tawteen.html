@@ -1,0 +1,58 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Tawteen Integration" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:760px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:28px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:44px;height:44px;background:#0d9488;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;">T</div>
+      <div><h2 style="margin:0;font-size:18px;">{% trans "Tawteen Platform" %}</h2>
+      <div style="font-size:13px;color:#6b7280;">{% trans "Oman National Programme for Omanisation" %}</div></div>
+    </div>
+
+    {% if connected %}
+    <div style="background:#dcfce7;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#166534;">✓ {% trans "Connected to Tawteen API" %}</div>
+    {% else %}
+    <div style="background:#fef3c7;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#92400e;">⚠ {% trans "Not connected. Configure TAWTEEN_API_ENDPOINT and TAWTEEN_API_KEY in environment variables to enable." %}</div>
+    {% endif %}
+
+    <div style="font-size:14px;color:#374151;margin-bottom:20px;line-height:1.7;">
+      <p>{% trans "When connected, this integration will allow you to:" %}</p>
+      <ul style="margin:0;padding-left:20px;">
+        <li>{% trans "Post job vacancies directly to Tawteen portal" %}</li>
+        <li>{% trans "Import Omani candidate profiles from Tawteen" %}</li>
+        <li>{% trans "Track Omanisation quota compliance in real time" %}</li>
+        <li>{% trans "Submit hiring reports to the Ministry of Labour" %}</li>
+      </ul>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:6px;padding:14px;font-size:13px;">
+      <div style="font-weight:600;margin-bottom:8px;">{% trans "Configuration" %}</div>
+      <div>TAWTEEN_API_ENDPOINT = <code style="background:#e5e7eb;padding:2px 6px;border-radius:3px;">{{ api_endpoint|default:"not set" }}</code></div>
+      <div style="margin-top:6px;">TAWTEEN_API_KEY = <code style="background:#e5e7eb;padding:2px 6px;border-radius:3px;">{% if connected %}••••••••{% else %}not set{% endif %}</code></div>
+      <div style="margin-top:6px;color:#6b7280;">{% trans "Set in your .env file or environment variables." %}</div>
+    </div>
+
+    {% if connected %}
+    <form method="post" style="margin-top:16px;">
+      {% csrf_token %}
+      <button type="submit" style="background:#0d9488;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;">
+        {% trans "Test Connection" %}
+      </button>
+    </form>
+    {% endif %}
+
+    {% if test_result %}
+    {% if "success" in test_result %}
+    <div style="margin-top:10px;background:#dcfce7;border-radius:6px;padding:8px 12px;font-size:13px;color:#166534;">✓ {% trans "Connection successful" %}</div>
+    {% else %}
+    <div style="margin-top:10px;background:#fee2e2;border-radius:6px;padding:8px 12px;font-size:13px;color:#991b1b;">✗ {% trans "Connection failed" %}: {{ test_result }}</div>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

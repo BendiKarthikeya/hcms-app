@@ -1,0 +1,398 @@
+{% extends "ui/base.html" %}
+{% block title %}Employment Proposal Creator — HCMS{% endblock %}
+{% block active_proposals %}active{% endblock %}
+
+{% block content %}
+<style>
+/* Scrollable content area — same as manpower_request */
+.ui-main    { height:100vh !important; overflow:hidden !important; }
+.ui-content { height:calc(100vh - 86px); overflow-y:auto; padding:14px 20px 24px; }
+.ui-navbar__user-wrap { display:none !important; }
+
+/* Template picker cards */
+.mr-tpl-card { display:block;border-radius:12px;padding:22px;text-decoration:none;color:inherit;transition:box-shadow .15s; }
+.mr-tpl-card--green { border:2px solid #86EFAC;background:#F0FDF4; }
+.mr-tpl-card--green:hover { box-shadow:0 4px 16px rgba(22,163,74,.15); }
+.mr-tpl-card--blue  { border:2px solid #93C5FD;background:#EFF6FF; }
+.mr-tpl-card--blue:hover  { box-shadow:0 4px 16px rgba(37,99,235,.15); }
+.mr-tpl-icon { width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px; }
+
+/* Form cards */
+.mr-card { background:#fff;border:1px solid #D8D8D8;border-radius:12px;overflow:hidden;margin-bottom:14px; }
+.mr-card:last-child { margin-bottom:0; }
+.mr-card-header { display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid #EFEFEF; }
+.mr-card-body { padding:14px 18px; }
+.mr-badge { width:22px;height:22px;border-radius:50%;background:#E8F5EC;color:#0F752F;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.mr-card-title { font-size:13px;font-weight:600;color:#111; }
+
+/* Fields */
+.mr-grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.mr-grid4 { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+.mr-field { display:flex;flex-direction:column;gap:4px; }
+.mr-label { font-size:12px;font-weight:500;color:#444; }
+.mr-req   { color:#C62828; }
+.mr-input {
+  height:34px;border:1px solid #E0E0E0;border-radius:6px;padding:0 10px;
+  font-size:12px;font-family:inherit;color:#333;outline:none;background:#fff;
+  width:100%;box-sizing:border-box;transition:border-color .15s;
+}
+.mr-input:focus { border-color:#A8D4B4; }
+select.mr-input { cursor:pointer; }
+textarea.mr-input { height:auto;padding:8px 10px;resize:vertical; }
+
+/* Candidate card */
+.mr-cand-card { display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #E8E8E8;border-radius:8px;background:#FAFAFA;margin-bottom:14px; }
+.mr-cand-avatar { width:36px;height:36px;background:#1F5F2F;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0; }
+
+/* Template chosen banner */
+.mr-chosen { display:flex;align-items:center;gap:10px;padding:9px 14px;border:1px solid #B6D9C3;border-radius:8px;background:#F0F8F3;margin-bottom:16px; }
+.mr-chosen .material-symbols-outlined { font-size:17px;color:#0F752F; }
+.mr-chosen span.label { font-size:13px;color:#111;font-weight:500; }
+.mr-chosen a { margin-left:auto;font-size:12px;color:#2563eb;text-decoration:none; }
+.mr-chosen a:hover { text-decoration:underline; }
+
+/* Summary panel */
+.mr-summary { background:#fff;border:1px solid #D8D8D8;border-radius:12px;overflow:hidden;position:sticky;top:0; }
+.mr-summary-head { padding:14px 18px 12px;border-bottom:1px solid #EFEFEF; }
+.mr-summary-title { font-size:13px;font-weight:600;color:#111; }
+.mr-summary-body { padding:14px 18px; }
+.ps-row { display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F5F5F5;font-size:11px; }
+.ps-row:last-of-type { border-bottom:none; }
+.ps-icon  { font-size:14px;color:#606060;background:#F5F5F5;border-radius:4px;padding:2px;flex-shrink:0; }
+.ps-label { color:#8E8D8D;font-weight:500;width:120px;flex-shrink:0; }
+.ps-val   { color:#111;font-weight:500; }
+.mr-summary-note { background:#E2ECE8;border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px;margin-top:12px; }
+.mr-summary-note .material-symbols-outlined { font-size:16px;color:#0F752F; }
+.mr-summary-note span { font-size:11px;color:#111;font-weight:500;line-height:1.4; }
+
+/* Action buttons */
+.btn-primary { height:36px;padding:0 18px;border:none;border-radius:8px;background:#0F752F;font-size:12px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:background .15s; }
+.btn-primary:hover { background:#0a5c24; }
+.btn-primary .material-symbols-outlined { font-size:15px; }
+.btn-submit-full { width:100%;height:40px;background:#0F752F;border:none;border-radius:8px;font-size:13px;font-weight:600;color:#fff;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-top:14px; }
+.btn-submit-full:hover { background:#0a5c24; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="ui-breadcrumb" style="margin-bottom:12px">
+  <span class="material-symbols-outlined">keyboard_arrow_left</span>
+  <a href="/ui/proposals/" style="color:#6D6D6D;text-decoration:none">Back to Proposals</a>
+</div>
+
+<!-- Page header -->
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+  <div>
+    <div class="ui-page-title" style="margin-bottom:4px">Employment Proposal Creator</div>
+    <div class="ui-page-subtitle">Create and submit an ONEIC employment proposal for the selected candidate</div>
+  </div>
+  {% if chosen_template %}
+  <button type="submit" form="proposalForm" class="btn-primary">
+    <span class="material-symbols-outlined">send</span>
+    Send Proposal
+  </button>
+  {% endif %}
+</div>
+
+{% if messages %}{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F;border:1px solid #B6D9C3">{{ m }}</div>
+{% endfor %}{% endif %}
+
+{% if not chosen_template %}
+<!-- ═══════════ TEMPLATE PICKER ═══════════ -->
+<p style="font-size:13px;color:#6b7280;margin:0 0 20px">Select the ONEIC Employment Proposal Form type that matches this hire.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px">
+
+  <a href="?candidate={{ candidate_id }}&template=permanent" class="mr-tpl-card mr-tpl-card--green">
+    <div class="mr-tpl-icon" style="background:#F0FDF4;border:1px solid #86EFAC">
+      <span class="material-symbols-outlined" style="font-size:26px;color:#16a34a">work_history</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:#166534;margin-bottom:6px">Permanent (Full-Time)</div>
+    <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:12px">
+      HR&amp;A/EPF/V3 — non-contractual proposal.<br>
+      Includes Overtime Allowance and HRC / CEO salary columns.
+    </div>
+    {% if permanent_chain %}
+    <div style="font-size:11px;font-weight:600;color:#16a34a;margin-bottom:6px">Approval Chain ({{ permanent_chain|length }} steps)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+      {% for step in permanent_chain %}
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">{{ step.role }}</span>
+      {% if not forloop.last %}<span style="font-size:10px;color:#9CA3AF">›</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="font-size:11px;font-weight:600;color:#16a34a;margin-bottom:6px">Approval Chain (7 steps)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">Project Director</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">HOD</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">COO</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">Legal Advisor</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">GM HR&amp;A</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">CFO</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DCFCE7;color:#166534">CEO</span>
+    </div>
+    {% endif %}
+  </a>
+
+  <a href="?candidate={{ candidate_id }}&template=contractual" class="mr-tpl-card mr-tpl-card--blue">
+    <div class="mr-tpl-icon" style="background:#EFF6FF;border:1px solid #93C5FD">
+      <span class="material-symbols-outlined" style="font-size:26px;color:#2563eb">assignment</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:#1d4ed8;margin-bottom:6px">Contractual — S-O-M Grade</div>
+    <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:12px">
+      HR&amp;A/EPF-S/V4 — contractual positions (S, O, M grade).<br>
+      Shorter approval chain with HR Suggestion column.
+    </div>
+    {% if contractual_chain %}
+    <div style="font-size:11px;font-weight:600;color:#2563eb;margin-bottom:6px">Approval Chain ({{ contractual_chain|length }} steps)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+      {% for step in contractual_chain %}
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DBEAFE;color:#1e40af">{{ step.role }}</span>
+      {% if not forloop.last %}<span style="font-size:10px;color:#9CA3AF">›</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="font-size:11px;font-weight:600;color:#2563eb;margin-bottom:6px">Approval Chain (3 steps)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DBEAFE;color:#1e40af">HOD</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DBEAFE;color:#1e40af">COO</span>
+      <span style="font-size:10px;color:#9CA3AF">›</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#DBEAFE;color:#1e40af">GM HR&amp;A</span>
+    </div>
+    {% endif %}
+  </a>
+
+</div>
+
+{% else %}
+<!-- ═══════════ CHOSEN TEMPLATE BANNER ═══════════ -->
+<div class="mr-chosen">
+  <span class="material-symbols-outlined">check_circle</span>
+  <span class="label">Template: {{ chosen_template_label }}</span>
+  <a href="?candidate={{ candidate_id }}">Change template</a>
+</div>
+
+<!-- ═══════════ FORM + SUMMARY ═══════════ -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+
+  <!-- LEFT: Form -->
+  <div>
+    <form id="proposalForm" method="post" action="">{% csrf_token %}
+      {% if candidate_id %}<input type="hidden" name="candidate_id" value="{{ candidate_id }}">{% endif %}
+      <input type="hidden" name="proposal_template" value="{{ chosen_template }}">
+
+      <!-- 1. Candidate -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">1</div>
+          <div class="mr-card-title">Select Candidate</div>
+        </div>
+        <div class="mr-card-body">
+          {% if selected_candidate %}
+          <div class="mr-cand-card">
+            <div class="mr-cand-avatar">{{ selected_candidate.name|slice:":2"|upper }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#111">{{ selected_candidate.name }}</div>
+              <div style="font-size:11px;color:#8E8D8D">{{ selected_candidate.email|default:"" }}</div>
+              {% if selected_candidate.recruitment_id %}<div style="font-size:11px;color:#606060">{{ selected_candidate.recruitment_id.title }}</div>{% endif %}
+            </div>
+            <a href="?{% if iv_id %}iv_id={{ iv_id }}{% endif %}" style="font-size:11px;color:#C62828;text-decoration:none;flex-shrink:0">Change</a>
+          </div>
+          {% else %}
+          <select name="candidate_id" class="mr-input" onchange="this.form.submit()" required style="margin-bottom:12px">
+            <option value="">— Select a candidate —</option>
+            {% for c in candidates %}
+            <option value="{{ c.id }}" {% if c.id|stringformat:"s" == candidate_id %}selected{% endif %}>{{ c.name }}{% if c.recruitment_id %} — {{ c.recruitment_id.title }}{% endif %}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+          <div class="mr-grid2">
+            <div class="mr-field"><label class="mr-label">Job Title <span class="mr-req">*</span></label>
+              <input class="mr-input" name="job_title" value="{% if form %}{{ form.job_title }}{% elif selected_candidate and selected_candidate.recruitment_id %}{{ selected_candidate.recruitment_id.title }}{% endif %}" placeholder="Senior Frontend Developer" required></div>
+            <div class="mr-field"><label class="mr-label">Department <span class="mr-req">*</span></label>
+              <input class="mr-input" name="department" value="{{ form.department|default:'' }}" placeholder="Engineering" required></div>
+            <div class="mr-field"><label class="mr-label">Employment Type <span class="mr-req">*</span></label>
+              <select class="mr-input" name="employment_type">
+                <option value="permanent" {% if form.employment_type == "permanent" %}selected{% endif %}>Permanent</option>
+                <option value="contract"  {% if form.employment_type == "contract"  %}selected{% endif %}>Contract</option>
+                <option value="part_time" {% if form.employment_type == "part_time" %}selected{% endif %}>Part Time</option>
+              </select></div>
+            <div class="mr-field"><label class="mr-label">Work Location <span class="mr-req">*</span></label>
+              <input class="mr-input" name="work_location" value="{{ form.work_location|default:'' }}" placeholder="Dubai, UAE" required></div>
+            <div class="mr-field"><label class="mr-label">Date of Joining <span class="mr-req">*</span></label>
+              <input class="mr-input" type="date" name="start_date" value="{{ form.start_date|default:'' }}" required></div>
+            <div class="mr-field"><label class="mr-label">Reporting Manager</label>
+              <select class="mr-input" name="reporting_manager_id">
+                <option value="">— Select —</option>
+                {% for emp in employees %}<option value="{{ emp.id }}" {% if form.reporting_manager_id|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.get_full_name|default:emp }}</option>{% endfor %}
+              </select></div>
+            <div class="mr-field"><label class="mr-label">Offer Expiry Date</label>
+              <input class="mr-input" type="date" name="expiry_date" value="{{ form.expiry_date|default:'' }}"></div>
+            <div class="mr-field"><label class="mr-label">Probation Period</label>
+              <select class="mr-input" name="probation_period">
+                <option value="3 months">3 months</option>
+                <option value="6 months" selected>6 months</option>
+                <option value="1 year">1 year</option>
+              </select></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Employment Details -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">2</div>
+          <div class="mr-card-title">Employment Details</div>
+        </div>
+        <div class="mr-card-body">
+          <div class="mr-grid2">
+            <div class="mr-field"><label class="mr-label">Replacement for</label>
+              <input class="mr-input" name="replacement_for" value="{{ form.replacement_for|default:'' }}" placeholder="Jack Smith" oninput="updateSummary('replacement_for',this.value)"></div>
+            <div class="mr-field"><label class="mr-label">GSM/CPN No.</label>
+              <input class="mr-input" name="gsm_cpn_no" value="{{ form.gsm_cpn_no|default:'' }}" placeholder="akj923425" oninput="updateSummary('gsm_cpn',this.value)"></div>
+            <div class="mr-field"><label class="mr-label">Contract Start Date</label>
+              <input class="mr-input" type="date" name="contract_start_date" value="{{ form.contract_start_date|default:'' }}"></div>
+            <div class="mr-field"><label class="mr-label">Contract End Date</label>
+              <input class="mr-input" type="date" name="contract_end_date" value="{{ form.contract_end_date|default:'' }}"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Compensation -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">3</div>
+          <div class="mr-card-title">Compensation Details</div>
+        </div>
+        <div class="mr-card-body">
+          <div class="mr-grid4">
+            <div class="mr-field"><label class="mr-label">Annual CTC</label>
+              <input class="mr-input" type="number" name="annual_ctc" value="{{ form.annual_ctc|default:'' }}" placeholder="40000"></div>
+            <div class="mr-field"><label class="mr-label">Base Salary</label>
+              <input class="mr-input" type="number" name="base_salary" value="{{ form.base_salary|default:'' }}" placeholder="30000"></div>
+            <div class="mr-field"><label class="mr-label">Allowance</label>
+              <input class="mr-input" type="number" name="allowance" value="{{ form.allowance|default:'' }}" placeholder="600"></div>
+            <div class="mr-field"><label class="mr-label">Bonus</label>
+              <input class="mr-input" type="number" name="bonus" value="{{ form.bonus|default:'' }}" placeholder="400"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Notes -->
+      <div class="mr-card">
+        <div class="mr-card-header">
+          <div class="mr-badge">4</div>
+          <div class="mr-card-title">Notes</div>
+        </div>
+        <div class="mr-card-body">
+          <textarea class="mr-input" name="notes" rows="3" placeholder="Add any notes for the approvers">{{ form.notes|default:"" }}</textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit-full">
+        <span class="material-symbols-outlined" style="font-size:16px">send</span>
+        Send Proposal
+      </button>
+    </form>
+  </div>
+
+  <!-- RIGHT: Approval Chain + Summary -->
+  <div style="display:flex;flex-direction:column;gap:14px;position:sticky;top:0">
+
+    <!-- Approval Chain -->
+    <div style="border:1px solid #D1D1D1;border-radius:15px;overflow:hidden;background:#fff">
+      <div style="padding:16px 20px 10px">
+        <div style="font-size:15px;font-weight:600;color:#202020">Approval Chain</div>
+        <div style="font-size:12px;color:#7f7f7f;margin-top:3px">Sequential approval and e-sign process</div>
+      </div>
+      <div style="padding:4px 0 12px">
+        {% if chosen_template == 'contractual' %}
+          {% for step in contractual_chain %}
+          <div style="display:flex;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:52px;flex-shrink:0">
+              <div style="width:32px;height:32px;border-radius:50%;background:#D2D2D2;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#202020;flex-shrink:0;margin-top:12px">{{ forloop.counter }}</div>
+              {% if not forloop.last %}<div style="width:2px;flex:1;min-height:16px;background:#CCCCCC;border-radius:2px;margin-top:4px"></div>{% endif %}
+            </div>
+            <div style="flex:1;border-bottom:{% if not forloop.last %}1px solid #E8E8E8{% else %}none{% endif %};padding:12px 14px 12px 0;min-height:60px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+                <div style="font-size:13px;font-weight:600;color:#202020">{{ forloop.counter }}. {{ step.role }}</div>
+                <div style="background:#F5F0ED;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:500;color:#E0812E;white-space:nowrap;flex-shrink:0">Pending</div>
+              </div>
+              <div style="font-size:12px;color:#606060;margin-top:3px">{{ step.employee }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          {% for step in permanent_chain %}
+          <div style="display:flex;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:52px;flex-shrink:0">
+              <div style="width:32px;height:32px;border-radius:50%;background:#D2D2D2;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#202020;flex-shrink:0;margin-top:12px">{{ forloop.counter }}</div>
+              {% if not forloop.last %}<div style="width:2px;flex:1;min-height:16px;background:#CCCCCC;border-radius:2px;margin-top:4px"></div>{% endif %}
+            </div>
+            <div style="flex:1;border-bottom:{% if not forloop.last %}1px solid #E8E8E8{% else %}none{% endif %};padding:12px 14px 12px 0;min-height:60px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+                <div style="font-size:13px;font-weight:600;color:#202020">{{ forloop.counter }}. {{ step.role }}</div>
+                <div style="background:#F5F0ED;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:500;color:#E0812E;white-space:nowrap;flex-shrink:0">Pending</div>
+              </div>
+              <div style="font-size:12px;color:#606060;margin-top:3px">{{ step.employee }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div style="margin:0 12px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:center">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#10B981;flex-shrink:0">check_circle</span>
+        <span style="font-size:11px;color:#374151;line-height:1.5">Approval notification will be sent to the approval chain members</span>
+      </div>
+    </div>
+
+    <!-- Proposal Summary -->
+    <div class="mr-summary">
+      <div class="mr-summary-head">
+        <div class="mr-summary-title">Proposal Summary</div>
+      </div>
+      <div class="mr-summary-body">
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">work</span><span class="ps-label">Request Title</span><span class="ps-val" id="ps-job-title">{{ form.job_title|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">co_present</span><span class="ps-label">Department</span><span class="ps-val" id="ps-dept">{{ form.department|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">category</span><span class="ps-label">Request Type</span><span class="ps-val">New Hiring</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">flag</span><span class="ps-label">Priority</span><span style="padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;background:#FFF8EC;color:#B07600">Medium</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">person</span><span class="ps-label">Candidate</span><span class="ps-val">{{ selected_candidate.name|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">swap_horiz</span><span class="ps-label">Replacement for</span><span class="ps-val" id="ps-replacement">{{ form.replacement_for|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">badge</span><span class="ps-label">Employment Type</span><span class="ps-val" id="ps-emp-type">{{ form.employment_type|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">calendar_month</span><span class="ps-label">Start Date</span><span class="ps-val" id="ps-start">{{ form.start_date|default:"—" }}</span></div>
+        <div class="ps-row"><span class="material-symbols-outlined ps-icon">tag</span><span class="ps-label">GSM/CPN No.</span><span class="ps-val" id="ps-gsm">{{ form.gsm_cpn_no|default:"—" }}</span></div>
+        <div class="mr-summary-note">
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>This request will be forwarded to your reporting manager for approval</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right -->
+
+</div>
+{% endif %}
+
+<script>
+function updateSummary(field, val) {
+  var map = { 'replacement_for': 'ps-replacement', 'gsm_cpn': 'ps-gsm' };
+  var el = document.getElementById(map[field]);
+  if (el) el.textContent = val || '—';
+}
+document.querySelectorAll('[name="job_title"]').forEach(function(el) {
+  el.addEventListener('input', function() { var t = document.getElementById('ps-job-title'); if (t) t.textContent = this.value || '—'; });
+});
+document.querySelectorAll('[name="department"]').forEach(function(el) {
+  el.addEventListener('input', function() { var t = document.getElementById('ps-dept'); if (t) t.textContent = this.value || '—'; });
+});
+document.querySelectorAll('[name="start_date"]').forEach(function(el) {
+  el.addEventListener('change', function() { var t = document.getElementById('ps-start'); if (t) t.textContent = this.value || '—'; });
+});
+</script>
+{% endblock %}

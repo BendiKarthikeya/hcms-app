@@ -1,0 +1,590 @@
+{% extends "index.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="oh-wrapper" style="overflow: visible;"> <!-- 🔥 fix clipping -->
+  <div class="oh-main__titlebar oh-main__titlebar--space-between">
+    <div class="oh-main__titlebar-title fw-bold mb-0 text-dark">
+      {% trans "Raise Recruitment" %}
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button
+        class="oh-btn oh-btn--secondary"
+        data-toggle="oh-modal-toggle"
+        data-target="#objectCreateModal"
+        hx-get="{% url 'recruitment-create' %}?raised_from_employee=True"
+        hx-target="#objectCreateModalTarget"
+      >
+        <ion-icon class="me-1" name="add-outline"></ion-icon>
+        {% trans "Recruitment" %}
+      </button>
+      <button
+        class="oh-btn oh-btn--secondary"
+        data-toggle="oh-modal-toggle"
+        data-target="#objectCreateModal"
+        hx-get="{% url 'bulk-recruitment' %}"
+        hx-target="#objectCreateModalTarget"
+      >
+        <ion-icon class="me-1" name="cloud-upload-outline"></ion-icon>
+        {% trans "Bulk Recruitment" %}
+      </button>
+    </div>
+  </div>
+
+  <div class="oh-card mt-4">
+    <div class="oh-card__body">
+      {% if requests %}
+      <div class="oh-table-responsive">
+        <table class="oh-table oh-table--striped">
+          <thead>
+            <tr>
+              <th>{% trans "Title" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Workflow" %}</th>
+              <th>{% trans "Created" %}</th>
+              <th>{% trans "Actions" %}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for rec in requests %}
+            <tr>
+              <td>{{ rec.title }}</td>
+
+              <td>
+                <span class="oh-badge {% if rec.approval_status == 'pending' %}oh-badge--warning{% elif rec.approval_status == 'approved' %}oh-badge--success{% elif rec.approval_status == 'queried' %}oh-badge--warning{% else %}oh-badge--danger{% endif %}"
+                  {% if rec.approval_status == 'queried' %}style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;"{% endif %}>
+                  {{ rec.get_approval_status_display }}
+                </span>
+                {% if rec.approval_status == 'queried' and rec.hr_feedback %}
+                <div style="font-size:12px;color:#92400e;margin-top:6px;white-space:pre-wrap;max-width:240px;">
+                  <strong>{% trans "Query:" %}</strong> {{ rec.hr_feedback }}
+                </div>
+                {% endif %}
+              </td>
+
+              <!-- 🔥 FIXED COLUMN -->
+              <td>
+                <button class="oh-btn oh-btn--primary" onclick="openWorkflow({{ rec.id }})">
+                  Track Status
+                </button>
+              </td>
+
+              <td>{{ rec.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+
+              <td>
+                {% for approval in rec.approvals.all %}
+                  {% if approval.status == 'pending' and approval.approver == request.user.employee_get %}
+                    <form action="{% url 'approve-employee-recruitment' approval.id %}" method="post" style="display:inline">
+                      {% csrf_token %}
+                      <button type="submit" class="oh-btn oh-btn--secondary oh-btn--small">
+                        {% trans "Approve" %}
+                      </button>
+                    </form>
+
+                    <form id="rejectForm{{ approval.id }}" 
+      action="{% url 'reject-employee-recruitment' approval.id %}" 
+      method="post" 
+      style="display:inline; margin-left:0.5rem;">
+    
+    {% csrf_token %}
+
+    <input type="hidden" name="reason" id="reasonInput{{ approval.id }}">
+
+    <button type="button"
+        class="oh-btn oh-btn--danger oh-btn--small"
+        onclick="openRejectModal({{ approval.id }})">
+        Reject
+    </button>
+
+</form>
+                  {% endif %}
+                {% endfor %}
+
+                {% if rec.raised_by == request.user.employee_get %}
+                  {% if rec.approval_status == 'queried' %}
+                    <button type="button"
+                      class="oh-btn oh-btn--small"
+                      style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;margin-left:0.5rem;"
+                      data-rec-id="{{ rec.id }}"
+                      data-query="{{ rec.hr_feedback|default_if_none:'' }}"
+                      onclick="openResubmitModal(this)">
+                      ↩ {% trans "Respond & Resubmit" %}
+                    </button>
+                  {% endif %}
+                  <form action="{% url 'delete-employee-recruitment' rec.id %}" method="post" style="display:inline; margin-left:0.5rem;">
+                    {% csrf_token %}
+                    <button type="submit" class="oh-btn oh-btn--tertiary oh-btn--small">
+                      {% trans "Delete" %}
+                    </button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+      {% else %}
+      <div class="oh-empty-state">
+        <h3>{% trans "No recruitments raised yet." %}</h3>
+        <p>{% trans "Click +Recruitment to raise a new recruitment request." %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- CREATE MODAL -->
+<div class="oh-modal" id="objectCreateModal">
+  <div class="oh-modal__dialog" id="objectCreateModalTarget"></div>
+</div>
+
+<!-- 🔥 WORKFLOW MODAL -->
+<div id="workflowModal" class="workflow-modal">
+  <div class="workflow-card">
+    <div class="workflow-header">
+      <h5>Workflow</h5>
+      <span onclick="closeWorkflow()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+
+    <div id="workflowContent" class="raise-recruitment-flowchart"></div>
+  </div>
+</div>
+
+
+
+<div id="rejectModal" class="workflow-modal">
+  <div class="workflow-card" style="max-width:500px; height:auto;">
+    
+    <div class="workflow-header">
+      <h5>Reject Reason</h5>
+      <span onclick="closeRejectModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+
+    <div style="margin-top:20px;">
+      <textarea 
+        id="rejectReason"
+        placeholder="Enter rejection reason..."
+        style="width:100%; height:120px; padding:10px; border-radius:8px; border:1px solid #ddd;"
+      ></textarea>
+
+      <button 
+        class="oh-btn oh-btn--danger mt-3"
+        onclick="submitReject()"
+      >
+        Submit Rejection
+      </button>
+    </div>
+
+  </div>
+</div>
+<!-- 🔥 CSS FIX -->
+<style>
+.workflow-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background: rgba(0,0,0,0.75);
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 99999;
+}
+
+.workflow-modal.show {
+  display: flex;
+}
+
+.workflow-card {
+  width: 80vw;
+  max-width: 860px;
+  height: auto;
+
+  background: white;
+  border-radius: 16px;
+  padding: 24px 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+
+  transform: scale(0.92);
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.workflow-modal.show .workflow-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.workflow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 0;
+}
+
+#workflowContent {
+  padding: 20px 0 8px;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 12px; /* tighter so reason sits near pill */
+}
+
+/* STEP */
+.flow-step {
+  opacity: 0;
+  transform: translateY(15px);
+
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  font-weight: 500;
+
+  border: 2px solid transparent;
+
+  transition: all 0.6s ease;
+  position: relative;
+}
+.step-date {
+  font-size: 10px; color: #9ca3af;
+  margin-bottom: 4px; white-space: nowrap; text-align: center;
+}
+.feedback-badge {
+  position: absolute; top: -9px; right: -9px;
+  background: #3b82f6; color: #fff;
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  border: 1.5px solid #fff;
+}
+.feedback-popup {
+  position: absolute; bottom: calc(100% + 10px); right: -10px;
+  background: #1e293b; color: #fff;
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; line-height: 1.4;
+  min-width: 160px; max-width: 240px;
+  white-space: normal; z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+.feedback-popup::after {
+  content: ""; position: absolute;
+  top: 100%; right: 16px;
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+.feedback-popup.hidden { display: none; }
+
+/* STATES */
+.flow-step.approved {
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+.flow-step.current {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.flow-step.rejected {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+/* ARROW */
+.flow-arrow {
+  opacity: 0;
+  transform: translateY(15px);
+
+  font-size: 22px;
+  color: #6b7280;
+
+  transition: all 0.6s ease;
+}
+
+/* SHOW (animation trigger) */
+.show {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* REASON */
+.reason {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 5px;
+}
+
+/* 🔥 INLINE REASON NEXT TO PILL */
+
+
+.reason-box.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reason-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-top: 6px;
+
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.5s ease;
+}
+
+.reason-box.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reason-arrow {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+
+.reason-text {
+  background: #fee2e2;
+  color: #991b1b;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  white-space: nowrap;
+}
+</style>
+
+<!-- 🔥 JS -->
+<script>
+const recruitments = JSON.parse('{{ requests_json|escapejs }}');
+
+function openWorkflow(id){
+  const modal = document.getElementById("workflowModal");
+  const container = document.getElementById("workflowContent");
+
+  container.innerHTML = "";
+
+  modal.style.display = "flex";
+  setTimeout(() => modal.classList.add("show"), 10);
+
+  const rec = recruitments.find(r => r.id === id);
+
+  const steps = [];
+
+  steps.push({
+    text: "Raised by: " + (rec.raised_by || "Unknown"),
+    cls: "approved",
+    datetime: rec.created_at || ""
+  });
+
+  rec.approvals.forEach(a => {
+    let cls = "current";
+    if(a.status === "approved") cls = "approved";
+    if(a.status === "rejected") cls = "rejected";
+
+    steps.push({
+      text: a.approver + " (" + a.status + ")",
+      cls: cls,
+      reason: a.reason || "",
+      datetime: a.approved_at || "",
+      feedback: a.reason || ""
+    });
+  });
+
+  const allApproved = rec.approvals.length > 0 && rec.approvals.every(a => a.status === "approved");
+  if(allApproved){
+    steps.push({ text: "Forwarded to HR for publishing", cls: "approved" });
+  }
+
+  // Build UI
+  steps.forEach((step, i) => {
+    const stepWrapper = document.createElement("div");
+    stepWrapper.style.display = "flex";
+    stepWrapper.style.flexDirection = "column";
+    stepWrapper.style.alignItems = "center";
+    stepWrapper.style.position = "relative";
+
+    if(step.datetime){
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "step-date";
+      dateLabel.textContent = step.datetime;
+      stepWrapper.appendChild(dateLabel);
+    }
+
+    const el = document.createElement("div");
+    el.className = "flow-step " + step.cls;
+    el.innerText = step.text;
+
+    if(step.feedback){
+      const badge = document.createElement("div");
+      badge.className = "feedback-badge";
+      badge.textContent = "1";
+      const popup = document.createElement("div");
+      popup.className = "feedback-popup hidden";
+      popup.textContent = step.feedback;
+      badge.addEventListener("click", e => {
+        e.stopPropagation();
+        document.querySelectorAll(".feedback-popup").forEach(p => { if(p !== popup) p.classList.add("hidden"); });
+        popup.classList.toggle("hidden");
+      });
+      el.appendChild(badge);
+      el.appendChild(popup);
+    }
+
+    stepWrapper.appendChild(el);
+
+    if(step.reason){
+      const reasonBox = document.createElement("div");
+      reasonBox.className = "reason-box";
+      reasonBox.innerHTML = `
+        <div class="reason-arrow">↓</div>
+        <div class="reason-text">
+          ${step.text.split(" (")[0]} reason: "${step.reason}"
+        </div>
+      `;
+      stepWrapper.appendChild(reasonBox);
+    }
+
+    container.appendChild(stepWrapper);
+
+    if(i < steps.length - 1){
+      const arrow = document.createElement("div");
+      arrow.className = "flow-arrow";
+      arrow.innerText = "→";
+      container.appendChild(arrow);
+    }
+  });
+
+  // Stagger animation
+  const items = container.querySelectorAll(".flow-step, .flow-arrow, .reason-box");
+  items.forEach((el, index) => {
+    setTimeout(() => el.classList.add("show"), index * 350);
+  });
+}
+
+function closeWorkflow(){
+  const modal = document.getElementById("workflowModal");
+
+  modal.classList.remove("show");
+
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300);
+}
+</script>
+
+
+
+<script>
+let currentRejectId = null;
+
+function openRejectModal(id){
+  currentRejectId = id;
+
+  const modal = document.getElementById("rejectModal");
+  modal.style.display = "flex";
+
+  setTimeout(() => modal.classList.add("show"), 10);
+}
+
+function closeRejectModal(){
+  const modal = document.getElementById("rejectModal");
+
+  modal.classList.remove("show");
+
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300);
+}
+
+function submitReject(){
+  const reason = document.getElementById("rejectReason").value;
+
+  if(!reason){
+    alert("Please enter rejection reason");
+    return;
+  }
+
+  // put reason in hidden input
+  document.getElementById("reasonInput" + currentRejectId).value = reason;
+
+  // submit ORIGINAL Django form
+  document.getElementById("rejectForm" + currentRejectId).submit();
+}
+
+function getCSRFToken(){
+  return document.cookie.split('; ')
+    .find(row => row.startsWith('csrftoken'))
+    ?.split('=')[1];
+}
+
+// ── Resubmit (respond to query) modal ─────────────────────────────────
+function openResubmitModal(btn){
+  const recId = btn.getAttribute("data-rec-id");
+  const query = btn.getAttribute("data-query") || "";
+  document.getElementById("resubmitQueryText").textContent = query || "(no query text)";
+  document.getElementById("resubmitForm").action = "/recruitment/raise-recruitment/resubmit/" + recId + "/";
+  document.getElementById("resubmitResponse").value = "";
+  document.getElementById("resubmitModal").classList.add("show");
+}
+function closeResubmitModal(){
+  document.getElementById("resubmitModal").classList.remove("show");
+}
+</script>
+
+<!-- RESPOND TO QUERY MODAL -->
+<div id="resubmitModal" class="workflow-modal">
+  <div class="workflow-card" style="max-width:520px;height:auto;">
+    <div class="workflow-header">
+      <h5>{% trans "Respond to Query" %}</h5>
+      <span onclick="closeResubmitModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:#92400e;margin-bottom:4px;">{% trans "Query from approver" %}</div>
+        <div id="resubmitQueryText" style="font-size:13px;color:#374151;white-space:pre-wrap;"></div>
+      </div>
+      <form id="resubmitForm" method="post">
+        {% csrf_token %}
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+          {% trans "Your response" %}
+        </label>
+        <textarea id="resubmitResponse" name="response" rows="5" required
+          style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;"
+          placeholder="{% trans 'Provide the clarification or document the approver asked for...' %}"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+          <button type="button" class="oh-btn oh-btn--tertiary" onclick="closeResubmitModal()">
+            {% trans "Cancel" %}
+          </button>
+          <button type="submit" class="oh-btn oh-btn--primary">
+            {% trans "Submit Response" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

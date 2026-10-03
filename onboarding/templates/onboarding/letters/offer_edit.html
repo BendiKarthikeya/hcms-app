@@ -1,0 +1,619 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+
+<style>
+.letter-edit-page { max-width: 880px; margin: 0 auto; }
+
+/* Candidate banner */
+.candidate-info-card {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac; border-radius: 14px; padding: 18px 24px; margin-bottom: 28px;
+}
+.candidate-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; flex-shrink: 0;
+}
+
+/* Section header */
+.section-header {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
+  color: #9ca3af; padding-bottom: 10px; margin: 28px 0 18px;
+  border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 6px;
+}
+
+/* Form field group */
+.field-group {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.field-label {
+  font-size: 12px; font-weight: 700; color: #374151; display: flex; align-items: center; gap: 6px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.field-label .label-hint {
+  font-size: 11px; color: #9ca3af; font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+.field-label .required-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: #16a34a; display: inline-block; margin-left: 2px;
+}
+
+/* Styled input */
+.of-input {
+  width: 100%; height: 44px; padding: 0 14px;
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 14px; color: #1f2937; background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none; appearance: none; -webkit-appearance: none;
+}
+.of-input:focus {
+  border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+}
+.of-input.auto-filled {
+  background: #f0fdf4; border-color: #86efac; color: #166534; font-weight: 500;
+}
+.of-input::placeholder { color: #d1d5db; }
+
+/* Input with left icon/prefix */
+.input-wrap { position: relative; }
+.input-wrap .input-prefix {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-right: 1.5px solid #e5e7eb; border-radius: 10px 0 0 10px;
+  background: #f9fafb; color: #6b7280; font-size: 12px; font-weight: 700;
+  pointer-events: none;
+}
+.input-wrap .of-input { padding-left: 58px; }
+.input-wrap .of-input:focus + .input-prefix,
+.input-wrap .of-input:focus ~ .input-prefix { border-color: #16a34a; }
+.input-wrap .of-input.of-input { }
+
+/* Currency prefix fix — prefix is before input in DOM but layered via position */
+.currency-wrap { position: relative; }
+.currency-wrap .currency-prefix {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: #f0fdf4; border-right: 1.5px solid #86efac;
+  border-radius: 10px 0 0 10px; font-size: 12px; font-weight: 700; color: #16a34a;
+  pointer-events: none; z-index: 1;
+}
+.currency-wrap .of-input { padding-left: 62px; }
+
+/* Role type pill selector */
+.role-type-group {
+  display: flex; gap: 10px;
+}
+.role-pill {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: #6b7280; background: #fff;
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.role-pill.active {
+  border-color: #16a34a; background: #f0fdf4; color: #166534;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+}
+.role-pill ion-icon { font-size: 16px; }
+
+/* Template cards */
+.template-card {
+  cursor: pointer; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 16px 18px;
+  transition: all .15s; background: #fff;
+}
+.template-card:hover { border-color: #16a34a; background: #f0fdf4; }
+.template-card.selected { border-color: #16a34a; background: #f0fdf4; box-shadow: 0 0 0 3px #bbf7d0; }
+.template-card .tc-icon {
+  width: 36px; height: 36px; border-radius: 8px; background: #dcfce7;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+}
+
+/* Content toggle */
+.content-toggle-btn {
+  display: flex; align-items: center; gap: 8px; padding: 9px 20px;
+  border: 1.5px solid #e5e7eb; border-radius: 10px; background: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: #6b7280; transition: all .15s;
+}
+.content-toggle-btn.active { border-color: #16a34a; background: #f0fdf4; color: #166534; }
+.content-toggle-btn ion-icon { font-size: 16px; }
+
+/* Textarea */
+.of-textarea {
+  width: 100%; padding: 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 13.5px; line-height: 1.7; resize: vertical; font-family: inherit;
+  color: #1f2937; transition: border-color .15s, box-shadow .15s; outline: none;
+}
+.of-textarea:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+.of-textarea::placeholder { color: #d1d5db; }
+
+/* Form card section */
+.form-section-card {
+  background: #fff; border: 1.5px solid #f3f4f6; border-radius: 14px;
+  padding: 22px 24px; margin-bottom: 16px;
+}
+</style>
+
+<div class="oh-wrapper">
+  {% if messages %}
+  <div class="oh-alert-container">
+    {% for msg in messages %}
+    <div class="oh-alert oh-alert--animated {{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="oh-card p-4 letter-edit-page">
+
+    <!-- Page header -->
+    <div class="oh-card__header mb-4" style="display:flex;align-items:center;gap:12px;">
+      <a href="{% url 'onboarding-letters' %}?tab=offer"
+         class="oh-btn oh-btn--light-bkg" style="padding:6px 10px;line-height:1;">
+        <ion-icon name="arrow-back-outline" style="font-size:18px;vertical-align:middle;"></ion-icon>
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">
+          <ion-icon name="document-text-outline" style="font-size:18px;color:#16a34a;"></ion-icon>
+        </div>
+        <div>
+          <h5 class="oh-card__title mb-0">{% trans "Edit Offer Letter" %} — {{ candidate.name }}</h5>
+          <p style="margin:0;font-size:12px;color:#6b7280;">{% trans "Update offer details and letter content" %}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate info banner -->
+    <div class="candidate-info-card">
+      <div class="candidate-avatar">{{ candidate.name|slice:":1"|upper }}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15px;color:#166534;">{{ candidate.name }}</div>
+        <div style="font-size:13px;color:#4b7c59;margin-top:2px;">
+          <ion-icon name="mail-outline" style="vertical-align:middle;margin-right:4px;font-size:13px;"></ion-icon>{{ candidate.email }}
+          {% if candidate.job_position_id %}
+          <span style="margin:0 8px;color:#86efac;">·</span>
+          <ion-icon name="briefcase-outline" style="vertical-align:middle;margin-right:4px;font-size:13px;"></ion-icon>{{ candidate.job_position_id }}
+          {% endif %}
+        </div>
+      </div>
+      <div style="background:#16a34a;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+        <ion-icon name="document-text-outline" style="vertical-align:middle;margin-right:4px;font-size:13px;"></ion-icon>
+        {% trans "Offer Letter" %}
+      </div>
+    </div>
+
+    <form method="post" id="offerForm">
+      {% csrf_token %}
+
+      <!-- Role Details card -->
+      <div class="form-section-card">
+        <div class="section-header" style="margin-top:0;margin-bottom:18px;">
+          <ion-icon name="briefcase-outline" style="font-size:14px;color:#16a34a;"></ion-icon>
+          {% trans "Role Details" %}
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">
+                {% trans "Position" %} <span class="required-dot"></span>
+                <span class="label-hint">{% trans "auto-filled" %}</span>
+              </label>
+              {% with rec_pos=candidate.recruitment_id.job_position_id rec_open=candidate.recruitment_id.open_positions.first %}
+              <input type="text" name="position" class="of-input auto-filled" required
+                     value="{% if offer.position and offer.position != 'To be confirmed' %}{{ offer.position }}{% elif candidate.job_position_id %}{{ candidate.job_position_id.job_position }}{% elif rec_pos %}{{ rec_pos.job_position }}{% elif rec_open %}{{ rec_open.job_position }}{% endif %}"
+                     placeholder="Job title">
+              {% endwith %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">
+                {% trans "Department" %}
+                <span class="label-hint">{% trans "auto-filled" %}</span>
+              </label>
+              {% with rec_pos=candidate.recruitment_id.job_position_id rec_open=candidate.recruitment_id.open_positions.first %}
+              <input type="text" name="department" class="of-input auto-filled"
+                     value="{% if offer.department %}{{ offer.department }}{% elif candidate.job_position_id %}{{ candidate.job_position_id.department_id.department }}{% elif rec_pos %}{{ rec_pos.department_id.department }}{% elif rec_open %}{{ rec_open.department_id.department }}{% endif %}"
+                     placeholder="Department name">
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">
+                {% trans "Role Type" %} <span class="required-dot"></span>
+              </label>
+              <input type="hidden" name="role_type" id="roleTypeInput"
+                     value="{{ offer.role_type|default:'full_time' }}">
+              <div class="role-type-group">
+                <div class="role-pill {% if offer.role_type != 'contract' %}active{% endif %}"
+                     id="pill-fulltime" onclick="setRoleType('full_time')">
+                  <ion-icon name="person-outline"></ion-icon>
+                  {% trans "Full Time" %}
+                </div>
+                <div class="role-pill {% if offer.role_type == 'contract' %}active{% endif %}"
+                     id="pill-contract" onclick="setRoleType('contract')">
+                  <ion-icon name="document-outline"></ion-icon>
+                  {% trans "Contract" %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6" id="contractDurationRow"
+               style="display:{% if offer.role_type == 'contract' %}flex{% else %}none{% endif %};">
+            <div class="field-group" style="width:100%;">
+              <label class="field-label">{% trans "Duration" %} <span class="label-hint">{% trans "months" %}</span></label>
+              <input type="number" name="contract_duration" class="of-input" min="1" max="120"
+                     value="{{ offer.contract_duration|default:'' }}"
+                     placeholder="e.g. 12">
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">{% trans "Joining Date" %}</label>
+              <input type="date" name="joining_date" class="of-input"
+                     value="{{ offer.joining_date|date:'Y-m-d' }}">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">{% trans "Probation Period" %} <span class="label-hint">{% trans "months" %}</span></label>
+              <input type="number" name="probation_period" class="of-input" min="0" max="24"
+                     value="{{ offer.probation_period|default:3 }}" placeholder="3">
+              <span style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Default is 3 months" %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compensation card -->
+      <div class="form-section-card">
+        <div class="section-header" style="margin-top:0;margin-bottom:18px;">
+          <ion-icon name="cash-outline" style="font-size:14px;color:#16a34a;"></ion-icon>
+          {% trans "Compensation (OMR)" %}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">{% trans "Basic Salary" %}</label>
+              <div class="currency-wrap">
+                <span class="currency-prefix">OMR</span>
+                <input type="number" name="basic_salary" class="of-input" min="0" step="0.01"
+                       value="{{ offer.basic_salary }}" placeholder="0.000">
+              </div>
+              <span style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Base component of salary package" %}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-group">
+              <label class="field-label">{% trans "Gross Salary" %} <span class="required-dot"></span></label>
+              <div class="currency-wrap">
+                <span class="currency-prefix">OMR</span>
+                <input type="number" name="gross_salary" class="of-input" min="0" step="0.01"
+                       value="{{ offer.gross_salary|default:'' }}" placeholder="0.000">
+              </div>
+              <span style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Monthly salary = Gross ÷ 12" %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Letter Content -->
+      <div class="section-header" style="margin-top:28px;">
+        <ion-icon name="document-text-outline" style="vertical-align:middle;margin-right:6px;font-size:13px;"></ion-icon>
+        {% trans "Letter Content" %}
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <button type="button" class="content-toggle-btn" id="btnTemplates" onclick="showTemplates()">
+          <ion-icon name="documents-outline"></ion-icon>
+          {% trans "Replace with Template" %}
+        </button>
+        <button type="button" class="content-toggle-btn active" id="btnCustom" onclick="showCustom()">
+          <ion-icon name="create-outline"></ion-icon>
+          {% trans "Edit Manually" %}
+        </button>
+      </div>
+
+      <!-- Template selector -->
+      <div id="templateSelector" style="display:none;margin-bottom:20px;">
+        {% if templates %}
+        <div class="row g-3">
+          {% for tmpl in templates %}
+          <div class="col-md-6" id="tmpl-col-{{ tmpl.id }}">
+            <div class="template-card" id="tmpl-card-{{ tmpl.id }}" onclick="selectTemplate({{ tmpl.id }}, this)">
+              <div class="tc-icon">
+                <ion-icon name="document-text-outline" style="font-size:16px;color:#16a34a;"></ion-icon>
+              </div>
+              <div style="font-weight:600;font-size:14px;color:#1f2937;margin-bottom:4px;" id="tmpl-name-{{ tmpl.id }}">{{ tmpl.name }}</div>
+              <div style="font-size:12px;color:#6b7280;line-height:1.5;" id="tmpl-snippet-{{ tmpl.id }}">{{ tmpl.body_html|truncatechars:90 }}</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+                <span style="font-size:11px;color:#16a34a;font-weight:600;flex:1;">
+                  <ion-icon name="checkmark-circle-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                  {% trans "Click to select" %}
+                </span>
+                <button type="button" onclick="event.stopPropagation();previewTemplate({{ tmpl.id }})"
+                  style="border:1px solid #d1d5db;background:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#374151;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                  <ion-icon name="eye-outline" style="font-size:13px;"></ion-icon> {% trans "Preview" %}
+                </button>
+                <button type="button" onclick="event.stopPropagation();editTemplate({{ tmpl.id }})"
+                  style="border:1px solid #86efac;background:#f0fdf4;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:#166534;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                  <ion-icon name="create-outline" style="font-size:13px;"></ion-icon> {% trans "Edit" %}
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding:32px;text-align:center;background:#f9fafb;border:1px dashed #d1d5db;border-radius:10px;">
+          <ion-icon name="documents-outline" style="font-size:36px;color:#d1d5db;display:block;margin:0 auto 8px;"></ion-icon>
+          <p style="color:#9ca3af;font-size:13px;margin:0;">{% trans "No templates available. Switch to manual editing." %}</p>
+        </div>
+        {% endif %}
+        <input type="hidden" name="template_id" id="template_id" value="">
+      </div>
+
+      <!-- Custom body editor -->
+      <div id="customBody">
+        <div class="oh-input-group">
+          <label class="oh-label" for="custom_body">
+            {% trans "Letter Body" %}
+            <span style="font-size:11px;color:#9ca3af;font-weight:400;margin-left:8px;">
+              {% trans "Use" %}
+              <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;">{{candidate_name}}</code>,
+              <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;">{{position}}</code>,
+              <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;">{{basic_salary}}</code>,
+              <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;">{{gross_salary}}</code>,
+              <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;">{{joining_date}}</code>
+            </span>
+          </label>
+          <textarea name="custom_body" id="custom_body" rows="14"
+                    style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;"
+                    placeholder="{% trans 'Write offer letter content here...' %}">{{ offer.generated_letter|default:offer.letter_template }}</textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid #f3f4f6;">
+        <button type="submit" class="oh-btn oh-btn--success" style="padding:10px 24px;font-size:14px;">
+          <ion-icon name="save-outline" style="vertical-align:middle;margin-right:6px;"></ion-icon>
+          {% trans "Save Changes" %}
+        </button>
+        <a href="{% url 'onboarding-letters' %}?tab=offer"
+           class="oh-btn oh-btn--light-bkg" style="padding:10px 20px;font-size:14px;">
+          {% trans "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Template Preview Modal ── -->
+<div id="tmplPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid #e5e7eb;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">
+          <ion-icon name="eye-outline" style="font-size:16px;color:#16a34a;"></ion-icon>
+        </div>
+        <div>
+          <h6 style="margin:0;font-size:15px;font-weight:700;" id="previewTmplName">Template Preview</h6>
+          <p style="margin:0;font-size:11px;color:#9ca3af;">Read-only preview · click Edit to modify</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('tmplPreviewModal').style.display='none'"
+        style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+    </div>
+    <div style="padding:24px;overflow-y:auto;flex:1;">
+      <div id="previewTmplBody" style="font-size:13.5px;line-height:1.8;color:#1f2937;white-space:pre-wrap;"></div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" id="previewSwitchEdit" onclick="switchToEdit()"
+        style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <ion-icon name="create-outline" style="font-size:14px;"></ion-icon> Edit Template
+      </button>
+      <button type="button" onclick="document.getElementById('tmplPreviewModal').style.display='none'"
+        style="background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Template Edit Modal ── -->
+<div id="tmplEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;width:90%;max-width:720px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid #e5e7eb;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">
+          <ion-icon name="create-outline" style="font-size:16px;color:#16a34a;"></ion-icon>
+        </div>
+        <div>
+          <h6 style="margin:0;font-size:15px;font-weight:700;">Edit Template</h6>
+          <p style="margin:0;font-size:11px;color:#9ca3af;">Changes will be saved to the template for future use</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('tmplEditModal').style.display='none'"
+        style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+    </div>
+    <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+      <input type="hidden" id="editTmplId">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Template Name</label>
+        <input type="text" id="editTmplName" class="form-control" style="font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Template Body</label>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">
+          Available placeholders:
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{candidate_name}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{position}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{department}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{basic_salary}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{gross_salary}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{joining_date}}</code>
+          <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{company_name}}</code>
+        </div>
+        <textarea id="editTmplBody" rows="16"
+          style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" onclick="saveTemplate()"
+        style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:8px 22px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <ion-icon name="save-outline" style="font-size:14px;"></ion-icon>
+        <span id="saveTmplBtnText">Save Template</span>
+      </button>
+      <button type="button" onclick="document.getElementById('tmplEditModal').style.display='none'"
+        style="background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function setRoleType(val) {
+  document.getElementById('roleTypeInput').value = val;
+  document.getElementById('pill-fulltime').classList.toggle('active', val === 'full_time');
+  document.getElementById('pill-contract').classList.toggle('active', val === 'contract');
+  document.getElementById('contractDurationRow').style.display = val === 'contract' ? 'flex' : 'none';
+}
+
+function showTemplates() {
+  document.getElementById('templateSelector').style.display = 'block';
+  document.getElementById('customBody').style.display = 'none';
+  document.getElementById('btnTemplates').classList.add('active');
+  document.getElementById('btnCustom').classList.remove('active');
+}
+function showCustom() {
+  document.getElementById('templateSelector').style.display = 'none';
+  document.getElementById('customBody').style.display = 'block';
+  const ti = document.getElementById('template_id');
+  if (ti) ti.value = '';
+  document.getElementById('btnCustom').classList.add('active');
+  document.getElementById('btnTemplates').classList.remove('active');
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+}
+function selectTemplate(id, card) {
+  document.getElementById('template_id').value = id;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+}
+showCustom();
+
+// ── Template Preview & Edit ──────────────────────────
+let _activeTmplId = null;
+
+const _CTX = {
+  candidate_name: "{{ candidate.name|escapejs }}",
+  company_name: "{{ candidate.recruitment_id.company_id.company|default:''|escapejs }}",
+};
+
+function _renderWithValues(body) {
+  const f = document.getElementById('offerForm');
+  const get = (n) => (f.elements[n] && f.elements[n].value) ? f.elements[n].value : '';
+  const subs = {
+    candidate_name: _CTX.candidate_name,
+    position:       get('position'),
+    department:     get('department'),
+    basic_salary:   get('basic_salary'),
+    gross_salary:   get('gross_salary'),
+    joining_date:   get('joining_date'),
+    probation_period: get('probation_period'),
+    contract_duration: get('contract_duration'),
+    company_name:   _CTX.company_name,
+  };
+  let out = body;
+  {% verbatim %}
+  Object.keys(subs).forEach(k => {
+    out = out.split('{{' + k + '}}').join(subs[k] || '');
+  });
+  // Resolve {% if VAR %}...{% endif %} blocks against the same context
+  out = out.replace(/\{%\s*if\s+(\w+)\s*%\}([\s\S]*?)\{%\s*endif\s*%\}/g,
+    (m, v, inner) => subs[v] ? inner : '');
+  // Strip any remaining {% ... %} tags
+  out = out.replace(/\{%[^%]*%\}/g, '');
+  {% endverbatim %}
+  return out.trim();
+}
+
+function previewTemplate(id) {
+  _activeTmplId = id;
+  fetch(`/onboarding/letters/offer/template/${id}/preview/`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('previewTmplName').textContent = data.name;
+      document.getElementById('previewTmplBody').textContent = _renderWithValues(data.body_html);
+      document.getElementById('previewSwitchEdit').dataset.id = id;
+      document.getElementById('tmplPreviewModal').style.display = 'flex';
+    });
+}
+
+function editTemplate(id) {
+  _activeTmplId = id;
+  fetch(`/onboarding/letters/offer/template/${id}/preview/`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('editTmplId').value = data.id;
+      document.getElementById('editTmplName').value = data.name;
+      document.getElementById('editTmplBody').value = data.body_html;
+      document.getElementById('tmplPreviewModal').style.display = 'none';
+      document.getElementById('tmplEditModal').style.display = 'flex';
+    });
+}
+
+function switchToEdit() {
+  editTemplate(_activeTmplId);
+}
+
+function saveTemplate() {
+  const id = document.getElementById('editTmplId').value;
+  const name = document.getElementById('editTmplName').value.trim();
+  const body = document.getElementById('editTmplBody').value.trim();
+  if (!body) { alert('Template body cannot be empty.'); return; }
+
+  const btn = document.getElementById('saveTmplBtnText');
+  btn.textContent = 'Saving…';
+
+  const fd = new FormData();
+  fd.append('name', name);
+  fd.append('body_html', body);
+  fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch(`/onboarding/letters/offer/template/${id}/edit/`, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        // Update card name and snippet in the DOM
+        const nameEl = document.getElementById(`tmpl-name-${id}`);
+        const snippetEl = document.getElementById(`tmpl-snippet-${id}`);
+        if (nameEl) nameEl.textContent = data.name;
+        if (snippetEl) snippetEl.textContent = data.body_html.substring(0, 90) + (data.body_html.length > 90 ? '…' : '');
+        document.getElementById('tmplEditModal').style.display = 'none';
+        btn.textContent = 'Save Template';
+      } else {
+        alert('Save failed. Please try again.');
+        btn.textContent = 'Save Template';
+      }
+    })
+    .catch(() => { alert('Network error. Please try again.'); btn.textContent = 'Save Template'; });
+}
+
+// Close modals on backdrop click
+document.getElementById('tmplPreviewModal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+document.getElementById('tmplEditModal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+
+{% endblock %}

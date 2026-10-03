@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}EOSB for {{ eosb.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>End of Service Benefits</h1>
+        <p>View and manage EOSB for employee separation</p>
+    </div>
+
+    <div class="employee-card">
+        <div class="avatar">{{ eosb.employee.get_name|slice:":1" }}</div>
+        <div class="details">
+            <h3>{{ eosb.employee.get_name }}</h3>
+            <p><strong>Designation:</strong> {{ eosb.employee.designation }}</p>
+            <p><strong>Department:</strong> {{ eosb.employee.department }}</p>
+            <p><strong>Separation Date:</strong> {{ eosb.separation_date|date:"M d, Y" }}</p>
+            <p><strong>Status:</strong> <span class="status-badge {{ eosb.status|lower }}">{{ eosb.get_status_display }}</span></p>
+        </div>
+    </div>
+
+    <div class="calculation-box">
+        <h3>Gratuity Calculation</h3>
+        
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Years of Service:</strong>
+                <span class="value">{{ eosb.years_of_service }} years</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Last Salary (OMR):</strong>
+                <span class="value">{{ eosb.final_salary }}</span>
+            </div>
+        </div>
+
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Applicable Rate:</strong>
+                <span class="value">{{ eosb.gratuity_rate }}x</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Gross Gratuity (OMR):</strong>
+                <span class="value">{{ eosb.gross_gratuity }}</span>
+            </div>
+        </div>
+
+        {% if eosb.outstanding_leave_days %}
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Outstanding Leave Days:</strong>
+                <span class="value">{{ eosb.outstanding_leave_days }} days</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Leave Compensation (OMR):</strong>
+                <span class="value">{{ eosb.leave_compensation }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Deductions (OMR):</strong>
+                <span class="value">{{ eosb.deductions }}</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Tax (if applicable):</strong>
+                <span class="value">{{ eosb.tax_amount }}</span>
+            </div>
+        </div>
+
+        <div class="total-eosb">
+            <div class="total-amount">
+                <div class="label">Gross EOSB</div>
+                <div class="amount">OMR {{ eosb.gross_gratuity|floatformat:2 }}</div>
+            </div>
+            <div class="total-amount">
+                <div class="label">Net EOSB Due</div>
+                <div class="amount" style="color: #059669;">OMR {{ eosb.net_amount|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="approval-workflow">
+        <div class="approval-step {% if eosb.status in 'draft,pending_hr' %}current{% elif eosb.status in 'approved,paid' %}completed{% endif %}">
+            <div class="icon">📝</div>
+            <div class="label">Draft</div>
+            <div class="status">
+                {% if eosb.status == 'draft' %}Pending{% else %}Completed{% endif %}
+            </div>
+        </div>
+        
+        <div class="approval-step {% if eosb.status == 'pending_hr' %}current{% elif eosb.status in 'approved,paid' %}completed{% endif %}">
+            <div class="icon">✓</div>
+            <div class="label">HR Approval</div>
+            <div class="status">
+                {% if eosb.status == 'pending_hr' %}Pending{% elif eosb.status in 'approved,paid' %}Approved{% else %}Not Started{% endif %}
+            </div>
+        </div>
+        
+        <div class="approval-step {% if eosb.status == 'pending_director' %}current{% elif eosb.status == 'paid' %}completed{% else %}pending{% endif %}">
+            <div class="icon">👔</div>
+            <div class="label">Director Approval</div>
+            <div class="status">
+                {% if eosb.status == 'pending_director' %}Pending{% elif eosb.status == 'paid' %}Approved{% else %}Not Started{% endif %}
+            </div>
+        </div>
+        
+        <div class="approval-step {% if eosb.status == 'paid' %}completed{% else %}pending{% endif %}">
+            <div class="icon">💰</div>
+            <div class="label">Payment</div>
+            <div class="status">
+                {% if eosb.status == 'paid' %}Paid{% else %}Not Started{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if eosb.notes %}
+    <div class="info-card" style="margin-top: 20px;">
+        <h4>Notes</h4>
+        <p>{{ eosb.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="form-actions" style="margin-top: 30px;">
+        {% if eosb.status == 'draft' %}
+            <a href="{% url 'eosb-approve' eosb.id %}" class="btn btn-success">Submit for HR Approval</a>
+        {% elif eosb.status == 'pending_hr' %}
+            <a href="{% url 'eosb-approve' eosb.id %}" class="btn btn-primary">Approve EOSB</a>
+        {% elif eosb.status == 'approved' %}
+            <a href="{% url 'eosb-director-approve' eosb.id %}" class="btn btn-primary">Submit to Director</a>
+        {% elif eosb.status == 'pending_director' %}
+            <a href="{% url 'eosb-mark-paid' eosb.id %}" class="btn btn-success">Mark as Paid</a>
+        {% endif %}
+        <a href="{% url 'eosb-list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+{% endblock %}

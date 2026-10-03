@@ -1,0 +1,262 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ candidate.name }} — Documents — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<div class="ui-breadcrumb" style="margin-bottom:16px">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D;text-decoration:none">Back to Candidates</a>
+</div>
+
+<!-- ── Profile Header ──────────────────────────────────────────────────────── -->
+<div class="cdet-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="ui-avatar" style="width:60px;height:60px;font-size:22px;flex-shrink:0">
+      {{ candidate.name|slice:":2"|upper }}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:20px;font-weight:700;color:#111">{{ candidate.name }}</span>
+        {% if candidate.canceled %}
+          <span class="ui-pill ui-pill--red" style="font-size:12px">Rejected</span>
+        {% elif candidate.hired %}
+          <span class="ui-pill ui-pill--blue" style="font-size:12px">Hired</span>
+        {% else %}
+          <span class="ui-pill ui-pill--green" style="font-size:12px">Active</span>
+        {% endif %}
+      </div>
+      <div style="font-size:13px;color:#555;margin-top:2px">
+        {% if candidate.recruitment_id %}{{ candidate.recruitment_id.title }}{% elif candidate.job_position_id %}{{ candidate.job_position_id }}{% else %}—{% endif %}
+        {% if candidate.recruitment_id %}&nbsp;·&nbsp;<span style="color:#888">{{ candidate.recruitment_id.reference_number|default:"" }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <a href="mailto:{{ candidate.email }}" class="ui-btn-outlined" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">mail</span>Compose Email
+    </a>
+    {% if not candidate.canceled and not candidate.hired %}
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ candidate.id }}" class="ui-btn-primary" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span>Send Offer
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── Tab Bar ─────────────────────────────────────────────────────────────── -->
+<div class="cdet-tabs" style="margin-bottom:24px">
+  <a href="{% url 'ui:candidate-profile-view' candidate.id %}" class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">person</span>Profile
+  </a>
+  <span class="cdet-tab active">
+    <span class="material-symbols-outlined">file_copy</span>Documents
+  </span>
+  <a href="{% url 'ui:candidate-interview-view' candidate.id %}" class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">calendar_month</span>Interviews
+  </a>
+  <a href="{% url 'ui:candidate-communication' candidate.id %}" class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">forum</span>Communication
+  </a>
+  <a href="{% url 'ui:candidate-offer-view' candidate.id %}" class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">handshake</span>Offer
+  </a>
+</div>
+
+<!-- ── All documents verified banner ──────────────────────────────────────── -->
+{% if all_verified %}
+<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#F0F8F3;border:1px solid #C3E6CB;border-radius:8px;margin-bottom:20px">
+  <span class="material-symbols-outlined" style="color:#1F5F2F;font-size:20px">check_circle_outline</span>
+  <span style="font-size:13px;color:#1F5F2F;font-weight:500">All documents are updated and verified</span>
+</div>
+{% endif %}
+
+<!-- ── Header row ─────────────────────────────────────────────────────────── -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div style="font-size:15px;font-weight:600;color:#111">
+    Candidate Documents
+    <span style="font-size:13px;font-weight:400;color:#888;margin-left:6px">({{ documents|length }} file{{ documents|length|pluralize }})</span>
+  </div>
+  <button type="button" onclick="document.getElementById('uploadModal').style.display='flex'"
+          class="ui-btn-primary" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+    <span class="material-symbols-outlined" style="font-size:16px">upload_file</span>Upload Document
+  </button>
+</div>
+
+<!-- ── Documents table ────────────────────────────────────────────────────── -->
+<div class="ui-panel" style="padding:0;overflow:hidden">
+  {% if documents %}
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="border-bottom:1px solid #F0F0F0">
+        <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">Document Name</th>
+        <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">File</th>
+        <th style="padding:12px 8px;text-align:left;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">Type</th>
+        <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">Updated At</th>
+        <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">Status</th>
+        <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:600;color:#999;letter-spacing:.05em;text-transform:uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in documents %}
+      <tr style="border-bottom:1px solid #F7F7F7;transition:background .15s" onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background=''">
+        <td style="padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:6px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span class="material-symbols-outlined" style="font-size:16px;color:#6B7280">description</span>
+            </div>
+            <div>
+              <span style="font-size:13px;font-weight:500;color:#111">{{ doc.title|default:"Document" }}</span>
+              {% if doc.is_career_upload %}<span style="font-size:10px;color:#10B981;background:#ECFDF5;padding:1px 6px;border-radius:4px;margin-left:6px">Careers</span>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px 16px;font-size:13px;color:#555;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {% if doc.document %}{{ doc.document.name|default:"—" }}{% else %}—{% endif %}
+        </td>
+        <td style="padding:14px 8px">
+          {% if doc.document %}
+          {% with ext=doc.document.name|lower %}
+          {% if "pdf" in ext %}
+            <span style="font-size:11px;font-weight:600;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:4px">PDF</span>
+          {% elif "doc" in ext %}
+            <span style="font-size:11px;font-weight:600;color:#2563EB;background:#EFF6FF;padding:2px 7px;border-radius:4px">DOC</span>
+          {% elif "xls" in ext %}
+            <span style="font-size:11px;font-weight:600;color:#16A34A;background:#F0FDF4;padding:2px 7px;border-radius:4px">XLS</span>
+          {% else %}
+            <span style="font-size:11px;font-weight:600;color:#6B7280;background:#F3F4F6;padding:2px 7px;border-radius:4px">FILE</span>
+          {% endif %}
+          {% endwith %}
+          {% else %}—{% endif %}
+        </td>
+        <td style="padding:14px 16px;font-size:13px;color:#888">{{ doc.updated_at|date:"d M Y"|default:doc.created_at|date:"d M Y" }}</td>
+        <td style="padding:14px 16px">
+          {% if doc.status == "verified" %}
+            <span class="ui-pill ui-pill--green" style="font-size:12px">Verified</span>
+          {% else %}
+            <span class="ui-pill" style="font-size:12px;background:#FFF7ED;color:#C2410C">Pending</span>
+          {% endif %}
+        </td>
+        <td style="padding:14px 16px;text-align:right">
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+            {% if doc.document %}
+            <a href="{{ doc.document.url }}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:12px;color:#374151;text-decoration:none;background:#fff">
+              <span class="material-symbols-outlined" style="font-size:14px">download</span>Download
+            </a>
+            {% endif %}
+            {% if not doc.is_career_upload %}
+            <button type="button"
+                    onclick="openUpdateModal({{ doc.id }}, '{{ doc.title|default:"" }}')"
+                    style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:12px;color:#374151;background:#fff;cursor:pointer">
+              <span class="material-symbols-outlined" style="font-size:14px">edit</span>Update
+            </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <!-- Empty state -->
+  <div style="padding:60px 24px;text-align:center">
+    <span class="material-symbols-outlined" style="font-size:48px;color:#D1D5DB;display:block;margin-bottom:12px">folder_open</span>
+    <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px">No documents uploaded yet</div>
+    <div style="font-size:13px;color:#9CA3AF;margin-bottom:20px">Upload the candidate's CV, passport, certificates and other documents.</div>
+    <button type="button" onclick="document.getElementById('uploadModal').style.display='flex'"
+            class="ui-btn-primary" style="height:36px;padding:0 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+      <span class="material-symbols-outlined" style="font-size:16px">upload_file</span>Upload First Document
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Upload Modal ────────────────────────────────────────────────────────── -->
+<div id="uploadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="padding:20px 24px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:15px;font-weight:600;color:#111">Upload Document</span>
+      <button type="button" onclick="document.getElementById('uploadModal').style.display='none'"
+              style="border:none;background:none;cursor:pointer;color:#9CA3AF;font-size:20px;line-height:1">×</button>
+    </div>
+    <form method="post" action="{% url 'ui:candidate-documents' candidate.id %}" enctype="multipart/form-data" style="padding:24px">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="upload">
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Document Type *</label>
+        <select name="document_type" required style="width:100%;height:38px;border:1px solid #E0E0E0;border-radius:8px;padding:0 12px;font-size:13px;background:#fff">
+          <option value="">— Select type —</option>
+          <option value="Resume / CV">Resume / CV</option>
+          <option value="Passport Copy">Passport Copy</option>
+          <option value="Health Insurance">Health Insurance</option>
+          <option value="Graduation Certificate">Graduation Certificate</option>
+          <option value="National ID">National ID</option>
+          <option value="Experience Letter">Experience Letter</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">File *</label>
+        <input type="file" name="file" required
+               style="width:100%;border:1px dashed #D1D5DB;border-radius:8px;padding:12px;font-size:13px;background:#FAFAFA;cursor:pointer">
+        <div style="font-size:11px;color:#9CA3AF;margin-top:6px">Accepted: PDF, DOC, DOCX, JPG, PNG (max 10 MB)</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" onclick="document.getElementById('uploadModal').style.display='none'"
+                class="ui-btn-outlined" style="height:36px;padding:0 16px;font-size:13px">Cancel</button>
+        <button type="submit" class="ui-btn-primary" style="height:36px;padding:0 16px;font-size:13px">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">upload</span> Upload
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Update Modal ────────────────────────────────────────────────────────── -->
+<div id="updateModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="padding:20px 24px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:15px;font-weight:600;color:#111">Update Document</span>
+      <button type="button" onclick="document.getElementById('updateModal').style.display='none'"
+              style="border:none;background:none;cursor:pointer;color:#9CA3AF;font-size:20px;line-height:1">×</button>
+    </div>
+    <form method="post" action="{% url 'ui:candidate-documents' candidate.id %}" enctype="multipart/form-data" style="padding:24px">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update">
+      <input type="hidden" name="doc_id" id="updateDocId">
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Document Type</label>
+        <input type="text" name="document_type" id="updateDocType" readonly
+               style="width:100%;height:38px;border:1px solid #E0E0E0;border-radius:8px;padding:0 12px;font-size:13px;background:#F9FAFB">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Replace File</label>
+        <input type="file" name="file"
+               style="width:100%;border:1px dashed #D1D5DB;border-radius:8px;padding:12px;font-size:13px;background:#FAFAFA;cursor:pointer">
+        <div style="font-size:11px;color:#9CA3AF;margin-top:6px">Leave blank to keep the existing file</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" onclick="document.getElementById('updateModal').style.display='none'"
+                class="ui-btn-outlined" style="height:36px;padding:0 16px;font-size:13px">Cancel</button>
+        <button type="submit" class="ui-btn-primary" style="height:36px;padding:0 16px;font-size:13px">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openUpdateModal(docId, docType) {
+  document.getElementById('updateDocId').value = docId;
+  document.getElementById('updateDocType').value = docType;
+  document.getElementById('updateModal').style.display = 'flex';
+}
+</script>
+
+{% endblock %}

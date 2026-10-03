@@ -1,0 +1,112 @@
+{% extends 'index.html' %}
+{% load static i18n %}
+{% load widget_tweaks %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/pms.css' %}" />
+{% endblock styles %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+  <section class="oh-wrapper oh-main__topbar">
+    <div class="oh-main__titlebar oh-main__titlebar--left">
+      <h1 class="oh-main__titlebar-title fw-bold">{{ title }}</h1>
+    </div>
+  </section>
+
+  <section class="oh-wrapper">
+    <div class="oh-card">
+      <div class="oh-card__body">
+        <form method="POST" class="form">
+          {% csrf_token %}
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.period_id.id_for_label }}">{{ form.period_id.label }}</label>
+                {% render_form form.period_id %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.employee_id.id_for_label }}">{{ form.employee_id.label }}</label>
+                {% render_form form.employee_id %}
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <h5>{% trans "Ratings" %}</h5>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.overall_rating.id_for_label }}">{{ form.overall_rating.label }}</label>
+                {% render_form form.overall_rating %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.competency_rating.id_for_label }}">{{ form.competency_rating.label }}</label>
+                {% render_form form.competency_rating %}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.collaboration_rating.id_for_label }}">{{ form.collaboration_rating.label }}</label>
+                {% render_form form.collaboration_rating %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.innovation_rating.id_for_label }}">{{ form.innovation_rating.label }}</label>
+                {% render_form form.innovation_rating %}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.customer_focus_rating.id_for_label }}">{{ form.customer_focus_rating.label }}</label>
+                {% render_form form.customer_focus_rating %}
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <h5>{% trans "Feedback" %}</h5>
+
+          <div class="form-group">
+            <label for="{{ form.comments.id_for_label }}">{{ form.comments.label }}</label>
+            {% render_form form.comments %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.strengths.id_for_label }}">{{ form.strengths.label }}</label>
+            {% render_form form.strengths %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.improvement_areas.id_for_label }}">{{ form.improvement_areas.label }}</label>
+            {% render_form form.improvement_areas %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.development_plan.id_for_label }}">{{ form.development_plan.label }}</label>
+            {% render_form form.development_plan %}
+          </div>
+
+          <div class="oh-card__footer">
+            <button type="submit" class="oh-btn oh-btn--primary">{% trans "Save" %}</button>
+            <a href="{% url 'performance-rating-view' %}" class="oh-btn oh-btn--secondary">{% trans "Cancel" %}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock content %}

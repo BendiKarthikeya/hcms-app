@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Record PIP Review - {{ pip.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'pms/css/pip-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pip-form-container">
+    <div class="pip-form-header">
+        <h1>Record Performance Improvement Plan Review</h1>
+        <p>Document progress for {{ pip.employee.get_name }}'s PIP</p>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            <strong>Error:</strong>
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <div>
+                    <h3>{{ pip.employee.get_name }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">
+                        {{ pip.designation }} • Status: <span class="status-badge active">ACTIVE</span>
+                    </p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                            Started
+                        </strong>
+                        <p style="margin: 0; font-size: 14px;">{{ pip.start_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div>
+                        <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                            Ends
+                        </strong>
+                        <p style="margin: 0; font-size: 14px;">{{ pip.end_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group {% if form.review_date.errors %}error{% endif %}">
+            <label for="{{ form.review_date.id_for_label }}">
+                Review Date <span class="required">*</span>
+            </label>
+            {{ form.review_date }}
+            {% if form.review_date.errors %}
+                <div class="error-message">{{ form.review_date.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group {% if form.performance_rating.errors %}error{% endif %}">
+            <label for="{{ form.performance_rating.id_for_label }}">
+                Performance Rating <span class="required">*</span>
+            </label>
+            {{ form.performance_rating }}
+            {% if form.performance_rating.errors %}
+                <div class="error-message">{{ form.performance_rating.errors.0 }}</div>
+            {% endif %}
+            <small>How is the employee performing against the PIP objectives?</small>
+        </div>
+
+        <div class="form-group {% if form.progress_notes.errors %}error{% endif %}">
+            <label for="{{ form.progress_notes.id_for_label }}">
+                Progress Notes <span class="required">*</span>
+            </label>
+            {{ form.progress_notes }}
+            {% if form.progress_notes.errors %}
+                <div class="error-message">{{ form.progress_notes.errors.0 }}</div>
+            {% endif %}
+            <small>Document specific achievements, improvements, and areas needing further work</small>
+        </div>
+
+        <div class="form-group {% if form.recommendations.errors %}error{% endif %}">
+            <label for="{{ form.recommendations.id_for_label }}">
+                Recommendations
+            </label>
+            {{ form.recommendations }}
+            {% if form.recommendations.errors %}
+                <div class="error-message">{{ form.recommendations.errors.0 }}</div>
+            {% endif %}
+            <small>Provide guidance for next steps and areas for improvement</small>
+        </div>
+
+        <div class="form-group {% if form.milestone_achievement.errors %}error{% endif %}">
+            <label for="{{ form.milestone_achievement.id_for_label }}">
+                Milestone Achievement Status
+            </label>
+            {{ form.milestone_achievement }}
+            {% if form.milestone_achievement.errors %}
+                <div class="error-message">{{ form.milestone_achievement.errors.0 }}</div>
+            {% endif %}
+            <small>Track completion of defined milestones</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span>Record Review</span>
+            </button>
+            <a href="{% url 'pip-detail' pip.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

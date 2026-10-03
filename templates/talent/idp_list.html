@@ -1,0 +1,26 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "Individual Development Plans (IDP)" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--primary oh-btn--shadow">
+                    <ion-icon name="sparkles-outline" class="me-1"></ion-icon>{% trans "Generate AI IDP" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Generate and track individual growth plans based on skill gaps." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="oh-card p-5 text-center">
+            <h4 class="text-muted">{% trans "IDP Management" %}</h4>
+            <p class="text-muted mb-4">{% trans "No Development Plans currently active for your profile." %}</p>
+        </div>
+    </div>
+</main>
+{% endblock %}

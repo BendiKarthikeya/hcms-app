@@ -1,0 +1,390 @@
+{% extends "ui/base.html" %}
+{% block title %}Proposals — HCMS{% endblock %}
+{% block active_proposals %}active{% endblock %}
+
+{% block content %}
+<style>
+/* No-scroll viewport-fit layout */
+.ui-main    { height: 100vh !important; overflow: hidden !important; }
+.ui-content { height: calc(100vh - 86px); overflow: hidden; padding: 14px 20px 10px;
+              display: flex; flex-direction: column; }
+.prop-body  { flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 10px; }
+
+.ui-navbar__user-wrap { display: none !important; }
+
+/* ── Page header ── */
+.prop-header        { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2px; flex-shrink: 0; }
+.prop-header__title { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 2px; }
+.prop-header__sub   { font-size: 13px; font-weight: 400; color: #8E8D8D; }
+
+.prop-btn-export {
+  height: 38px; padding: 0 16px;
+  border: 1px solid #D9D9D9; border-radius: 8px;
+  background: #fff; font-size: 13px; font-weight: 600; color: #333;
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+}
+.prop-btn-export:hover { background: #f5f5f5; }
+
+.prop-btn-create {
+  height: 38px; padding: 0 16px;
+  background: #0F752F; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; color: #fff;
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+}
+.prop-btn-create:hover { background: #0a5c24; color: #fff; }
+
+/* ── KPI cards ── */
+.prop-kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; flex-shrink: 0; }
+
+.prop-kpi {
+  background: #fff; border: 1px solid #D9D9D9; border-radius: 12px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.prop-kpi__label  { font-size: 13px; font-weight: 500; color: #606060; }
+.prop-kpi__body   { display: flex; align-items: center; gap: 12px; }
+.prop-kpi__icon   {
+  width: 44px; height: 44px; background: #0F752F; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.prop-kpi__icon .material-symbols-outlined { font-size: 22px; color: #fff; }
+.prop-kpi__icon--amber { background: #fff4e6; }
+.prop-kpi__icon--amber .material-symbols-outlined { color: #c47d0e; }
+.prop-kpi__icon--red   { background: #fde8e8; }
+.prop-kpi__icon--red   .material-symbols-outlined { color: #c62828; }
+.prop-kpi__icon--blue  { background: #e8f0fe; }
+.prop-kpi__icon--blue  .material-symbols-outlined { color: #1a73e8; }
+.prop-kpi__value  { font-size: 34px; font-weight: 700; color: #111; line-height: 1; }
+.prop-kpi__trend  { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #8E8D8D; }
+.prop-kpi__trend .prop-trend-pct { color: #0F752F; font-weight: 600; }
+
+/* ── Table card ── */
+.prop-table-card {
+  flex: 1; min-height: 0;
+  background: #fff; border: 1px solid #D9D9D9; border-radius: 12px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* Filter bar */
+.prop-filters {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid #F0F0F0; flex-shrink: 0;
+}
+.prop-search-wrap { position: relative; flex: 0 0 300px; }
+.prop-search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: #BDBDBD; pointer-events: none; z-index: 1;
+}
+.prop-search {
+  width: 100%; height: 34px; box-sizing: border-box;
+  border: 1px solid #E0E0E0; border-radius: 7px;
+  padding: 0 10px 0 32px;
+  font-size: 12px; font-weight: 400; color: #333; font-family: inherit;
+  outline: none; background: #FAFAFA;
+}
+.prop-search::placeholder { color: #BDBDBD; }
+.prop-search:focus { border-color: #9DC9AF; background: #fff; }
+
+.prop-select {
+  height: 34px; border: 1px solid #E0E0E0; border-radius: 7px;
+  padding: 0 28px 0 10px; font-size: 12px; font-weight: 400; color: #444;
+  font-family: inherit; background: #fff; outline: none; cursor: pointer;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+.prop-select:focus { border-color: #9DC9AF; }
+
+.prop-filter-btn {
+  height: 34px; padding: 0 12px;
+  border: 1px solid #E0E0E0; border-radius: 7px;
+  background: #fff; font-size: 12px; font-weight: 500; color: #444; font-family: inherit;
+  display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap;
+}
+.prop-filter-btn .material-symbols-outlined { font-size: 15px; }
+.prop-filter-btn:hover { background: #F5F5F5; }
+
+/* Table */
+.prop-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+.prop-table { width: 100%; border-collapse: collapse; }
+.prop-table thead tr {
+  background: #FAFAFA;
+  border-bottom: 1px solid #E8E8E8;
+}
+.prop-table thead th {
+  padding: 8px 12px; text-align: left;
+  font-size: 10px; font-weight: 600; color: #8E8D8D;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  white-space: nowrap; position: sticky; top: 0; background: #FAFAFA; z-index: 1;
+}
+.prop-table thead th:first-child { padding-left: 14px; }
+.prop-table tbody tr { border-bottom: 1px solid #F5F5F5; }
+.prop-table tbody tr:last-child td { border-bottom: none; }
+.prop-table tbody tr:hover { background: #fafafa; }
+.prop-table tbody td { padding: 8px 12px; font-size: 12px; color: #606060; vertical-align: middle; }
+.prop-table tbody td:first-child { padding-left: 14px; font-family: monospace; font-size: 11px; color: #8E8D8D; }
+
+/* Status badge */
+.prop-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 22px; padding: 0 8px;
+  background: #e6e6e6; border-radius: 4px;
+  font-size: 11px; font-weight: 500; color: #6d6d6d;
+  white-space: nowrap;
+}
+.prop-badge--green  { background: #e6f4ec; color: #1a7a3c; }
+.prop-badge--amber  { background: #fff4e6; color: #c47d0e; }
+.prop-badge--red    { background: #fde8e8; color: #c62828; }
+.prop-badge--blue   { background: #e8f0fe; color: #1a73e8; }
+
+/* Avatar */
+.prop-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #D0E8D8; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #1F5F2F;
+  overflow: hidden;
+}
+
+/* Action button */
+.prop-action-btn {
+  font-size: 16px; font-weight: 900; color: #606060; letter-spacing: 1px;
+  text-decoration: none; background: none; border: none; cursor: pointer;
+  line-height: 1; display: inline-block;
+}
+.prop-action-btn:hover { color: #111; }
+
+/* Pagination */
+.prop-pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; border-top: 1px solid #F0F0F0; flex-shrink: 0;
+}
+.prop-pagination__label { font-size: 12px; font-weight: 400; color: #8E8D8D; }
+.prop-pagination__btns  { display: flex; gap: 4px; align-items: center; }
+.prop-page-btn {
+  width: 28px; height: 28px;
+  border: 1px solid #E0E0E0; border-radius: 5px;
+  background: #fff; font-size: 12px; font-weight: 500; color: #333; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+}
+.prop-page-btn:hover:not([disabled]) { background: #F0F8F3; border-color: #9DC9AF; }
+.prop-page-btn--active { border-color: #0F752F; color: #0F752F; font-weight: 600; }
+.prop-page-btn[disabled] { opacity: 0.4; cursor: default; }
+.prop-page-btn .material-symbols-outlined { font-size: 15px; }
+</style>
+
+<div class="prop-body">
+
+  <!-- Page header -->
+  <div class="prop-header">
+    <div>
+      <div class="prop-header__title">Proposals</div>
+      <div class="prop-header__sub">Manage and track all employment proposals across the organization</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="prop-btn-export">
+        <span class="material-symbols-outlined" style="font-size:15px">upload</span>
+        Export
+      </button>
+      <a href="/ui/proposal-creator/" class="prop-btn-create">
+        <span style="font-size:16px;font-weight:400">+</span>&nbsp;Create Proposal
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="prop-kpi-row">
+    <div class="prop-kpi">
+      <div class="prop-kpi__label">Total Proposals</div>
+      <div class="prop-kpi__body">
+        <div class="prop-kpi__icon prop-kpi__icon--amber">
+          <span class="material-symbols-outlined">description</span>
+        </div>
+        <div class="prop-kpi__value">{{ kpi_total }}</div>
+      </div>
+      <div class="prop-kpi__trend"><span class="prop-trend-pct">↑ 20%</span> from last month</div>
+    </div>
+    <div class="prop-kpi">
+      <div class="prop-kpi__label">Pending Approval</div>
+      <div class="prop-kpi__body">
+        <div class="prop-kpi__icon">
+          <span class="material-symbols-outlined">pending_actions</span>
+        </div>
+        <div class="prop-kpi__value">{{ kpi_pending }}</div>
+      </div>
+      <div class="prop-kpi__trend"><span class="prop-trend-pct">↑ 13%</span> from last month</div>
+    </div>
+    <div class="prop-kpi">
+      <div class="prop-kpi__label">Approved</div>
+      <div class="prop-kpi__body">
+        <div class="prop-kpi__icon">
+          <span class="material-symbols-outlined">how_to_reg</span>
+        </div>
+        <div class="prop-kpi__value">{{ kpi_approved }}</div>
+      </div>
+      <div class="prop-kpi__trend"><span class="prop-trend-pct">↑ 20%</span> from last month</div>
+    </div>
+    <div class="prop-kpi">
+      <div class="prop-kpi__label">Rejected</div>
+      <div class="prop-kpi__body">
+        <div class="prop-kpi__icon prop-kpi__icon--red">
+          <span class="material-symbols-outlined">cancel</span>
+        </div>
+        <div class="prop-kpi__value">{{ kpi_rejected }}</div>
+      </div>
+      <div class="prop-kpi__trend"><span class="prop-trend-pct">↑ 25%</span> from last month</div>
+    </div>
+    <div class="prop-kpi">
+      <div class="prop-kpi__label">Converted to Offer</div>
+      <div class="prop-kpi__body">
+        <div class="prop-kpi__icon prop-kpi__icon--blue">
+          <span class="material-symbols-outlined">handshake</span>
+        </div>
+        <div class="prop-kpi__value">{{ kpi_converted }}</div>
+      </div>
+      <div class="prop-kpi__trend"><span class="prop-trend-pct">↑ 13%</span> from last month</div>
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <div class="prop-table-card">
+
+    <!-- Filter bar -->
+    <form class="prop-filters" method="get" action="">
+      <div class="prop-search-wrap">
+        <span class="material-symbols-outlined prop-search-icon">search</span>
+        <input id="prop-q" class="prop-search" type="text" name="q" value="{{ q }}"
+               placeholder="Search by proposal no, candidate or position…"
+               autocomplete="off">
+      </div>
+      <select class="prop-select" name="status" onchange="this.form.submit()">
+        <option value="">All Status</option>
+        <option value="draft"     {% if status == "draft" %}selected{% endif %}>Draft</option>
+        <option value="pending"   {% if status == "pending" %}selected{% endif %}>Pending Approval</option>
+        <option value="approved"  {% if status == "approved" %}selected{% endif %}>Approved</option>
+        <option value="rejected"  {% if status == "rejected" %}selected{% endif %}>Rejected</option>
+        <option value="converted" {% if status == "converted" %}selected{% endif %}>Converted</option>
+      </select>
+      <select class="prop-select" name="template_type" onchange="this.form.submit()">
+        <option value="">All Types</option>
+        <option value="permanent"    {% if template_type == "permanent" %}selected{% endif %}>Permanent</option>
+        <option value="contractual"  {% if template_type == "contractual" %}selected{% endif %}>Contractual</option>
+      </select>
+      <button type="submit" class="prop-filter-btn">
+        <span class="material-symbols-outlined">tune</span>
+        Filters
+      </button>
+    </form>
+
+    <!-- Table -->
+    <div class="prop-table-wrap">
+      <table class="prop-table">
+        <thead>
+          <tr>
+            <th>PROPOSAL NO</th>
+            <th>CANDIDATE</th>
+            <th>POSITION</th>
+            <th>TYPE</th>
+            <th>STATUS</th>
+            <th>CREATED</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in page %}
+          <tr style="cursor:pointer" onclick="location.href='/ui/proposal/{{ p.id }}/'">
+            <td><a href="/ui/proposal/{{ p.id }}/" style="color:#8E8D8D;font-family:monospace;font-size:11px;text-decoration:none">{{ p.proposal_no }}</a></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="prop-avatar">{{ p.candidate.name|slice:":2"|upper }}</div>
+                <div>
+                  <div style="font-weight:600;color:#333;font-size:12px;line-height:1.3">{{ p.candidate.name }}</div>
+                  <div style="font-weight:400;color:#8E8D8D;font-size:11px;line-height:1.3">{{ p.candidate.email|default:"" }}</div>
+                </div>
+              </div>
+            </td>
+            <td style="font-weight:500;color:#333">{{ p.post_applied_for|default:"—" }}</td>
+            <td>{{ p.get_template_type_display }}</td>
+            <td>
+              {% if p.status == "approved" %}<span class="prop-badge prop-badge--green">Approved</span>
+              {% elif p.status == "rejected" %}<span class="prop-badge prop-badge--red">Rejected</span>
+              {% elif p.status == "pending" %}<span class="prop-badge prop-badge--amber">Pending Approval</span>
+              {% elif p.status == "converted" %}<span class="prop-badge prop-badge--blue">Converted</span>
+              {% else %}<span class="prop-badge">Draft</span>{% endif %}
+            </td>
+            <td>{{ p.created_at|date:"M d, Y" }}</td>
+            <td>
+              <a href="/ui/proposal/{{ p.id }}/" class="prop-action-btn" title="View">···</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" style="text-align:center;color:#8E8D8D;font-size:12px;padding:24px">No proposals found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="prop-pagination">
+      <span class="prop-pagination__label">Showing {{ page.number }} of {{ page.paginator.num_pages }} pages</span>
+      <div class="prop-pagination__btns">
+        {% if page.has_previous %}
+        <a class="prop-page-btn" href="?page={{ page.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if template_type %}&template_type={{ template_type }}{% endif %}">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        {% else %}
+        <button class="prop-page-btn" disabled><span class="material-symbols-outlined">chevron_left</span></button>
+        {% endif %}
+
+        {% for i in page.paginator.page_range %}
+          {% if i == page.number %}
+          <button class="prop-page-btn prop-page-btn--active">{{ i }}</button>
+          {% elif i <= 3 %}
+          <a class="prop-page-btn" href="?page={{ i }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if template_type %}&template_type={{ template_type }}{% endif %}">{{ i }}</a>
+          {% elif i == 4 and page.paginator.num_pages > 5 %}
+          <button class="prop-page-btn" disabled>...</button>
+          {% elif i == page.paginator.num_pages and i > 4 %}
+          <a class="prop-page-btn" href="?page={{ i }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if template_type %}&template_type={{ template_type }}{% endif %}">{{ i }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page.has_next %}
+        <a class="prop-page-btn" href="?page={{ page.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if template_type %}&template_type={{ template_type }}{% endif %}">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+        {% else %}
+        <button class="prop-page-btn" disabled><span class="material-symbols-outlined">chevron_right</span></button>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /prop-table-card -->
+
+</div><!-- /prop-body -->
+
+<script>
+(function () {
+  var input = document.getElementById('prop-q');
+  var form  = input ? input.closest('form') : null;
+  var timer = null;
+  if (!input || !form) return;
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () { form.submit(); }, 400);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(timer);
+      form.submit();
+    }
+  });
+})();
+</script>
+{% endblock %}

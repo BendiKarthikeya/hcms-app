@@ -1,0 +1,58 @@
+{% comment %}Standalone (no-extends) PDF body for the Employment Proposal, used
+as the document sent to DocuSign / Adobe Acrobat Sign for signature.{% endcomment %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; color:#222; font-size:12px; }
+  h1 { font-size:18px; margin:0 0 2px; }
+  .sub { color:#666; font-size:11px; margin-bottom:18px; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  td { padding:6px 8px; border-bottom:1px solid #e2e2e2; vertical-align:top; }
+  td.k { width:38%; color:#666; font-weight:bold; }
+  .sec { margin-top:20px; font-size:13px; font-weight:bold; color:#1F5F2F; border-bottom:2px solid #1F5F2F; padding-bottom:3px; }
+  .sign { margin-top:40px; font-size:11px; color:#444; }
+  .sigline { margin-top:36px; border-top:1px solid #444; width:260px; padding-top:4px; }
+</style>
+</head>
+<body>
+  <h1>Employment Proposal</h1>
+  <div class="sub">{{ proposal.proposal_no }} · {{ proposal.get_template_type_display }}</div>
+
+  <div class="sec">Candidate</div>
+  <table>
+    <tr><td class="k">Name</td><td>{{ proposal.applicant_name|default:proposal.candidate.name }}</td></tr>
+    <tr><td class="k">Position Applied For</td><td>{{ proposal.post_applied_for|default:"—" }}</td></tr>
+    <tr><td class="k">Grade Group</td><td>{{ proposal.grade_group|default:"—" }}</td></tr>
+    <tr><td class="k">Division / Department</td><td>{{ proposal.division_department|default:"—" }}</td></tr>
+  </table>
+
+  <div class="sec">Engagement</div>
+  <table>
+    <tr><td class="k">Contract Name</td><td>{{ proposal.contract_name|default:"—" }}</td></tr>
+    <tr><td class="k">Contract Period</td><td>{{ proposal.contract_period_from|default:"—" }} – {{ proposal.contract_period_to|default:"—" }}</td></tr>
+    <tr><td class="k">Application Date</td><td>{{ proposal.application_date|default:"—" }}</td></tr>
+    <tr><td class="k">Interview Date</td><td>{{ proposal.interview_date|default:"—" }}</td></tr>
+  </table>
+
+  <div class="sec">Compensation</div>
+  <table>
+    <tr><td class="k">Basic Salary</td><td>{{ proposal.basic_salary|default:"—" }}</td></tr>
+    <tr><td class="k">Gross Salary</td><td>{{ proposal.gross_salary|default:"—" }}</td></tr>
+    <tr><td class="k">Salary Budgeted</td><td>{{ proposal.get_salary_budgeted_display|default:"—" }}</td></tr>
+  </table>
+
+  {% if proposal.salary_increase_clause %}
+  <div class="sec">Salary Increase Clause</div>
+  <p>{{ proposal.salary_increase_clause }}</p>
+  {% endif %}
+
+  <div class="sign">
+    <div>Approved &amp; signed electronically through the HCMS approval chain.</div>
+    {# invisible DocuSign anchor — the Sign tab lands here #}
+    <div style="color:#ffffff; font-size:8px;">/sn1/</div>
+    <div class="sigline">Signature</div>
+  </div>
+</body>
+</html>

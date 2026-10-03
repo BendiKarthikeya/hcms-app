@@ -1,0 +1,74 @@
+{% extends "index.html" %}
+{% load static i18n %}
+
+{% block content %}
+<!-- End of Navigation -->
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-dashboard row">
+            <div class="oh-dashboard__left col-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="oh-dashboard__cards row">
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3">
+                        <div class="oh-card-dashboard oh-card-dashboard--success">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Available Courses" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ courses_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3">
+                        <div class="oh-card-dashboard oh-card-dashboard--warning">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "My Enrollments" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ enrollments_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3">
+                        <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "My Skills" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ skills_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3">
+                        <div class="oh-card-dashboard oh-card-dashboard--danger">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Certifications" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ certifications_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="oh-btn-group ms-2 mt-3">
+                    <a href="{% url 'learning:course_list' %}" class="oh-btn oh-btn--primary oh-btn--shadow">
+                        <ion-icon name="school-outline" class="mr-1"></ion-icon>{% trans "Browse Courses" %}
+                    </a>
+                    <a href="{% url 'learning:my_enrollments' %}" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                        <ion-icon name="list-outline" class="mr-1"></ion-icon>{% trans "My Enrollments" %}
+                    </a>
+                    <a href="{% url 'learning:my_skills' %}" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                        <ion-icon name="checkmark-circle-outline" class="mr-1"></ion-icon>{% trans "My Skills" %}
+                    </a>
+                    <a href="{% url 'learning:my_certifications' %}" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                        <ion-icon name="trophy-outline" class="mr-1"></ion-icon>{% trans "Certificates" %}
+                    </a>
+                    <a href="{% url 'learning:my_learning_plans' %}" class="oh-btn oh-btn--secondary oh-btn--shadow ms-2">
+                        <ion-icon name="clipboard-outline" class="mr-1"></ion-icon>{% trans "Learning Plans" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

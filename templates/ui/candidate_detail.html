@@ -1,0 +1,1036 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}{{ c.name }} — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Profile Header ─────────────────────────────────────────────────────── -->
+<div class="ui-breadcrumb" style="margin-bottom:16px">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D;text-decoration:none">Back to Candidates</a>
+</div>
+
+<div class="cdet-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="ui-avatar" style="width:80px;height:80px;font-size:28px;flex-shrink:0">
+      {{ c.name|slice:":2"|upper }}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:22px;font-weight:700;color:#111">{{ c.name }}</span>
+        {% if c.canceled %}
+          <span class="ui-pill ui-pill--red" style="font-size:12px">Rejected</span>
+        {% elif c.hired %}
+          <span class="ui-pill ui-pill--blue" style="font-size:12px">Hired</span>
+        {% else %}
+          <span class="ui-pill ui-pill--green" style="font-size:12px">Active</span>
+        {% endif %}
+      </div>
+      <div style="font-size:14px;color:#555;margin-top:4px">
+        {% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id }}{% else %}—{% endif %}
+        {% if c.recruitment_id %}&nbsp;·&nbsp;<span style="color:#888">{{ c.recruitment_id.reference_number|default:"" }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <a href="mailto:{{ c.email }}" class="ui-btn-outlined" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">mail</span>Compose Email
+    </a>
+    <button type="button" onclick="document.getElementById('docsPanel').classList.add('open')"
+            class="ui-btn-outlined" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+      <span class="material-symbols-outlined" style="font-size:16px">folder_open</span>Documents
+    </button>
+    {% if not c.canceled and not c.hired %}
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}" class="ui-btn-primary" style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span>Send Offer
+    </a>
+    {% endif %}
+    <!-- Three-dot menu -->
+    <div style="position:relative">
+      <button id="cdetMenuBtn" type="button"
+              style="width:36px;height:36px;border:1px solid #E0E0E0;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"
+              onclick="document.getElementById('cdetMenu').classList.toggle('open')">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#555">more_vert</span>
+      </button>
+      <div id="cdetMenu" style="display:none;position:absolute;right:0;top:40px;background:#fff;border:1px solid #E8E8E8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:160px;z-index:200">
+        {% if c.resume %}
+        <a href="{{ c.resume.url }}" target="_blank" class="cdet-menu-item">
+          <span class="material-symbols-outlined" style="font-size:16px">description</span>View CV
+        </a>
+        {% endif %}
+        {% if not c.canceled and not c.hired %}
+        <form method="post" action="{% url 'ui:candidate-promote' c.id %}" style="margin:0">{% csrf_token %}
+          <button type="submit" class="cdet-menu-item" style="width:100%;background:none;border:none;cursor:pointer;text-align:left">
+            <span class="material-symbols-outlined" style="font-size:16px">upgrade</span>Promote
+          </button>
+        </form>
+        <button type="button" class="cdet-menu-item cdet-menu-item--danger"
+                onclick="document.getElementById('rejectModal').classList.add('open');document.getElementById('cdetMenu').classList.remove('open')">
+          <span class="material-symbols-outlined" style="font-size:16px">block</span>Reject
+        </button>
+        {% endif %}
+        <button type="button" class="cdet-menu-item cdet-menu-item--danger"
+                onclick="confirmDelete('{% url 'ui:candidate-delete' c.id %}', '{{ c.name|escapejs }}');document.getElementById('cdetMenu').classList.remove('open')">
+          <span class="material-symbols-outlined" style="font-size:16px">delete</span>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+{% if profile and profile.hr_override %}
+<div style="display:flex;align-items:center;gap:10px;background:#F0F8F3;border:1px solid #A8D4B4;border-radius:8px;padding:10px 16px;margin-bottom:14px;">
+  <span class="material-symbols-outlined" style="font-size:18px;color:#1F5F2F;flex-shrink:0;">shield</span>
+  <span style="font-size:13px;color:#1F5F2F;font-weight:500;">{{ c.name }} shortlisted via HR Override.</span>
+</div>
+{% endif %}
+
+<!-- ── Tab Bar ─────────────────────────────────────────────────────────────── -->
+<div class="cdet-tabs">
+  <button class="cdet-tab" data-tab="profile">
+    <span class="material-symbols-outlined">person</span>Profile
+  </button>
+  <button class="cdet-tab" data-tab="documents">
+    <span class="material-symbols-outlined">description</span>Documents
+  </button>
+  <button class="cdet-tab" data-tab="interviews">
+    <span class="material-symbols-outlined">calendar_month</span>Interviews
+  </button>
+  <button class="cdet-tab" data-tab="communication">
+    <span class="material-symbols-outlined">forum</span>Communication
+  </button>
+  <button class="cdet-tab" data-tab="offer">
+    <span class="material-symbols-outlined">handshake</span>Offer
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB: PROFILE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="cdet-pane" id="pane-profile">
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+    <!-- Left -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Candidate info -->
+      <div class="ui-panel">
+        <div class="ui-panel__title">Candidate Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div class="cdet-label">Position</div>
+            <div class="cdet-value">{% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id }}{% else %}—{% endif %}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Stage</div>
+            <div class="cdet-value">
+              {% if c.canceled %}<span class="stage-rejected">Rejected</span>
+              {% elif c.hired %}<span class="stage-shortlisted">Hired</span>
+              {% elif c.stage_id %}{{ c.stage_id.stage }}
+              {% else %}New{% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="cdet-label">Email</div>
+            <div class="cdet-value">{{ c.email|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Phone</div>
+            <div class="cdet-value">{{ c.phone|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Source</div>
+            <div class="cdet-value">{{ c.get_source_display|default:c.source|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Applied On</div>
+            <div class="cdet-value">{{ c.created_at|date:"d M Y" }}</div>
+          </div>
+          {% if c.experience_years %}
+          <div>
+            <div class="cdet-label">Experience</div>
+            <div class="cdet-value">{{ c.experience_years }} yrs</div>
+          </div>
+          {% endif %}
+          {% if c.notice_period_days %}
+          <div>
+            <div class="cdet-label">Notice Period</div>
+            <div class="cdet-value">{{ c.notice_period_days }} days</div>
+          </div>
+          {% endif %}
+          {% if c.availability_date %}
+          <div>
+            <div class="cdet-label">Available From</div>
+            <div class="cdet-value">{{ c.availability_date|date:"d M Y" }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Interview history (compact, in profile tab) -->
+      <div class="ui-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="ui-panel__title" style="margin-bottom:0">Interview History</div>
+          <a href="/ui/interview-creator/?candidate={{ c.id }}" class="ui-btn-outlined" style="height:30px;padding:0 12px;font-size:12px">+ Schedule</a>
+        </div>
+        {% if interviews %}
+        <table class="ui-table" style="margin:0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Mode</th>
+              <th>Panelists</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for iv in interviews %}
+            <tr>
+              <td style="font-size:12px">
+                {{ iv.interview_date|date:"d M Y" }}
+                {% if iv.interview_time %}<br><span style="color:#888">{{ iv.interview_time|time:"g:i A" }}</span>{% endif %}
+              </td>
+              <td>
+                {% if iv.online_meeting_link %}
+                  <span class="ui-pill ui-pill--blue" style="font-size:10px">Online</span>
+                {% else %}
+                  <span class="ui-pill ui-pill--grey" style="font-size:10px">In-Person</span>
+                {% endif %}
+              </td>
+              <td style="font-size:12px">
+                {% for emp in iv.employee_id.all %}{{ emp }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+              </td>
+              <td>
+                {% if iv.completed %}
+                  <span class="ui-pill ui-pill--green" style="font-size:10px">Done</span>
+                {% else %}
+                  <span class="ui-pill ui-pill--amber" style="font-size:10px">Scheduled</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="ui-action-group">
+                  <a class="ui-action-btn" title="Edit" href="/ui/interview/{{ iv.id }}/edit/">
+                    <span class="material-symbols-outlined">edit</span>
+                  </a>
+                  <a class="ui-action-btn" title="Evaluate" href="/ui/interview/{{ iv.id }}/evaluate/">
+                    <span class="material-symbols-outlined">rate_review</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;color:#999;padding:20px;font-size:13px">No interviews scheduled yet.</div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Right — AI Screening -->
+    <div class="ui-panel" style="padding:20px">
+      <div class="ui-panel__title" style="font-size:14px;margin-bottom:12px">AI Screening</div>
+      {% if profile and profile.status != "pending" %}
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:40px;font-weight:700;{% if profile.matching_score >= 80 %}color:#278E53{% elif profile.matching_score >= 60 %}color:#F59E0B{% else %}color:#C62828{% endif %}">
+          {{ profile.matching_score }}%
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:2px">Match Score</div>
+        {% if profile.recommendation %}
+        <div style="margin-top:8px">
+          <span style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:12px;
+            {% if profile.recommendation == 'auto_shortlist' %}background:#E8F5ED;color:#1F5F2F
+            {% elif profile.recommendation == 'interview' %}background:#E3F2FD;color:#1565C0
+            {% else %}background:#FFEBEE;color:#C62828{% endif %}">
+            {{ profile.get_recommendation_display }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="ui-divider"></div>
+      {% if profile.summary %}
+      <div style="margin-bottom:12px">
+        <div class="cdet-label" style="margin-bottom:6px">Summary</div>
+        <div style="font-size:13px;color:#333;line-height:1.6">{{ profile.summary }}</div>
+      </div>
+      {% endif %}
+      {% if profile.extracted_skills %}
+      <div style="margin-bottom:12px">
+        <div class="cdet-label" style="margin-bottom:6px">Skills</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          {% for s in profile.extracted_skills %}
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;
+            {% if s in profile.matching_skills %}background:#E8F5ED;color:#1F5F2F{% else %}background:#F1F3F4;color:#444{% endif %}">
+            {{ s }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if c.resume %}
+      <form method="post" action="{% url 'ui:candidate-screen' c.id %}">{% csrf_token %}
+        <button type="submit" style="width:100%;height:36px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555">
+          Re-run AI Screening
+        </button>
+      </form>
+      {% endif %}
+      {% else %}
+      <div style="text-align:center;color:#999;padding:20px">
+        <span class="material-symbols-outlined" style="font-size:40px;display:block;margin-bottom:8px">smart_toy</span>
+        <div style="font-size:13px">Not screened yet</div>
+        {% if c.resume %}
+        <form method="post" action="{% url 'ui:candidate-screen' c.id %}" style="margin-top:12px">{% csrf_token %}
+          <button type="submit" class="ui-btn-primary" style="height:36px;padding:0 16px;font-size:13px">Run AI Screening</button>
+        </form>
+        {% else %}
+        <div style="font-size:12px;color:#bbb;margin-top:8px">No CV uploaded</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB: DOCUMENTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="cdet-pane" id="pane-documents">
+  <div class="ui-panel" style="padding:0;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid #F0F0F0">
+      <div class="ui-panel__title" style="margin-bottom:0">Candidate Documents</div>
+    </div>
+    {% if documents %}
+    <table class="ui-table" style="margin:0">
+      <thead>
+        <tr>
+          <th>Document Name</th>
+          <th>File</th>
+          <th>File Type</th>
+          <th>Updated At</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+        <tr>
+          <td>
+            <div style="font-weight:500;font-size:13px;color:#111">{{ doc.name|default:doc.document_type|default:"Document" }}</div>
+          </td>
+          <td>
+            {% if doc.file %}
+            <a href="{{ doc.file.url }}" target="_blank" style="font-size:12px;color:#278E53;text-decoration:none;display:flex;align-items:center;gap:4px">
+              <span class="material-symbols-outlined" style="font-size:14px">attach_file</span>
+              {{ doc.file.name|default:"file"|slice:"20" }}
+            </a>
+            {% else %}
+            <span style="color:#bbb;font-size:12px">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% with ext=doc.file.name|lower %}
+            {% if "pdf" in ext %}
+              <span class="ui-pill ui-pill--red" style="font-size:11px">PDF</span>
+            {% elif "doc" in ext %}
+              <span class="ui-pill ui-pill--blue" style="font-size:11px">DOC</span>
+            {% elif "xls" in ext %}
+              <span class="ui-pill ui-pill--green" style="font-size:11px">XLS</span>
+            {% else %}
+              <span class="ui-pill ui-pill--grey" style="font-size:11px">FILE</span>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td style="font-size:12px;color:#666">
+            {{ doc.updated_at|date:"d M Y"|default:doc.created_at|date:"d M Y"|default:"—" }}
+          </td>
+          <td>
+            {% if doc.verified %}
+              <span class="ui-pill ui-pill--green" style="font-size:11px">Verified</span>
+            {% else %}
+              <span class="ui-pill ui-pill--amber" style="font-size:11px">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button type="button"
+                      style="height:28px;padding:0 10px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:#333">
+                Update
+              </button>
+              {% if doc.file %}
+              <a href="{{ doc.file.url }}" download
+                 style="height:28px;width:28px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:#555;text-decoration:none">
+                <span class="material-symbols-outlined" style="font-size:14px">download</span>
+              </a>
+              {% endif %}
+              <button type="button"
+                      style="height:28px;width:28px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#555">
+                <span class="material-symbols-outlined" style="font-size:14px">more_horiz</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <!-- Footer banner -->
+    {% if documents_all_verified %}
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:#F0F8F4;border-top:1px solid #D6EDE2">
+      <span class="material-symbols-outlined" style="font-size:18px;color:#278E53">check_circle</span>
+      <span style="font-size:13px;color:#1F5F2F;font-weight:500">All documents are updated and verified</span>
+    </div>
+    {% else %}
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:#FFF7E8;border-top:1px solid #F2E2BF">
+      <span class="material-symbols-outlined" style="font-size:18px;color:#B8860B">pending</span>
+      <span style="font-size:13px;color:#7A5C00;font-weight:500">Some documents are still pending verification</span>
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="text-align:center;color:#999;padding:48px;font-size:13px">
+      <span class="material-symbols-outlined" style="font-size:36px;display:block;margin-bottom:8px;color:#ccc">folder_open</span>
+      No documents uploaded yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB: INTERVIEWS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="cdet-pane" id="pane-interviews">
+  <div class="ui-panel" style="padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #F0F0F0">
+      <div class="ui-panel__title" style="margin-bottom:0">Interview Schedule</div>
+      <a href="/ui/interview-creator/?candidate={{ c.id }}" class="ui-btn-primary" style="height:32px;padding:0 14px;font-size:12px;display:inline-flex;align-items:center;gap:4px;text-decoration:none">
+        <span class="material-symbols-outlined" style="font-size:15px">add</span>Schedule Interview
+      </a>
+    </div>
+    {% if interviews %}
+    <table class="ui-table" style="margin:0">
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Interviewer</th>
+          <th>Date &amp; Time</th>
+          <th>Rating</th>
+          <th>Feedback</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for iv in interviews %}
+        <tr>
+          <td>
+            <div style="font-weight:500;font-size:13px;color:#111">
+              {% if iv.stage_id %}{{ iv.stage_id.stage }}{% else %}Interview{% endif %}
+            </div>
+            <div style="font-size:11px;color:#999;margin-top:2px">Initial screening by recruiter</div>
+          </td>
+          <td>
+            {% for emp in iv.employee_id.all %}
+            <div class="ui-avatar-chip" style="margin-bottom:{% if not forloop.last %}4px{% else %}0{% endif %}">
+              <div class="ui-avatar" style="width:28px;height:28px;font-size:10px">{{ emp.get_full_name|slice:":2"|upper|default:"??" }}</div>
+              <div>
+                <div class="name">{{ emp.get_full_name|default:emp }}</div>
+                <div class="sub">{{ emp.job_position_id|default:"" }}</div>
+              </div>
+            </div>
+            {% empty %}
+            <span style="color:#bbb;font-size:12px">—</span>
+            {% endfor %}
+          </td>
+          <td style="font-size:12px">
+            <div style="font-weight:500;color:#111">{{ iv.interview_date|date:"d M Y" }}</div>
+            {% if iv.interview_time %}<div style="color:#888;margin-top:1px">{{ iv.interview_time|time:"g:i A" }}</div>{% endif %}
+          </td>
+          <td>
+            {% with score=iv.rating|default:0 %}
+            <div style="display:flex;gap:2px">
+              {% for i in "12345" %}
+              <span class="material-symbols-outlined" style="font-size:15px;{% if forloop.counter <= score %}color:#F59E0B{% else %}color:#D0D0D0{% endif %}">star</span>
+              {% endfor %}
+            </div>
+            {% endwith %}
+          </td>
+          <td style="max-width:180px">
+            <div style="font-size:12px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              {{ iv.feedback|default:"—" }}
+            </div>
+          </td>
+          <td>
+            {% if iv.completed %}
+              <span class="ui-pill ui-pill--green" style="font-size:11px">Completed</span>
+            {% else %}
+              <span class="ui-pill ui-pill--amber" style="font-size:11px">Scheduled</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div style="padding:10px 20px;background:#FAFAFA;border-top:1px solid #F0F0F0">
+      <span style="font-size:11px;color:#999">Scores are on a scale of 1 (Poor) to 5 (Excellent)</span>
+    </div>
+    {% else %}
+    <div style="text-align:center;color:#999;padding:48px;font-size:13px">
+      <span class="material-symbols-outlined" style="font-size:36px;display:block;margin-bottom:8px;color:#ccc">calendar_month</span>
+      No interviews scheduled yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB: COMMUNICATION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="cdet-pane" id="pane-communication">
+  <div class="ui-panel" style="padding:0;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid #F0F0F0">
+      <div class="ui-panel__title" style="margin-bottom:0">Communication History</div>
+    </div>
+
+    {% if profile and profile.hr_override %}
+    <div style="display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #F0F0F0;padding:14px 20px;">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#E65100;flex-shrink:0;margin-top:2px;">shield</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#E65100;background:#FFF3E0;border:1px solid #FFCC80;border-radius:4px;padding:2px 8px;">HR Override</span>
+          <span style="font-size:12px;color:#888;">AI recommended Reject — candidate shortlisted manually by HR</span>
+          {% if profile.screened_at %}
+          <span style="font-size:11px;color:#CCCCCC;margin-left:auto;">{{ profile.screened_at|date:"d M Y, H:i" }}</span>
+          {% endif %}
+        </div>
+        <div style="font-size:13px;color:#444;line-height:1.6;background:#FFF8F0;border:1px solid #FFE0B2;border-radius:6px;padding:10px 14px;">
+          <span style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Justification</span>
+          {{ profile.hr_override_justification|default:"No justification provided." }}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if communications %}
+    <table class="ui-table" style="margin:0">
+      <thead>
+        <tr>
+          <th>Communication</th>
+          <th>Content</th>
+          <th>Status</th>
+          <th>Date &amp; Time</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for comm in communications %}
+        <tr>
+          <td>
+            <div style="font-weight:500;font-size:13px;color:#111">{{ comm.subject|default:"Email" }}</div>
+            <div style="font-size:11px;color:#999;margin-top:2px">
+              {% if comm.direction == "outbound" %}To: {{ comm.recipient|default:c.email }}{% else %}From: {{ comm.sender|default:c.email }}{% endif %}
+            </div>
+          </td>
+          <td style="max-width:220px">
+            <div style="font-size:12px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              {{ comm.body|default:comm.content|default:"—"|truncatechars:80 }}
+            </div>
+          </td>
+          <td>
+            {% if comm.status == "received" %}
+              <span class="ui-pill ui-pill--green" style="font-size:11px">Received</span>
+            {% elif comm.status == "sent" %}
+              <span class="ui-pill ui-pill--blue" style="font-size:11px">Sent</span>
+            {% elif comm.status == "failed" %}
+              <span class="ui-pill ui-pill--red" style="font-size:11px">Failed</span>
+            {% else %}
+              <span class="ui-pill ui-pill--grey" style="font-size:11px">{{ comm.status|default:"—"|capfirst }}</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;color:#666">
+            {{ comm.created_at|date:"d M Y" }}<br>
+            <span style="color:#999">{{ comm.created_at|time:"g:i A" }}</span>
+          </td>
+          <td>
+            <button type="button"
+                    style="height:28px;width:28px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#555">
+              <span class="material-symbols-outlined" style="font-size:14px">more_horiz</span>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;color:#999;padding:48px;font-size:13px">
+      <span class="material-symbols-outlined" style="font-size:36px;display:block;margin-bottom:8px;color:#ccc">forum</span>
+      No communications yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TAB: OFFER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="cdet-pane" id="pane-offer">
+  {% if offer %}
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+    <!-- Left: Info + Benefits + Documents -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="ui-panel">
+        <div class="ui-panel__title">Offer Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div class="cdet-label">Candidate</div>
+            <div class="cdet-value">{{ c.name }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Offer ID</div>
+            <div class="cdet-value">#{{ offer.id }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Job Title</div>
+            <div class="cdet-value">{{ offer.job_title|default:c.recruitment_id.title|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Department</div>
+            <div class="cdet-value">{{ offer.department|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Employment Type</div>
+            <div class="cdet-value">{{ offer.employment_type|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Work Location</div>
+            <div class="cdet-value">{{ offer.work_location|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Date of Joining</div>
+            <div class="cdet-value">{{ offer.joining_date|date:"d M Y"|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Offer Expiry Date</div>
+            <div class="cdet-value">{{ offer.expiry_date|date:"d M Y"|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Probation Period</div>
+            <div class="cdet-value">{{ offer.probation_period|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="cdet-label">Status</div>
+            <div class="cdet-value">
+              {% if offer.status == "approved" %}<span class="ui-pill ui-pill--green">Approved</span>
+              {% elif offer.status == "rejected" %}<span class="ui-pill ui-pill--red">Rejected</span>
+              {% elif offer.status == "pending_approval" %}<span class="ui-pill ui-pill--amber">Pending Approval</span>
+              {% else %}<span class="ui-pill ui-pill--grey">{{ offer.status|capfirst }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ui-panel">
+        <div class="ui-panel__title">Benefits &amp; Perks</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          {% for benefit in "Health Insurance,Annual Leave 30 days,Performance Bonus,Flexible Working,Professional Development,Employee Wellness Program"|split:"," %}
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#278E53">check_circle</span>
+            {{ benefit }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Interview history (in offer tab) -->
+      <div class="ui-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="ui-panel__title" style="margin-bottom:0">Interview History</div>
+          <a href="/ui/interview-creator/?candidate={{ c.id }}" class="ui-btn-outlined" style="height:30px;padding:0 12px;font-size:12px">+ Schedule</a>
+        </div>
+        {% if interviews %}
+        <table class="ui-table" style="margin:0">
+          <thead><tr><th>Date</th><th>Mode</th><th>Panelists</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for iv in interviews %}
+            <tr>
+              <td style="font-size:12px">{{ iv.interview_date|date:"d M Y" }}{% if iv.interview_time %}<br><span style="color:#888">{{ iv.interview_time|time:"g:i A" }}</span>{% endif %}</td>
+              <td>{% if iv.online_meeting_link %}<span class="ui-pill ui-pill--blue" style="font-size:10px">Online</span>{% else %}<span class="ui-pill ui-pill--grey" style="font-size:10px">In-Person</span>{% endif %}</td>
+              <td style="font-size:12px">{% for emp in iv.employee_id.all %}{{ emp }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+              <td>{% if iv.completed %}<span class="ui-pill ui-pill--green" style="font-size:10px">Done</span>{% else %}<span class="ui-pill ui-pill--amber" style="font-size:10px">Scheduled</span>{% endif %}</td>
+              <td>
+                <div class="ui-action-group">
+                  <a class="ui-action-btn" title="Edit" href="/ui/interview/{{ iv.id }}/edit/"><span class="material-symbols-outlined">edit</span></a>
+                  <a class="ui-action-btn" title="Evaluate" href="/ui/interview/{{ iv.id }}/evaluate/"><span class="material-symbols-outlined">rate_review</span></a>
+                  <button type="button" class="ui-action-btn" title="Delete interview"
+                          onclick="confirmDelete('{% url 'ui:interview-delete' iv.id %}', 'interview on {{ iv.interview_date|date:'d M Y' }}')">
+                    <span class="material-symbols-outlined" style="color:#C62828">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;color:#999;padding:20px;font-size:13px">No interviews scheduled yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="ui-panel">
+        <div class="ui-panel__title">Documents</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          {% for doc_name in "Offer Letter,CTC Breakup,Company Policy,Terms & Conditions"|split:"," %}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #F0F0F0;border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
+              <span class="material-symbols-outlined" style="font-size:18px;color:#C62828">picture_as_pdf</span>
+              {{ doc_name }}
+            </div>
+            <a href="#" style="height:28px;padding:0 10px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:12px;font-weight:500;color:#333;display:inline-flex;align-items:center;gap:4px;text-decoration:none">
+              <span class="material-symbols-outlined" style="font-size:14px">download</span>Download
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Compensation + Actions -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="ui-panel">
+        <div class="ui-panel__title">Compensation &amp; Benefits</div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:28px;font-weight:700;color:#111">
+            {% if offer.salary %}${{ offer.salary|floatformat:0 }}{% else %}—{% endif %}
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:2px">Annual CTC</div>
+        </div>
+        <div class="ui-divider"></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {% if offer.basic_salary %}
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#666">Base Salary</span>
+            <span style="font-weight:600;color:#111">${{ offer.basic_salary|floatformat:0 }}</span>
+          </div>
+          {% endif %}
+          {% if offer.allowances %}
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#666">Allowance</span>
+            <span style="font-weight:600;color:#111">${{ offer.allowances|floatformat:0 }}</span>
+          </div>
+          {% endif %}
+          {% if offer.bonus %}
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#666">Bonus</span>
+            <span style="font-weight:600;color:#111">${{ offer.bonus|floatformat:0 }}</span>
+          </div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#666">Payment Frequency</span>
+            <span style="font-weight:600;color:#111">Monthly</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        {% if offer.generated_letter %}
+        <a href="{% url 'ui:offer-detail' offer.id %}" target="_blank"
+           class="ui-btn-outlined" style="height:38px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:16px">download</span>Download Offer Letter
+        </a>
+        {% endif %}
+        <a href="{% url 'ui:offer-detail' offer.id %}"
+           class="ui-btn-outlined" style="height:38px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span>Go to Offer Letter
+        </a>
+        <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}&update={{ offer.id }}"
+           class="ui-btn-primary" style="height:38px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:16px">edit</span>Update Offer Letter
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  {% else %}
+  <!-- No offer -->
+  <div style="text-align:center;padding:64px 24px">
+    <span class="material-symbols-outlined" style="font-size:48px;color:#ccc;display:block;margin-bottom:12px">handshake</span>
+    <div style="font-size:16px;font-weight:600;color:#444;margin-bottom:6px">No offer created yet</div>
+    <div style="font-size:13px;color:#999;margin-bottom:20px">Create an offer letter for this candidate to get started.</div>
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}" class="ui-btn-primary"
+       style="height:38px;padding:0 20px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span>Create Offer
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Reject Modal ────────────────────────────────────────────────────────── -->
+<div id="rejectModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center"
+     onclick="if(event.target===this)this.classList.remove('open')">
+  <form method="post" action="{% url 'ui:candidate-reject' c.id %}"
+        style="background:#fff;border-radius:12px;padding:28px 32px;max-width:440px;width:90%">
+    {% csrf_token %}
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px">Reject {{ c.name }}</div>
+    <div style="font-size:13px;color:#888;margin-bottom:14px">This will mark the candidate as rejected.</div>
+    <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Reason for rejection</label>
+    <textarea name="justification" rows="3"
+              style="width:100%;border:1px solid #E0E0E0;border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box"
+              placeholder="Reason for rejection…"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;cursor:pointer">
+      <input type="checkbox" name="send_email" value="1" checked> Send rejection email to candidate
+    </label>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button type="button" onclick="document.getElementById('rejectModal').classList.remove('open')"
+              style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">Cancel</button>
+      <button type="submit"
+              style="padding:8px 20px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Reject Candidate</button>
+    </div>
+  </form>
+</div>
+
+<!-- Documents panel (slide-in from right) -->
+<div id="docsPanelOverlay" onclick="document.getElementById('docsPanel').classList.remove('open')"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999"></div>
+<div id="docsPanel"
+     style="position:fixed;top:0;right:0;width:360px;height:100%;background:#fff;z-index:1000;
+            box-shadow:-4px 0 20px rgba(0,0,0,.12);display:flex;flex-direction:column;
+            transform:translateX(100%);transition:transform .25s ease">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 14px;border-bottom:1px solid #F0F0F0">
+    <div style="font-size:15px;font-weight:700;color:#1A1A1A">Candidate Documents</div>
+    <button onclick="document.getElementById('docsPanel').classList.remove('open')"
+            style="background:none;border:none;cursor:pointer;color:#888;font-size:20px;line-height:1;padding:0">&times;</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px">
+
+    <!-- Resume -->
+    <div style="border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span class="material-symbols-outlined" style="font-size:28px;color:{% if c.resume %}#278E53{% else %}#BDBDBD{% endif %}">description</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1A1A1A">Resume</div>
+        <div style="font-size:11px;color:#888;margin-top:1px">PDF / DOC / DOCX</div>
+      </div>
+      {% if c.resume %}
+        <a href="{{ c.resume.url }}" target="_blank"
+           style="font-size:12px;font-weight:600;color:#278E53;text-decoration:none;white-space:nowrap;
+                  padding:5px 12px;border:1px solid #278E53;border-radius:6px">View</a>
+      {% else %}
+        <span style="font-size:11px;color:#BDBDBD">Not uploaded</span>
+      {% endif %}
+    </div>
+
+    <!-- Cover Letter -->
+    <div style="border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span class="material-symbols-outlined" style="font-size:28px;color:{% if c.cover_letter %}#278E53{% else %}#BDBDBD{% endif %}">mail</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1A1A1A">Cover Letter</div>
+        <div style="font-size:11px;color:#888;margin-top:1px">PDF</div>
+      </div>
+      {% if c.cover_letter %}
+        <a href="{{ c.cover_letter.url }}" target="_blank"
+           style="font-size:12px;font-weight:600;color:#278E53;text-decoration:none;white-space:nowrap;
+                  padding:5px 12px;border:1px solid #278E53;border-radius:6px">View</a>
+      {% else %}
+        <span style="font-size:11px;color:#BDBDBD">Not uploaded</span>
+      {% endif %}
+    </div>
+
+    <!-- Graduation Certificate -->
+    <div style="border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span class="material-symbols-outlined" style="font-size:28px;color:{% if c.graduation_certificate %}#278E53{% else %}#BDBDBD{% endif %}">school</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1A1A1A">Graduation Certificate</div>
+        <div style="font-size:11px;color:#888;margin-top:1px">PDF</div>
+      </div>
+      {% if c.graduation_certificate %}
+        <a href="{{ c.graduation_certificate.url }}" target="_blank"
+           style="font-size:12px;font-weight:600;color:#278E53;text-decoration:none;white-space:nowrap;
+                  padding:5px 12px;border:1px solid #278E53;border-radius:6px">View</a>
+      {% else %}
+        <span style="font-size:11px;color:#BDBDBD">Not uploaded</span>
+      {% endif %}
+    </div>
+
+    <!-- Transcripts -->
+    <div style="border:1px solid #E8E8E8;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span class="material-symbols-outlined" style="font-size:28px;color:{% if c.transcripts %}#278E53{% else %}#BDBDBD{% endif %}">article</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1A1A1A">Transcripts</div>
+        <div style="font-size:11px;color:#888;margin-top:1px">PDF</div>
+      </div>
+      {% if c.transcripts %}
+        <a href="{{ c.transcripts.url }}" target="_blank"
+           style="font-size:12px;font-weight:600;color:#278E53;text-decoration:none;white-space:nowrap;
+                  padding:5px 12px;border:1px solid #278E53;border-radius:6px">View</a>
+      {% else %}
+        <span style="font-size:11px;color:#BDBDBD">Not uploaded</span>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1100;align-items:center;justify-content:center"
+     onclick="if(event.target===this)closeDelete()">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:420px;width:90%">
+    <div style="font-size:16px;font-weight:700;color:#C62828;margin-bottom:8px">Confirm Delete</div>
+    <p id="deleteMsg" style="font-size:14px;color:#444;margin:0 0 20px"></p>
+    <form method="post" id="deleteConfirmForm">
+      {% csrf_token %}
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" onclick="closeDelete()"
+                style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">Cancel</button>
+        <button type="submit"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Styles ──────────────────────────────────────────────────────────────── -->
+<style>
+/* Header */
+.cdet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+}
+
+/* Tab bar */
+.cdet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #EFEFEF;
+  margin-bottom: 24px;
+}
+.cdet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.cdet-tab .material-symbols-outlined { font-size: 17px; }
+.cdet-tab:hover { color: #278E53; }
+.cdet-tab.active { color: #278E53; border-bottom-color: #278E53; font-weight: 600; }
+
+/* Panes */
+.cdet-pane { display: none; }
+.cdet-pane.active { display: block; }
+
+/* Info labels */
+.cdet-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; letter-spacing: .4px; }
+.cdet-value { font-size: 14px; color: #111; }
+
+/* Modals */
+#rejectModal.open { display: flex; }
+#deleteModal.open { display: flex; }
+#docsPanel.open { transform: translateX(0); }
+
+/* Stage pills */
+.stage-rejected { font-size: 11px; font-weight: 600; background: #FFEBEE; color: #C62828; border-radius: 4px; padding: 3px 8px; }
+.stage-shortlisted { font-size: 11px; font-weight: 600; background: #E8F5ED; color: #1F5F2F; border-radius: 4px; padding: 3px 8px; }
+
+/* Action button tooltips */
+.ui-action-btn { position: relative; }
+.ui-action-btn[title]:hover::after {
+  content: attr(title); position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%); background: #1f2937; color: #fff; font-size: 11px;
+  white-space: nowrap; padding: 4px 8px; border-radius: 5px; pointer-events: none; z-index: 100;
+}
+.ui-action-btn[title]:hover::before {
+  content: ''; position: absolute; bottom: calc(100% + 1px); left: 50%;
+  transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1f2937;
+  pointer-events: none; z-index: 100;
+}
+
+/* Three-dot dropdown menu */
+#cdetMenu.open { display: block; }
+.cdet-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; font-size: 13px; color: #333; text-decoration: none; cursor: pointer;
+  transition: background 0.1s;
+}
+.cdet-menu-item:hover { background: #F8F8F8; }
+.cdet-menu-item--danger { color: #C62828; }
+.cdet-menu-item:first-child { border-radius: 8px 8px 0 0; }
+.cdet-menu-item:last-child { border-radius: 0 0 8px 8px; }
+</style>
+
+<!-- ── Tab switching JS ────────────────────────────────────────────────────── -->
+<script>
+(function () {
+  var tabs  = document.querySelectorAll(".cdet-tab");
+  var panes = document.querySelectorAll(".cdet-pane");
+
+  function activate(name) {
+    tabs.forEach(function (t) { t.classList.toggle("active", t.dataset.tab === name); });
+    panes.forEach(function (p) { p.classList.toggle("active", p.id === "pane-" + name); });
+    try { history.replaceState(null, "", "?tab=" + name); } catch(e) {}
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(t.dataset.tab); });
+  });
+
+  // Honour ?tab= query param or default to profile
+  var qs   = new URLSearchParams(window.location.search);
+  var init = qs.get("tab") || "profile";
+  activate(["profile","documents","interviews","communication","offer"].indexOf(init) >= 0 ? init : "profile");
+
+  // Close three-dot menu on outside click
+  document.addEventListener("click", function (e) {
+    var menu = document.getElementById("cdetMenu");
+    var btn  = document.getElementById("cdetMenuBtn");
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.remove("open");
+    }
+  });
+
+  // Docs panel overlay sync
+  var panel = document.getElementById('docsPanel');
+  var overlay = document.getElementById('docsPanelOverlay');
+  if (panel && overlay) {
+    var observer = new MutationObserver(function(){
+      overlay.style.display = panel.classList.contains('open') ? 'block' : 'none';
+    });
+    observer.observe(panel, {attributes:true, attributeFilter:['class']});
+  }
+})();
+
+function confirmDelete(url, label) {
+  document.getElementById('deleteMsg').textContent = 'Delete "' + label + '"? This cannot be undone.';
+  document.getElementById('deleteConfirmForm').action = url;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDelete() { document.getElementById('deleteModal').classList.remove('open'); }
+</script>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block title %}{% trans "Audit Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="oh-wrapper mb-4">
+    <div class="oh-card oh-card--section">
+        <!-- Page Header -->
+        <div style="margin-bottom: 20px;">
+            <h1 class="oh-main__titlebar-title" style="font-weight: bold;">{% trans "Audit Dashboard" %}</h1>
+            <p style="color: hsl(0, 0%, 45%); margin-top: 5px;">{% trans "Monitor all system changes and user activities" %}</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div style="margin: 20px 0; background-color: hsl(0, 0%, 97.5%); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <form method="get" class="oh-form">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <!-- Search Input -->
+                    <div>
+                        <label for="search">{% trans "Search" %}</label>
+                        <input type="text" name="search" id="search" value="{{ search }}" 
+                               class="oh-input" placeholder="{% trans 'Search in changes...' %}">
+                    </div>
+
+                    <!-- Model Filter -->
+                    <div>
+                        <label for="model">{% trans "Model" %}</label>
+                        <select name="model" id="model" class="oh-select">
+                            <option value="">{% trans "All Models" %}</option>
+                            {% for model in models %}
+                                <option value="{{ model }}" {% if model == model_filter %}selected{% endif %}>
+                                    {{ model|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- User Filter -->
+                    <div>
+                        <label for="user">{% trans "User" %}</label>
+                        <select name="user" id="user" class="oh-select">
+                            <option value="">{% trans "All Users" %}</option>
+                            {% for user in users %}
+                                <option value="{{ user }}" {% if user == user_filter %}selected{% endif %}>
+                                    {{ user }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Action Filter -->
+                    <div>
+                        <label for="action">{% trans "Action Type" %}</label>
+                        <select name="action" id="action" class="oh-select">
+                            <option value="">{% trans "All Actions" %}</option>
+                            {% for action_val, action_label in action_choices %}
+                                <option value="{{ action_val }}" {% if action_val|stringformat:"s" == action_filter %}selected{% endif %}>
+                                    {{ action_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div style="display: flex; align-items: flex-end; gap: 10px;">
+                        <button type="submit" class="oh-btn oh-btn--primary">
+                            {% trans "Filter" %}
+                        </button>
+                        <a href="?" class="oh-btn oh-btn--secondary">
+                            {% trans "Reset" %}
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        {% if logs %}
+            <table class="oh-table oh-table--striped oh-table--status">
+                <thead>
+                    <tr>
+                        <th>{% trans "Action" %}</th>
+                        <th>{% trans "Model" %}</th>
+                        <th>{% trans "User" %}</th>
+                        <th>{% trans "Object" %}</th>
+                        <th>{% trans "Date & Time" %}</th>
+                        <th>{% trans "Details" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>
+                                {% if log.action == 0 %}
+                                    <span class="oh-status-indicator created">
+                                        ➕ {% trans "Created" %}
+                                    </span>
+                                {% elif log.action == 1 %}
+                                    <span class="oh-status-indicator modified">
+                                        ✏️ {% trans "Modified" %}
+                                    </span>
+                                {% elif log.action == 2 %}
+                                    <span class="oh-status-indicator deleted">
+                                        🗑️ {% trans "Deleted" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.content_type.name|title }}</td>
+                            <td>
+                                {% if log.actor %}
+                                    {{ log.actor.username }}
+                                {% else %}
+                                    <span class="oh-status-indicator system">{% trans "System" %}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.object_repr|truncatewords:5 }}</td>
+                            <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="#" class="oh-btn oh-btn--sm oh-btn--secondary" 
+                                   onclick="loadAuditDetail({{ log.id }}); return false;">
+                                    {% trans "View" %}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if paginator.num_pages > 1 %}
+                <div style="margin-top: 20px; text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    {% if logs.has_previous %}
+                        <a href="?page=1{% if model_filter %}&model={{ model_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="oh-btn oh-btn--sm">{% trans "First" %}</a>
+                        <a href="?page={{ logs.previous_page_number }}{% if model_filter %}&model={{ model_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="oh-btn oh-btn--sm">
+                            {% trans "Previous" %}
+                        </a>
+                    {% endif %}
+
+                    <span style="margin: 0 10px; align-self: center;">
+                        {% trans "Page" %} {{ logs.number }} {% trans "of" %} {{ paginator.num_pages }}
+                    </span>
+
+                    {% if logs.has_next %}
+                        <a href="?page={{ logs.next_page_number }}{% if model_filter %}&model={{ model_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="oh-btn oh-btn--sm">
+                            {% trans "Next" %}
+                        </a>
+                        <a href="?page={{ paginator.num_pages }}{% if model_filter %}&model={{ model_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="oh-btn oh-btn--sm">{% trans "Last" %}</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div style="text-align: center; padding: 40px;">
+                <p style="color: hsl(0, 0%, 45%);">{% trans "No audit logs found." %}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="audit-detail-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: hsl(0, 0%, 100%); border-radius: 8px; max-width: 600px; width: 90%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <div style="padding: 20px; border-bottom: 1px solid hsl(213, 22%, 93%); display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 18px;">{% trans "Audit Log Details" %}</h2>
+            <button type="button" style="background: none; border: none; font-size: 24px; cursor: pointer; color: hsl(0, 0%, 45%);" onclick="closeAuditDetail()">×</button>
+        </div>
+        <div style="padding: 20px;">
+            <div id="audit-detail-content">
+                <!-- Loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadAuditDetail(logId) {
+    const modal = document.getElementById('audit-detail-modal');
+    const content = document.getElementById('audit-detail-content');
+    
+    // Show modal with loading message
+    modal.style.display = 'flex';
+    content.innerHTML = '<p style="text-align: center;">{% trans "Loading..." %}</p>';
+    
+    // Simple display of log details
+    setTimeout(() => {
+        content.innerHTML = `
+            <div style="padding: 0;">
+                <p><strong>{% trans "Log ID:" %}</strong> ${logId}</p>
+                <p><strong>{% trans "Status:" %}</strong> {% trans "Detail view loaded" %}</p>
+            </div>
+        `;
+    }, 300);
+}
+
+function closeAuditDetail() {
+    document.getElementById('audit-detail-modal').style.display = 'none';
+}
+</script>
+
+{% endblock %}

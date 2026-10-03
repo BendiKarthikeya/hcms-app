@@ -1,0 +1,78 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+
+<div class="oh-wrapper" style="max-width:900px;margin:24px auto;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <div>
+      <h3 style="margin:0;font-size:20px;font-weight:700;color:#111827;">
+        <ion-icon name="people-outline" style="font-size:22px;vertical-align:middle;color:#2563eb;"></ion-icon>
+        {% trans "Proposal Role Mapping" %}
+      </h3>
+      <p style="font-size:13px;color:#6b7280;margin:4px 0 0;">
+        {% trans "Assign each ONEIC organisational role to an Employee. Unassigned roles are skipped in the e-sign chain." %}
+      </p>
+    </div>
+    <a href="{% url 'proposal-list' %}" class="oh-btn oh-btn--light-bkg">
+      <ion-icon name="arrow-back-outline"></ion-icon> {% trans "Back" %}
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="oh-alert-container"><div class="oh-alert oh-alert--animated {{ m.tags }}">{{ m }}</div></div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post"
+        style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:22px;">
+    {% csrf_token %}
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+          <th style="text-align:left;padding:9px 11px;font-weight:600;">{% trans "Role" %}</th>
+          <th style="text-align:left;padding:9px 11px;font-weight:600;">{% trans "Used in" %}</th>
+          <th style="text-align:left;padding:9px 11px;font-weight:600;">{% trans "Employee" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for role in roles %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+          <td style="padding:9px 11px;font-weight:600;color:#111827;">{{ role.label }}</td>
+          <td style="padding:9px 11px;">
+            {% if role.in_permanent %}<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Permanent</span>{% endif %}
+            {% if role.in_contractual %}<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Contractual</span>{% endif %}
+          </td>
+          <td style="padding:9px 11px;">
+            <select name="role_{{ role.key }}"
+                    style="width:100%;padding:7px 10px;font-size:13px;border:1px solid #d1d5db;border-radius:6px;">
+              <option value="">— {% trans "Unassigned" %} —</option>
+              {% for emp in employees %}
+                <option value="{{ emp.id }}" {% if emp.id == role.selected_id %}selected{% endif %}>
+                  {{ emp.get_full_name }}{% if emp.badge_id %} ({{ emp.badge_id }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
+      <a href="{% url 'proposal-list' %}"
+         style="padding:9px 18px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;color:#374151;text-decoration:none;font-size:13px;font-weight:600;">
+        {% trans "Cancel" %}
+      </a>
+      <button type="submit"
+              style="padding:9px 22px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer;font-weight:700;font-size:13px;">
+        <ion-icon name="save-outline" style="vertical-align:middle;"></ion-icon>
+        {% trans "Save Mapping" %}
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

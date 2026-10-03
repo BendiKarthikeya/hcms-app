@@ -1,0 +1,106 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Approval Rule" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:760px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;">{% trans "Create Approval Rule" %}</h2>
+      <a href="{% url 'approval-rules' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Back to Rules" %}</a>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Rule Name" %} *</label>
+          <input type="text" name="name" required style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;" placeholder="e.g. Engineering Grade 4+ Approval">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Department (blank = any)" %}</label>
+          <select name="department" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;">
+            <option value="">{% trans "— Any Department —" %}</option>
+            {% for d in departments %}<option value="{{ d.id }}">{{ d.department }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Priority" %}</label>
+          <input type="number" name="priority" value="0" min="0" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Grade Min (optional)" %}</label>
+          <input type="text" name="grade_min" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;" placeholder="e.g. Grade 1">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Grade Max (optional)" %}</label>
+          <input type="text" name="grade_max" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;" placeholder="e.g. Grade 5">
+        </div>
+      </div>
+
+      <!-- Approval Steps -->
+      <div style="margin-top:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="margin:0;font-size:15px;">{% trans "Approval Steps" %}</h3>
+          <button type="button" onclick="addStep()" style="padding:6px 12px;border-radius:6px;background:#e5e7eb;border:none;cursor:pointer;font-size:13px;">+ {% trans "Add Step" %}</button>
+        </div>
+        <div id="steps-container">
+          <div class="step-row" style="display:grid;grid-template-columns:1fr 1fr 100px;gap:10px;margin-bottom:10px;padding:12px;background:#f9fafb;border-radius:6px;">
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "Approver Type" %}</label>
+              <select name="approver_type" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:2px;">
+                {% for val,label in approver_types %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#6b7280;">{% trans "SLA Hours" %}</label>
+              <input type="number" name="sla_hours" value="48" min="1" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:2px;box-sizing:border-box;">
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button type="button" onclick="removeStep(this)" style="padding:7px 10px;border-radius:6px;background:#fee2e2;color:#dc2626;border:none;cursor:pointer;width:100%;">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+        <a href="{% url 'approval-rules' %}" style="padding:9px 16px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:9px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Save Rule" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+
+<script>
+const approverTypes = [{% for val,label in approver_types %}["{{ val }}","{{ label }}"],{% endfor %}];
+
+function addStep() {
+  const container = document.getElementById('steps-container');
+  const div = document.createElement('div');
+  div.className = 'step-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 100px;gap:10px;margin-bottom:10px;padding:12px;background:#f9fafb;border-radius:6px;';
+  const opts = approverTypes.map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+  div.innerHTML = `
+    <div>
+      <label style="font-size:11px;color:#6b7280;">Approver Type</label>
+      <select name="approver_type" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:2px;">${opts}</select>
+    </div>
+    <div>
+      <label style="font-size:11px;color:#6b7280;">SLA Hours</label>
+      <input type="number" name="sla_hours" value="48" min="1" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:6px;margin-top:2px;box-sizing:border-box;">
+    </div>
+    <div style="display:flex;align-items:flex-end;">
+      <button type="button" onclick="removeStep(this)" style="padding:7px 10px;border-radius:6px;background:#fee2e2;color:#dc2626;border:none;cursor:pointer;width:100%;">✕</button>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeStep(btn) {
+  const row = btn.closest('.step-row');
+  if (document.querySelectorAll('.step-row').length > 1) row.remove();
+}
+</script>
+{% endblock %}

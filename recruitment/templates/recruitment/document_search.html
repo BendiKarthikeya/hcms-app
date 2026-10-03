@@ -1,0 +1,114 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Document Search" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:860px;margin:24px auto;padding:16px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h1 style="margin:0;font-size:22px;">{% trans "Document Search" %}</h1>
+  </div>
+
+  <form method="get" style="display:flex;gap:10px;margin-bottom:24px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="OL-XXXXXXXX or MR-XXXXXXXX"
+      autofocus autocomplete="off"
+      style="flex:1;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:monospace;">
+    <button type="submit"
+      style="padding:10px 22px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">
+      {% trans "Search" %}
+    </button>
+  </form>
+
+  {% if error %}
+  <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:14px 18px;color:#991b1b;font-size:13px;">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:20px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div style="font-size:12px;color:#9ca3af;font-family:monospace;margin-bottom:4px;">
+          {% if doc_type == 'offer' %}{% trans "Offer Letter" %}{% else %}{% trans "Manpower Request" %}{% endif %}
+        </div>
+        <div style="font-size:20px;font-weight:700;font-family:monospace;">{{ query|upper }}</div>
+        {% if doc_type == 'offer' %}
+        <div style="font-size:14px;color:#374151;margin-top:6px;">
+          {{ result.candidate_id.name }} — {{ result.position }}
+        </div>
+        {% else %}
+        <div style="font-size:14px;color:#374151;margin-top:6px;">
+          {{ result.department }} — {{ result.position|default:result.job_position|default:"" }}
+        </div>
+        {% endif %}
+      </div>
+      <span style="padding:4px 16px;border-radius:20px;font-size:13px;font-weight:600;
+        {% if result.status == 'approved' or result.status == 'accepted' %}background:#dcfce7;color:#166534;
+        {% elif result.status == 'rejected' %}background:#fee2e2;color:#991b1b;
+        {% elif result.status == 'pending_approval' or result.status == 'pending' %}background:#fef9c3;color:#854d0e;
+        {% elif result.status == 'sent' %}background:#dbeafe;color:#1e40af;
+        {% elif result.status == 'joined' %}background:#d1fae5;color:#065f46;
+        {% else %}background:#f3f4f6;color:#374151;{% endif %}">
+        {{ result.get_status_display }}
+      </span>
+    </div>
+
+    {% if current_approver %}
+    <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:10px 14px;font-size:13px;color:#78350f;margin-bottom:16px;">
+      📍 <strong>{% trans "Currently with:" %}</strong> {{ current_approver }}
+    </div>
+    {% endif %}
+
+    {% if timeline %}
+    <h3 style="font-size:14px;font-weight:600;margin:0 0 10px;color:#374151;">{% trans "Status Timeline" %}</h3>
+    <div style="position:relative;padding-left:20px;">
+      {% for event in timeline %}
+      <div style="position:relative;padding:0 0 14px 16px;border-left:2px solid
+        {% if event.status == 'approved' or event.status == 'accepted' %}#10b981
+        {% elif event.status == 'rejected' %}#ef4444
+        {% elif event.status == 'pending' %}#f59e0b
+        {% else %}#d1d5db{% endif %};">
+        <div style="position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:
+          {% if event.status == 'approved' or event.status == 'accepted' %}#10b981
+          {% elif event.status == 'rejected' %}#ef4444
+          {% elif event.status == 'pending' %}#f59e0b
+          {% else %}#9ca3af{% endif %};"></div>
+        <div style="font-size:13px;font-weight:600;color:#111827;">{{ event.label }}</div>
+        <div style="font-size:12px;color:#6b7280;">
+          {{ event.actor }}{% if event.at %} · {{ event.at|date:"d M Y H:i" }}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size:13px;color:#6b7280;">{% trans "No status history recorded yet." %}</p>
+    {% endif %}
+
+    <div style="margin-top:14px;border-top:1px solid #f3f4f6;padding-top:12px;">
+      {% if doc_type == 'offer' %}
+      <a href="{% url 'offer-detail' result.id %}" style="font-size:13px;color:#7c3aed;font-weight:600;">
+        {% trans "Open Offer Letter →" %}
+      </a>
+      {% else %}
+      <a href="{% url 'manpower-detail' result.id %}" style="font-size:13px;color:#7c3aed;font-weight:600;">
+        {% trans "Open Request →" %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not query %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:40px;text-align:center;color:#6b7280;">
+    <p style="font-size:2rem;margin:0 0 8px;">🔍</p>
+    <p style="margin:0;font-size:14px;">{% trans "Enter a document reference number above to find its real-time location in the approval workflow." %}</p>
+    <p style="margin:8px 0 0;font-size:12px;color:#9ca3af;">{% trans "Examples: OL-A1B2C3D4 (offer letter), MR-E5F6G7H8 (manpower request)" %}</p>
+  </div>
+  {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

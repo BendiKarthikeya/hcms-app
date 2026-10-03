@@ -1,0 +1,538 @@
+{% extends "ui/base.html" %}
+{% block title %}Reschedule Interview — HCMS{% endblock %}
+{% block active_interview %}active{% endblock %}
+
+{% block content %}
+<!-- ── Breadcrumb ─────────────────────────────────────────────────── -->
+<div class="ui-breadcrumb" style="display:flex;align-items:center;gap:6px;margin-bottom:18px">
+  <span class="material-symbols-outlined" style="font-size:16px;color:#6D6D6D">arrow_back</span>
+  <a href="/ui/interview/" style="font-size:13px;color:#6D6D6D;text-decoration:none">Back to Interviews</a>
+</div>
+
+<!-- ── Page header ────────────────────────────────────────────────── -->
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+  <div>
+    <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">Reschedule Interview</div>
+    <div style="font-size:13px;color:#6D6D6D">Quickly schedule an interview with the candidate and send invitations.</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button type="button" class="ui-btn-outlined" style="display:flex;align-items:center;gap:6px;font-size:13px">
+      <span class="material-symbols-outlined" style="font-size:16px">refresh</span>
+      Reset
+    </button>
+    <button type="button" class="ui-btn-primary" style="display:flex;align-items:center;gap:6px;font-size:13px;background:#1F5F2F">
+      <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span>
+      Generate with AI
+    </button>
+  </div>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="font-size:12px;padding:10px 14px;margin-bottom:16px;border-radius:6px;background:#FFF0EE;color:#C04730;border:1px solid #F8C9C2">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── Two-column layout ──────────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:58% 1fr;gap:24px;align-items:start">
+
+  <!-- ════════════════════════════════════════════════════════════════
+       LEFT — Form
+       ════════════════════════════════════════════════════════════════ -->
+  <form method="post" action="">{% csrf_token %}
+
+    <!-- ── Section 1: Select Candidate ──────────────────────────── -->
+    <div class="ui-panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="rsc-num">1</span>
+        <span style="font-size:14px;font-weight:600;color:#111">Select Candidate</span>
+      </div>
+      <!-- Read-only candidate card -->
+      <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #E8E8E8;border-radius:8px;padding:12px 16px;background:#FAFAFA">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#1F5F2F;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">
+            {% with name=iv.candidate_id.name %}{% if name %}{{ name|slice:":1"|upper }}{% else %}?{% endif %}{% endwith %}
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#111">{{ iv.candidate_id.name }}</div>
+            <div style="font-size:12px;color:#6D6D6D">{{ iv.candidate_id.email|default:"—" }}</div>
+          </div>
+        </div>
+        {% if iv.candidate_id.stage_id %}
+        <span style="background:#EBF7EF;color:#1F5F2F;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">{{ iv.candidate_id.stage_id.stage }}</span>
+        {% else %}
+        <span style="background:#EBF7EF;color:#1F5F2F;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">Technical Interview</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Section 2: Old Schedule (read-only) ───────────────────── -->
+    <div class="ui-panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="rsc-num">2</span>
+        <span style="font-size:14px;font-weight:600;color:#111">Old Schedule</span>
+        <span style="font-size:11px;color:#9E9E9E;margin-left:4px">(read-only)</span>
+      </div>
+      <div style="background:#FAFAFA;border:1px solid #E8E8E8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;opacity:.85">
+        <!-- Date & Time -->
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#9E9E9E">calendar_today</span>
+          <span style="font-size:13px;color:#555">
+            {{ iv.interview_date|date:"M d, Y" }}{% if iv.interview_time %} — {{ iv.interview_time|time:"g:i A" }} (60 min){% endif %}
+          </span>
+        </div>
+        <!-- Mode -->
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#9E9E9E">videocam</span>
+          <span style="background:#EDF4FB;color:#2B6CB0;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">
+            {% if iv.meeting_provider == "meet" %}Google Meet
+            {% elif iv.meeting_provider == "teams" %}Microsoft Teams
+            {% elif iv.meeting_provider == "zoom" %}Zoom
+            {% else %}Online Mode{% endif %}
+          </span>
+        </div>
+        <!-- Meeting Link -->
+        {% if iv.online_meeting_link %}
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#9E9E9E">link</span>
+          <a href="{{ iv.online_meeting_link }}" target="_blank" style="font-size:12px;color:#2B6CB0;text-overflow:ellipsis;overflow:hidden;max-width:380px;white-space:nowrap">{{ iv.online_meeting_link }}</a>
+        </div>
+        {% endif %}
+        <!-- Interviewers -->
+        {% with panelists=iv.employee_id.all %}
+        {% if panelists %}
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#9E9E9E">group</span>
+          {% for emp in panelists %}
+          <div style="display:inline-flex;align-items:center;gap:6px;background:#F3F4F6;border-radius:20px;padding:3px 10px 3px 4px">
+            <div style="width:22px;height:22px;border-radius:50%;background:#76B590;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">{{ emp|stringformat:"s"|slice:":1"|upper }}</div>
+            <span style="font-size:12px;color:#374151">{{ emp }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- ── Section 3: New Schedule ───────────────────────────────── -->
+    <div class="ui-panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="rsc-num">3</span>
+        <span style="font-size:14px;font-weight:600;color:#111">New Schedule</span>
+      </div>
+
+      <!-- Row 1: Date + Time -->
+      <div class="ui-form-row" style="margin-bottom:0">
+        <div class="ui-form-group">
+          <label class="ui-form-label">New Date *</label>
+          <input class="ui-form-input" type="date" name="interview_date"
+                 value="{{ iv.interview_date|date:'Y-m-d' }}" required>
+        </div>
+        <div class="ui-form-group">
+          <label class="ui-form-label">New Time</label>
+          <input class="ui-form-input" type="time" name="interview_time"
+                 value="{{ iv.interview_time|time:'H:i'|default:'' }}">
+        </div>
+      </div>
+
+      <!-- Row 2: Duration + Timezone -->
+      <div class="ui-form-row">
+        <div class="ui-form-group">
+          <label class="ui-form-label">Duration</label>
+          <select class="ui-form-select" name="duration">
+            <option value="30">30 Minutes</option>
+            <option value="45">45 Minutes</option>
+            <option value="60" selected>60 Minutes</option>
+            <option value="90">90 Minutes</option>
+          </select>
+        </div>
+        <div class="ui-form-group">
+          <label class="ui-form-label">Time Zone</label>
+          <select class="ui-form-select" name="timezone">
+            <option value="Asia/Muscat" selected>UTC+04:00 (Muscat)</option>
+            <option value="Asia/Kolkata">UTC+05:30 (IST)</option>
+            <option value="UTC">UTC+00:00</option>
+            <option value="Europe/London">UTC+01:00 (BST)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Meeting Platform + Link -->
+      <div class="ui-form-row">
+        <div class="ui-form-group">
+          <label class="ui-form-label">Meeting Platform</label>
+          <select class="ui-form-select" name="platform">
+            <option value="manual" {% if iv.meeting_provider == "manual" %}selected{% endif %}>In-Person / Other</option>
+            <option value="meet"   {% if iv.meeting_provider == "meet"   %}selected{% endif %}>Google Meet</option>
+            <option value="teams"  {% if iv.meeting_provider == "teams"  %}selected{% endif %}>Microsoft Teams</option>
+            <option value="zoom"   {% if iv.meeting_provider == "zoom"   %}selected{% endif %}>Zoom</option>
+          </select>
+        </div>
+        <div class="ui-form-group">
+          <label class="ui-form-label">Online Meeting Link</label>
+          <input class="ui-form-input" type="url" name="meeting_link"
+                 value="{{ iv.online_meeting_link|default:'' }}"
+                 placeholder="https://meet.google.com/…">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 4: Reason for Reschedule ─────────────────────── -->
+    <div class="ui-panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="rsc-num">4</span>
+        <span style="font-size:14px;font-weight:600;color:#111">Reason for Reschedule</span>
+      </div>
+      <div class="ui-form-group" style="margin-bottom:0">
+        <textarea class="ui-form-textarea" name="description" rows="3"
+                  placeholder="Enter your reason for reschedule">{{ iv.description|default:"" }}</textarea>
+      </div>
+    </div>
+
+    <!-- ── Section 5: Notify Participants ───────────────────────── -->
+    <div class="ui-panel" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="rsc-num">5</span>
+        <span style="font-size:14px;font-weight:600;color:#111">Notify Participants</span>
+      </div>
+
+      <!-- Panelist chips (interactive picker) -->
+      <div class="ui-form-group" id="panelists-widget" style="margin-bottom:12px">
+        <label class="ui-form-label">Interviewers</label>
+        <div id="panelists-box" onclick="document.getElementById('panelists-search').focus()"
+             style="min-height:42px;border:1px solid #E0E0E0;border-radius:8px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;cursor:text;background:#fff;transition:border-color .15s">
+          <span id="panelists-placeholder" style="color:#aaa;font-size:13px;user-select:none">Search panelists…</span>
+          <input id="panelists-search" type="text" autocomplete="off"
+                 style="border:none;outline:none;font-size:13px;flex:1;min-width:120px;padding:2px 0;background:transparent">
+        </div>
+        <div id="panelists-dropdown"
+             style="display:none;position:absolute;z-index:999;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;margin-top:4px;width:100%">
+          {% for emp in employees %}
+          <div class="panelists-opt" data-id="{{ emp.id }}" data-name="{{ emp }}"
+               {% if emp.id in current_panelist_ids %}data-preselected="1"{% endif %}
+               style="padding:9px 14px;font-size:13px;cursor:pointer;color:#1f2937">{{ emp }}</div>
+          {% endfor %}
+        </div>
+        <select name="panelists" multiple id="panelists-hidden" style="display:none">
+          {% for emp in employees %}<option value="{{ emp.id }}">{{ emp }}</option>{% endfor %}
+        </select>
+      </div>
+
+      <!-- Candidate read-only chip -->
+      <div>
+        <label class="ui-form-label">Candidate</label>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#EBF7EF;border:1px solid #C6E9D0;border-radius:20px;padding:4px 12px 4px 6px">
+          <div style="width:22px;height:22px;border-radius:50%;background:#1F5F2F;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">
+            {% with name=iv.candidate_id.name %}{% if name %}{{ name|slice:":1"|upper }}{% else %}?{% endif %}{% endwith %}
+          </div>
+          <span style="font-size:12px;font-weight:500;color:#1F5F2F">{{ iv.candidate_id.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Form Actions ──────────────────────────────────────────── -->
+    <div style="display:flex;gap:12px;align-items:center">
+      <button type="submit" class="ui-btn-primary" style="display:flex;align-items:center;gap:7px;padding:10px 28px;font-size:14px">
+        <span class="material-symbols-outlined" style="font-size:17px">event_repeat</span>
+        Reschedule &amp; Notify
+      </button>
+      <a href="/ui/interview/" class="ui-btn-outlined" style="font-size:14px;padding:10px 22px">Cancel</a>
+    </div>
+
+  </form>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       RIGHT — Summary Panel
+       ════════════════════════════════════════════════════════════════ -->
+  <div>
+
+    <!-- Interview Summary card -->
+    <div class="ui-panel" style="margin-bottom:16px">
+      <div class="ui-panel__title" style="font-size:14px;margin-bottom:16px">Interview Summary</div>
+
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">person</span>
+        <div>
+          <div class="rsc-summary-key">Candidate</div>
+          <div class="rsc-summary-val">{{ iv.candidate_id.name }}</div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">work</span>
+        <div>
+          <div class="rsc-summary-key">Position</div>
+          <div class="rsc-summary-val">
+            {% if iv.candidate_id.recruitment_id %}{{ iv.candidate_id.recruitment_id.title }}{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">layers</span>
+        <div>
+          <div class="rsc-summary-key">Interview Stage</div>
+          <div class="rsc-summary-val">
+            {% if iv.candidate_id.stage_id %}{{ iv.candidate_id.stage_id.stage }}{% else %}Technical Interview{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">calendar_today</span>
+        <div>
+          <div class="rsc-summary-key">Current Date &amp; Time</div>
+          <div class="rsc-summary-val">
+            {{ iv.interview_date|date:"M d, Y" }}{% if iv.interview_time %}, {{ iv.interview_time|time:"g:i A" }}{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row" style="background:#F0FAF4;border-radius:8px;padding:8px 10px;margin-left:-4px;margin-right:-4px">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#1F5F2F;flex-shrink:0">event_available</span>
+        <div>
+          <div style="font-size:11px;color:#278E53;font-weight:500">New Date &amp; Time</div>
+          <div style="font-size:13px;color:#1F5F2F;font-weight:600" id="summary-new-datetime">—</div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row" style="margin-top:10px">
+        <span class="material-symbols-outlined rsc-summary-icon">group</span>
+        <div>
+          <div class="rsc-summary-key">Interviewers</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
+            {% for emp in iv.employee_id.all %}
+            <span style="font-size:11px;background:#F3F4F6;color:#374151;padding:2px 8px;border-radius:12px">{{ emp }}</span>
+            {% empty %}
+            <span style="font-size:12px;color:#9E9E9E">—</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">videocam</span>
+        <div>
+          <div class="rsc-summary-key">Mode</div>
+          <div class="rsc-summary-val">
+            {% if iv.meeting_provider == "meet" %}Google Meet
+            {% elif iv.meeting_provider == "teams" %}Microsoft Teams
+            {% elif iv.meeting_provider == "zoom" %}Zoom
+            {% else %}In-Person / Other{% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if iv.online_meeting_link %}
+      <div class="rsc-summary-row">
+        <span class="material-symbols-outlined rsc-summary-icon">link</span>
+        <div>
+          <div class="rsc-summary-key">Meeting Link</div>
+          <div style="font-size:12px"><a href="{{ iv.online_meeting_link }}" target="_blank" style="color:#2B6CB0;word-break:break-all">{{ iv.online_meeting_link|truncatechars:40 }}</a></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Info banner -->
+      <div style="margin-top:14px;background:#EBF7EF;border:1px solid #C6E9D0;border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:16px;color:#1F5F2F;flex-shrink:0;margin-top:1px">info</span>
+        <span style="font-size:12px;color:#1F5F2F;line-height:1.5">Interview invitation will be sent to the candidate and interviewers.</span>
+      </div>
+    </div>
+
+    <!-- Interview Rounds card — toggle each round complete to unlock Promote -->
+    <div class="ui-panel">
+      <div class="ui-panel__title" style="font-size:14px;margin-bottom:16px">Interview Rounds</div>
+
+      {% if rounds %}
+      <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="rounds">
+        <div style="display:flex;flex-direction:column;gap:0">
+          {% for r in rounds %}
+          <div style="display:flex;align-items:flex-start;gap:12px;position:relative;padding-bottom:{% if not forloop.last %}20{% else %}4{% endif %}px">
+            <!-- Connector line -->
+            {% if not forloop.last %}
+            <div style="position:absolute;left:13px;top:28px;bottom:0;width:2px;background:#E5E7EB"></div>
+            {% endif %}
+            <!-- Step indicator -->
+            {% if r.completed %}
+            <div style="width:26px;height:26px;border-radius:50%;background:#1F5F2F;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1">
+              <span class="material-symbols-outlined" style="font-size:15px;color:#fff">check</span>
+            </div>
+            {% else %}
+            <div style="width:26px;height:26px;border-radius:50%;border:2px solid #D1D5DB;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1">
+              <span style="font-size:10px;font-weight:700;color:#9CA3AF">{{ r.round_number }}</span>
+            </div>
+            {% endif %}
+            <!-- Round info -->
+            <div style="padding-top:3px;flex:1">
+              <div style="font-size:13px;font-weight:600;color:{% if r.completed %}#1F5F2F{% else %}#374151{% endif %}">
+                Round {{ r.round_number }} — {{ r.label|default:"Interview" }}
+              </div>
+              <div style="font-size:11px;margin-top:2px">
+                {% if r.completed %}
+                <span style="color:#278E53;font-weight:500">Completed</span>
+                {% elif forloop.counter0 == 0 %}
+                <span style="background:#EBF7EF;color:#1F5F2F;padding:1px 8px;border-radius:10px;font-weight:500">Scheduled — Current</span>
+                {% else %}
+                <span style="color:#9CA3AF">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            <!-- Completion toggle -->
+            <label class="ui-round-toggle" title="Mark round complete">
+              <input type="checkbox" name="round_done" value="{{ r.id }}" {% if r.completed %}checked{% endif %}>
+              <span class="ui-round-slider"></span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="ui-btn-primary" style="margin-top:16px;width:100%;justify-content:center;display:flex;align-items:center;gap:7px;padding:10px;font-size:13px">
+          <span class="material-symbols-outlined" style="font-size:17px">task_alt</span>
+          Save Rounds
+        </button>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:8px;text-align:center;line-height:1.4">
+          Mark every round complete to unlock <b>Promote</b> / <b>Create Proposal</b> on the interview list.
+        </div>
+      </form>
+      {% else %}
+      <div style="text-align:center;padding:20px 0;color:#9CA3AF;font-size:13px">No rounds defined yet.</div>
+      {% endif %}
+    </div>
+
+  </div><!-- /right -->
+
+</div><!-- /grid -->
+
+<!-- ── Styles ─────────────────────────────────────────────────────── -->
+<style>
+.rsc-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #1F5F2F; color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rsc-summary-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 12px;
+}
+.rsc-summary-icon { font-size: 18px; color: #9E9E9E; flex-shrink: 0; margin-top: 1px; }
+.rsc-summary-key  { font-size: 11px; color: #9E9E9E; font-weight: 500; margin-bottom: 2px; }
+.rsc-summary-val  { font-size: 13px; color: #111; font-weight: 500; }
+
+#panelists-box:focus-within { border-color: #76B590; }
+.panelists-opt:hover  { background: #F0F8F3; }
+.panelists-opt.selected { color: #888; pointer-events: none; }
+.panelists-opt.selected::after { content: ' ✓'; color: #278E53; }
+.panelists-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 26px; padding: 0 10px;
+  border: 1px solid #D0E8D8; border-radius: 20px;
+  font-size: 12px; font-weight: 500; color: #278E53; background: #F0F8F3;
+}
+.panelists-pill button {
+  border: none; background: none; color: #278E53; cursor: pointer;
+  padding: 0; line-height: 1; font-size: 14px; display: flex; align-items: center;
+}
+/* Round completion toggle */
+.ui-round-toggle { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; margin-top: 2px; }
+.ui-round-toggle input { opacity: 0; width: 0; height: 0; }
+.ui-round-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: #D1D5DB; border-radius: 22px; transition: .2s;
+}
+.ui-round-slider::before {
+  content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px;
+  background: #fff; border-radius: 50%; transition: .2s;
+}
+.ui-round-toggle input:checked + .ui-round-slider { background: #1F5F2F; }
+.ui-round-toggle input:checked + .ui-round-slider::before { transform: translateX(16px); }
+</style>
+
+<!-- ── Scripts ────────────────────────────────────────────────────── -->
+<script>
+/* ---- Panelist pill widget ---- */
+(function(){
+  var box      = document.getElementById('panelists-box');
+  var search   = document.getElementById('panelists-search');
+  var dropdown = document.getElementById('panelists-dropdown');
+  var hidden   = document.getElementById('panelists-hidden');
+  var placeholder = document.getElementById('panelists-placeholder');
+  var opts     = Array.from(dropdown.querySelectorAll('.panelists-opt'));
+  var selected = new Set();
+  var widget   = document.getElementById('panelists-widget');
+  widget.style.position = 'relative';
+
+  function syncHidden(){
+    Array.from(hidden.options).forEach(function(o){ o.selected = selected.has(o.value); });
+    placeholder.style.display = selected.size ? 'none' : '';
+  }
+  function addPill(id, name){
+    if(selected.has(id)) return;
+    selected.add(id);
+    var pill = document.createElement('span');
+    pill.className = 'panelists-pill';
+    pill.dataset.id = id;
+    pill.innerHTML = name + '<button type="button" title="Remove">&times;</button>';
+    pill.querySelector('button').addEventListener('click', function(e){
+      e.stopPropagation();
+      pill.remove();
+      selected.delete(id);
+      var o = opts.find(function(o){ return o.dataset.id === id; });
+      if(o) o.classList.remove('selected');
+      syncHidden();
+    });
+    box.insertBefore(pill, search);
+    var o = opts.find(function(o){ return o.dataset.id === id; });
+    if(o) o.classList.add('selected');
+    syncHidden();
+    search.value = '';
+    filterOpts('');
+  }
+  function filterOpts(q){
+    q = q.toLowerCase();
+    var visible = 0;
+    opts.forEach(function(o){
+      var show = o.dataset.name.toLowerCase().includes(q);
+      o.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    dropdown.style.display = visible ? '' : 'none';
+  }
+  search.addEventListener('input',  function(){ filterOpts(search.value); });
+  search.addEventListener('focus',  function(){ filterOpts(search.value); dropdown.style.display = ''; });
+  document.addEventListener('click',function(e){ if(!widget.contains(e.target)) dropdown.style.display = 'none'; });
+  opts.forEach(function(o){
+    o.addEventListener('click', function(){ addPill(o.dataset.id, o.dataset.name); search.focus(); });
+  });
+  /* Pre-select existing panelists */
+  opts.forEach(function(o){ if(o.dataset.preselected === '1') addPill(o.dataset.id, o.dataset.name); });
+})();
+
+/* ---- Live "New Date & Time" in summary ---- */
+(function(){
+  var dateIn = document.querySelector('input[name="interview_date"]');
+  var timeIn = document.querySelector('input[name="interview_time"]');
+  var target = document.getElementById('summary-new-datetime');
+  function update(){
+    var d = dateIn.value, t = timeIn.value;
+    if(!d){ target.textContent = '—'; return; }
+    var parts = d.split('-');
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var label = months[parseInt(parts[1],10)-1] + ' ' + parseInt(parts[2],10) + ', ' + parts[0];
+    if(t){
+      var tp = t.split(':'), h = parseInt(tp[0],10), m = tp[1], ampm = h>=12?'PM':'AM';
+      h = h%12 || 12;
+      label += ', ' + h + ':' + m + ' ' + ampm;
+    }
+    target.textContent = label;
+  }
+  dateIn.addEventListener('change', update);
+  timeIn.addEventListener('change', update);
+  update();
+})();
+</script>
+{% endblock %}

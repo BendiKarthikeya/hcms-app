@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}EOSB Settings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>End of Service Benefits Settings</h1>
+        <p>Configure gratuity rates and EOSB calculation parameters</p>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+
+        <div class="info-card">
+            <h4>ℹ️ Omani Labor Law Compliance</h4>
+            <p>End of Service Benefits in Oman are calculated based on tenure and salary. These settings ensure compliance with the Labour Law of Oman.</p>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.gratuity_rate_0_3.id_for_label }}">
+                    Gratuity Rate (0-3 Years)
+                </label>
+                {{ form.gratuity_rate_0_3 }}
+                <small>Proportion of salary per year of service</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.gratuity_rate_4_5.id_for_label }}">
+                    Gratuity Rate (4-5 Years)
+                </label>
+                {{ form.gratuity_rate_4_5 }}
+                <small>Proportion of salary per year of service</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.gratuity_rate_6_plus.id_for_label }}">
+                Gratuity Rate (6+ Years)
+            </label>
+            {{ form.gratuity_rate_6_plus }}
+            <small>Proportion of salary per year of service</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.min_service_months.id_for_label }}">
+                    Minimum Service Period (Months)
+                </label>
+                {{ form.min_service_months }}
+                <small>Minimum months of service to qualify for EOSB (typically 12)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.max_gratuity_amount.id_for_label }}">
+                    Maximum Gratuity Amount (OMR)
+                </label>
+                {{ form.max_gratuity_amount }}
+                <small>Maximum gratuity amount payable</small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.apply_tax.id_for_label }}">
+                    <input type="checkbox" id="{{ form.apply_tax.id_for_label }}" name="apply_tax">
+                    Apply Tax on Gratuity
+                </label>
+                <small>Whether gratuity should be subject to income tax</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tax_rate.id_for_label }}">
+                    Tax Rate (%)
+                </label>
+                {{ form.tax_rate }}
+                <small>Tax percentage to apply if tax is enabled</small>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> These settings apply to all EOSB calculations for the company. Ensure they are updated if there are changes to organizational policy or legal requirements.
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <a href="." class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

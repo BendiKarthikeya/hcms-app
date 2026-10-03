@@ -1,0 +1,331 @@
+{% load static %} {% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - {{white_label_company_name}} Dashboard</title>
+    <link rel="apple-touch-icon" sizes="180x180"
+        href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/apple-touch-icon.png' %}{% endif %}">
+    <link rel="icon" type="image/png" sizes="32x32"
+        href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-32x32.png' %}{% endif %}">
+    <link rel="icon" type="image/png" sizes="16x16"
+        href="{% if white_label_company.icon %}{{white_label_company.icon.url}} {% else %}{% static 'favicons/favicon-16x16.png' %}{% endif %}">
+    <link rel="stylesheet" href="{% static '/build/css/style.min.css' %}" />
+    <link rel="manifest" href="{% static 'build/manifest.json' %}" />
+    <style>
+        /* Modern Login Styles - Matching original login.html colors */
+        .modern-login-container {
+            min-height: 100vh;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modern-login-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .modern-login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .modern-login-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .modern-login-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .modern-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .modern-form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .modern-form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .modern-form-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .modern-password-container {
+            position: relative;
+        }
+        
+        .modern-password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .modern-login-btn {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .modern-login-btn:hover {
+            background: #0056b3;
+        }
+        
+        .modern-login-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .modern-forgot-link {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .modern-forgot-link:hover {
+            color: #0056b3;
+        }
+        
+        .modern-alert-container {
+            margin-bottom: 20px;
+        }
+        
+        .modern-alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .modern-alert--error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .modern-alert--warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .modern-alert--success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .modern-neon-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 8px;
+        }
+        
+        .modern-neon-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="modern-login-container">
+        <div class="modern-login-card">
+            <div class="modern-login-header">
+                <h1 class="modern-login-title">{% trans "Welcome Back" %}</h1>
+                <p class="modern-login-subtitle">{% trans "Sign in to access your dashboard" %}</p>
+            </div>
+            
+            <div class="modern-alert-container">
+                {% for message in messages %}
+                <div class="modern-alert modern-alert--{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <form method="post" class="modern-login-form">
+                {% csrf_token %}
+                
+                <div class="modern-form-group">
+                    <label class="modern-form-label" for="username">{% trans "Username" %}</label>
+                    <input type="text" id="username" name="username" class="modern-form-input"
+                           placeholder="e.g. adam.luis@fits.com" required
+                           oninput="this.value=this.value.toLowerCase()"
+                           onblur="this.value=this.value.trim().toLowerCase()" />
+                </div>
+                
+                <div class="modern-form-group">
+                    <label class="modern-form-label" for="password">{% trans "Password" %}</label>
+                    <div class="modern-password-container">
+                        <input type="password" id="password" name="password" 
+                               class="modern-form-input modern-form-input--password" 
+                               placeholder="Enter your password" required />
+                        <button type="button" class="modern-password-toggle">
+                            <ion-icon class="modern-password-show" name="eye-outline"></ion-icon>
+                            <ion-icon class="modern-password-hide d-none" name="eye-off-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="modern-login-btn">
+                    <ion-icon class="me-2" name="lock-closed-outline"></ion-icon>
+                    {% trans "Sign In" %}
+                </button>
+                
+                {% if not initialize_database %}
+                <div class="modern-login-footer">
+                    <a href="{% url 'forgot-password' %}" class="modern-forgot-link">
+                        {% trans "Forgot password?" %}
+                    </a>
+                </div>
+                {% endif %}
+                
+                <div class="modern-neon-status" id="neon-db-status-indicator">
+                    <span class="modern-neon-indicator" style="background: #aaaaaa;"></span>
+                    {% trans "Neon DB Connection: Checking..." %}
+                </div>
+            </form>
+            
+            {% if initialize_database %}
+            <div class="modern-login-footer">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'initialize-database' %}"
+                       class="modern-login-btn" style="background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);">
+                        {% trans "Initialize Database" %}
+                        <ion-icon class="ms-2" name="arrow-forward-outline"></ion-icon>
+                    </a>
+                    <a onclick="$('#dataLoadAuthentication').toggleClass('oh-modal--show');"
+                       class="modern-login-btn" style="background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);">
+                        {% trans "Load Demo Data" %}
+                        <ion-icon class="ms-2" name="arrow-forward-outline"></ion-icon>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script src="{% static '/build/js/web.frontend.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="module" src="{% static 'images/ionicons/ui_icons/ionicons/ionicons.esm.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script>
+        $(document).ready(function () {
+            // Password toggle functionality
+            $('.modern-password-toggle').click(function() {
+                const passwordInput = $(this).siblings('.modern-form-input--password');
+                const showIcon = $(this).find('.modern-password-show');
+                const hideIcon = $(this).find('.modern-password-hide');
+                
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    showIcon.addClass('d-none');
+                    hideIcon.removeClass('d-none');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    hideIcon.addClass('d-none');
+                    showIcon.removeClass('d-none');
+                }
+            });
+            
+            // Form validation
+            $('.modern-login-form').on('submit', function(e) {
+                const username = $('#username').val().trim().toLowerCase();
+                $('#username').val(username);
+                const password = $('#password').val().trim();
+                
+                if (!username || !password) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Missing Information',
+                        text: 'Please fill in both username and password fields.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                    });
+                }
+            });
+            
+            // Error message handling
+            if ($(".modern-alert--warning").length > 0) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Your login credentials are currently blocked. Please contact HR administrators for assistance.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                });
+            }
+        });
+    </script>
+    <script>
+        // Fetch Neon DB status asynchronously so it doesn't block page render
+        fetch("{% url 'neon-db-status' %}")
+            .then(r => r.json())
+            .then(function(data) {
+                var el = document.getElementById('neon-db-status-indicator');
+                if (el) {
+                    if (data.active) {
+                        el.innerHTML = '<span class="modern-neon-indicator" style="background: #00ff88;"></span>Neon DB Connection: Active';
+                    } else {
+                        el.innerHTML = '<span class="modern-neon-indicator" style="background: #ff4444;"></span>Neon DB Connection: Inactive';
+                    }
+                }
+            })
+            .catch(function() {
+                var el = document.getElementById('neon-db-status-indicator');
+                if (el) el.innerHTML = '<span class="modern-neon-indicator" style="background: #ff4444;"></span>Neon DB Connection: Inactive';
+            });
+    </script>
+    {% include "sitewide_chatbot/widget.html" %}
+</body>
+
+</html>

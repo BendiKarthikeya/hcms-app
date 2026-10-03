@@ -1,0 +1,98 @@
+{% extends 'index.html' %}
+{% block content %}
+{% load static %}
+{% load i18n %}
+
+<div class="oh-modal" id="createModal" role="dialog" aria-hidden="true">
+  <div class="oh-modal__dialog" style="max-width: 550px">
+      <div class="oh-modal__dialog-header">
+      <button onclick="$(this).closest('#createModal').removeClass('oh-modal--show');" type="button" class="oh-modal__close" aria-label="Close"><ion-icon name="close-outline"></ion-icon></button>
+      </div>
+
+      <div class="oh-modal__dialog-body" id="createTarget"></div>
+  </div>
+</div>
+
+<style>
+  .to-employee{
+    background: #f1ffd5;
+  }
+  .to-employee:hover{
+    background-color: #f1ffd5 !important;
+  }
+  .oh-rate:not(:checked)>label:hover, .oh-rate:not(:checked)>label:hover~label{
+    color: #ccc
+  }
+  .diff-cell{
+    background: rgba(255, 166, 0, 0.158);
+  }
+</style>
+{% include 'candidate/interview_nav.html' %}
+
+<style>
+  .iv-tabs { display:flex; gap:4px; border-bottom:2px solid #e5e7eb; padding:0 12px; margin-top:12px; background:#fff; }
+  .iv-tab { padding:10px 18px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:3px solid transparent; cursor:pointer; user-select:none; }
+  .iv-tab.active { color:#2563eb; border-bottom-color:#2563eb; }
+  .iv-pane { display:none; }
+  .iv-pane.active { display:block; }
+</style>
+
+<div class="oh-wrapper">
+  <div class="iv-tabs">
+    <div class="iv-tab active" data-iv-tab="interviews">
+      <ion-icon name="calendar-outline" style="vertical-align:middle;"></ion-icon>
+      {% trans "Interviews" %}
+    </div>
+    <div class="iv-tab" data-iv-tab="proposals"
+         hx-get="{% url 'proposal-list' %}?partial=1"
+         hx-target="#iv-pane-proposals"
+         hx-trigger="click once"
+         hx-swap="innerHTML">
+      <ion-icon name="document-text-outline" style="vertical-align:middle;"></ion-icon>
+      {% trans "Proposals" %}
+    </div>
+  </div>
+
+  <div id="iv-pane-interviews" class="iv-pane active">
+    <div id="section">
+        {% include 'candidate/interview_list.html' %}
+    </div>
+  </div>
+
+  <div id="iv-pane-proposals" class="iv-pane" style="padding:16px 0;">
+    <div style="text-align:center;color:#9ca3af;font-size:13px;padding:24px;">
+      {% trans "Loading proposals…" %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest(".iv-tab");
+    if (!t) return;
+    var key = t.dataset.ivTab;
+    document.querySelectorAll(".iv-tab").forEach(function (el) { el.classList.toggle("active", el === t); });
+    document.querySelectorAll(".iv-pane").forEach(function (p) {
+      p.classList.toggle("active", p.id === "iv-pane-" + key);
+    });
+  });
+</script>
+
+<div class="oh-modal" id="createModal" role="dialog" aria-hidden="true">
+    <div class="oh-modal__dialog" style="max-width: 550px">
+        <div class="oh-modal__dialog-header">
+        <button onclick="$(this).closest('#createModal').removeClass('oh-modal--show');" type="button" class="oh-modal__close" aria-label="Close"><ion-icon name="close-outline"></ion-icon></button>
+        </div>
+
+        <div class="oh-modal__dialog-body" id="createTarget"></div>
+    </div>
+</div>
+
+<script src="{% static '/candidate/bulk.js' %}"></script>
+<script>
+  $(".oh-permission-table--toggle").on("click", function(){
+      $(this).siblings(".oh-sticky-table__td").children(".count-span").toggleClass("d-none")
+  })
+</script>
+
+{% endblock %}

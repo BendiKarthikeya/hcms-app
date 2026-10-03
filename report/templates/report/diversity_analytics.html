@@ -1,0 +1,161 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .div-container {
+    padding: 2rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    color: hsl(0, 0%, 26%);
+  }
+  .div-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    color: hsl(0, 0%, 26%);
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  .dark-card {
+    background: hsl(0, 0%, 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid hsl(213, 22%, 93%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .dark-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: hsl(216, 18%, 64%);
+  }
+  .value-lg {
+    font-size: 3rem;
+    font-weight: 800;
+    color: hsl(0, 0%, 26%);
+    margin: 1rem 0;
+  }
+  .subtitle { color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+  .benchmark { color: hsl(148, 70%, 40%); font-size: 0.85rem; font-weight: 600; display:flex; align-items:center; }
+
+  .charts-row {
+    display: flex;
+    gap: 2rem;
+  }
+  .chart-box {
+    flex: 1;
+    background: hsl(0, 0%, 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid hsl(213, 22%, 93%);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="div-container">
+  <h1 class="div-title">{% trans "Diversity & Tenure Intelligence" %}</h1>
+
+  <div class="metrics-grid">
+    <div class="dark-card">
+      <div class="subtitle">{% trans "Gender Diversity (Female)" %}</div>
+      <div class="value-lg">42.5%</div>
+      <div class="benchmark">↑ +2.1% {% trans "vs Ind. Avg. (39%)" %}</div>
+    </div>
+    <div class="dark-card" style="border-image: linear-gradient(90deg, #f093fb, #f5576c) 1; border-top: 3px solid transparent;">
+      <div class="subtitle">{% trans "Avg. Employee Tenure" %}</div>
+      <div class="value-lg">4.2 {% trans "years" %}</div>
+      <div class="benchmark" style="color: #60a5fa;">✓ Stable Core</div>
+    </div>
+    <div class="dark-card" style="border-image: linear-gradient(90deg, #43e97b, #38f9d7) 1; border-top: 3px solid transparent;">
+      <div class="subtitle">{% trans "Generational Mix (Millennials+GenZ)" %}</div>
+      <div class="value-lg">78%</div>
+      <div class="benchmark" style="color: #fbbf24;">Future-Ready Workforce</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-box">
+      <h3 style="color:hsl(0, 0%, 26%); margin-top:0;">{% trans "Diversity Score by Department" %}</h3>
+      <div style="height: 300px;">
+        <canvas id="deptDiversity"></canvas>
+      </div>
+    </div>
+    <div class="chart-box">
+      <h3 style="color:hsl(0, 0%, 26%); margin-top:0;">{% trans "Tenure Distribution vs Attrition" %}</h3>
+      <div style="height: 300px;">
+        <canvas id="tenureChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    Chart.defaults.color = '#6b7280';
+    Chart.defaults.borderColor = 'rgba(0,0,0,0.08)';
+
+    new Chart(document.getElementById('deptDiversity'), {
+      type: 'radar',
+      data: {
+        labels: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations'],
+        datasets: [{
+          label: 'Diversity Score (0-100)',
+          data: [65, 88, 75, 92, 70, 80],
+          backgroundColor: 'rgba(79, 172, 254, 0.4)',
+          borderColor: '#4facfe',
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#00f2fe'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(0,0,0,0.08)' },
+            grid: { color: 'rgba(0,0,0,0.08)' },
+            pointLabels: { color: '#6b7280', font: { size: 12 } },
+            ticks: { display: false }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('tenureChart'), {
+      type: 'bar',
+      data: {
+        labels: ['<1 year', '1-3 years', '3-5 years', '5-10 years', '>10 years'],
+        datasets: [{
+          label: 'Employee Count',
+          data: [150, 420, 310, 280, 88],
+          backgroundColor: '#f093fb',
+          borderRadius: 6
+        }, {
+          label: 'Attrition Rate (%)',
+          data: [18, 12, 5, 2, 1],
+          type: 'line',
+          borderColor: '#43e97b',
+          tension: 0.4,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

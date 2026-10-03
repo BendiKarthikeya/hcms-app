@@ -1,0 +1,256 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+
+<div class="oh-wrapper">
+  <style>
+    .ep-list-head { display:flex; align-items:center; justify-content:space-between; margin:18px 0 14px; }
+    .ep-list-head h3 { margin:0; font-size:20px; font-weight:700; color:#111827; }
+    .ep-list-tbl { width:100%; border-collapse:collapse; font-size:13px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; }
+    .ep-list-tbl th { background:#f9fafb; text-align:left; padding:10px 12px; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb; }
+    .ep-list-tbl td { padding:10px 12px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+    .ep-list-tbl tr:last-child td { border-bottom:none; }
+    .ep-pill { display:inline-block; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; margin-right:4px; }
+    .ep-pill-active   { background:#dcfce7; color:#166534; }
+    .ep-pill-waiting  { background:#f3f4f6; color:#6b7280; }
+    .ep-pill-approved { background:#dbeafe; color:#1d4ed8; }
+    .ep-pill-rejected { background:#fef3c7; color:#b45309; }
+    .ep-status-draft     { background:#f3f4f6; color:#374151; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; }
+    .ep-status-pending   { background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; }
+    .ep-status-approved  { background:#dcfce7; color:#166534; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; }
+    .ep-status-rejected  { background:#fee2e2; color:#b91c1c; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; }
+    .ep-status-converted { background:#e0e7ff; color:#3730a3; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:600; }
+    .ep-action-btn { display:inline-flex; align-items:center; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:600; text-decoration:none; cursor:pointer; border:none; margin-right:4px; }
+  </style>
+
+  <div class="ep-list-head">
+    <h3><ion-icon name="document-text-outline" style="font-size:22px;vertical-align:middle;color:#2563eb;"></ion-icon>
+      {% trans "Employment Proposals" %}</h3>
+    <div>
+      {% if is_admin %}
+      <a href="{% url 'proposal-roles' %}" class="ep-action-btn" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">
+        <ion-icon name="people-outline"></ion-icon>&nbsp;{% trans "Role Mapping" %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="oh-alert-container"><div class="oh-alert oh-alert--animated {{ m.tags }}">{{ m }}</div></div>
+    {% endfor %}
+  {% endif %}
+
+  {% if rows %}
+  <table class="ep-list-tbl">
+    <thead>
+      <tr>
+        <th style="width:90px;">{% trans "No." %}</th>
+        <th>{% trans "Candidate" %}</th>
+        <th style="width:160px;">{% trans "Template" %}</th>
+        <th style="width:110px;">{% trans "Status" %}</th>
+        <th>{% trans "E-Sign Chain" %}</th>
+        <th style="width:280px;">{% trans "Actions" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><strong>{{ r.proposal.proposal_no }}</strong></td>
+        <td>
+          {{ r.proposal.candidate.name }}
+          <div style="font-size:11px;color:#6b7280;">{{ r.proposal.post_applied_for|default:'—' }}</div>
+        </td>
+        <td>
+          {% if r.proposal.template_type == "permanent" %}
+            <span class="ep-pill ep-pill-approved">Permanent</span>
+          {% else %}
+            <span class="ep-pill ep-pill-active">Contractual</span>
+          {% endif %}
+        </td>
+        <td><span class="ep-status-{{ r.proposal.status }}">{{ r.proposal.get_status_display }}</span></td>
+        <td>
+          {% if r.chain %}
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              {% for step in r.chain %}
+                <span class="ep-pill ep-pill-{{ step.display_status }}"
+                      title="{{ step.role_label }} — {{ step.approver.get_full_name }}">
+                  {{ step.sequence }}
+                </span>
+              {% endfor %}
+              <button type="button"
+                      onclick='openProposalWorkflow({{ r.proposal.id }})'
+                      style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px;">
+                <ion-icon name="git-branch-outline" style="font-size:13px;"></ion-icon>{% trans "Track" %}
+              </button>
+            </div>
+          {% else %}
+            <span style="color:#9ca3af;font-size:11px;">{% trans "No chain — assign roles" %}</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'proposal-detail' r.proposal.id %}"
+             class="ep-action-btn" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">
+            <ion-icon name="eye-outline"></ion-icon>&nbsp;{% trans "View" %}
+          </a>
+          {% if r.is_my_turn %}
+            <a href="{% url 'proposal-detail' r.proposal.id %}"
+               class="ep-action-btn" style="background:#16a34a;color:#fff;">
+              <ion-icon name="pen-outline"></ion-icon>&nbsp;{% trans "Sign" %}
+            </a>
+          {% endif %}
+          {% if r.all_approved %}
+            <a href="{% url 'proposal-convert-offer' r.proposal.id %}"
+               class="ep-action-btn" style="background:#2563eb;color:#fff;">
+              <ion-icon name="document-text-outline"></ion-icon>&nbsp;{% trans "Create Offer" %}
+            </a>
+          {% endif %}
+          {% if is_admin and not r.proposal.is_terminal %}
+            <a href="{% url 'proposal-edit' r.proposal.id %}"
+               class="ep-action-btn" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">
+              <ion-icon name="create-outline"></ion-icon>
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="oh-empty">
+      <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="No proposals." />
+      {% if is_admin %}
+        <h1 class="oh-empty__title">{% trans "No proposals yet." %}</h1>
+        <p class="oh-empty__subtitle">
+          {% trans "Complete an interview to create a proposal — Interview View → toggle all rounds → Create Proposal." %}
+        </p>
+      {% else %}
+        <h1 class="oh-empty__title">{% trans "No proposals waiting for your signature." %}</h1>
+        <p class="oh-empty__subtitle">{% trans "You will be notified when a proposal reaches your step in the approval chain." %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{# ── Track Status workflow modal ───────────────────────── #}
+<style>
+  .pp-workflow-modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:99999; }
+  .pp-workflow-modal.show { display:flex; }
+  .pp-workflow-card { width:90vw; max-width:900px; max-height:90vh; overflow-y:auto; background:#fff; border-radius:16px; padding:24px 28px; box-shadow:0 20px 60px rgba(0,0,0,.3); transform:scale(0.92); opacity:0; transition:all .35s ease; }
+  .pp-workflow-modal.show .pp-workflow-card { transform:scale(1); opacity:1; }
+  .pp-workflow-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; }
+  .pp-flow-step { opacity:0; transform:translateY(15px); padding:10px 16px; border-radius:999px; font-weight:500; border:2px solid transparent; transition:all .6s ease; white-space:nowrap; font-size:13px; text-align:center; }
+  .pp-flow-step.approved { background:#d1fae5; border-color:#10b981; color:#065f46; }
+  .pp-flow-step.current  { background:#fef3c7; border-color:#f59e0b; color:#92400e; }
+  .pp-flow-step.rejected { background:#fee2e2; border-color:#ef4444; color:#991b1b; }
+  .pp-flow-step.waiting  { background:#f3f4f6; border-color:#e5e7eb; color:#9ca3af; }
+  .pp-flow-arrow { opacity:0; transform:translateY(15px); font-size:22px; color:#6b7280; transition:all .6s ease; align-self:flex-start; margin-top:10px; }
+  .pp-flow-step.show, .pp-flow-arrow.show, .pp-reason.show { opacity:1; transform:translateY(0); }
+  .pp-reason { display:flex; flex-direction:column; align-items:center; margin-top:6px; opacity:0; transform:translateY(-6px); transition:all .5s ease; gap:4px; }
+  .pp-reason-text { padding:5px 10px; border-radius:999px; font-size:11px; white-space:nowrap; }
+  .pp-reason-time { background:#e0f2fe; color:#075985; }
+  .pp-reason-fb { background:#fee2e2; color:#991b1b; max-width:240px; white-space:normal; text-align:center; }
+</style>
+
+<script>
+window.PROPOSAL_CHAINS = window.PROPOSAL_CHAINS || {};
+{% for r in rows %}
+window.PROPOSAL_CHAINS[{{ r.proposal.id }}] = {
+  candidate: "{{ r.proposal.candidate.name|escapejs }}",
+  template: "{{ r.proposal.get_template_type_display|escapejs }}",
+  steps: [
+    {% for step in r.chain %}
+    {
+      seq: {{ step.sequence }},
+      role: "{{ step.role_label|escapejs }}",
+      approver: "{{ step.approver.get_full_name|default:'—'|escapejs }}",
+      status: "{{ step.display_status }}",
+      acted_at: "{{ step.acted_at|date:'d M Y H:i'|default:''|escapejs }}",
+      feedback: "{{ step.feedback|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+};
+{% endfor %}
+</script>
+
+<div id="ppWorkflowModal" class="pp-workflow-modal">
+  <div class="pp-workflow-card">
+    <div class="pp-workflow-header">
+      <div>
+        <h5 style="margin:0;">{% trans "Proposal E-Sign Workflow" %}</h5>
+        <p id="ppWorkflowSubtitle" style="font-size:12px;color:#6b7280;margin:2px 0 0;"></p>
+      </div>
+      <span onclick="closeProposalWorkflow()" style="cursor:pointer;font-size:22px;color:#9ca3af;line-height:1;">&times;</span>
+    </div>
+    <div id="ppWorkflowContent" style="padding:24px 0 8px;display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;min-height:80px;"></div>
+  </div>
+</div>
+
+<script>
+function openProposalWorkflow(id) {
+  const d = window.PROPOSAL_CHAINS[id];
+  if (!d) return;
+  const modal = document.getElementById('ppWorkflowModal');
+  const container = document.getElementById('ppWorkflowContent');
+  document.getElementById('ppWorkflowSubtitle').textContent = d.candidate + ' · ' + d.template;
+  container.innerHTML = '';
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  if (!d.steps.length) {
+    container.innerHTML = '<p style="color:#9ca3af;font-size:13px;">{% trans "No approval chain configured." %}</p>';
+    return;
+  }
+
+  d.steps.forEach((s, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    const cls = s.status === 'approved' ? 'approved'
+              : s.status === 'rejected' ? 'rejected'
+              : s.status === 'active'   ? 'current' : 'waiting';
+    const pill = document.createElement('div');
+    pill.className = 'pp-flow-step ' + cls;
+    pill.innerHTML = 'Step ' + s.seq + ': ' + s.role + '<br><span style="font-size:11px;font-weight:400;opacity:.85;">' + s.approver + '</span>';
+    wrap.appendChild(pill);
+
+    if (s.acted_at) {
+      const t = document.createElement('div');
+      t.className = 'pp-reason';
+      t.innerHTML = '<span class="pp-reason-text pp-reason-time">' + s.acted_at + '</span>';
+      wrap.appendChild(t);
+    }
+    if (s.feedback) {
+      const fb = document.createElement('div');
+      fb.className = 'pp-reason';
+      fb.innerHTML = '<span class="pp-reason-text pp-reason-fb">&ldquo;' + s.feedback + '&rdquo;</span>';
+      wrap.appendChild(fb);
+    }
+
+    container.appendChild(wrap);
+
+    if (i < d.steps.length - 1) {
+      const arr = document.createElement('div');
+      arr.className = 'pp-flow-arrow';
+      arr.textContent = '→';
+      container.appendChild(arr);
+    }
+  });
+
+  container.querySelectorAll('.pp-flow-step, .pp-flow-arrow, .pp-reason').forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), i * 250);
+  });
+}
+
+function closeProposalWorkflow() {
+  const modal = document.getElementById('ppWorkflowModal');
+  modal.classList.remove('show');
+  setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+document.getElementById('ppWorkflowModal').addEventListener('click', function(e) {
+  if (e.target === this) closeProposalWorkflow();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,1252 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+{% block content %}
+
+<script src="https://cdn.docuseal.com/js/form.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+
+<style>
+.offer-page { background:#fff; width:100%; max-width:794px; margin:0 auto; padding:60px 72px; font-family:'Segoe UI',Arial,sans-serif; font-size:13.5px; line-height:1.7; color:#1f2937; position:relative; }
+.offer-page + .offer-page { border-top:3px dashed #e5e7eb; margin-top:32px; }
+.offer-letter-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #16a34a; padding-bottom:18px; margin-bottom:28px; }
+.offer-letter-header .company-name { font-size:22px; font-weight:700; color:#16a34a; }
+.offer-letter-header .offer-ref { font-size:12px; color:#6b7280; text-align:right; }
+.offer-section-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#6b7280; border-bottom:1px solid #e5e7eb; padding-bottom:6px; margin:24px 0 12px; }
+.offer-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
+.offer-field label { font-size:11px; color:#9ca3af; display:block; }
+.offer-field p { margin:2px 0 0; font-weight:600; font-size:13.5px; }
+.sign-box { border:1px dashed #d1d5db; border-radius:8px; padding:20px 24px; margin-top:16px; display:flex; align-items:flex-start; gap:24px; }
+.sign-slot { flex:1; border-bottom:1px solid #374151; padding-bottom:4px; }
+.sign-slot span { font-size:11px; color:#9ca3af; display:block; margin-top:4px; }
+.esign-chain { display:flex; align-items:center; gap:0; flex-wrap:wrap; }
+.esign-node { display:flex; align-items:center; gap:6px; font-size:12px; }
+.esign-node .pill { padding:2px 10px; border-radius:20px; font-weight:600; white-space:nowrap; }
+.esign-node .pill.active   { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.esign-node .pill.waiting  { background:#f3f4f6; color:#9ca3af; }
+.esign-node .pill.approved { background:#dbeafe; color:#1e40af; }
+.esign-node .pill.rejected { background:#fef3c7; color:#92400e; }
+.esign-arrow { color:#d1d5db; margin:0 4px; font-size:14px; }
+
+/* ── Workflow modal (shared with raise_recruitment) ── */
+.workflow-modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:99999; }
+.workflow-modal.show { display:flex; }
+.workflow-card { width:90vw; max-width:900px; height:auto; max-height:90vh; overflow-y:auto; background:#fff; border-radius:16px; padding:24px 28px; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.3); transform:scale(0.92); opacity:0; transition:all 0.4s ease; }
+.workflow-modal.show .workflow-card { transform:scale(1); opacity:1; }
+.workflow-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:0; }
+.flow-step { opacity:0; transform:translateY(15px); padding:10px 16px; border-radius:999px; font-weight:500; border:2px solid transparent; transition:all 0.6s ease; white-space:nowrap; }
+.flow-step.approved { background:#d1fae5; border-color:#10b981; }
+.flow-step.current  { background:#fef3c7; border-color:#f59e0b; }
+.flow-step.rejected { background:#fee2e2; border-color:#ef4444; }
+.flow-step.waiting  { background:#f3f4f6; border-color:#e5e7eb; color:#9ca3af; }
+.flow-arrow { opacity:0; transform:translateY(15px); font-size:22px; color:#6b7280; transition:all 0.6s ease; }
+.flow-step.show, .flow-arrow.show { opacity:1; transform:translateY(0); }
+.reason-box { display:flex; flex-direction:column; align-items:center; margin-top:6px; opacity:0; transform:translateY(-6px); transition:all 0.5s ease; }
+.reason-box.show { opacity:1; transform:translateY(0); }
+.reason-arrow { font-size:14px; color:#9ca3af; margin-bottom:2px; }
+.reason-text { background:#fee2e2; color:#991b1b; padding:6px 12px; border-radius:999px; font-size:12px; white-space:nowrap; }
+</style>
+
+<div class="oh-wrapper">
+  {% if messages %}
+  <div class="oh-alert-container" id="message">
+    {% for msg in messages %}
+      <div class="oh-alert oh-alert--animated {{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="oh-wrapper">
+  <div class="oh-card p-4">
+    <div class="oh-card__header mb-3" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <h4 class="oh-card__title mb-0">
+        {% trans "Letters" %}
+        {% if search_query %}
+        <span style="font-size:13px;font-weight:400;color:#6b7280;margin-left:8px;">
+          — {{ filtered_count }} of {{ total_count }} result{% if filtered_count != 1 %}s{% endif %} for "<strong>{{ search_query }}</strong>"
+          <a href="{% url 'onboarding-letters' %}?tab={{ active_tab }}" style="margin-left:6px;color:#ef4444;font-size:12px;">&times; Clear</a>
+        </span>
+        {% endif %}
+      </h4>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <!-- Search by document number -->
+        <form method="get" action="{% url 'onboarding-letters' %}" style="display:flex;gap:0;">
+          <input type="hidden" name="tab" value="{{ active_tab }}">
+          <input type="text" name="q" value="{{ search_query }}"
+                 placeholder="{% trans 'Search doc no. or name…' %}"
+                 style="padding:6px 12px;border:1px solid #d1d5db;border-radius:6px 0 0 6px;font-size:13px;outline:none;width:210px;">
+          <button type="submit" style="padding:6px 12px;border:1px solid #d1d5db;border-left:none;border-radius:0 6px 6px 0;background:#f3f4f6;cursor:pointer;">
+            <ion-icon name="search-outline" style="vertical-align:middle;font-size:15px;"></ion-icon>
+          </button>
+        </form>
+        <!-- Send Email button -->
+        <button type="button" class="oh-btn oh-btn--success" style="font-size:13px;padding:6px 16px;"
+                onclick="openSendEmailModal()">
+          <ion-icon name="mail-outline" style="vertical-align:middle;margin-right:5px;"></ion-icon>
+          {% trans "Send Documents Email" %}
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="oh-tabs__tablist">
+      <li class="oh-tabs__tab {% if active_tab == 'offer' %}oh-tabs__tab--active{% endif %}" data-target="#tab-offer">{% trans "Offer Letter" %}</li>
+      <li class="oh-tabs__tab {% if active_tab == 'medical' %}oh-tabs__tab--active{% endif %}" data-target="#tab-medical">{% trans "Medical Letter" %}</li>
+      <li class="oh-tabs__tab {% if active_tab == 'visa' %}oh-tabs__tab--active{% endif %}" data-target="#tab-visa">{% trans "Visa Letter" %}</li>
+    </ul>
+
+    <!-- ── Offer Letter Tab ──────────────────────────────────────────────── -->
+    <div id="tab-offer" class="oh-tabs__content {% if active_tab == 'offer' %}oh-tabs__content--active{% endif %}" style="margin-top:20px;">
+
+      {% if my_pending_approvals %}
+      <div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:18px;margin-bottom:20px;">
+        <p style="font-weight:700;color:#92400e;margin-bottom:14px;font-size:14px;">
+          <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:6px;font-size:16px;"></ion-icon>
+          {% trans "Pending Your E-Signature" %}
+        </p>
+        {% for appr in my_pending_approvals %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border:1px solid #fde68a;border-radius:8px;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <strong style="font-size:14px;">{{ appr.offer_letter.candidate_id.name }}</strong>
+            <span style="color:#6b7280;font-size:13px;margin-left:8px;">{{ appr.offer_letter.position }}</span>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px;">
+              {% trans "Step" %} {{ appr.sequence }} · {{ appr.offer_letter.candidate_id.email }}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="oh-btn oh-btn--light-bkg"
+                    style="padding:5px 14px;font-size:13px;color:#2563eb;"
+                    onclick="openLetterView({{ appr.offer_letter.id }})">
+              <ion-icon name="eye-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+              {% trans "View" %}
+            </button>
+            <button type="button" class="oh-btn oh-btn--success"
+                    style="padding:5px 14px;font-size:13px;"
+                    onclick="openEsignModal({{ appr.offer_letter.id }}, '{{ appr.offer_letter.candidate_id.name|escapejs }}', '{{ appr.offer_letter.position|escapejs }}')">
+              <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+              {% trans "E-Sign" %}
+            </button>
+            <button type="button" class="oh-btn oh-btn--warning"
+                    style="padding:5px 14px;font-size:13px;background:#f59e0b;color:#fff;border:none;border-radius:6px;cursor:pointer;"
+                    onclick="openFeedbackModal({{ appr.offer_letter.id }})">
+              <ion-icon name="chatbubble-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+              {% trans "Feedback" %}
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="oh-sticky-table oh-sticky-table--no-highlight">
+        <div class="oh-sticky-table__table">
+          <div class="oh-sticky-table__thead">
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__th">{% trans "Doc No" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Candidate" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Position" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+              <div class="oh-sticky-table__th">{% trans "E-Sign Chain" %}</div>
+              <div class="oh-sticky-table__th oh-sticky-table__right" style="width:220px;">{% trans "Actions" %}</div>
+            </div>
+          </div>
+          <div class="oh-sticky-table__tbody">
+            {% for row in offer_data %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td">
+                {% if row.offer %}
+                  <span style="font-family:monospace;font-size:12px;background:#f3f4f6;padding:2px 7px;border-radius:4px;color:#374151;">{{ row.offer.offer_no }}</span>
+                {% else %}
+                  <span style="color:#d1d5db;font-size:12px;">—</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                <strong>{{ row.candidate.name }}</strong>
+                <div style="font-size:12px;color:#6b7280;">{{ row.candidate.email }}</div>
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.offer %}{{ row.offer.position }}{% else %}&mdash;{% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.offer %}
+                  {% if row.offer.status == 'draft' %}<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Draft" %}</span>
+                  {% elif row.offer.status == 'pending_approval' %}<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Pending E-Sign" %}</span>
+                  {% elif row.offer.status == 'sent' %}<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Sent" %}</span>
+                  {% elif row.offer.status == 'accepted' %}<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Accepted" %}</span>
+                  {% elif row.offer.status == 'rejected' %}<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Rejected" %}</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color:#9ca3af;font-size:12px;">{% trans "Not created" %}</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.chain %}
+                <button class="oh-btn oh-btn--primary" style="font-size:12px;padding:5px 14px;"
+                        onclick="openEsignWorkflow({{ row.offer.id }})">
+                  <ion-icon name="git-branch-outline" style="vertical-align:middle;margin-right:4px;"></ion-icon>
+                  {% trans "Track Status" %}
+                </button>
+                {% else %}&mdash;{% endif %}
+              </div>
+              <div class="oh-sticky-table__td oh-sticky-table__right">
+                <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                  {% if not row.offer %}
+                  <a href="{% url 'onboarding-offer-create' row.candidate.id %}"
+                     class="oh-btn oh-btn--light-bkg" style="color:#2563eb;font-size:12px;padding:5px 14px;white-space:nowrap;">
+                    <ion-icon name="add-circle-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                    {% trans "Create" %}
+                  </a>
+                  {% else %}
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button type="button" class="oh-btn oh-btn--light-bkg"
+                            style="color:#2563eb;font-size:12px;padding:5px 12px;white-space:nowrap;"
+                            onclick="openLetterView({{ row.offer.id }})">
+                      <ion-icon name="eye-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "View" %}
+                    </button>
+                    {% if row.offer.status == 'draft' %}
+                    <a href="{% url 'onboarding-offer-edit' row.offer.id %}"
+                       class="oh-btn oh-btn--light-bkg" style="color:#d97706;font-size:12px;padding:5px 12px;white-space:nowrap;">
+                      <ion-icon name="create-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "Edit" %}
+                    </a>
+                    {% endif %}
+                  </div>
+                  {% if row.offer.status == 'accepted' %}
+                    <span style="color:#16a34a;font-size:12px;">&#10003; {% trans "Accepted" %}</span>
+                  {% elif row.offer.status == 'sent' %}
+                    <span style="color:#2563eb;font-size:12px;">{% trans "Awaiting candidate" %}</span>
+                  {% endif %}
+                  <button type="button"
+                          style="background:none;border:none;color:#6b7280;font-size:11px;cursor:pointer;padding:3px 6px;border-radius:4px;display:flex;align-items:center;gap:3px;"
+                          onclick="openAuditModal('offer', {{ row.offer.id }}, '{{ row.offer.offer_no|escapejs }}')"
+                          title="{% trans 'Audit Trail' %}">
+                    <ion-icon name="time-outline" style="font-size:13px;"></ion-icon>{% trans "Audit" %}
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td" style="text-align:center;padding:40px;color:#9ca3af;" colspan="6">
+                {% trans "No candidates with completed interviews yet." %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-offer -->
+
+    <!-- ── Medical Letter Tab ──────────────────────────────────────────────── -->
+    <div id="tab-medical" class="oh-tabs__content {% if active_tab == 'medical' %}oh-tabs__content--active{% endif %}" style="margin-top:20px;">
+
+      <div class="oh-sticky-table oh-sticky-table--no-highlight">
+        <div class="oh-sticky-table__table">
+          <div class="oh-sticky-table__thead">
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__th">{% trans "Doc No" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Candidate" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+              <div class="oh-sticky-table__th">{% trans "HR Signature" %}</div>
+              <div class="oh-sticky-table__th oh-sticky-table__right" style="width:220px;">{% trans "Actions" %}</div>
+            </div>
+          </div>
+          <div class="oh-sticky-table__tbody">
+            {% for row in medical_data %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td">
+                {% if row.letter %}
+                  <span style="font-family:monospace;font-size:12px;background:#f3f4f6;padding:2px 7px;border-radius:4px;color:#374151;">{{ row.letter.doc_no }}</span>
+                {% else %}
+                  <span style="color:#d1d5db;font-size:12px;">—</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                <strong>{{ row.candidate.name }}</strong>
+                <div style="font-size:12px;color:#6b7280;">{{ row.candidate.email }}</div>
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.letter %}
+                  {% if row.letter.status == 'draft' %}
+                    <span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Draft" %}</span>
+                  {% elif row.letter.status == 'signed' %}
+                    <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-size:12px;">✍ {% trans "Signed" %}</span>
+                  {% elif row.letter.status == 'sent' %}
+                    <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Sent" %}</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color:#9ca3af;font-size:12px;">{% trans "Not created" %}</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.letter and row.letter.hr_signed %}
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    {% if row.letter.hr_signature %}
+                    <img src="{{ row.letter.hr_signature }}" style="max-height:36px;border:1px solid #e5e7eb;border-radius:4px;background:#fff;" alt="HR Signature"/>
+                    {% endif %}
+                    <span style="font-size:12px;color:#166534;">{{ row.letter.hr_signed_by }}</span>
+                  </div>
+                {% elif row.letter %}
+                  <span style="color:#9ca3af;font-size:12px;">{% trans "Awaiting HR signature" %}</span>
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td oh-sticky-table__right">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                  {% if not row.letter %}
+                  <a href="{% url 'onboarding-medical-create' row.candidate.id %}"
+                     class="oh-btn oh-btn--light-bkg" style="color:#2563eb;font-size:12px;padding:5px 14px;white-space:nowrap;">
+                    <ion-icon name="add-circle-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                    {% trans "Create" %}
+                  </a>
+                  {% else %}
+                    <button type="button" class="oh-btn oh-btn--light-bkg"
+                            style="color:#2563eb;font-size:12px;padding:5px 12px;white-space:nowrap;"
+                            onclick="openSimpleLetterView('medical', {{ row.letter.id }}, '{{ row.candidate.name|escapejs }}')">
+                      <ion-icon name="eye-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "View" %}
+                    </button>
+                    {% if not row.letter.hr_signed %}
+                    <button type="button" class="oh-btn oh-btn--success"
+                            style="font-size:12px;padding:5px 12px;white-space:nowrap;"
+                            onclick="openSimpleEsign('medical', {{ row.letter.id }}, '{{ row.candidate.name|escapejs }}')">
+                      <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "E-Sign" %}
+                    </button>
+                    {% endif %}
+                    <button type="button"
+                            style="background:none;border:none;color:#6b7280;font-size:11px;cursor:pointer;padding:3px 6px;border-radius:4px;display:flex;align-items:center;gap:3px;"
+                            onclick="openAuditModal('medical', {{ row.letter.id }}, '{{ row.letter.doc_no|escapejs }}')"
+                            title="{% trans 'Audit Trail' %}">
+                      <ion-icon name="time-outline" style="font-size:13px;"></ion-icon>{% trans "Audit" %}
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td" style="text-align:center;padding:40px;color:#9ca3af;" colspan="5">
+                {% trans "No candidates with completed interviews yet." %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-medical -->
+
+    <!-- ── Visa Letter Tab ──────────────────────────────────────────────── -->
+    <div id="tab-visa" class="oh-tabs__content {% if active_tab == 'visa' %}oh-tabs__content--active{% endif %}" style="margin-top:20px;">
+
+      <div class="oh-sticky-table oh-sticky-table--no-highlight">
+        <div class="oh-sticky-table__table">
+          <div class="oh-sticky-table__thead">
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__th">{% trans "Doc No" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Candidate" %}</div>
+              <div class="oh-sticky-table__th">{% trans "Status" %}</div>
+              <div class="oh-sticky-table__th">{% trans "HR Signature" %}</div>
+              <div class="oh-sticky-table__th oh-sticky-table__right" style="width:220px;">{% trans "Actions" %}</div>
+            </div>
+          </div>
+          <div class="oh-sticky-table__tbody">
+            {% for row in visa_data %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td">
+                {% if row.letter %}
+                  <span style="font-family:monospace;font-size:12px;background:#f3f4f6;padding:2px 7px;border-radius:4px;color:#374151;">{{ row.letter.doc_no }}</span>
+                {% else %}
+                  <span style="color:#d1d5db;font-size:12px;">—</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                <strong>{{ row.candidate.name }}</strong>
+                <div style="font-size:12px;color:#6b7280;">{{ row.candidate.email }}</div>
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.letter %}
+                  {% if row.letter.status == 'draft' %}
+                    <span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Draft" %}</span>
+                  {% elif row.letter.status == 'signed' %}
+                    <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-size:12px;">✍ {% trans "Signed" %}</span>
+                  {% elif row.letter.status == 'sent' %}
+                    <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:12px;font-size:12px;">{% trans "Sent" %}</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color:#9ca3af;font-size:12px;">{% trans "Not created" %}</span>
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td">
+                {% if row.letter and row.letter.hr_signed %}
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    {% if row.letter.hr_signature %}
+                    <img src="{{ row.letter.hr_signature }}" style="max-height:36px;border:1px solid #e5e7eb;border-radius:4px;background:#fff;" alt="HR Signature"/>
+                    {% endif %}
+                    <span style="font-size:12px;color:#166534;">{{ row.letter.hr_signed_by }}</span>
+                  </div>
+                {% elif row.letter %}
+                  <span style="color:#9ca3af;font-size:12px;">{% trans "Awaiting HR signature" %}</span>
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </div>
+              <div class="oh-sticky-table__td oh-sticky-table__right">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                  {% if not row.letter %}
+                  <a href="{% url 'onboarding-visa-create' row.candidate.id %}"
+                     class="oh-btn oh-btn--light-bkg" style="color:#2563eb;font-size:12px;padding:5px 14px;white-space:nowrap;">
+                    <ion-icon name="add-circle-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                    {% trans "Create" %}
+                  </a>
+                  {% else %}
+                    <button type="button" class="oh-btn oh-btn--light-bkg"
+                            style="color:#2563eb;font-size:12px;padding:5px 12px;white-space:nowrap;"
+                            onclick="openSimpleLetterView('visa', {{ row.letter.id }}, '{{ row.candidate.name|escapejs }}')">
+                      <ion-icon name="eye-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "View" %}
+                    </button>
+                    {% if not row.letter.hr_signed %}
+                    <button type="button" class="oh-btn oh-btn--success"
+                            style="font-size:12px;padding:5px 12px;white-space:nowrap;"
+                            onclick="openSimpleEsign('visa', {{ row.letter.id }}, '{{ row.candidate.name|escapejs }}')">
+                      <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:3px;"></ion-icon>
+                      {% trans "E-Sign" %}
+                    </button>
+                    {% endif %}
+                    <button type="button"
+                            style="background:none;border:none;color:#6b7280;font-size:11px;cursor:pointer;padding:3px 6px;border-radius:4px;display:flex;align-items:center;gap:3px;"
+                            onclick="openAuditModal('visa', {{ row.letter.id }}, '{{ row.letter.doc_no|escapejs }}')"
+                            title="{% trans 'Audit Trail' %}">
+                      <ion-icon name="time-outline" style="font-size:13px;"></ion-icon>{% trans "Audit" %}
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="oh-sticky-table__tr">
+              <div class="oh-sticky-table__td" style="text-align:center;padding:40px;color:#9ca3af;" colspan="5">
+                {% trans "No candidates with completed interviews yet." %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-visa -->
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     OFFER LETTER VIEW MODAL
+══════════════════════════════════════════════════════ -->
+<div id="letterViewModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:32px 16px;box-sizing:border-box;">
+  <div style="background:#f3f4f6;border-radius:12px;max-width:860px;width:100%;position:relative;padding-bottom:32px;">
+    <div style="background:#1f2937;color:#fff;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-weight:600;font-size:15px;" id="lvModalTitle">Offer Letter</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.print()" style="background:#374151;border:none;color:#d1d5db;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:13px;">
+          <ion-icon name="print-outline" style="vertical-align:middle;margin-right:4px;"></ion-icon>{% trans "Print" %}
+        </button>
+        <button onclick="closeLetter()" style="background:none;border:none;color:#9ca3af;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+    </div>
+    <div id="lvPages" style="padding:24px;"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SIMPLE LETTER VIEW MODAL (Medical / Visa)
+══════════════════════════════════════════════════════ -->
+<div id="simpleLetterViewModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:32px 16px;box-sizing:border-box;">
+  <div style="background:#f3f4f6;border-radius:12px;max-width:860px;width:100%;position:relative;padding-bottom:32px;">
+    <div style="background:#1f2937;color:#fff;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-weight:600;font-size:15px;" id="slvModalTitle">Letter</span>
+      <button onclick="closeSimpleLetter()" style="background:none;border:none;color:#9ca3af;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div id="slvContent" style="padding:24px;"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     E-SIGN MODAL (Offer Letter)
+══════════════════════════════════════════════════════ -->
+<div id="esignModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="background:#dcfce7;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+        <ion-icon name="pen-outline" style="font-size:20px;color:#16a34a;"></ion-icon>
+      </div>
+      <div>
+        <h5 style="margin:0;font-size:16px;">{% trans "E-Sign Offer Letter" %}</h5>
+        <p style="margin:0;font-size:12px;color:#6b7280;" id="esignSubtitle"></p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#374151;margin-bottom:8px;">{% trans "Draw your signature below:" %}</p>
+    <div style="border:2px solid #d1d5db;border-radius:8px;background:#f9fafb;position:relative;">
+      <canvas id="signatureCanvas" style="width:100%;display:block;touch-action:none;" height="160"></canvas>
+      <button type="button" onclick="clearSignature()"
+              style="position:absolute;top:6px;right:8px;background:none;border:none;font-size:11px;color:#9ca3af;cursor:pointer;">
+        {% trans "Clear" %}
+      </button>
+    </div>
+    <p style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Sign using your mouse or touch." %}</p>
+    <form id="esignForm" method="post" style="margin-top:16px;">
+      {% csrf_token %}
+      <input type="hidden" name="signature_data" id="signatureDataInput">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" onclick="closeEsign()"
+                style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="button" onclick="submitEsign()"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600;">
+          <ion-icon name="checkmark-circle-outline" style="vertical-align:middle;margin-right:4px;"></ion-icon>
+          {% trans "Confirm E-Sign" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SIMPLE E-SIGN MODAL (Medical / Visa — HR only)
+══════════════════════════════════════════════════════ -->
+<div id="simpleEsignModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="background:#dbeafe;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+        <ion-icon name="pen-outline" style="font-size:20px;color:#2563eb;"></ion-icon>
+      </div>
+      <div>
+        <h5 style="margin:0;font-size:16px;" id="simpleEsignTitle">{% trans "HR E-Sign" %}</h5>
+        <p style="margin:0;font-size:12px;color:#6b7280;" id="simpleEsignSubtitle"></p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#374151;margin-bottom:8px;">{% trans "Draw your signature below:" %}</p>
+    <div style="border:2px solid #d1d5db;border-radius:8px;background:#f9fafb;position:relative;">
+      <canvas id="simpleSignatureCanvas" style="width:100%;display:block;touch-action:none;" height="160"></canvas>
+      <button type="button" onclick="clearSimpleSignature()"
+              style="position:absolute;top:6px;right:8px;background:none;border:none;font-size:11px;color:#9ca3af;cursor:pointer;">
+        {% trans "Clear" %}
+      </button>
+    </div>
+    <p style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Sign using your mouse or touch." %}</p>
+    <form id="simpleEsignForm" method="post" style="margin-top:16px;">
+      {% csrf_token %}
+      <input type="hidden" name="signature_data" id="simpleSignatureDataInput">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" onclick="closeSimpleEsign()"
+                style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="button" onclick="submitSimpleEsign()"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;">
+          <ion-icon name="checkmark-circle-outline" style="vertical-align:middle;margin-right:4px;"></ion-icon>
+          {% trans "Confirm E-Sign" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     FEEDBACK MODAL
+══════════════════════════════════════════════════════ -->
+<div id="feedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;padding:28px;max-width:480px;width:90%;">
+    <h5 style="margin-top:0;">
+      <ion-icon name="chatbubble-outline" style="vertical-align:middle;margin-right:6px;color:#f59e0b;"></ion-icon>
+      {% trans "Leave Feedback" %}
+    </h5>
+    <p style="color:#6b7280;font-size:14px;">{% trans "Your feedback will be sent to HR." %}</p>
+    <form method="post" id="feedbackForm">
+      {% csrf_token %}
+      <textarea name="feedback" rows="4" placeholder="{% trans 'Describe your feedback or requested changes...' %}"
+                style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;resize:vertical;"></textarea>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" onclick="closeFeedback()" class="oh-btn oh-btn--light-bkg">{% trans "Cancel" %}</button>
+        <button type="submit" style="padding:8px 18px;border:none;border-radius:6px;background:#f59e0b;color:#fff;cursor:pointer;font-weight:600;">
+          {% trans "Submit Feedback" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SEND DOCUMENTS EMAIL MODAL
+══════════════════════════════════════════════════════ -->
+<div id="sendEmailModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="background:#dbeafe;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+        <ion-icon name="mail-outline" style="font-size:20px;color:#2563eb;"></ion-icon>
+      </div>
+      <div>
+        <h5 style="margin:0;font-size:16px;">{% trans "Send Documents to Candidate" %}</h5>
+        <p style="margin:0;font-size:12px;color:#6b7280;">{% trans "Select a candidate and the documents to send." %}</p>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'onboarding-send-documents' %}">
+      {% csrf_token %}
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">{% trans "Candidate" %}</label>
+        <select name="candidate_id" id="sendEmailCandidateSelect"
+                style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;"
+                onchange="updateDocumentAvailability(this.value)" required>
+          <option value="">— {% trans "Select candidate" %} —</option>
+          {% for row in offer_data %}
+          <option value="{{ row.candidate.id }}"
+                  data-offer="{% if row.offer %}{{ row.offer.status }}{% endif %}"
+                  data-medical="{% for mr in medical_data %}{% if mr.candidate.id == row.candidate.id %}{% if mr.letter %}{{ mr.letter.status }}{% endif %}{% endif %}{% endfor %}"
+                  data-visa="{% for vr in visa_data %}{% if vr.candidate.id == row.candidate.id %}{% if vr.letter %}{{ vr.letter.status }}{% endif %}{% endif %}{% endfor %}">
+            {{ row.candidate.name }} ({{ row.candidate.email }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:10px;">{% trans "Documents to Send" %}</label>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;" id="docOfferLabel">
+            <input type="checkbox" name="send_offer" id="chkOffer" style="width:16px;height:16px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;">{% trans "Offer Letter" %}</div>
+              <div style="font-size:12px;color:#6b7280;" id="offerDocStatus">{% trans "Select a candidate to see status" %}</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;" id="docMedicalLabel">
+            <input type="checkbox" name="send_medical" id="chkMedical" style="width:16px;height:16px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;">{% trans "Medical Clearance Letter" %}</div>
+              <div style="font-size:12px;color:#6b7280;" id="medicalDocStatus">{% trans "Select a candidate to see status" %}</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;" id="docVisaLabel">
+            <input type="checkbox" name="send_visa" id="chkVisa" style="width:16px;height:16px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;">{% trans "Visa Support Letter" %}</div>
+              <div style="font-size:12px;color:#6b7280;" id="visaDocStatus">{% trans "Select a candidate to see status" %}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" onclick="closeSendEmailModal()"
+                style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:13px;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="submit"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-weight:600;font-size:13px;">
+          <ion-icon name="send-outline" style="vertical-align:middle;margin-right:5px;"></ion-icon>
+          {% trans "Send Email" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Offer data for JS -->
+<script>
+const OFFER_LETTERS = {
+  {% for row in offer_data %}{% if row.offer %}
+  {{ row.offer.id }}: {
+    candidate: "{{ row.candidate.name|escapejs }}",
+    email: "{{ row.candidate.email|escapejs }}",
+    position: "{{ row.offer.position|escapejs }}",
+    department: "{{ row.offer.department|default:''|escapejs }}",
+    role_type: "{{ row.offer.role_type|default:'full_time'|escapejs }}",
+    basic_salary: "{{ row.offer.currency }} {{ row.offer.basic_salary }}",
+    gross_salary: "{% if row.offer.gross_salary %}{{ row.offer.currency }} {{ row.offer.gross_salary }}{% else %}—{% endif %}",
+    gross_salary_raw: {% if row.offer.gross_salary %}{{ row.offer.gross_salary }}{% else %}0{% endif %},
+    basic_salary_raw: {{ row.offer.basic_salary }},
+    joining_date: "{{ row.offer.joining_date|date:'d M Y' }}",
+    probation: "{{ row.offer.probation_period }} months",
+    contract: "{% if row.offer.contract_duration %}{{ row.offer.contract_duration }} months{% else %}Permanent{% endif %}",
+    job_description: `{{ row.offer.job_description|default:''|escapejs }}`,
+    recruitment_jd: `{{ row.candidate.recruitment_id.description|default:''|escapejs }}`,
+    terms: `{{ row.offer.terms_conditions|default:''|escapejs }}`,
+    body: `{{ row.offer.generated_letter|default:row.offer.letter_template|default:''|escapejs }}`,
+    offer_no: "{{ row.offer.offer_no }}",
+    status: "{{ row.offer.status }}",
+    chain: [{% for step in row.chain %}{approver:"{{ step.approver|default:'—'|escapejs }}", role:"{{ step.approver.employee_work_info.job_position_id.job_position|default:''|escapejs }}", job_role:"{{ step.approver.employee_work_info.job_role_id.job_role|default:''|escapejs }}", department:"{{ step.approver.employee_work_info.department_id.department|default:''|escapejs }}", is_superuser:{% if step.approver.employee_user_id.is_superuser %}true{% else %}false{% endif %}, groups:"{% for g in step.approver.employee_user_id.groups.all %}{{ g.name|escapejs }}{% if not forloop.last %}|{% endif %}{% endfor %}", status:"{{ step.display_status }}", seq:{{ step.sequence }}, total:{{ row.chain|length }}, feedback:"{{ step.feedback|escapejs }}", signature:"{{ step.signature_image|escapejs }}", acted_at:"{{ step.acted_at|date:'d M Y H:i'|default:''|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+  },
+  {% endif %}{% endfor %}
+};
+
+// Medical / Visa letter content for view modal
+const SIMPLE_LETTERS = {
+  {% for row in medical_data %}{% if row.letter %}
+  "medical_{{ row.letter.id }}": {
+    type: "Medical",
+    candidate: "{{ row.candidate.name|escapejs }}",
+    content: `{{ row.letter.content|escapejs }}`,
+    status: "{{ row.letter.status }}",
+    hr_signed: {{ row.letter.hr_signed|yesno:"true,false" }},
+    hr_signed_by: "{{ row.letter.hr_signed_by|default:''|escapejs }}",
+    hr_signature: "{{ row.letter.hr_signature|escapejs }}",
+  },
+  {% endif %}{% endfor %}
+  {% for row in visa_data %}{% if row.letter %}
+  "visa_{{ row.letter.id }}": {
+    type: "Visa",
+    candidate: "{{ row.candidate.name|escapejs }}",
+    content: `{{ row.letter.content|escapejs }}`,
+    status: "{{ row.letter.status }}",
+    hr_signed: {{ row.letter.hr_signed|yesno:"true,false" }},
+    hr_signed_by: "{{ row.letter.hr_signed_by|default:''|escapejs }}",
+    hr_signature: "{{ row.letter.hr_signature|escapejs }}",
+  },
+  {% endif %}{% endfor %}
+};
+
+/* ── Strip legacy Django template tags from stored letter body ── */
+function _cleanBody(text) {
+  if (!text) return '';
+  // Keep inner content of {% if X %}...{% endif %} blocks (values already substituted)
+  return text
+    .replace(/\{%[-\s]*if\s+\w+[-\s]*%\}([\s\S]*?)\{%[-\s]*endif[-\s]*%\}/g, '$1')
+    .replace(/\{%[^%]*%\}/g, '')
+    .trim();
+}
+
+/* ── Offer Letter View ──────────────────────────────── */
+function openLetterView(id) {
+  const d = OFFER_LETTERS[id];
+  if (!d) return;
+  document.getElementById('lvModalTitle').textContent = 'Offer Letter — ' + d.candidate + ' (' + d.offer_no + ')';
+
+  const statusBadge = {draft:'#854d0e|#fef9c3',sent:'#1e40af|#dbeafe',accepted:'#166534|#dcfce7',rejected:'#991b1b|#fee2e2',pending_approval:'#92400e|#fef3c7'}[d.status] || '#374151|#f3f4f6';
+  const [sCl, sBg] = statusBadge.split('|');
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  // Monthly Salary = gross / 12
+  const monthlyVal = d.gross_salary_raw > 0 ? (d.gross_salary_raw / 12).toFixed(2) : (d.basic_salary_raw / 12).toFixed(2);
+  const currency = d.basic_salary.split(' ')[0] || 'OMR';
+  const monthlySalary = currency + ' ' + monthlyVal;
+
+  // JD: prefer offer job_description, else recruitment JD; clean legacy tags
+  const cleanedBody = _cleanBody(d.body);
+  const jdText = _cleanBody(d.job_description || d.recruitment_jd);
+  const jdHtml = jdText
+    ? `<div style="white-space:pre-wrap;font-size:13.5px;">${jdText}</div>`
+    : '<em style="color:#9ca3af;">No job description provided.</em>';
+
+  // Feedback notes from rejectors
+  const feedbackHtml = d.chain.filter(s=>s.status==='rejected'&&s.feedback).map(s=>`
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;color:#78350f;">
+      <strong>${s.approver}</strong> left feedback: "${s.feedback}"
+    </div>`).join('');
+
+  // Derive a human-readable role label for each approver in the chain.
+  // All values come from the DB (employee_work_info / groups).
+  function _roleLabel(s) {
+    // 1. Job position from employee_work_info
+    if (s.role && s.role.trim()) return s.role.trim();
+    // 2. Job role from employee_work_info
+    if (s.job_role && s.job_role.trim()) return s.job_role.trim();
+    // 3. Department from employee_work_info
+    if (s.department && s.department.trim()) return s.department.trim();
+    // 4. Most descriptive group name
+    if (s.groups && s.groups.trim()) {
+      const groups = s.groups.split('|').filter(Boolean);
+      const priority = ['Team Lead', 'Manager', 'HR', 'HR Manager', 'Recruiter'];
+      for (const p of priority) {
+        const hit = groups.find(g => g.toLowerCase() === p.toLowerCase());
+        if (hit) return hit;
+      }
+      if (groups[0]) return groups[0];
+    }
+    // Nothing found in DB → empty
+    return '';
+  }
+
+  // Always use the actual approver name (from DB)
+  function _displayName(s) {
+    return s.approver || 'the authorising party';
+  }
+
+  function _roleAcceptanceText(s, candidateName, position) {
+    const roleLabel = _roleLabel(s);
+    const approverName = _displayName(s);
+    const r = roleLabel.toLowerCase();
+
+    if (!roleLabel) {
+      return `I, <strong>${approverName}</strong>, hereby acknowledge and approve the appointment of <strong>${candidateName}</strong> to the position of <strong>${position}</strong> as detailed in this offer letter. My signature below confirms this authorisation.`;
+    }
+    if (r.includes('hr')) {
+      return `I, <strong>${approverName}</strong>, on behalf of the <strong>${roleLabel}</strong> department, confirm that all hiring procedures, documentation and compliance checks have been completed for <strong>${candidateName}</strong> in relation to the role of <strong>${position}</strong>. My signature below endorses this offer letter from the HR side.`;
+    }
+    if (r.includes('manager')) {
+      return `I, <strong>${approverName}</strong>, as the <strong>${roleLabel}</strong>, approve the appointment of <strong>${candidateName}</strong> to the role of <strong>${position}</strong> within my function. The terms in this offer letter have been reviewed and are aligned with the department's requirements. My signature below confirms this approval.`;
+    }
+    if (r.includes('lead') || r.includes('team')) {
+      return `I, <strong>${approverName}</strong>, as the <strong>${roleLabel}</strong>, confirm that <strong>${candidateName}</strong> has been evaluated and is suitable for the role of <strong>${position}</strong>. I take responsibility for onboarding this candidate into the team and endorse this offer letter with my signature below.`;
+    }
+    return `I, <strong>${approverName}</strong>, acting as the <strong>${roleLabel}</strong>, hereby acknowledge and approve the appointment of <strong>${candidateName}</strong> to the position of <strong>${position}</strong> as detailed in this offer letter. My signature below confirms this authorisation.`;
+  }
+
+  const sigPages = d.chain.length > 0
+    ? d.chain.map((s, i) => {
+        const roleLabel = _roleLabel(s);
+        const sigContent = s.signature
+          ? `<img src="${s.signature}" style="max-height:80px;max-width:220px;display:block;" alt="Signature"/>`
+          : `<div style="height:70px;"></div>`;
+        const dateVal = s.acted_at || '________________';
+        const statusPill = s.status === 'approved'
+          ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">Approved</span>`
+          : s.status === 'rejected'
+          ? `<span style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">Rejected</span>`
+          : `<span style="background:#f3f4f6;color:#9ca3af;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">Pending</span>`;
+        const feedbackNote = s.feedback
+          ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13px;color:#78350f;">
+               <strong>Feedback:</strong> "${s.feedback}"
+             </div>` : '';
+        return `
+  <div class="offer-page">
+    <div class="offer-letter-header">
+      <div>
+        <div class="company-name">FITS HRMS</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">${roleLabel} Authorisation</div>
+      </div>
+      <div class="offer-ref">
+        <div style="font-weight:700;font-size:14px;">SIGNATURE PAGE ${i+1} of ${d.chain.length}</div>
+        <div>Ref: ${d.offer_no}</div>
+        <div>${today}</div>
+        <div style="margin-top:6px;">${statusPill}</div>
+      </div>
+    </div>
+
+    <div style="margin:28px 0 32px;padding:24px 28px;background:#f8fafc;border-radius:10px;">
+      <p style="font-size:15px;color:#374151;line-height:1.8;margin:0;">
+        ${_roleAcceptanceText(s, d.candidate, d.position)}
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 32px;margin-bottom:32px;">
+      <div><span style="font-size:11px;color:#9ca3af;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Candidate</span><strong style="font-size:14px;">${d.candidate}</strong></div>
+      <div><span style="font-size:11px;color:#9ca3af;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Position</span><strong style="font-size:14px;">${d.position}</strong></div>
+      <div><span style="font-size:11px;color:#9ca3af;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Authorising Party</span><strong style="font-size:14px;">${_displayName(s)}</strong></div>
+      <div><span style="font-size:11px;color:#9ca3af;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Role</span><strong style="font-size:14px;">${roleLabel}</strong></div>
+    </div>
+
+    ${feedbackNote}
+
+    <div style="margin-top:auto;padding-top:60px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;align-items:end;">
+        <div>
+          <div style="border-bottom:1.5px solid #374151;padding-bottom:6px;min-height:80px;display:flex;align-items:flex-end;">
+            ${sigContent}
+          </div>
+          <div style="margin-top:8px;">
+            <div style="font-size:13px;font-weight:700;color:#1f2937;">${_displayName(s)}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">${roleLabel}</div>
+          </div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;">Signature</div>
+        </div>
+        <div>
+          <div style="border-bottom:1.5px solid #374151;padding-bottom:6px;min-height:80px;display:flex;align-items:flex-end;">
+            <div style="font-size:13px;color:#374151;">${dateVal}</div>
+          </div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:12px;text-transform:uppercase;letter-spacing:.5px;">Date</div>
+        </div>
+        <div>
+          <div style="border-bottom:1.5px solid #374151;padding-bottom:6px;min-height:80px;"></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:12px;text-transform:uppercase;letter-spacing:.5px;">Official Stamp</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:#9ca3af;margin-top:40px;text-align:center;border-top:1px solid #f3f4f6;padding-top:12px;">
+      Generated by FITS HRMS · Ref: ${d.offer_no} · Page ${i+1} of ${d.chain.length} · ${today}
+    </p>
+  </div>`;
+      }).join('')
+    : `<div class="offer-page"><p style="color:#9ca3af;font-size:13px;">No approval chain configured.</p></div>`;
+
+  document.getElementById('lvPages').innerHTML = `
+  <div class="offer-page">
+    <div class="offer-letter-header">
+      <div><div class="company-name">FITS HRMS</div><div style="font-size:12px;color:#6b7280;margin-top:2px;">Human Resource Management System</div></div>
+      <div class="offer-ref">
+        <div style="font-weight:700;font-size:14px;">OFFER LETTER</div>
+        <div>Ref: ${d.offer_no}</div>
+        <div>Date: ${today}</div>
+        <div style="margin-top:6px;"><span style="background:${sBg};color:${sCl};padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">${d.status.toUpperCase()}</span></div>
+      </div>
+    </div>
+    <p>Dear <strong>${d.candidate}</strong>,</p>
+    <p>We are delighted to offer you the position of <strong>${d.position}</strong>${d.department ? ' in the <strong>' + d.department + '</strong> department' : ''}.</p>
+    <div class="offer-section-title">Candidate Information</div>
+    <div class="offer-grid">
+      <div class="offer-field"><label>Full Name</label><p>${d.candidate}</p></div>
+      <div class="offer-field"><label>Email Address</label><p>${d.email}</p></div>
+      <div class="offer-field"><label>Position</label><p>${d.position}</p></div>
+      <div class="offer-field"><label>Department</label><p>${d.department||'—'}</p></div>
+      <div class="offer-field"><label>Employment Type</label><p>${d.role_type === 'contract' ? 'Contract' : 'Full Time'}</p></div>
+    </div>
+    <div class="offer-section-title">Compensation &amp; Benefits</div>
+    <div class="offer-grid">
+      <div class="offer-field"><label>Basic Salary</label><p>${d.basic_salary}</p></div>
+      <div class="offer-field"><label>Gross Salary</label><p>${d.gross_salary}</p></div>
+      <div class="offer-field"><label>Monthly Salary</label><p>${monthlySalary}</p></div>
+      <div class="offer-field"><label>Joining Date</label><p>${d.joining_date}</p></div>
+      <div class="offer-field"><label>Probation Period</label><p>${d.probation}</p></div>
+      <div class="offer-field"><label>Contract Duration</label><p>${d.contract}</p></div>
+    </div>
+  </div>
+  <div class="offer-page">
+    <div class="offer-section-title">Job Description &amp; Responsibilities</div>
+    <div style="font-size:13.5px;line-height:1.8;">${jdText || '<em style="color:#9ca3af;">No job description provided.</em>'}</div>
+    ${cleanedBody ? `<div class="offer-section-title" style="margin-top:24px;">Offer Letter Details</div><div style="font-size:13.5px;line-height:1.8;">${cleanedBody}</div>` : ''}
+  </div>
+  <div class="offer-page">
+    <div class="offer-section-title">Terms &amp; Conditions</div>
+    ${d.terms
+      ? `<div style="font-size:13.5px;line-height:1.8;">${d.terms}</div>`
+      : `<ol style="font-size:13px;color:#374151;padding-left:20px;line-height:2;margin:0;">
+          <li><strong>Commencement:</strong> Your employment will commence on the joining date specified in this letter, subject to the satisfactory completion of all pre-employment requirements.</li>
+          <li><strong>Probationary Period:</strong> The first ${d.probation} of your employment shall be considered a probationary period, during which either party may terminate employment with one (1) week's written notice.</li>
+          <li><strong>Compensation:</strong> Your basic salary of ${d.basic_salary} per month will be paid in accordance with the company's payroll cycle. Any deductions required by law will be applied.</li>
+          <li><strong>Working Hours:</strong> You are expected to work the standard hours as set out in the company's working hours policy. Overtime, where applicable, will be compensated in accordance with the Omani Labour Law.</li>
+          <li><strong>Confidentiality:</strong> You are required to maintain strict confidentiality of all proprietary, technical, commercial, and business information of the company, both during and after your employment.</li>
+          <li><strong>Code of Conduct:</strong> You shall adhere to all company policies, procedures, and the employee code of conduct as communicated during onboarding and updated from time to time.</li>
+          <li><strong>Background Verification:</strong> This offer is conditional upon the successful completion of background checks, reference verification, and receipt of original academic and professional credentials.</li>
+          <li><strong>Governing Law:</strong> This offer and your employment shall be governed by the Sultanate of Oman Labour Law and the company's internal HR policies in force.</li>
+          <li><strong>Acceptance:</strong> Please confirm your acceptance of this offer by signing and returning a copy of this letter within five (5) working days of receipt. Failure to do so may result in withdrawal of the offer.</li>
+        </ol>`}
+  </div>
+  ${sigPages}`;
+  document.getElementById('letterViewModal').style.display = 'flex';
+}
+function closeLetter() { document.getElementById('letterViewModal').style.display = 'none'; }
+
+/* ── Simple Letter View (Medical / Visa) ────────────── */
+function openSimpleLetterView(type, id, candidateName) {
+  const key = type + '_' + id;
+  const d = SIMPLE_LETTERS[key];
+  const title = (type === 'medical' ? 'Medical Clearance Letter' : 'Visa Support Letter') + ' — ' + candidateName;
+  document.getElementById('slvModalTitle').textContent = title;
+
+  const statusPill = d ? (d.status === 'signed' ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-size:12px;">✍ Signed</span>' : '<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:12px;font-size:12px;">Draft</span>') : '';
+  const sigSection = (d && d.hr_signed) ? `
+    <div style="margin-top:24px;padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;">
+      <p style="font-size:13px;color:#166534;font-weight:600;margin:0 0 8px;">HR E-Signature</p>
+      ${d.hr_signature ? `<img src="${d.hr_signature}" style="max-height:60px;border:1px solid #e5e7eb;border-radius:4px;background:#fff;" alt="HR Signature"/>` : ''}
+      <p style="font-size:12px;color:#6b7280;margin:6px 0 0;">Signed by: ${d.hr_signed_by}</p>
+    </div>` : `<div style="margin-top:20px;padding:12px;background:#fef9c3;border:1px solid #fde68a;border-radius:8px;font-size:13px;color:#92400e;">Awaiting HR e-signature.</div>`;
+
+  document.getElementById('slvContent').innerHTML = `
+    <div class="offer-page">
+      <div class="offer-letter-header">
+        <div><div class="company-name">FITS HRMS</div><div style="font-size:12px;color:#6b7280;">${type === 'medical' ? 'Medical Clearance' : 'Visa Support'} Letter</div></div>
+        <div class="offer-ref">${statusPill}</div>
+      </div>
+      <p>Dear <strong>${candidateName}</strong>,</p>
+      <div style="white-space:pre-wrap;font-size:13.5px;margin-top:16px;">${d && d.content ? d.content : '<em style="color:#9ca3af;">No content.</em>'}</div>
+      ${sigSection}
+    </div>`;
+  document.getElementById('simpleLetterViewModal').style.display = 'flex';
+}
+function closeSimpleLetter() { document.getElementById('simpleLetterViewModal').style.display = 'none'; }
+
+/* ── Offer E-Sign ───────────────────────────────────── */
+let _signPad = null;
+function openEsignModal(id, candidate, position) {
+  document.getElementById('esignSubtitle').textContent = candidate + ' · ' + position;
+  document.getElementById('esignForm').action = '/onboarding/letters/offer/' + id + '/approve/';
+  document.getElementById('esignModal').style.display = 'flex';
+  const canvas = document.getElementById('signatureCanvas');
+  canvas.width = canvas.offsetWidth;
+  _signPad = new SignaturePad(canvas, { backgroundColor:'rgb(249,250,251)', penColor:'#1f2937' });
+}
+function clearSignature() { if (_signPad) _signPad.clear(); }
+function closeEsign() { document.getElementById('esignModal').style.display = 'none'; }
+function submitEsign() {
+  if (_signPad && _signPad.isEmpty()) { alert('Please draw your signature before confirming.'); return; }
+  if (_signPad) document.getElementById('signatureDataInput').value = _signPad.toDataURL();
+  document.getElementById('esignForm').submit();
+}
+
+/* ── Simple E-Sign (Medical / Visa) ─────────────────── */
+let _simpleSignPad = null;
+function openSimpleEsign(type, id, candidateName) {
+  const labelMap = { medical: 'Medical Clearance Letter', visa: 'Visa Support Letter' };
+  document.getElementById('simpleEsignTitle').textContent = 'HR E-Sign — ' + labelMap[type];
+  document.getElementById('simpleEsignSubtitle').textContent = candidateName;
+  document.getElementById('simpleEsignForm').action = '/onboarding/letters/' + type + '/' + id + '/sign/';
+  document.getElementById('simpleEsignModal').style.display = 'flex';
+  const canvas = document.getElementById('simpleSignatureCanvas');
+  canvas.width = canvas.offsetWidth;
+  _simpleSignPad = new SignaturePad(canvas, { backgroundColor:'rgb(249,250,251)', penColor:'#1f2937' });
+}
+function clearSimpleSignature() { if (_simpleSignPad) _simpleSignPad.clear(); }
+function closeSimpleEsign() { document.getElementById('simpleEsignModal').style.display = 'none'; }
+function submitSimpleEsign() {
+  if (_simpleSignPad && _simpleSignPad.isEmpty()) { alert('Please draw your signature before confirming.'); return; }
+  if (_simpleSignPad) document.getElementById('simpleSignatureDataInput').value = _simpleSignPad.toDataURL();
+  document.getElementById('simpleEsignForm').submit();
+}
+
+/* ── Feedback ───────────────────────────────────────── */
+function openFeedbackModal(id) {
+  document.getElementById('feedbackForm').action = '/onboarding/letters/offer/' + id + '/reject/';
+  document.getElementById('feedbackModal').style.display = 'flex';
+}
+function closeFeedback() { document.getElementById('feedbackModal').style.display = 'none'; }
+
+/* ── Send Documents Email modal ─────────────────────── */
+function openSendEmailModal() { document.getElementById('sendEmailModal').style.display = 'flex'; }
+function closeSendEmailModal() { document.getElementById('sendEmailModal').style.display = 'none'; }
+
+function updateDocumentAvailability(candidateId) {
+  const sel = document.getElementById('sendEmailCandidateSelect');
+  const opt = sel.querySelector(`option[value="${candidateId}"]`);
+  if (!opt) return;
+
+  const offerStatus = opt.getAttribute('data-offer') || '';
+  const medicalStatus = opt.getAttribute('data-medical') || '';
+  const visaStatus = opt.getAttribute('data-visa') || '';
+
+  const setDoc = (chkId, labelId, statusId, status, readyStatus) => {
+    const chk = document.getElementById(chkId);
+    const lbl = document.getElementById(labelId);
+    const statusEl = document.getElementById(statusId);
+    if (status) {
+      const isReady = readyStatus.includes(status);
+      chk.disabled = false;
+      lbl.style.opacity = '1';
+      statusEl.textContent = isReady ? `✓ ${status} — ready to send` : `Status: ${status}`;
+      statusEl.style.color = isReady ? '#16a34a' : '#9ca3af';
+    } else {
+      chk.disabled = true;
+      chk.checked = false;
+      lbl.style.opacity = '0.5';
+      statusEl.textContent = 'Not created';
+      statusEl.style.color = '#9ca3af';
+    }
+  };
+
+  setDoc('chkOffer', 'docOfferLabel', 'offerDocStatus', offerStatus, ['sent', 'accepted', 'draft']);
+  setDoc('chkMedical', 'docMedicalLabel', 'medicalDocStatus', medicalStatus, ['signed', 'sent', 'draft']);
+  setDoc('chkVisa', 'docVisaLabel', 'visaDocStatus', visaStatus, ['signed', 'sent', 'draft']);
+}
+
+/* ── Tabs ───────────────────────────────────────────── */
+$('.oh-tabs__tab').on('click', function() {
+  var target = $(this).data('target');
+  $('.oh-tabs__tab').removeClass('oh-tabs__tab--active');
+  $(this).addClass('oh-tabs__tab--active');
+  $('.oh-tabs__content').removeClass('oh-tabs__content--active');
+  $(target).addClass('oh-tabs__content--active');
+});
+
+// Close modals on backdrop click
+['letterViewModal','simpleLetterViewModal','esignModal','simpleEsignModal','feedbackModal','sendEmailModal'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+});
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     E-SIGN WORKFLOW MODAL
+══════════════════════════════════════════════════════ -->
+<div id="esignWorkflowModal" class="workflow-modal">
+  <div class="workflow-card">
+    <div class="workflow-header">
+      <div>
+        <h5 style="margin:0;" id="esignWorkflowTitle">{% trans "E-Sign Workflow" %}</h5>
+        <p style="font-size:12px;color:#6b7280;margin:2px 0 0;" id="esignWorkflowSubtitle"></p>
+      </div>
+      <span onclick="closeEsignWorkflow()" style="cursor:pointer;font-size:22px;color:#9ca3af;line-height:1;">&times;</span>
+    </div>
+    <div id="esignWorkflowContent" style="padding:24px 0 8px;display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;min-height:80px;"></div>
+  </div>
+</div>
+
+<script>
+function openEsignWorkflow(id) {
+  const modal = document.getElementById('esignWorkflowModal');
+  const container = document.getElementById('esignWorkflowContent');
+  const d = OFFER_LETTERS[id];
+  if (!d) return;
+
+  document.getElementById('esignWorkflowTitle').textContent = '{% trans "E-Sign Workflow" %}';
+  document.getElementById('esignWorkflowSubtitle').textContent = d.candidate + ' · ' + d.position;
+
+  container.innerHTML = '';
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  const steps = d.chain.map(s => ({
+    text: 'Step ' + s.seq + ': ' + s.approver,
+    cls: s.status === 'approved' ? 'approved' : s.status === 'rejected' ? 'rejected' : s.status === 'active' ? 'current' : 'waiting',
+    acted_at: s.acted_at,
+    feedback: s.feedback
+  }));
+
+  if (!steps.length) {
+    container.innerHTML = '<p style="color:#9ca3af;font-size:13px;">No approval chain configured.</p>';
+    return;
+  }
+
+  steps.forEach((step, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+
+    const pill = document.createElement('div');
+    pill.className = 'flow-step ' + step.cls;
+    pill.innerText = step.text;
+    wrapper.appendChild(pill);
+
+    if (step.acted_at) {
+      const dt = document.createElement('div');
+      dt.className = 'reason-box';
+      dt.innerHTML = '<div class="reason-text" style="background:#e0f2fe;color:#075985;">' + step.acted_at + '</div>';
+      wrapper.appendChild(dt);
+    }
+
+    if (step.feedback) {
+      const fb = document.createElement('div');
+      fb.className = 'reason-box';
+      fb.innerHTML = '<div class="reason-text">&ldquo;' + step.feedback + '&rdquo;</div>';
+      wrapper.appendChild(fb);
+    }
+
+    container.appendChild(wrapper);
+
+    if (i < steps.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'flow-arrow';
+      arrow.style.cssText = 'align-self:flex-start;margin-top:10px;';
+      arrow.innerText = '→';
+      container.appendChild(arrow);
+    }
+  });
+
+  container.querySelectorAll('.flow-step, .flow-arrow, .reason-box').forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), i * 350);
+  });
+}
+
+function closeEsignWorkflow() {
+  const modal = document.getElementById('esignWorkflowModal');
+  modal.classList.remove('show');
+  setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+document.getElementById('esignWorkflowModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEsignWorkflow();
+});
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     AUDIT TRAIL MODAL
+══════════════════════════════════════════════════════ -->
+<div id="auditModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:10001;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;max-width:640px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:#1f2937;color:#fff;padding:14px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <span style="font-weight:600;font-size:15px;">
+          <ion-icon name="time-outline" style="vertical-align:middle;margin-right:6px;"></ion-icon>
+          {% trans "Audit Trail" %}
+        </span>
+        <span id="auditDocNo" style="font-family:monospace;font-size:13px;color:#9ca3af;margin-left:10px;"></span>
+      </div>
+      <button onclick="closeAuditModal()" style="background:none;border:none;color:#9ca3af;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div id="auditContent" style="overflow-y:auto;padding:20px 24px;flex:1;">
+      <div id="auditLoading" style="text-align:center;padding:40px;color:#9ca3af;">
+        <ion-icon name="reload-outline" style="font-size:28px;animation:spin 1s linear infinite;"></ion-icon>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.audit-row { display:grid; grid-template-columns:140px 120px 120px 1fr; gap:6px 12px; padding:10px 0; border-bottom:1px solid #f3f4f6; font-size:13px; align-items:start; }
+.audit-row:last-child { border-bottom:none; }
+.audit-ts { color:#9ca3af; font-size:12px; }
+.audit-from { color:#6b7280; }
+.audit-to { font-weight:600; }
+.audit-note { color:#374151; }
+.audit-actor { font-size:12px; color:#2563eb; }
+</style>
+
+<script>
+const AUDIT_URLS = {
+  offer:   '/onboarding/letters/offer/',
+  medical: '/onboarding/letters/medical/',
+  visa:    '/onboarding/letters/visa/',
+};
+
+function openAuditModal(type, id, docNo) {
+  document.getElementById('auditDocNo').textContent = docNo;
+  document.getElementById('auditContent').innerHTML =
+    '<div id="auditLoading" style="text-align:center;padding:40px;color:#9ca3af;"><ion-icon name="reload-outline" style="font-size:28px;"></ion-icon><p style="margin-top:8px;">Loading…</p></div>';
+  document.getElementById('auditModal').style.display = 'flex';
+
+  fetch(AUDIT_URLS[type] + id + '/audit/')
+    .then(r => r.json())
+    .then(data => {
+      const logs = data.logs;
+      if (!logs.length) {
+        document.getElementById('auditContent').innerHTML =
+          '<p style="color:#9ca3af;text-align:center;padding:32px;">{% trans "No audit events recorded yet." %}</p>';
+        return;
+      }
+      const statusColor = {
+        draft:'#854d0e', pending_approval:'#92400e', sent:'#1e40af',
+        accepted:'#166534', rejected:'#991b1b', signed:'#166534', '':'#6b7280'
+      };
+      const statusBg = {
+        draft:'#fef9c3', pending_approval:'#fef3c7', sent:'#dbeafe',
+        accepted:'#dcfce7', rejected:'#fee2e2', signed:'#dcfce7', '':'#f3f4f6'
+      };
+      const pill = (s) => s
+        ? `<span style="background:${statusBg[s]||'#f3f4f6'};color:${statusColor[s]||'#374151'};padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;">${s}</span>`
+        : '<span style="color:#d1d5db;">—</span>';
+
+      let html = '<div style="font-size:11px;color:#9ca3af;display:grid;grid-template-columns:140px 120px 120px 1fr;gap:6px 12px;padding:0 0 8px;border-bottom:2px solid #e5e7eb;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">'
+        + '<div>{% trans "Timestamp" %}</div><div>{% trans "From" %}</div><div>{% trans "To" %}</div><div>{% trans "Note / Actor" %}</div></div>';
+
+      html += logs.map(l => `
+        <div class="audit-row">
+          <div class="audit-ts">${l.timestamp}</div>
+          <div>${pill(l.from_status)}</div>
+          <div>${pill(l.to_status)}</div>
+          <div>
+            <div class="audit-note">${l.note || '—'}</div>
+            <div class="audit-actor">${l.actor}</div>
+          </div>
+        </div>`).join('');
+
+      document.getElementById('auditContent').innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById('auditContent').innerHTML =
+        '<p style="color:#ef4444;text-align:center;padding:32px;">{% trans "Failed to load audit trail." %}</p>';
+    });
+}
+
+function closeAuditModal() {
+  document.getElementById('auditModal').style.display = 'none';
+}
+
+document.getElementById('auditModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAuditModal();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "ui/base.html" %}
+{% block title %}Profile — HCMS{% endblock %}
+
+{% block content %}
+<style>
+.pf-header { display:flex; gap:18px; align-items:center; background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:20px; margin-bottom:16px; }
+.pf-avatar { width:72px; height:72px; border-radius:50%; background:#278E53; color:#fff; font-weight:700; font-size:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pf-name { font-size:18px; font-weight:600; color:#111; }
+.pf-sub  { font-size:12px; color:#888; margin-top:3px; }
+.pf-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.pf-card { background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:18px 20px; }
+.pf-card__title { font-size:13px; font-weight:600; color:#111; margin-bottom:12px; }
+.pf-row { display:flex; padding:8px 0; border-bottom:1px solid #F5F5F5; font-size:12px; }
+.pf-row:last-child { border-bottom:none; }
+.pf-row__label { width:160px; color:#888; }
+.pf-row__value { color:#222; font-weight:500; }
+</style>
+
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">My Profile</div>
+    <div class="ui-page-subtitle">Personal and account information</div>
+  </div>
+</div>
+
+<div class="pf-header">
+  <div class="pf-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper|default:"U" }}</div>
+  <div>
+    <div class="pf-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+    <div class="pf-sub">{{ request.user.email|default:"—" }}{% if employee %} · {{ employee.employee_first_name }} {{ employee.employee_last_name }}{% endif %}</div>
+  </div>
+</div>
+
+<div class="pf-grid">
+  <div class="pf-card">
+    <div class="pf-card__title">Account</div>
+    <div class="pf-row"><div class="pf-row__label">Username</div><div class="pf-row__value">{{ request.user.username }}</div></div>
+    <div class="pf-row"><div class="pf-row__label">Email</div><div class="pf-row__value">{{ request.user.email|default:"—" }}</div></div>
+    <div class="pf-row"><div class="pf-row__label">Role</div><div class="pf-row__value">{% if request.user.is_superuser %}Administrator{% else %}User{% endif %}</div></div>
+    <div class="pf-row"><div class="pf-row__label">Last login</div><div class="pf-row__value">{{ request.user.last_login|date:"d M Y, H:i"|default:"—" }}</div></div>
+  </div>
+
+  <div class="pf-card">
+    <div class="pf-card__title">Employee</div>
+    {% if employee %}
+      <div class="pf-row"><div class="pf-row__label">Badge ID</div><div class="pf-row__value">{{ employee.badge_id|default:"—" }}</div></div>
+      <div class="pf-row"><div class="pf-row__label">Phone</div><div class="pf-row__value">{{ employee.phone|default:"—" }}</div></div>
+      <div class="pf-row"><div class="pf-row__label">Nationality</div><div class="pf-row__value">{{ employee.nationality|default:"—" }}</div></div>
+      <div class="pf-row"><div class="pf-row__label">Qualification</div><div class="pf-row__value">{{ employee.qualification|default:"—" }}</div></div>
+    {% else %}
+      <div class="pf-row"><div class="pf-row__value" style="color:#999">No linked employee record.</div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

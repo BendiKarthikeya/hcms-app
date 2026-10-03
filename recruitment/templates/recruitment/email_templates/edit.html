@@ -1,0 +1,42 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Edit Email Template" %} — {{ tpl.name }}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:960px;margin:24px auto;padding:16px;">
+
+  <div style="margin-bottom:20px;">
+    <a href="{% url 'email-template-list' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Email Templates" %}</a>
+    <h1 style="margin:4px 0 0;font-size:20px;">{% trans "Edit Template" %} — {{ tpl.name }}</h1>
+  </div>
+
+  {% if messages %}
+  {% for msg in messages %}
+  <div style="padding:10px 14px;border-radius:6px;margin-bottom:12px;font-size:13px;
+    background:{% if msg.tags == 'error' %}#fee2e2;color:#991b1b{% else %}#dcfce7;color:#166534{% endif %};">
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <form method="post" action="{% url 'email-template-edit' tpl.id %}">
+      {% csrf_token %}
+      {% include "recruitment/email_templates/_form_fields.html" %}
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit" style="padding:9px 22px;border-radius:6px;background:#1d4ed8;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;">
+          {% trans "Save Changes" %}
+        </button>
+        <a href="{% url 'email-template-list' %}"
+          style="padding:9px 16px;border-radius:6px;background:#f3f4f6;color:#374151;border:none;text-decoration:none;font-size:13px;">
+          {% trans "Cancel" %}
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div>
+</div>
+</main>
+{% endblock %}

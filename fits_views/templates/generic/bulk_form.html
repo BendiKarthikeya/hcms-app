@@ -1,0 +1,14 @@
+<form
+    {% if post_bulk_path %}
+        hx-post="/{{post_bulk_path}}?{{request.GET.urlencode}}"
+    {% else %}
+        onsubmit="event.preventDefault();window.showPathMissingAlert && window.showPathMissingAlert('Bulk action is unavailable right now.');return false;"
+    {% endif %}
+    method="post"
+    hx-swap="outerHTML"
+    hx-encoding="multipart/form-data"
+>
+    <input type="hidden" name="instance_ids" value="{{instance_ids|safe}}">
+    {% csrf_token %}
+    {% include "generic/form.html" %}
+</form>

@@ -1,0 +1,226 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Performance Improvement Plans" %}{% endblock %}
+
+{% block styles %}
+<style>
+    .pip-page .card {
+        border: 1px solid hsl(213, 22%, 93%);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .pip-page .page-item.active .page-link {
+        background-color: hsl(216, 18%, 64%);
+        border-color: hsl(216, 18%, 64%);
+    }
+    .pip-page .progress-bar {
+        background-color: hsl(148, 70%, 40%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid pip-page">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                {% trans "Performance Improvement Plans" %}
+            </h1>
+            <p class="text-muted">{% trans "Manage and track employee performance improvement initiatives" %}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pip-create' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> {% trans "New PIP" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "Employee" %}</label>
+                    <input type="text" name="search" class="form-control" placeholder="{% trans 'Search by name' %}" value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "Status" %}</label>
+                    <select name="status" class="form-control">
+                        <option value="">{% trans "All" %}</option>
+                        <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>{% trans "Draft" %}</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                        <option value="under_review" {% if request.GET.status == 'under_review' %}selected{% endif %}>{% trans "Under Review" %}</option>
+                        <option value="successful" {% if request.GET.status == 'successful' %}selected{% endif %}>{% trans "Successful" %}</option>
+                        <option value="unsuccessful" {% if request.GET.status == 'unsuccessful' %}selected{% endif %}>{% trans "Unsuccessful" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "Department" %}</label>
+                    <select name="department" class="form-control">
+                        <option value="">{% trans "All" %}</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if request.GET.department|add:'' == dept.id|add:'' %}selected{% endif %}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-search"></i> {% trans "Search" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ total_pips }}</h3>
+                    <p class="card-text text-muted">{% trans "Total PIPs" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ active_pips }}</h3>
+                    <p class="card-text text-muted">{% trans "Active" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ overdue_pips }}</h3>
+                    <p class="card-text text-muted">{% trans "Overdue" %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ successful_pips }}</h3>
+                    <p class="card-text text-muted">{% trans "Successful" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIP Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% trans "Employee" %}</th>
+                        <th>{% trans "PIP Title" %}</th>
+                        <th>{% trans "Period" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Progress" %}</th>
+                        <th>{% trans "Days Left" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pip in pips %}
+                    <tr>
+                        <td>
+                            <strong>{{ pip.employee.get_full_name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ pip.employee.designation }}</small>
+                        </td>
+                        <td>{{ pip.title }}</td>
+                        <td>
+                            <small>{{ pip.start_date|date:"M d, Y" }} - {{ pip.end_date|date:"M d, Y" }}</small>
+                        </td>
+                        <td>
+                            {% if pip.status == 'draft' %}
+                                <span class="badge bg-secondary">{% trans "Draft" %}</span>
+                            {% elif pip.status == 'active' %}
+                                <span class="badge bg-info">{% trans "Active" %}</span>
+                            {% elif pip.status == 'under_review' %}
+                                <span class="badge bg-warning">{% trans "Under Review" %}</span>
+                            {% elif pip.status == 'successful' %}
+                                <span class="badge bg-success">{% trans "Successful" %}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{% trans "Unsuccessful" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="progress" style="min-width: 100px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ pip.progress_percentage }}%" aria-valuenow="{{ pip.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ pip.progress_percentage }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if pip.days_remaining >= 0 %}
+                                <span class="badge bg-light text-dark">{{ pip.days_remaining }} {% trans "days" %}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{% trans "Overdue" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'pip-detail' pip.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if pip.status == 'draft' %}
+                                    <a href="{% url 'pip-update' pip.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% endif %}
+                                {% if pip.status == 'draft' %}
+                                    <a href="{% url 'pip-approve' pip.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            {% trans "No Performance Improvement Plans found" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">{% trans "First" %}</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{% trans "Last" %}</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

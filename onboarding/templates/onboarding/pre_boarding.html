@@ -1,0 +1,159 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+
+  .prebd-container {
+    padding: 2.5rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+  }
+  .bd-header {
+    background: hsl(0, 0%, 100%);
+    color: hsl(0, 0%, 26%);
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid hsl(148, 70%, 40%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bd-header h1 { margin: 0 0 0.5rem 0; font-size: 2rem; }
+  .bd-header p { margin: 0; opacity: 0.9; font-size: 1.1rem; }
+  
+  .timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 24px; width: 2px;
+    background: #e5e7eb;
+  }
+  .tl-stage {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 60px;
+  }
+  .tl-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e5e7eb;
+    position: absolute;
+    left: 1px; top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    color: #9ca3af;
+  }
+  .tl-stage.completed .tl-icon {
+    background: hsl(148, 70%, 40%);
+    border-color: hsl(148, 70%, 40%);
+    color: white;
+  }
+  .tl-stage.active .tl-icon {
+    border-color: hsl(216, 18%, 64%);
+    color: hsl(216, 18%, 64%);
+  }
+  .tl-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tl-stage.completed .tl-card { border-left: 4px solid hsl(148, 70%, 40%); }
+  .tl-stage.active .tl-card { border-left: 4px solid hsl(216, 18%, 64%); }
+  
+  .tl-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9rem;
+    border: none;
+  }
+  .btn-primary { background: hsl(216, 18%, 64%); color: white; }
+  .btn-outline { background: white; border: 1px solid #d1d5db; color: #4b5563; }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="prebd-container">
+  <div class="bd-header">
+    <div>
+      <h1>{% trans "Pre-Boarding Portal" %}</h1>
+      <p>Welcome your new hires with a digital red carpet.</p>
+    </div>
+    <div style="background: rgba(255,255,255,0.2); padding: 1rem 1.5rem; border-radius: 12px; text-align: right;">
+      <div style="font-size: 2rem; font-weight: 800;">75%</div>
+      <div style="font-size: 0.9rem; font-weight: 600; text-transform:uppercase;">Overall Completion</div>
+    </div>
+  </div>
+  
+  <h2 style="text-align:center; color:#1f2937; margin-bottom: 2rem;">New Hire Checklist: David Wong</h2>
+  
+  <div class="timeline">
+    <!-- Completed -->
+    <div class="tl-stage completed">
+      <div class="tl-icon">✓</div>
+      <div class="tl-card">
+        <div>
+          <h3 style="margin: 0 0 0.2rem 0; color:#1f2937; font-size:1.2rem;">Offer Letter e-Signature</h3>
+          <p style="margin: 0; color:#6b7280; font-size:0.95rem;">Signed via DocuSign on Oct 12, 2026</p>
+        </div>
+        <button class="tl-btn btn-outline" style="color:#10b981; border-color:#10b981;">View Document</button>
+      </div>
+    </div>
+    
+    <div class="tl-stage completed">
+      <div class="tl-icon">✓</div>
+      <div class="tl-card">
+        <div>
+          <h3 style="margin: 0 0 0.2rem 0; color:#1f2937; font-size:1.2rem;">Background Check & KYC</h3>
+          <p style="margin: 0; color:#6b7280; font-size:0.95rem;">Verified by FirstAdvantage</p>
+        </div>
+        <button class="tl-btn btn-outline" style="color:#10b981; border-color:#10b981;">Report Cleared</button>
+      </div>
+    </div>
+
+    <!-- Active -->
+    <div class="tl-stage active">
+      <div class="tl-icon">3</div>
+      <div class="tl-card">
+        <div>
+          <h3 style="margin: 0 0 0.2rem 0; color:#1f2937; font-size:1.2rem;">IT Provisioning & Setup</h3>
+          <p style="margin: 0; color:#6b7280; font-size:0.95rem;">Pending hardware assignment (MacBook Pro)</p>
+        </div>
+        <button class="tl-btn btn-primary">Assign Asset</button>
+      </div>
+    </div>
+
+    <!-- Pending -->
+    <div class="tl-stage">
+      <div class="tl-icon">4</div>
+      <div class="tl-card">
+        <div style="opacity:0.6;">
+          <h3 style="margin: 0 0 0.2rem 0; color:#1f2937; font-size:1.2rem;">Welcome Video & Buddy Setup</h3>
+          <p style="margin: 0; color:#6b7280; font-size:0.95rem;">To be completed on Day 1</p>
+        </div>
+        <button class="tl-btn btn-outline" disabled style="opacity:0.5;">Locked</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

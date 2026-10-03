@@ -1,0 +1,27 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "High-Potential (HiPo) Tracking" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--primary oh-btn--shadow">
+                    <ion-icon name="rocket-outline" class="me-1"></ion-icon>{% trans "Design Pilot Program" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Identify, track, and nurture future leadership candidates based on potential metrics." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="oh-card p-5 text-center">
+            <ion-icon name="trending-up-outline" style="font-size: 5rem; color: #ddd;" class="mb-3"></ion-icon>
+            <h4 class="text-muted">{% trans "HiPo Development Pool" %}</h4>
+            <p class="text-muted mb-4">{% trans "No candidates currently in the high-potential pool for this cycle." %}</p>
+        </div>
+    </div>
+</main>
+{% endblock %}

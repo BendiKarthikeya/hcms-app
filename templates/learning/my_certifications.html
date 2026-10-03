@@ -1,0 +1,101 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:dashboard' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Dashboard" %}
+                    </a>
+                    <h1 class="oh-page-title">{% trans "My Certifications" %}</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <button class="oh-btn oh-btn--success oh-btn--shadow" data-bs-toggle="modal" data-bs-target="#addCertModal">
+                        <ion-icon name="add-outline" class="mr-1"></ion-icon>{% trans "Add Certificate" %}
+                    </button>
+                </div>
+            </div>
+
+            {% if certifications %}
+            <div class="oh-card" style="border-radius: 8px;">
+                <div class="table-responsive" style="padding: 1.5rem;">
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead style="background-color: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Certification" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Issuing Authority" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Certificate #" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Issue Date" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Expiry Date" %}</th>
+                                <th style="padding: 1rem; font-weight: 600; color: #333;">{% trans "Status" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cert in certifications %}
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 1rem; color: #333;"><strong>{{ cert.certification.name }}</strong></td>
+                                <td style="padding: 1rem; color: #666; font-size: 0.9rem;">{{ cert.certification.issuing_authority }}</td>
+                                <td style="padding: 1rem; font-family: monospace; color: #666; font-size: 0.85rem;">{{ cert.certificate_number }}</td>
+                                <td style="padding: 1rem; color: #666; font-size: 0.9rem;">{{ cert.issue_date|date:"M d, Y" }}</td>
+                                <td style="padding: 1rem;">
+                                    {% if cert.expiry_date %}
+                                        <div>
+                                            <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.3rem;">{{ cert.expiry_date|date:"M d, Y" }}</div>
+                                            {% if cert.expiry_date < today %}
+                                            <span class="oh-badge oh-badge--danger">{% trans "Expired" %}</span>
+                                            {% else %}
+                                            <span class="oh-badge oh-badge--success">{% trans "Valid" %}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--neutral">{% trans "No Expiry" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    {% if cert.is_active %}
+                                    <span class="oh-badge oh-badge--success">{% trans "Active" %}</span>
+                                    {% else %}
+                                    <span class="oh-badge oh-badge--danger">{% trans "Inactive" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% else %}
+            <div style="text-align: center; padding: 3rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏆</div>
+                <p style="color: #666; margin-bottom: 1.5rem;">{% trans "You have no certifications registered yet." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<!-- Add Certification Modal -->
+<div class="modal fade" id="addCertModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Certification" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">{% trans "Certification management coming soon. Contact HR to add or modify your certifications." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="oh-btn oh-btn--secondary oh-btn--shadow" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

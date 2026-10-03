@@ -1,0 +1,100 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% trans "Choose Access Mode" %} - HCMS</title>
+    <link rel="stylesheet" href="{% static 'build/css/style.min.css' %}" />
+    <style>
+        .role-selection-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .role-selection-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+        }
+        .role-selection-card h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .role-selection-card p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .role-options {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .role-btn {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-btn.admin {
+            background: #1f6feb;
+            color: white;
+        }
+        .role-btn.hr {
+            background: #7c3aed;
+            color: white;
+        }
+        .role-btn.dashboard {
+            background: #16a34a;
+            color: white;
+        }
+        .role-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        @media (max-width: 640px) {
+            .role-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="role-selection-container">
+        <div class="role-selection-card">
+            <h1>{% trans "Choose Dashboard" %}</h1>
+            <p>{% trans "Your account has both Admin and HR access. Select where you want to continue." %}</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="role-options">
+                    <button class="role-btn admin" type="submit" name="role" value="admin">
+                        {% trans "Open Admin" %}
+                    </button>
+                    <button class="role-btn dashboard" type="submit" name="role" value="dashboard">
+                        {% trans "See All Dashboard" %}
+                    </button>
+                    {% if is_hr_staff %}
+                    <button class="role-btn hr" type="submit" name="role" value="hr">
+                        {% trans "Open HR Dashboard" %}
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

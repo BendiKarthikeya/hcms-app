@@ -1,0 +1,183 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "End of Service Benefits & Gratuity" %}{% endblock %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Header Section -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "End of Service Benefits" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <a href="{% url 'eosb-create' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                    <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Calculate EOSB" %}
+                </a>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Manage gratuity calculations in accordance with Labor Law." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <!-- Quick Summary Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Total Records" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ total_count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--info">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Total Liability" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ total_amount|floatformat:2 }} OMR</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--warning">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Pending Approvals" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ pending_count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--success">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Paid" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ paid_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="oh-card mb-4 mt-4">
+            <div class="oh-card__body">
+                <form method="get" class="row">
+                    <div class="col-md-4">
+                        <div class="oh-input-group">
+                            <label class="oh-label">{% trans "Search Employee" %}</label>
+                            <input type="text" name="search" class="oh-input w-100" placeholder="{% trans 'Search...' %}" value="{{ request.GET.search }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="oh-input-group">
+                            <label class="oh-label">{% trans "Status" %}</label>
+                            <select name="status" class="oh-select w-100">
+                                <option value="">{% trans "All" %}</option>
+                                <option value="calculated" {% if request.GET.status == 'calculated' %}selected{% endif %}>{% trans "Calculated" %}</option>
+                                <option value="hr_approved" {% if request.GET.status == 'hr_approved' %}selected{% endif %}>{% trans "HR Approved" %}</option>
+                                <option value="director_approved" {% if request.GET.status == 'director_approved' %}selected{% endif %}>{% trans "Director Approved" %}</option>
+                                <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>{% trans "Paid" %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mt-4 d-flex align-items-end">
+                        <button type="submit" class="oh-btn oh-btn--primary w-100">
+                            <ion-icon name="search-outline" class="me-1"></ion-icon>{% trans "Filter" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- EOSB Table Section -->
+        <div class="oh-card mt-5">
+            <div class="oh-card__header d-flex justify-content-between align-items-center">
+                <h5 class="oh-card__title">{% trans "Benefit Calculations" %}</h5>
+                <div class="oh-dropdown" x-data="{open: false}">
+                    <button class="oh-btn oh-btn--light oh-btn--sm" @click="open = !open">
+                        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+                    </button>
+                    <div class="oh-dropdown__menu oh-dropdown__menu--right mt-2" x-show="open" @click.outside="open = false" style="display:none">
+                        <a href="{% url 'eosb-bulk-calculate' %}" class="oh-dropdown__item">{% trans "Bulk Calculate" %}</a>
+                        <a href="{% url 'eosb-export' %}" class="oh-dropdown__item">{% trans "Export CSV" %}</a>
+                    </div>
+                </div>
+            </div>
+            <div class="oh-card__body p-0">
+                <div class="oh-table-container">
+                    <table class="oh-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Employee" %}</th>
+                                <th>{% trans "Separation" %}</th>
+                                <th>{% trans "Service Period" %}</th>
+                                <th>{% trans "Gratuity Amount" %}</th>
+                                <th>{% trans "Total Deductions" %}</th>
+                                <th>{% trans "Net Benefits" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for eosb in eosbs %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="oh-avatar oh-avatar--sm me-2">
+                                            <img src="{% static 'images/avatar.png' %}" alt="">
+                                        </div>
+                                        <div>
+                                            <span class="font-weight-bold d-block text-dark">{{ eosb.employee.get_full_name }}</span>
+                                            <small class="text-muted">#{{ eosb.employee.identification_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ eosb.separation_date|date:"d M Y" }}</td>
+                                <td>{{ eosb.total_years_of_service|floatformat:1 }} {% trans "yr(s)" %}</td>
+                                <td><strong>{{ eosb.gross_gratuity_amount|floatformat:2 }} OMR</strong></td>
+                                <td><span class="text-danger fw-bold">-{{ eosb.total_deductions|floatformat:2 }}</span></td>
+                                <td><span class="text-success font-weight-bold" style="font-size: 1.1rem">{{ eosb.net_eosb_amount|floatformat:2 }} OMR</span></td>
+                                <td>
+                                    {% if eosb.status == 'calculated' %}
+                                        <span class="oh-badge oh-badge--info">{% trans "Calculated" %}</span>
+                                    {% elif eosb.status == 'hr_approved' %}
+                                        <span class="oh-badge oh-badge--primary">{% trans "HR Approved" %}</span>
+                                    {% elif eosb.status == 'director_approved' %}
+                                        <span class="oh-badge oh-badge--warning">{% trans "Director Appr." %}</span>
+                                    {% elif eosb.status == 'paid' %}
+                                        <span class="oh-badge oh-badge--success">{% trans "Paid" %}</span>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--light">{{ eosb.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="oh-btn-group">
+                                        <a href="{% url 'eosb-detail' eosb.id %}" class="oh-btn oh-btn--light oh-btn--sm"><ion-icon name="eye-outline"></ion-icon></a>
+                                        {% if eosb.status == 'calculated' %}
+                                            <a href="{% url 'eosb-approve' eosb.id %}" class="oh-btn oh-btn--success oh-btn--sm"><ion-icon name="checkmark-outline"></ion-icon></a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-5">
+                                    <ion-icon name="document-text-outline" class="fa-3x mb-3 text-muted"></ion-icon>
+                                    <p class="text-muted">{% trans "No benefits recorded yet." %}</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

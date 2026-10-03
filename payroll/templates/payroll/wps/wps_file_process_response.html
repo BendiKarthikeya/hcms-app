@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Process WPS Response{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>Process WPS Bank Response</h1>
+        <p>Record bank response for {{ wps_file.file_reference }}</p>
+    </div>
+
+    <div class="file-status-box">
+        <h3>Bank Response Processing</h3>
+        
+        <div class="status-info">
+            <div class="status-field">
+                <div class="label">File Reference</div>
+                <div class="value">{{ wps_file.file_reference }}</div>
+            </div>
+            <div class="status-field">
+                <div class="label">Submitted Date</div>
+                <div class="value">{{ wps_file.submitted_date|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.response_code.id_for_label }}">
+                Bank Response Code <span class="required">*</span>
+            </label>
+            {{ form.response_code }}
+            <small>Response code received from Central Bank</small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.response_message.id_for_label }}">
+                Response Message
+            </label>
+            {{ form.response_message }}
+            <small>Full message or details from bank</small>
+        </div>
+
+        {% if form.exceptions %}
+        <div class="form-group">
+            <label>Exceptions/Errors</label>
+            <div id="exceptions-container">
+                {% for exception_form in form.exceptions %}
+                    <div class="exception-item">
+                        <h5>Exception {{ forloop.counter }}</h5>
+                        <p>{{ exception_form }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.processing_notes.id_for_label }}">
+                Processing Notes
+            </label>
+            {{ form.processing_notes }}
+            <small>Record any issues or actions taken</small>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Response Processing:</strong>
+            <p>Enter the exact response code from the bank to update the file status. Success codes will mark the file as processed. Error codes will create exceptions for resolution.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Process Response</button>
+            <a href="{% url 'wps-detail' wps_file.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block styles %}
+<style>
+    .oh-empty__icon img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="oh-card__header">
+            <h2 class="oh-card__title">{% trans "Talent Profile Details" %}</h2>
+        </div>
+        <div class="oh-card__body">
+            <div class="oh-empty">
+                <div class="oh-empty__icon">
+                    <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                </div>
+                <h5 class="oh-empty__title">{% trans "Profile details not available" %}</h5>
+                <p class="oh-empty__subtitle">{% trans "The requested talent profile details are not available." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

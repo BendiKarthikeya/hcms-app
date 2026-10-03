@@ -1,0 +1,147 @@
+{% load rest_framework %}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API Documentation</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'drf-yasg/swagger-ui.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'drf-yasg/favicon-32x32.png' %}" sizes="32x32" />
+    <link rel="icon" type="image/png" href="{% static 'drf-yasg/favicon-16x16.png' %}" sizes="16x16" />
+    <style>
+      html{
+        box-sizing: border-box;
+        overflow: -moz-scrollbars-vertical;
+        overflow-y: scroll;
+      }
+      *,
+      *:before,
+      *:after{
+        box-sizing: inherit;
+      }
+      body{
+        margin:0;
+        background: #fafafa;
+      }
+      /* Hide all swagger branding elements */
+      .topbar,
+      .swagger-ui .topbar,
+      .swagger-ui .info,
+      .swagger-ui .topbar-wrapper,
+      [class*="logo"],
+      [class*="brand"],
+      svg[viewBox*="Swagger"],
+      img[alt*="Swagger"],
+      img[alt*="SmartBear"],
+      a.link svg[viewBox="0 0 407 116"],
+      a.link {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="{% static 'drf-yasg/swagger-ui-bundle.js' %}"></script>
+    <script src="{% static 'drf-yasg/swagger-ui-standalone-preset.js' %}"></script>
+    <script>
+    function removeAllSvgAndLogos() {
+      // Remove topbar
+      const topbar = document.querySelector('.topbar');
+      if (topbar) {
+        topbar.remove();
+      }
+
+      // Remove the specific SmartBear logo link (viewBox="0 0 407 116")
+      const smartbearLinks = document.querySelectorAll('a.link');
+      smartbearLinks.forEach(link => {
+        const svg = link.querySelector('svg');
+        if (svg && svg.getAttribute('viewBox') === '0 0 407 116') {
+          link.remove();
+        }
+      });
+
+      // Remove all SVG elements (which might contain logo)
+      const svgs = document.querySelectorAll('svg');
+      svgs.forEach(svg => {
+        const viewBox = svg.getAttribute('viewBox');
+        if (svg.innerHTML.includes('Swagger') || 
+            svg.innerHTML.includes('SmartBear') ||
+            viewBox === '0 0 36 36' || 
+            viewBox === '0 0 407 116') {
+          svg.remove();
+        }
+      });
+
+      // Remove all img elements with swagger/smartbear
+      const imgs = document.querySelectorAll('img');
+      imgs.forEach(img => {
+        if (img.alt && (img.alt.includes('Swagger') || img.alt.includes('SmartBear'))) {
+          img.remove();
+        }
+      });
+
+      // Find and remove any element containing swagger logo class
+      const logoElements = document.querySelectorAll('[class*="logo"], [class*="brand"], [class*="topbar"]');
+      logoElements.forEach(el => {
+        if (el.textContent.includes('Swagger') || el.textContent.includes('SmartBear') || el.className.includes('topbar')) {
+          el.remove();
+        }
+      });
+
+      // Hide the entire header section if it exists
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+        header.style.visibility = 'hidden';
+      }
+    }
+
+    // Remove logo immediately
+    document.addEventListener('DOMContentLoaded', removeAllSvgAndLogos);
+
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: "{{ schema_url }}",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        {% if swagger_settings.USE_SESSION_AUTH %}
+        persistAuthorization: true,
+        {% endif %}
+      })
+      window.ui = ui
+
+      // Continuously remove logos for 10 seconds
+      const interval = setInterval(removeAllSvgAndLogos, 200);
+      setTimeout(() => {
+        clearInterval(interval);
+        // Final cleanup
+        removeAllSvgAndLogos();
+        // Hide by adding aggressive CSS
+        const style = document.createElement('style');
+        style.innerHTML = `
+          .topbar { display: none !important; }
+          a.link { display: none !important; }
+          svg[viewBox="0 0 407 116"] { display: none !important; }
+          svg[viewBox="0 0 36 36"] { display: none !important; }
+        `;
+        document.head.appendChild(style);
+      }, 10000);
+    }
+  </script>
+  </body>
+</html>

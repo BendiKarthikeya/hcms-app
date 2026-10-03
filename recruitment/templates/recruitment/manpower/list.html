@@ -1,0 +1,59 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Manpower Requests" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1280px;margin:0 auto;padding:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h1 style="margin:0;font-size:22px;">{% trans "Manpower Requests" %}</h1>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'approval-inbox' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Approvals Inbox" %}</a>
+      <a href="{% url 'manpower-create' %}" style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;text-decoration:none;">+ {% trans "New Request" %}</a>
+    </div>
+  </div>
+
+  <!-- Status filter tabs -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+    <a href="?" style="padding:5px 12px;border-radius:20px;border:1px solid {% if not current_status %}#16a34a{% else %}#d1d5db{% endif %};background:{% if not current_status %}#dcfce7{% else %}#fff{% endif %};text-decoration:none;font-size:13px;">{% trans "All" %}</a>
+    {% for val,label in status_choices %}
+    <a href="?status={{ val }}" style="padding:5px 12px;border-radius:20px;border:1px solid {% if current_status == val %}#16a34a{% else %}#d1d5db{% endif %};background:{% if current_status == val %}#dcfce7{% else %}#fff{% endif %};text-decoration:none;font-size:13px;">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Req No" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Position" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Department" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Positions" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Status" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;">{% trans "Requested On" %}</th>
+          <th style="padding:10px;text-align:left;font-size:13px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in requests_page.object_list %}
+        <tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:9px 10px;font-size:13px;font-weight:600;">{{ r.requisition_no }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ r.job_position|default:"—" }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ r.department|default:"—" }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ r.positions_count }}</td>
+          <td style="padding:9px 10px;font-size:13px;">
+            <span style="padding:2px 10px;border-radius:12px;background:{% if r.status == 'approved' %}#dcfce7{% elif r.status == 'rejected' %}#fee2e2{% elif r.status == 'under_approval' %}#fef3c7{% else %}#f3f4f6{% endif %};font-size:12px;">{{ r.get_status_display }}</span>
+          </td>
+          <td style="padding:9px 10px;font-size:13px;">{{ r.requested_on|date:"d M Y" }}</td>
+          <td style="padding:9px 10px;"><a href="{% url 'manpower-detail' r.id %}" style="color:#16a34a;font-size:13px;">{% trans "View" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="padding:24px;text-align:center;color:#6b7280;">{% trans "No requests yet." %} <a href="{% url 'manpower-create' %}">{% trans "Create one" %}</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

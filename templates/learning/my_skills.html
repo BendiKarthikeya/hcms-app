@@ -1,0 +1,93 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:dashboard' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Dashboard" %}
+                    </a>
+                    <h1 class="oh-page-title">{% trans "My Skills" %}</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <button class="oh-btn oh-btn--success oh-btn--shadow" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                        <ion-icon name="add-outline" class="mr-1"></ion-icon>{% trans "Add Skill" %}
+                    </button>
+                </div>
+            </div>
+
+            {% if skills %}
+            <div class="oh-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                {% for skill in skills %}
+                <div class="oh-card" style="border-radius: 8px;">
+                    <div class="oh-card__header" style="padding: 1.5rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: start;">
+                        <h5 class="oh-card__title" style="margin: 0; font-weight: 600;">{{ skill.skill.name }}</h5>
+                        {% if skill.verified_by %}
+                        <span style="color: #28a745; font-size: 1.2rem;">✓</span>
+                        {% endif %}
+                    </div>
+                    <div class="oh-card__body" style="padding: 1.5rem;">
+                        <p style="color: #666; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.5;">{{ skill.skill.description|default:"No description" }}</p>
+                        
+                        <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.9rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #ddd;">
+                                <strong style="color: #555;">{% trans "Proficiency" %}:</strong>
+                                <span class="oh-badge oh-badge--primary">{{ skill.get_proficiency_level_display }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #ddd;">
+                                <strong style="color: #555;">{% trans "Experience" %}:</strong>
+                                <span style="color: #333;">{{ skill.years_experience }} {% trans "years" %}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                                <strong style="color: #555;">{% trans "Last Used" %}:</strong>
+                                <span style="color: #333;">{{ skill.last_used|default:"—" }}</span>
+                            </div>
+                            {% if skill.verified_by %}
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #28a745;">
+                                <strong style="color: #28a745;">✓ {% trans "Verified" %}</strong>
+                                <span style="color: #28a745; font-size: 0.85rem;">{{ skill.verified_by.get_full_name }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div style="text-align: center; padding: 3rem; background-color: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">💡</div>
+                <p style="color: #666; margin-bottom: 1.5rem;">{% trans "You have no skills added yet." %}</p>
+                <button class="oh-btn oh-btn--success oh-btn--shadow" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                    <ion-icon name="add-outline"></ion-icon>{% trans "Add Your First Skill" %}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<!-- Add Skill Modal -->
+<div class="modal fade" id="addSkillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Add New Skill" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">{% trans "Skill management coming soon. Contact HR to add or modify your skills." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="oh-btn oh-btn--secondary oh-btn--shadow" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

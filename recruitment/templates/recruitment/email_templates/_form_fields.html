@@ -1,0 +1,60 @@
+{% load i18n %}
+<div style="display:grid;gap:14px;">
+  <div>
+    <label style="font-size:12px;color:#374151;font-weight:500;display:block;margin-bottom:4px;">{% trans "Template Name" %} *</label>
+    <input type="text" name="name" value="{{ tpl.name|default:'' }}" required
+      placeholder="e.g. Standard HR Template"
+      style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;box-sizing:border-box;">
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label style="font-size:12px;color:#374151;font-weight:500;display:block;margin-bottom:4px;">
+        {% trans "Selection Email Subject" %} *
+        <span style="color:#9ca3af;font-weight:400;">— sent to shortlisted candidates</span>
+      </label>
+      <input type="text" name="selection_subject" value="{{ tpl.selection_subject|default:'' }}" required
+        placeholder="Congratulations — you have been shortlisted"
+        style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;box-sizing:border-box;">
+    </div>
+    <div>
+      <label style="font-size:12px;color:#374151;font-weight:500;display:block;margin-bottom:4px;">
+        {% trans "Rejection Email Subject" %} *
+        <span style="color:#9ca3af;font-weight:400;">— sent to rejected candidates</span>
+      </label>
+      <input type="text" name="rejection_subject" value="{{ tpl.rejection_subject|default:'' }}" required
+        placeholder="Thank you for your application"
+        style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;box-sizing:border-box;">
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label style="font-size:12px;color:#374151;font-weight:500;display:block;margin-bottom:4px;">
+        {% trans "Selection Email Body" %} *
+      </label>
+      <p style="font-size:11px;color:#9ca3af;margin:0 0 4px;">
+        {% trans "Use {candidate_name}, {position}, {company} as placeholders." %}
+      </p>
+      <textarea name="selection_body" required rows="8"
+        style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit;">{{ tpl.selection_body|default:'' }}</textarea>
+    </div>
+    <div>
+      <label style="font-size:12px;color:#374151;font-weight:500;display:block;margin-bottom:4px;">
+        {% trans "Rejection Email Body" %} *
+      </label>
+      <p style="font-size:11px;color:#9ca3af;margin:0 0 4px;">
+        {% trans "Use {candidate_name}, {position}, {company} as placeholders." %}
+      </p>
+      <textarea name="rejection_body" required rows="8"
+        style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;box-sizing:border-box;resize:vertical;font-family:inherit;">{{ tpl.rejection_body|default:'' }}</textarea>
+    </div>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+    <input type="checkbox" name="is_default" {% if tpl.is_default %}checked{% endif %}
+      style="width:15px;height:15px;">
+    {% trans "Set as default template" %}
+    <span style="font-size:11px;color:#9ca3af;">— {% trans "only one template can be default at a time" %}</span>
+  </label>
+</div>

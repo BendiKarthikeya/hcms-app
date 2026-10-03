@@ -1,0 +1,1031 @@
+{% extends "ui/base.html" %}
+{% block title %}Job Offer Creator — HCMS{% endblock %}
+{% block active_offers %}active{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+
+<style>
+/* ── Layout ───────────────────────────────────────────────────────── */
+.oc-wrap { display:grid; grid-template-columns:1fr 0.85fr; gap:20px; align-items:start; }
+
+/* ── Form card ────────────────────────────────────────────────────── */
+.oc-card { background:#fff; border:1px solid #d8d8d8; border-radius:14px; overflow:hidden; }
+.oc-section-head {
+  font-size:16px; font-weight:600; color:#202020;
+  padding:22px 26px 14px;
+}
+.oc-section-head:not(:first-child) { border-top:1px solid #f0f0f0; padding-top:22px; }
+.oc-section-head ol { list-style:decimal; padding-left:22px; margin:0; }
+.oc-section-head li { margin:0; }
+.oc-body-inner { padding:0 26px 22px; }
+
+/* ── Form controls ────────────────────────────────────────────────── */
+.oc-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.oc-row:last-child { margin-bottom:0; }
+.oc-row-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:0; }
+.oc-group { display:flex; flex-direction:column; gap:6px; }
+.oc-label { font-size:14px; font-weight:500; color:#111827; }
+.oc-label span.req { color:#fb2c36; }
+.oc-input {
+  height:38px; border:1px solid #e5e7eb; border-radius:8px;
+  padding:0 13px; font-size:14px; font-family:inherit; color:#111827;
+  outline:none; background:#fff; width:100%; box-sizing:border-box;
+  transition:border-color .15s;
+}
+.oc-input:focus { border-color:#76b590; }
+.oc-select {
+  height:38px; border:1px solid #e5e7eb; border-radius:8px;
+  padding:0 13px; font-size:14px; font-family:inherit; color:#111827;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%23555'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 10px center;
+  appearance:none; -webkit-appearance:none; outline:none;
+  width:100%; cursor:pointer; box-sizing:border-box; transition:border-color .15s;
+}
+.oc-select:focus { border-color:#76b590; }
+.oc-date-wrap { position:relative; }
+.oc-date-wrap .date-icon {
+  position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  font-size:18px; color:#555; pointer-events:none;
+}
+.oc-input-date {
+  height:38px; border:1px solid #e5e7eb; border-radius:8px;
+  padding:0 13px 0 38px; font-size:14px; font-family:inherit; color:#111827;
+  outline:none; background:#fff; width:100%; box-sizing:border-box; transition:border-color .15s;
+}
+.oc-input-date:focus { border-color:#76b590; }
+.oc-textarea {
+  border:1px solid #e5e7eb; border-radius:8px;
+  padding:10px 13px; font-size:14px; font-family:inherit; color:#111827;
+  outline:none; background:#fff; width:100%; box-sizing:border-box;
+  resize:none; transition:border-color .15s;
+}
+.oc-textarea:focus { border-color:#76b590; }
+
+/* ── Auto-fill banner ─────────────────────────────────────────────── */
+.oc-autofill-banner {
+  display:none; align-items:center; gap:8px;
+  background:#f0fdf4; border:1px solid #86efac; border-radius:8px;
+  padding:10px 14px; margin-top:12px; font-size:13px; color:#166534;
+}
+.oc-autofill-banner .material-symbols-outlined { font-size:18px; color:#16a34a; }
+
+/* ── Candidate card ───────────────────────────────────────────────── */
+.cand-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 16px; border:1px solid #b7b6b6; border-radius:9px;
+  margin-top:10px;
+}
+.cand-card__avatar {
+  width:41px; height:41px; background:#1F5F2F; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:14px; font-weight:700; flex-shrink:0;
+}
+.cand-card__name { font-size:13px; font-weight:600; color:#000; }
+.cand-card__email { font-size:12px; color:#7a7a7a; margin-top:2px; }
+.cand-card__detail { font-size:12px; color:#7a7a7a; margin-top:2px; }
+
+/* ── Compensation boxes ───────────────────────────────────────────── */
+.comp-box { border:1px solid #e5e7eb; border-radius:8px; padding:9px 13px; }
+.comp-box__label { font-size:14px; font-weight:500; color:#111827; margin-bottom:6px; }
+.comp-box__input {
+  border:none; outline:none; font-size:14px; font-weight:400;
+  color:#111827; font-family:inherit; width:100%; background:transparent; padding:0;
+}
+.comp-box__input::placeholder { color:#ccc; }
+
+/* ── Benefits tags ────────────────────────────────────────────────── */
+.perks-wrap { border:1px solid #e5e7eb; border-radius:8px; padding:9px 13px; }
+.perks-row { display:flex; flex-wrap:wrap; gap:8px; }
+.perk-tag {
+  background:rgba(16,185,129,0.1); border-radius:8px; padding:4px 8px;
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:12px; color:#0c7e58; white-space:nowrap;
+}
+.perk-close { font-size:12px; cursor:pointer; line-height:1; }
+.perk-add {
+  height:28px; padding:0 10px; border:1px dashed #76b590; border-radius:8px;
+  font-size:12px; color:#0c7e58; background:#fff;
+  display:inline-flex; align-items:center; gap:4px; cursor:pointer;
+  transition:background .15s;
+}
+.perk-add:hover { background:rgba(16,185,129,0.06); }
+
+/* ── Template cards ───────────────────────────────────────────────── */
+.tpl-card {
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+  border:2px solid #E8E8E8; border-radius:8px; cursor:pointer; transition:border-color .15s;
+}
+.tpl-card:has(input:checked) { border-color:#278E53; background:#F0F8F3; }
+.tpl-card:hover { border-color:#A8D4B4; }
+
+/* ── Chain opt hover ──────────────────────────────────────────────── */
+.chain-opt:hover { background:#F0F8F3; }
+
+/* ── E-Sign chain (offer detail style) ───────────────────────────── */
+.od-chain-step { display:flex; gap:14px; padding:0; position:relative; }
+.od-chain-connector {
+  position:absolute; left:17px; top:42px; bottom:0;
+  width:2px; background:#d1d1d1; z-index:0;
+}
+.od-step-circle {
+  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; color:#fff;
+  background:#d2d2d2; z-index:1; position:relative; margin-top:0;
+}
+.od-step-circle.assigned { background:#278E53; }
+.od-step-body {
+  flex:1; border-bottom:1px solid #e5e7eb; padding-bottom:18px;
+  padding-top:4px; min-width:0;
+}
+.od-chain-step:last-child .od-step-body { border-bottom:none; }
+.od-step-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.od-step-title { font-size:16px; font-weight:600; color:#202020; }
+.od-step-sub { font-size:14px; color:#6b7280; margin-top:3px; }
+.od-badge {
+  height:24px; padding:0 10px; border-radius:6px;
+  font-size:13px; font-weight:500; display:inline-flex; align-items:center;
+  flex-shrink:0; margin-top:4px;
+}
+.od-badge--pending { background:#f5f0ed; color:#e0812e; }
+
+/* ── Notify bar ───────────────────────────────────────────────────── */
+.od-notify-bar {
+  background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2);
+  border-radius:8px; padding:12px 16px; margin-top:16px;
+  display:flex; align-items:center; gap:10px;
+  font-size:14px; color:#374151;
+}
+.od-notify-bar .material-symbols-outlined { font-size:20px; color:#278E53; flex-shrink:0; }
+
+/* ── Top buttons ──────────────────────────────────────────────────── */
+.btn-preview-offer {
+  height:43px; padding:0 20px; border:1px solid #acacac; border-radius:10px;
+  background:#fff; font-size:16px; font-weight:600; color:#282828;
+  cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:background .15s;
+}
+.btn-preview-offer:hover { background:#f5f5f5; }
+.btn-preview-offer .material-symbols-outlined { font-size:20px; }
+.btn-send-offer {
+  height:43px; padding:0 24px; border:none; border-radius:10px;
+  background:#208e3d; font-size:16px; font-weight:600; color:#fff;
+  cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:background .15s;
+}
+.btn-send-offer:hover { background:#1a7533; }
+.btn-send-offer .material-symbols-outlined { font-size:18px; }
+
+/* ── PDF Viewer Panel ─────────────────────────────────────────────── */
+.pdf-viewer-panel {
+  position:sticky; top:70px; border-radius:14px; overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.12);
+}
+.pdf-viewer-header {
+  background:#1f2937; color:#fff; padding:12px 18px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.pdf-viewer-header-title { font-weight:600; font-size:14px; }
+.pdf-viewer-header-sub { font-size:12px; color:#9ca3af; margin-top:2px; }
+.pdf-viewer-body {
+  background:#e5e7eb; padding:16px;
+  max-height: calc(100vh - 160px);
+  overflow-y:auto;
+}
+
+/* ── Offer Letter Page (PDF-like) ─────────────────────────────────── */
+.offer-page {
+  background:#fff; width:100%; max-width:620px; margin:0 auto;
+  padding:40px 48px; font-family:'Inter','Segoe UI',Arial,sans-serif;
+  font-size:12.5px; line-height:1.7; color:#1f2937;
+  box-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+.offer-page + .offer-page { margin-top:12px; }
+.ol-header {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  border-bottom:3px solid #16a34a; padding-bottom:14px; margin-bottom:22px;
+}
+.ol-company { font-size:18px; font-weight:700; color:#16a34a; }
+.ol-ref { font-size:11px; color:#6b7280; text-align:right; }
+.ol-section { font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; color:#6b7280; border-bottom:1px solid #e5e7eb;
+  padding-bottom:5px; margin:18px 0 10px; }
+.ol-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; }
+.ol-field label { font-size:10px; color:#9ca3af; display:block; }
+.ol-field p { margin:2px 0 0; font-weight:600; font-size:12.5px; }
+.ol-sig-box {
+  border:1px dashed #d1d5db; border-radius:8px; padding:16px 20px;
+  margin-top:14px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px;
+}
+.ol-sig-slot { border-bottom:1px solid #374151; padding-bottom:4px; min-height:50px; }
+.ol-sig-label { font-size:10px; color:#9ca3af; margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* ── E-sign chain in viewer ───────────────────────────────────────── */
+.esign-chain-wrap { display:flex; align-items:center; gap:0; flex-wrap:wrap; padding:12px 18px; background:#f9fafb; border-top:1px solid #e5e7eb; }
+.esign-node { display:flex; align-items:center; gap:6px; font-size:12px; }
+.esign-node .pill { padding:2px 10px; border-radius:20px; font-weight:600; white-space:nowrap; }
+.esign-node .pill.pending  { background:#f3f4f6; color:#9ca3af; }
+.esign-arrow { color:#d1d5db; margin:0 4px; font-size:14px; }
+</style>
+
+<!-- Top bar -->
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px">
+  <div>
+    <a href="/ui/offers/" style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6d6d6d;margin-bottom:10px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:15px;transform:rotate(-90deg)">keyboard_arrow_up</span> Back to offers
+    </a>
+    <div style="font-size:26px;font-weight:700;color:#000;line-height:1.2">Job Offer Creator</div>
+    <div style="font-size:16px;color:#5b5b5b;margin-top:4px">Create and send a professional offer to the selected candidate</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+    <button form="ocForm" type="submit" class="btn-send-offer">
+      <span class="material-symbols-outlined">send</span> Send Offer
+    </button>
+  </div>
+</div>
+
+<form id="ocForm" method="post" action="">{% csrf_token %}
+{% if messages %}{% for m in messages %}<div style="font-size:13px;padding:10px 14px;margin-bottom:14px;border-radius:8px;background:#FFF0EE;color:#C04730;">{{ m }}</div>{% endfor %}{% endif %}
+
+<div class="oc-wrap">
+
+  <!-- ═══════════════ LEFT: Form Card ═══════════════ -->
+  <div class="oc-card">
+
+    <!-- 1. Select Candidate -->
+    <div class="oc-section-head">
+      <ol start="1"><li>Select Candidate</li></ol>
+    </div>
+    <div class="oc-body-inner">
+      <select class="oc-select" name="candidate" id="candidateSelect" required onchange="onCandidateChange(this)">
+        <option value="">Search and select candidate with approved proposal…</option>
+        {% for c in candidates %}
+        <option value="{{ c.id }}"
+                data-name="{{ c.name }}"
+                data-email="{{ c.email }}"
+                data-title="{% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id.job_position }}{% endif %}"
+                data-req="{% if c.recruitment_id %}{{ c.recruitment_id.req_id|default:'' }}{% endif %}"
+                {% if preselect_candidate_id == c.id|stringformat:"s" %}selected{% endif %}>
+          {{ c.name }} — {{ c.email }}{% if c.recruitment_id %} — {{ c.recruitment_id.title }}{% elif c.job_position_id %} — {{ c.job_position_id.job_position }}{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+
+      <div class="cand-card" id="candCard" style="display:none">
+        <div class="cand-card__avatar" id="candInitials">—</div>
+        <div>
+          <div class="cand-card__name" id="candName">—</div>
+          <div class="cand-card__email" id="candEmail">—</div>
+          <div class="cand-card__detail" id="candDetail">—</div>
+        </div>
+      </div>
+
+      <!-- Auto-fill banner -->
+      <div class="oc-autofill-banner" id="autofillBanner">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        <span id="autofillMsg">Fields auto-filled from approved proposal.</span>
+      </div>
+    </div>
+
+    <!-- 2. Offer Details -->
+    <div class="oc-section-head">
+      <ol start="2"><li>Offer Details</li></ol>
+    </div>
+    <div class="oc-body-inner">
+      <div class="oc-row">
+        <div class="oc-group">
+          <label class="oc-label">Job Title <span class="req">*</span></label>
+          <input class="oc-input" type="text" name="position" id="fieldJobTitle"
+                 placeholder="e.g. Senior Frontend Developer" required
+                 oninput="renderPreview()">
+        </div>
+        <div class="oc-group">
+          <label class="oc-label">Department <span class="req">*</span></label>
+          <input class="oc-input" type="text" name="department" id="fieldDept"
+                 placeholder="e.g. Engineering"
+                 oninput="renderPreview()">
+        </div>
+      </div>
+      <div class="oc-row">
+        <div class="oc-group">
+          <label class="oc-label">Employment Type <span class="req">*</span></label>
+          <select class="oc-select" name="employment_type" id="fieldEmpType" onchange="renderPreview()">
+            <option value="">Select type…</option>
+            <option value="full_time">Full-Time</option>
+            <option value="part_time">Part-Time</option>
+            <option value="contract">Contract</option>
+            <option value="internship">Internship</option>
+            <option value="temporary">Temporary</option>
+          </select>
+        </div>
+        <div class="oc-group">
+          <label class="oc-label">Work Location <span class="req">*</span></label>
+          <input class="oc-input" type="text" name="work_location" id="fieldLocation"
+                 placeholder="e.g. Muscat, Oman"
+                 oninput="renderPreview()">
+        </div>
+      </div>
+      <div class="oc-row">
+        <div class="oc-group">
+          <label class="oc-label">Date of Joining <span class="req">*</span></label>
+          <div class="oc-date-wrap">
+            <span class="date-icon material-symbols-outlined">date_range</span>
+            <input class="oc-input-date" type="date" name="joining_date" id="fieldJoining" required
+                   onchange="renderPreview()">
+          </div>
+        </div>
+        <div class="oc-group">
+          <label class="oc-label">Reporting Manager <span class="req">*</span></label>
+          <select class="oc-select" name="reporting_manager" id="fieldManager" onchange="renderPreview()">
+            <option value="">Select manager…</option>
+            {% for mgr in managers %}<option value="{{ mgr.id }}">{{ mgr }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="oc-row">
+        <div class="oc-group">
+          <label class="oc-label">Offer Expiry Date <span class="req">*</span></label>
+          <div class="oc-date-wrap">
+            <span class="date-icon material-symbols-outlined">date_range</span>
+            <input class="oc-input-date" type="date" name="expiry_date" id="fieldExpiry"
+                   onchange="renderPreview()">
+          </div>
+        </div>
+        <div class="oc-group">
+          <label class="oc-label">Probation Period <span class="req">*</span></label>
+          <select class="oc-select" name="probation_period" id="fieldProbation" onchange="renderPreview()">
+            <option value="">Select period…</option>
+            <option value="1">1 Month</option>
+            <option value="3">3 Months</option>
+            <option value="6">6 Months</option>
+            <option value="12">1 Year</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Compensation Details -->
+    <div class="oc-section-head">
+      <ol start="3"><li>Compensation Details</li></ol>
+    </div>
+    <div class="oc-body-inner">
+      <div class="oc-row-4">
+        <div class="comp-box">
+          <div class="comp-box__label">Annual CTC</div>
+          <input class="comp-box__input" type="number" step="0.01" name="gross_salary" id="fieldGross"
+                 placeholder="0.00" oninput="renderPreview()">
+        </div>
+        <div class="comp-box">
+          <div class="comp-box__label">Base Salary</div>
+          <input class="comp-box__input" type="number" step="0.01" name="basic_salary" id="fieldBasic"
+                 placeholder="0.00" oninput="renderPreview()">
+        </div>
+        <div class="comp-box">
+          <div class="comp-box__label">Allowance</div>
+          <input class="comp-box__input" type="number" step="0.01" name="allowance" id="fieldAllowance"
+                 placeholder="0.00" oninput="renderPreview()">
+        </div>
+        <div class="comp-box">
+          <div class="comp-box__label">Bonus</div>
+          <input class="comp-box__input" type="number" step="0.01" name="bonus" id="fieldBonus"
+                 placeholder="0.00" oninput="renderPreview()">
+        </div>
+      </div>
+
+      <!-- Benefits & Perks -->
+      <div style="margin-top:18px">
+        <label class="oc-label" style="margin-bottom:6px;display:block">Benefits &amp; Perks <span class="req">*</span></label>
+        <div id="perksHiddenInputs">
+          <input type="hidden" name="perks[]" value="Health Insurance">
+          <input type="hidden" name="perks[]" value="Annual Leave">
+          <input type="hidden" name="perks[]" value="Performance Bonus">
+          <input type="hidden" name="perks[]" value="Flexible Working">
+        </div>
+        <div class="perks-wrap">
+          <div class="perks-row" id="perksRow">
+            <span class="perk-tag" data-perk="Health Insurance">Health Insurance <span class="perk-close material-symbols-outlined" onclick="removePerk(this)">close</span></span>
+            <span class="perk-tag" data-perk="Annual Leave">Annual Leave <span class="perk-close material-symbols-outlined" onclick="removePerk(this)">close</span></span>
+            <span class="perk-tag" data-perk="Performance Bonus">Performance Bonus <span class="perk-close material-symbols-outlined" onclick="removePerk(this)">close</span></span>
+            <span class="perk-tag" data-perk="Flexible Working">Flexible Working <span class="perk-close material-symbols-outlined" onclick="removePerk(this)">close</span></span>
+            <span class="perk-add" id="perkAddBtn" onclick="showPerkInput()">
+              <span class="material-symbols-outlined" style="font-size:13px">add</span> Add
+            </span>
+          </div>
+          <div id="perkInputWrap" style="display:none;margin-top:8px">
+            <div style="display:flex;gap:6px">
+              <input type="text" id="perkInput" class="oc-input" placeholder="e.g. Travel Allowance" style="max-width:240px"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();addPerkFromInput();}if(event.key==='Escape'){hidePerkInput();}">
+              <button type="button" onclick="addPerkFromInput()" class="btn-send-offer" style="height:38px;padding:0 14px;font-size:13px">Add</button>
+              <button type="button" onclick="hidePerkInput()" class="btn-preview-offer" style="height:38px;padding:0 12px;font-size:13px">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div style="margin-top:18px">
+        <label class="oc-label" style="margin-bottom:6px;display:block">Notes (Optional)</label>
+        <textarea class="oc-textarea" name="notes" rows="4" placeholder="Add any notes for the interviewers"></textarea>
+      </div>
+    </div>
+
+    <!-- Offer Letter Template -->
+    <div class="oc-section-head" style="border-top:1px solid #f0f0f0">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:22px;height:22px;background:#6b7280;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">T</div>
+        <span>Offer Letter Template</span>
+      </div>
+    </div>
+    <div class="oc-body-inner">
+      {% if templates %}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        {% for tpl in templates %}
+        <label class="tpl-card" data-body="{{ tpl.body_html|escapejs }}">
+          <input type="radio" name="template_id" value="{{ tpl.id }}" style="margin-top:3px;accent-color:#278E53">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#222">{{ tpl.name }}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">{{ tpl.body_html|truncatechars:100 }}</div>
+          </div>
+        </label>
+        {% endfor %}
+        <label class="tpl-card">
+          <input type="radio" name="template_id" value="" checked style="margin-top:3px;accent-color:#278E53">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#222">No template — blank offer</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Create a blank offer letter without pre-filled content</div>
+          </div>
+        </label>
+      </div>
+      {% else %}
+      <div style="font-size:13px;color:#888;padding:4px 0">
+        No offer letter templates configured yet. The offer will be created with a blank body.
+        <a href="/recruitment/offer-templates/" style="color:#278E53;text-decoration:none;font-weight:500">Add templates →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- E-Sign Approval Chain -->
+    <div style="border-top:1px solid #f0f0f0;padding:22px 26px 0;">
+      <div style="font-size:20px;font-weight:600;color:#202020;margin-bottom:4px">E-Sign Chain</div>
+      <div style="font-size:14px;color:#7f7f7f;margin-bottom:20px">Sequential approval and e-sign process</div>
+    </div>
+    <div class="oc-body-inner">
+
+      <!-- Visual chain list — 4 fixed roles matching offer detail UI -->
+      <div id="chainList" style="display:flex;flex-direction:column;gap:0;margin-bottom:16px">
+
+        <!-- Step 1: Hiring Manager (Head of Department) -->
+        <div class="od-chain-step od-approver-step {% if chain_roles.hiring_manager %}od-assigned{% endif %}" data-role="hiring_manager">
+          <div class="od-chain-connector"></div>
+          <div class="od-step-circle {% if chain_roles.hiring_manager %}assigned{% endif %}">
+            {% if chain_roles.hiring_manager %}<span class="material-symbols-outlined" style="font-size:18px">check</span>{% else %}1{% endif %}
+          </div>
+          <div class="od-step-body">
+            <div class="od-step-header">
+              <div>
+                <div class="od-step-title">Hiring Manager</div>
+                <div class="od-step-sub od-assignee-name">
+                  {% if chain_roles.hiring_manager %}{{ chain_roles.hiring_manager.name }}{% else %}— click to assign —{% endif %}
+                </div>
+              </div>
+              <span class="od-badge od-badge--pending">Pending</span>
+            </div>
+            {% if chain_roles.hiring_manager %}<input type="hidden" name="chain_approver[]" value="{{ chain_roles.hiring_manager.id }}">{% endif %}
+          </div>
+        </div>
+
+        <!-- Step 2: HR Manager (General Manager HR&A) -->
+        <div class="od-chain-step od-approver-step {% if chain_roles.hr_manager %}od-assigned{% endif %}" data-role="hr_manager">
+          <div class="od-chain-connector"></div>
+          <div class="od-step-circle {% if chain_roles.hr_manager %}assigned{% endif %}">
+            {% if chain_roles.hr_manager %}<span class="material-symbols-outlined" style="font-size:18px">check</span>{% else %}2{% endif %}
+          </div>
+          <div class="od-step-body">
+            <div class="od-step-header">
+              <div>
+                <div class="od-step-title">HR Manager</div>
+                <div class="od-step-sub od-assignee-name">
+                  {% if chain_roles.hr_manager %}{{ chain_roles.hr_manager.name }}{% else %}— click to assign —{% endif %}
+                </div>
+              </div>
+              <span class="od-badge od-badge--pending">Pending</span>
+            </div>
+            {% if chain_roles.hr_manager %}<input type="hidden" name="chain_approver[]" value="{{ chain_roles.hr_manager.id }}">{% endif %}
+          </div>
+        </div>
+
+        <!-- Step 3: CEO Approval -->
+        <div class="od-chain-step od-approver-step {% if chain_roles.ceo %}od-assigned{% endif %}" data-role="ceo">
+          <div class="od-chain-connector"></div>
+          <div class="od-step-circle {% if chain_roles.ceo %}assigned{% endif %}">
+            {% if chain_roles.ceo %}<span class="material-symbols-outlined" style="font-size:18px">check</span>{% else %}3{% endif %}
+          </div>
+          <div class="od-step-body">
+            <div class="od-step-header">
+              <div>
+                <div class="od-step-title">CEO Approval</div>
+                <div class="od-step-sub od-assignee-name">
+                  {% if chain_roles.ceo %}{{ chain_roles.ceo.name }}{% else %}— click to assign —{% endif %}
+                </div>
+              </div>
+              <span class="od-badge od-badge--pending">Pending</span>
+            </div>
+            {% if chain_roles.ceo %}<input type="hidden" name="chain_approver[]" value="{{ chain_roles.ceo.id }}">{% endif %}
+          </div>
+        </div>
+
+        <!-- Step 4: Candidate Signature (always last) -->
+        <div class="od-chain-step" id="candidateStep" data-candidate="1">
+          <div class="od-step-circle">4</div>
+          <div class="od-step-body">
+            <div class="od-step-header">
+              <div>
+                <div class="od-step-title">Candidate Signature</div>
+                <div class="od-step-sub" id="candidateStepName">Select a candidate above</div>
+              </div>
+              <span class="od-badge od-badge--pending">Pending</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Search to add approver -->
+      <div style="position:relative" id="chainSearchWidget">
+        <div id="chainSearchBox" onclick="document.getElementById('chainSearchInput').focus()"
+             style="display:flex;align-items:center;gap:6px;height:40px;border:1px solid #e5e7eb;border-radius:10px;padding:0 13px;cursor:text;background:#fff">
+          <span class="material-symbols-outlined" style="font-size:16px;color:#AAA">search</span>
+          <input id="chainSearchInput" type="text" placeholder="Search and add approver…"
+                 style="border:none;outline:none;font-size:14px;flex:1;background:transparent">
+        </div>
+        <div id="chainDropdown"
+             style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;z-index:999">
+          {% for emp in employees %}
+          <div class="chain-opt" data-id="{{ emp.id }}" data-name="{{ emp }}"
+               style="padding:9px 14px;font-size:13px;cursor:pointer;color:#1f2937">{{ emp }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Notify bar -->
+      <div class="od-notify-bar">
+        <span class="material-symbols-outlined">check_circle_outline</span>
+        Approval notification will be sent to the approval chain members
+      </div>
+    </div>
+
+    <!-- Bottom submit -->
+    <div style="padding:18px 26px;border-top:1px solid #f0f0f0;">
+      <button form="ocForm" type="submit" class="btn-send-offer" style="width:100%;justify-content:center;font-size:15px;">
+        <span class="material-symbols-outlined">send</span> Create Offer &amp; Start E-Sign
+      </button>
+    </div>
+
+  </div><!-- /LEFT -->
+
+  <!-- ═══════════════ RIGHT: PDF Viewer Panel ═══════════════ -->
+  <div class="pdf-viewer-panel" id="offerPreviewPanel">
+
+    <!-- Header bar (like onboarding/letters modal) -->
+    <div class="pdf-viewer-header">
+      <div>
+        <div class="pdf-viewer-header-title">
+          <span style="margin-right:6px;">📄</span> Offer Letter Preview
+        </div>
+        <div class="pdf-viewer-header-sub" id="pvHeaderSub">Select a candidate to preview</div>
+      </div>
+      <button type="button" onclick="window.print()"
+              style="background:#374151;border:none;color:#d1d5db;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px;">
+        <span class="material-symbols-outlined" style="font-size:15px;">print</span> Print
+      </button>
+    </div>
+
+    <!-- E-sign chain strip -->
+    <div class="esign-chain-wrap" id="pvEsignChain">
+      <span style="font-size:12px;color:#9ca3af;">E-sign chain will appear here once approvers are added.</span>
+    </div>
+
+    <!-- Rendered letter pages -->
+    <div class="pdf-viewer-body" id="pvLetterBody">
+      <!-- Placeholder state -->
+      <div id="pvPlaceholder" style="text-align:center;padding:60px 20px;color:#9ca3af;">
+        <span class="material-symbols-outlined" style="font-size:48px;display:block;margin-bottom:12px;opacity:.4;">description</span>
+        <div style="font-size:14px;font-weight:500;margin-bottom:6px;">No preview yet</div>
+        <div style="font-size:13px;">Select a candidate and fill in the offer details<br>to see a live letter preview here.</div>
+      </div>
+
+      <!-- Live letter (hidden until candidate selected) -->
+      <div id="pvLetter" style="display:none;">
+        <!-- Page 1: Candidate & Offer Info -->
+        <div class="offer-page">
+          <div class="ol-header">
+            <div>
+              <div class="ol-company">FITS HRMS</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px;">Human Resource Management System</div>
+            </div>
+            <div class="ol-ref">
+              <div style="font-weight:700;font-size:13px;">OFFER LETTER</div>
+              <div id="pvOfferNo" style="font-family:monospace;">—</div>
+              <div id="pvDate"></div>
+            </div>
+          </div>
+
+          <p style="margin:0 0 14px;">Dear <strong id="pvCandName">—</strong>,</p>
+          <p style="margin:0 0 18px;font-size:12.5px;color:#374151;">We are delighted to offer you the position of <strong id="pvPosition">—</strong><span id="pvDeptSpan"></span>.</p>
+
+          <div class="ol-section">Candidate Information</div>
+          <div class="ol-grid">
+            <div class="ol-field"><label>Full Name</label><p id="pvFullName">—</p></div>
+            <div class="ol-field"><label>Email Address</label><p id="pvEmail">—</p></div>
+            <div class="ol-field"><label>Position</label><p id="pvPos2">—</p></div>
+            <div class="ol-field"><label>Department</label><p id="pvDept2">—</p></div>
+            <div class="ol-field"><label>Employment Type</label><p id="pvEmpType">—</p></div>
+            <div class="ol-field"><label>Work Location</label><p id="pvLoc">—</p></div>
+          </div>
+
+          <div class="ol-section">Key Dates</div>
+          <div class="ol-grid">
+            <div class="ol-field"><label>Date of Joining</label><p id="pvJoining">—</p></div>
+            <div class="ol-field"><label>Offer Expiry</label><p id="pvExpiry">—</p></div>
+            <div class="ol-field"><label>Probation Period</label><p id="pvProbation">—</p></div>
+          </div>
+
+          <div class="ol-section">Compensation &amp; Benefits</div>
+          <div class="ol-grid">
+            <div class="ol-field"><label>Annual CTC</label><p id="pvGross">—</p></div>
+            <div class="ol-field"><label>Base Salary / Month</label><p id="pvBasic">—</p></div>
+            <div class="ol-field"><label>Allowance</label><p id="pvAllowance">—</p></div>
+            <div class="ol-field"><label>Bonus</label><p id="pvBonus">—</p></div>
+          </div>
+
+          <div class="ol-section">Benefits &amp; Perks</div>
+          <div id="pvPerksList" style="font-size:12.5px;color:#374151;line-height:2;">—</div>
+        </div>
+
+        <!-- Page 2: Terms + Signature -->
+        <div class="offer-page">
+          <div class="ol-header">
+            <div>
+              <div class="ol-company">FITS HRMS</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px;">Offer Letter — Terms &amp; E-Signature</div>
+            </div>
+            <div class="ol-ref">
+              <div style="font-weight:700;font-size:13px;">PAGE 2</div>
+            </div>
+          </div>
+
+          <div class="ol-section">Terms &amp; Conditions</div>
+          <ol style="font-size:12px;color:#374151;padding-left:18px;line-height:2;margin:0 0 20px;">
+            <li><strong>Commencement:</strong> Your employment commences on the joining date subject to satisfactory completion of all pre-employment requirements.</li>
+            <li><strong>Probationary Period:</strong> The first <span id="pvTermsProbation">—</span> of employment are probationary. Either party may terminate with one (1) week's written notice.</li>
+            <li><strong>Compensation:</strong> Salary of <span id="pvTermsSalary">—</span> per month, paid in accordance with the company payroll cycle.</li>
+            <li><strong>Confidentiality:</strong> You shall maintain strict confidentiality of all proprietary and business information, during and after employment.</li>
+            <li><strong>Code of Conduct:</strong> You shall adhere to all company policies and the employee code of conduct.</li>
+            <li><strong>Acceptance:</strong> Please confirm acceptance by signing and returning this letter within five (5) working days.</li>
+          </ol>
+
+          <div class="ol-section">Authorisation &amp; E-Signature</div>
+          <div class="ol-sig-box">
+            <div>
+              <div class="ol-sig-slot"></div>
+              <div class="ol-sig-label">Candidate Signature</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;" id="pvSigCand">—</div>
+            </div>
+            <div>
+              <div class="ol-sig-slot"></div>
+              <div class="ol-sig-label">HR Authorisation</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;">HR Representative</div>
+            </div>
+            <div>
+              <div class="ol-sig-slot"></div>
+              <div class="ol-sig-label">Date</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;" id="pvSigDate">________________</div>
+            </div>
+          </div>
+
+          <p style="font-size:10px;color:#9ca3af;margin-top:24px;text-align:center;border-top:1px solid #f3f4f6;padding-top:10px;">
+            Generated by FITS HRMS · This is a preview — the final letter will be generated upon creation.
+          </p>
+        </div>
+      </div><!-- /pvLetter -->
+    </div><!-- /pdf-viewer-body -->
+  </div><!-- /RIGHT -->
+
+</div>
+</form>
+
+<script>
+// ── Utility ────────────────────────────────────────────────────────────────
+function formatDate(val) {
+  if (!val) return '—';
+  var d = new Date(val + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function fmtMoney(val) {
+  var n = parseFloat(val);
+  if (isNaN(n) || val === '' || val === null) return '—';
+  return 'OMR ' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+function set(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val || '—';
+}
+
+// ── Render preview ──────────────────────────────────────────────────────────
+function renderPreview() {
+  var candName  = document.getElementById('candName').textContent;
+  var candEmail = document.getElementById('candEmail').textContent;
+  if (!document.getElementById('candidateSelect').value) return;
+
+  // Show letter, hide placeholder
+  document.getElementById('pvPlaceholder').style.display = 'none';
+  document.getElementById('pvLetter').style.display = '';
+
+  var pos      = document.getElementById('fieldJobTitle').value || '—';
+  var dept     = document.getElementById('fieldDept').value || '—';
+  var empTypeSel = document.getElementById('fieldEmpType');
+  var empType  = empTypeSel.options[empTypeSel.selectedIndex]?.text || '—';
+  var loc      = document.getElementById('fieldLocation').value || '—';
+  var joining  = formatDate(document.getElementById('fieldJoining').value);
+  var expiry   = formatDate(document.getElementById('fieldExpiry').value);
+  var probSel  = document.getElementById('fieldProbation');
+  var probVal  = probSel.value;
+  var probText = probSel.options[probSel.selectedIndex]?.text || '—';
+  var gross    = fmtMoney(document.getElementById('fieldGross').value);
+  var basic    = fmtMoney(document.getElementById('fieldBasic').value);
+  var allow    = fmtMoney(document.getElementById('fieldAllowance').value);
+  var bonus    = fmtMoney(document.getElementById('fieldBonus').value);
+
+  var today = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+
+  set('pvHeaderSub', candName !== '—' ? candName + ' · ' + pos : 'Select a candidate to preview');
+  set('pvCandName', candName);
+  set('pvPosition', pos);
+  set('pvFullName', candName);
+  set('pvEmail', candEmail !== '—' ? candEmail : '—');
+  set('pvPos2', pos);
+  set('pvDept2', dept);
+  set('pvEmpType', empType);
+  set('pvLoc', loc);
+  set('pvJoining', joining);
+  set('pvExpiry', expiry);
+  set('pvProbation', probText);
+  set('pvGross', gross);
+  set('pvBasic', basic);
+  set('pvAllowance', allow);
+  set('pvBonus', bonus);
+  set('pvDate', today);
+  set('pvSigDate', joining !== '—' ? joining : '________________');
+  set('pvSigCand', candName !== '—' ? candName : '—');
+  set('pvTermsProbation', probVal ? probVal + ' month' + (parseInt(probVal) !== 1 ? 's' : '') : '—');
+  set('pvTermsSalary', basic !== '—' ? basic : gross);
+
+  // Dept inline text
+  var deptSpan = document.getElementById('pvDeptSpan');
+  if (deptSpan) deptSpan.textContent = dept !== '—' ? ' in the ' + dept + ' department' : '';
+
+  // Perks
+  var tags = document.querySelectorAll('#perksRow .perk-tag');
+  var perksList = document.getElementById('pvPerksList');
+  if (perksList) {
+    if (tags.length) {
+      perksList.innerHTML = Array.from(tags).map(function(t){
+        return '✓ ' + t.dataset.perk;
+      }).join('<br>');
+    } else {
+      perksList.textContent = '—';
+    }
+  }
+
+  // E-sign chain strip
+  renderChainStrip();
+}
+
+function renderChainStrip() {
+  var steps = Array.from(document.querySelectorAll('#chainList .od-approver-step'));
+  var strip = document.getElementById('pvEsignChain');
+  var candName = document.getElementById('candName').textContent;
+  var all = steps.map(function(s, i) {
+    var title    = s.querySelector('.od-step-title');
+    var assignee = s.querySelector('.od-assignee-name');
+    var roleName = title ? title.textContent.trim() : '?';
+    var empName  = assignee ? assignee.textContent.trim() : '';
+    var label    = empName && empName !== '— assign below —' ? roleName + ' (' + empName + ')' : roleName;
+    return '<div class="esign-node"><span class="pill pending">Step ' + (i+1) + ': ' + label + '</span></div>'
+      + '<span class="esign-arrow">→</span>';
+  }).join('');
+  var candPart = '<div class="esign-node"><span class="pill pending">'
+    + (candName && candName !== '—' ? candName : 'Candidate') + '</span></div>';
+  strip.innerHTML = all + candPart;
+}
+
+// ── Candidate change + auto-fill ────────────────────────────────────────────
+function onCandidateChange(sel) {
+  var opt   = sel.options[sel.selectedIndex];
+  var card  = document.getElementById('candCard');
+  var banner = document.getElementById('autofillBanner');
+
+  if (!opt.value) {
+    card.style.display = 'none';
+    banner.style.display = 'none';
+    document.getElementById('pvPlaceholder').style.display = '';
+    document.getElementById('pvLetter').style.display = 'none';
+    set('pvHeaderSub', 'Select a candidate to preview');
+    return;
+  }
+
+  var name     = opt.dataset.name  || opt.text.split(' — ')[0];
+  var email    = opt.dataset.email || '';
+  var title    = opt.dataset.title || '';
+  var req      = opt.dataset.req   || '';
+  var initials = name.split(' ').slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase();
+
+  document.getElementById('candInitials').textContent = initials;
+  document.getElementById('candName').textContent     = name;
+  document.getElementById('candEmail').textContent    = email;
+  document.getElementById('candDetail').textContent   = [req, title].filter(Boolean).join('      —      ');
+  card.style.display = 'flex';
+
+  // Update candidate step in chain
+  var candStepName = document.getElementById('candidateStepName');
+  if (candStepName) candStepName.textContent = name;
+  renderChainStrip();
+
+  // Auto-fill from proposal via AJAX
+  fetch('/ui/api/proposal-autofill/' + opt.value + '/')
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (!d.found) { renderPreview(); return; }
+
+      if (d.position)      document.getElementById('fieldJobTitle').value  = d.position;
+      if (d.department)    document.getElementById('fieldDept').value       = d.department;
+      if (d.work_location) document.getElementById('fieldLocation').value  = d.work_location;
+      if (d.basic_salary)  document.getElementById('fieldBasic').value      = d.basic_salary;
+      if (d.gross_salary)  document.getElementById('fieldGross').value      = d.gross_salary;
+      if (d.allowance)     document.getElementById('fieldAllowance').value  = d.allowance;
+      if (d.joining_date)  document.getElementById('fieldJoining').value    = d.joining_date;
+
+      var msg = 'Fields auto-filled from proposal ' + (d.proposal_no || '');
+      if (d.grade_group) msg += ' · Grade: ' + d.grade_group;
+      document.getElementById('autofillMsg').textContent = msg;
+      banner.style.display = 'flex';
+
+      renderPreview();
+    })
+    .catch(function(){ renderPreview(); });
+}
+
+// ── Perks ──────────────────────────────────────────────────────────────────
+function removePerk(closeBtn) {
+  var tag  = closeBtn.closest('.perk-tag');
+  var perk = tag.dataset.perk;
+  tag.remove();
+  var hi = document.querySelector('#perksHiddenInputs input[value="' + CSS.escape(perk) + '"]');
+  if (hi) hi.remove();
+  renderPreview();
+}
+
+function showPerkInput() {
+  document.getElementById('perkInputWrap').style.display = 'flex';
+  document.getElementById('perkInput').focus();
+  document.getElementById('perkAddBtn').style.display = 'none';
+}
+
+function hidePerkInput() {
+  document.getElementById('perkInputWrap').style.display = 'none';
+  document.getElementById('perkInput').value = '';
+  document.getElementById('perkAddBtn').style.display = 'inline-flex';
+}
+
+function addPerkFromInput() {
+  var input = document.getElementById('perkInput');
+  var val   = input.value.trim();
+  if (!val) return;
+  var exists = Array.from(document.querySelectorAll('#perksRow .perk-tag')).some(function(t){ return t.dataset.perk === val; });
+  if (exists) { input.select(); return; }
+
+  var tag = document.createElement('span');
+  tag.className = 'perk-tag';
+  tag.dataset.perk = val;
+  tag.innerHTML = val + ' <span class="perk-close material-symbols-outlined" onclick="removePerk(this)">close</span>';
+
+  var addBtn = document.getElementById('perkAddBtn');
+  document.getElementById('perksRow').insertBefore(tag, addBtn);
+
+  var hi = document.createElement('input');
+  hi.type = 'hidden';
+  hi.name = 'perks[]';
+  hi.value = val;
+  document.getElementById('perksHiddenInputs').appendChild(hi);
+
+  hidePerkInput();
+  renderPreview();
+}
+
+// ── E-Sign Chain Builder — fixed 3-role assignment ────────────────────────
+(function(){
+  var input    = document.getElementById('chainSearchInput');
+  var dropdown = document.getElementById('chainDropdown');
+  var widget   = document.getElementById('chainSearchWidget');
+  var opts     = Array.from(dropdown.querySelectorAll('.chain-opt'));
+
+  // Which role step is currently being assigned (highlighted)
+  var activeRole = null;
+
+  // Click on a role step to select it for assignment
+  document.querySelectorAll('.od-approver-step').forEach(function(step) {
+    step.style.cursor = 'pointer';
+    step.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      document.querySelectorAll('.od-approver-step').forEach(function(s) {
+        s.style.outline = 'none';
+      });
+      activeRole = step;
+      step.style.outline = '2px solid #278E53';
+      step.style.outlineOffset = '2px';
+      step.style.borderRadius = '8px';
+      input.placeholder = 'Assign to ' + step.querySelector('.od-step-title').textContent + '…';
+      input.focus();
+      filterOpts('');
+      document.getElementById('chainDropdown').style.display = '';
+    });
+  });
+
+  function assignToRole(id, name) {
+    if (!activeRole) return;
+
+    // Remove any previous hidden input for this role
+    var old = activeRole.querySelector('input[type=hidden]');
+    if (old) old.remove();
+
+    // Add hidden input
+    var hi = document.createElement('input');
+    hi.type = 'hidden';
+    hi.name = 'chain_approver[]';
+    hi.value = id;
+    activeRole.querySelector('.od-step-body').appendChild(hi);
+
+    // Update assignee name display
+    var sub = activeRole.querySelector('.od-assignee-name');
+    if (sub) sub.textContent = name;
+
+    // Turn circle green with checkmark
+    var circle = activeRole.querySelector('.od-step-circle');
+    if (circle) {
+      circle.classList.add('assigned');
+      circle.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">check</span>';
+    }
+
+    // Deselect
+    activeRole.style.outline = 'none';
+    activeRole = null;
+    input.value = '';
+    input.placeholder = 'Search and assign approver…';
+    dropdown.style.display = 'none';
+
+    renderChainStrip();
+  }
+
+  function filterOpts(q) {
+    q = q.toLowerCase();
+    var visible = 0;
+    opts.forEach(function(o) {
+      var show = o.dataset.name.toLowerCase().includes(q);
+      o.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    dropdown.style.display = (visible && (activeRole || input === document.activeElement)) ? '' : 'none';
+  }
+
+  input.addEventListener('input',  function() { filterOpts(input.value); });
+  input.addEventListener('focus',  function() { if (activeRole) filterOpts(input.value); });
+  document.addEventListener('click', function(e) {
+    if (!widget.contains(e.target) && !e.target.closest('.od-approver-step')) {
+      dropdown.style.display = 'none';
+      if (activeRole) { activeRole.style.outline = 'none'; activeRole = null; }
+    }
+  });
+  opts.forEach(function(o) {
+    o.addEventListener('click', function() { assignToRole(o.dataset.id, o.dataset.name); });
+  });
+
+  // Keep removeStep for any dynamically added steps (not used for fixed roles)
+  window.removeStep = function(btn) {
+    var step = btn.closest('.od-chain-step');
+    step.remove();
+    renderChainStrip();
+  };
+})();
+
+// ── Init: trigger candidate card if preselected ────────────────────────────
+(function(){
+  var sel = document.getElementById('candidateSelect');
+  if (sel && sel.value) onCandidateChange(sel);
+
+  // Set today's date in preview
+  var today = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+  var pvDate = document.getElementById('pvDate');
+  if (pvDate) pvDate.textContent = today;
+})();
+</script>
+{% endblock %}

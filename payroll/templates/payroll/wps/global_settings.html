@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}WPS Settings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>WPS Global Settings</h1>
+        <p>Configure Wage Protection System parameters for your organization</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="bank-info-box">
+            <h4>⚙️ Central Bank of Oman Integration</h4>
+            <p>Configure your bank details and WPS file generation settings to ensure compliance with Omani banking regulations.</p>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.employer_code.id_for_label }}">
+                    Employer Code <span class="required">*</span>
+                </label>
+                {{ form.employer_code }}
+                <small>Unique code assigned by Central Bank of Oman</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.establishment_code.id_for_label }}">
+                    Establishment Code <span class="required">*</span>
+                </label>
+                {{ form.establishment_code }}
+                <small>If applicable for your establishment</small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.bank_name.id_for_label }}">
+                    Bank Name <span class="required">*</span>
+                </label>
+                {{ form.bank_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.bank_code.id_for_label }}">
+                    Bank Code <span class="required">*</span>
+                </label>
+                {{ form.bank_code }}
+                <small>SWIFT code or local bank identifier</small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.company_iban.id_for_label }}">
+                    Company IBAN
+                </label>
+                {{ form.company_iban }}
+                <small>For salary disbursement returns</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.cbm_format.id_for_label }}">
+                    <input type="checkbox" id="{{ form.cbm_format.id_for_label }}" name="cbm_format">
+                    Use CBM Format
+                </label>
+                <small>Central Bank of Oman standard file format</small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.file_validation.id_for_label }}">
+                    <input type="checkbox" id="{{ form.file_validation.id_for_label }}" name="file_validation" checked>
+                    Enable File Validation
+                </label>
+                <small>Validate files before submission to bank</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.auto_generate.id_for_label }}">
+                    <input type="checkbox" id="{{ form.auto_generate.id_for_label }}" name="auto_generate">
+                    Auto-Generate WPS Files
+                </label>
+                <small>Automatically generate files after payroll processing</small>
+            </div>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border);">
+
+        <h3 style="margin-bottom: 20px;">File Submission Limits</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.daily_limit.id_for_label }}">
+                    Daily Submission Limit (OMR)
+                </label>
+                {{ form.daily_limit }}
+                <small>Maximum amount submittable per day</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.monthly_limit.id_for_label }}">
+                    Monthly Submission Limit (OMR)
+                </label>
+                {{ form.monthly_limit }}
+                <small>Maximum amount submittable per month</small>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> These limits are typically set by the Central Bank of Oman and your bank. Update them if you receive new directives from regulatory authorities.
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save WPS Settings</button>
+            <a href="." class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

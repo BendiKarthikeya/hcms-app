@@ -1,0 +1,65 @@
+{% extends "ui/base.html" %}
+{% block title %}Select Signature — HCMS{% endblock %}
+
+{% block content %}
+<style>
+.sp-wrap { max-width:680px; margin:0 auto; }
+.sp-head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.sp-logo { width:40px; height:40px; border-radius:9px; background:#D8B500; color:#fff;
+           display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+.sp-title { font-size:16px; font-weight:700; color:#111; }
+.sp-sub { font-size:12px; color:#888; }
+.sp-acct { font-size:12px; color:#555; margin:10px 0 18px; }
+.sp-acct b { color:#111; }
+.sp-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px; }
+.sp-card { position:relative; border:2px solid #e6e6e6; border-radius:12px; background:#fff;
+           padding:14px; cursor:pointer; transition:border-color .12s, box-shadow .12s; display:block; }
+.sp-card:hover { border-color:#bdbdbd; }
+.sp-card input { position:absolute; opacity:0; pointer-events:none; }
+.sp-card:has(input:checked) { border-color:#208e3d; box-shadow:0 0 0 3px rgba(32,142,61,.12); }
+.sp-card__img { height:90px; display:flex; align-items:center; justify-content:center;
+                background:#fafafa; border-radius:8px; overflow:hidden; }
+.sp-card__img img { max-height:80px; max-width:100%; object-fit:contain; }
+.sp-card__name { margin-top:10px; font-size:12.5px; font-weight:600; color:#333; text-align:center; }
+.sp-check { position:absolute; top:8px; right:10px; color:#208e3d; font-size:20px; visibility:hidden; }
+.sp-card:has(input:checked) .sp-check { visibility:visible; }
+.sp-actions { display:flex; gap:10px; margin-top:22px; }
+.sp-apply { height:42px; padding:0 26px; border:none; border-radius:9px; background:#208e3d;
+            color:#fff; font-size:13px; font-weight:600; cursor:pointer; }
+.sp-apply:hover { background:#1a7a33; }
+.sp-cancel { height:42px; padding:0 22px; border:1px solid #d9d9d9; border-radius:9px; background:#fff;
+             color:#555; font-size:13px; font-weight:600; display:inline-flex; align-items:center; text-decoration:none; }
+</style>
+
+<div class="sp-wrap">
+  <div class="sp-head">
+    <div class="sp-logo">DS</div>
+    <div>
+      <div class="sp-title">Select your {{ label }} signature</div>
+      <div class="sp-sub">Saved signatures from your connected {{ label }} profile</div>
+    </div>
+  </div>
+  <div class="sp-acct">Connected account: <b>{{ account.email_address|default:account.display_name }}</b> ·
+    signing {{ kind }} #{{ obj.id }}</div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="sp-grid">
+      {% for c in cards %}
+      <label class="sp-card">
+        <input type="radio" name="signature_id" value="{{ c.id }}" {% if forloop.first %}checked{% endif %}>
+        <span class="sp-check material-symbols-outlined">check_circle</span>
+        <div class="sp-card__img">
+          {% if c.image %}<img src="{{ c.image }}" alt="{{ c.name }}">{% else %}<span class="sp-sub">Preview unavailable</span>{% endif %}
+        </div>
+        <div class="sp-card__name">{{ c.name }}</div>
+      </label>
+      {% endfor %}
+    </div>
+    <div class="sp-actions">
+      <button type="submit" class="sp-apply">Apply signature &amp; approve</button>
+      <a class="sp-cancel" href="{{ cancel_url }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

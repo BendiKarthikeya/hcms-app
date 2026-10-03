@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Fits Community Support
+    url: https://github.com/fits-opensource/fits/discussions
+    about: Ask questions or discuss features here
+  - name: Documentation
+    url: https://fits-opensource.github.io/fits-docs/
+    about: Check the official Fits documentation

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Omani Labour Law Configuration" %}{% endblock %}
+
+{% block content %}
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="oh-card__header">
+            <h2 class="oh-card__title">{% trans "Omani Labour Law Configuration" %}</h2>
+        </div>
+        <div class="oh-card__body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>{% trans "Leave Entitlements" %}</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>{% trans "Annual Leave" %}</td>
+                            <td>{{ config.annual_leave_days }} {% trans "days" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Maternity Leave" %}</td>
+                            <td>{{ config.maternity_leave_days }} {% trans "days" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Hajj Leave" %}</td>
+                            <td>{{ config.hajj_leave_days }} {% trans "days" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Emergency Leave" %}</td>
+                            <td>{{ config.emergency_leave_days }} {% trans "days" %}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h4>{% trans "Working Hours & Overtime" %}</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>{% trans "Daily Working Hours" %}</td>
+                            <td>{{ config.daily_working_hours }} {% trans "hours" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Weekly Working Hours" %}</td>
+                            <td>{{ config.weekly_working_hours }} {% trans "hours" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Regular Overtime Rate" %}</td>
+                            <td>{{ config.overtime_regular_rate }}x</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Holiday Overtime Rate" %}</td>
+                            <td>{{ config.overtime_holiday_rate }}x</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h4>{% trans "End of Service" %}</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>{% trans "Gratuity Days Per Year" %}</td>
+                            <td>{{ config.gratuity_days_per_year }} {% trans "days" %}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Probation Period" %}</td>
+                            <td>{{ config.probation_period_months }} {% trans "months" %}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h4>{% trans "PASI Integration" %}</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>{% trans "PASI Enabled" %}</td>
+                            <td>
+                                {% if config.pasi_enabled %}
+                                    <span class="badge bg-success">{% trans "Enabled" %}</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{% trans "Disabled" %}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Employee Contribution Rate" %}</td>
+                            <td>{{ config.pasi_employee_rate|floatformat:3 }}%</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Employer Contribution Rate" %}</td>
+                            <td>{{ config.pasi_employer_rate|floatformat:3 }}%</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    {% trans "Configuration based on Royal Decree 35/2003 - Omani Labour Law" %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

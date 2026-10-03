@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Submit WPS File to Bank{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>Submit WPS File to Bank</h1>
+        <p>Submit {{ wps_file.file_reference }} to Central Bank of Oman</p>
+    </div>
+
+    <div class="bank-info-box">
+        <h4>🏦 Bank Submission Process</h4>
+        <p>This file will be submitted to the Central Bank of Oman's Wage Protection System. Ensure all data is verified before submission as it cannot be modified after bank receipt.</p>
+    </div>
+
+    <div class="file-status-box">
+        <h3>Submission Details</h3>
+        
+        <div class="status-info">
+            <div class="status-field">
+                <div class="label">File Reference</div>
+                <div class="value">{{ wps_file.file_reference }}</div>
+            </div>
+            <div class="status-field">
+                <div class="label">Status</div>
+                <div class="value"><span class="status-badge approved">{{ wps_file.get_status_display }}</span></div>
+            </div>
+        </div>
+
+        <div class="status-info">
+            <div class="status-field">
+                <div class="label">Submission Time</div>
+                <div class="value">{{ now|date:"M d, Y H:i" }}</div>
+            </div>
+            <div class="status-field">
+                <div class="label">Bank Submission</div>
+                <div class="value">Central Bank of Oman</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.submission_method.id_for_label }}">
+                    Submission Method <span class="required">*</span>
+                </label>
+                {{ form.submission_method }}
+                <small>Select how to submit the file (API, batch upload, etc.)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.submitted_by.id_for_label }}">
+                    Submitted By <span class="required">*</span>
+                </label>
+                {{ form.submitted_by }}
+                <small>Person responsible for submission</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.submission_notes.id_for_label }}">
+                Submission Notes
+            </label>
+            {{ form.submission_notes }}
+            <small>Additional notes about this submission</small>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>✓ File Ready for Submission</strong>
+            <p>All approvals are complete. System will submit file to Central Bank upon confirmation.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Confirm & Submit to Bank</button>
+            <a href="{% url 'wps-detail' wps_file.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

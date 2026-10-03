@@ -1,0 +1,67 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "9-Box Talent Matrix" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--primary oh-btn--shadow">
+                    <ion-icon name="refresh-outline" class="me-1"></ion-icon>{% trans "Recalculate Matrix" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Performance vs Potential grid analysis for talent identification." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="oh-card p-5">
+                    <div class="oh-card__header pb-3 text-center border-bottom mb-4">
+                        <h4 class="oh-card__title">{% trans "Global Talent View" %} (March 2026)</h4>
+                    </div>
+                    <div class="oh-card__body overflow-auto">
+                        <table class="oh-table table-bordered text-center" style="min-height: 500px">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px; vertical-align: middle;" rowspan="4">{% trans "Potential" %}</th>
+                                    <th>{% trans "High" %}</th>
+                                    <td class="oh-card-dashboard--warning p-4" style="background:#fff3e0 !important; border: 2px dashed #ffb74d">{% trans "Core Talent" %}</td>
+                                    <td class="oh-card-dashboard--warning p-4" style="background:#fff3e0 !important; border: 2px dashed #ffb74d">{% trans "High Potential" %}</td>
+                                    <td class="oh-card-dashboard--success p-4" style="background:#e8f5e9 !important; border: 2px dashed #81c784">{% trans "Star / Top Talent" %}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Medium" %}</th>
+                                    <td class="oh-card-dashboard--info p-4" style="background:#e3f2fd !important; border: 2px dashed #64b5f6">{% trans "Effective" %}</td>
+                                    <td class="oh-card-dashboard--info p-4" style="background:#e3f2fd !important; border: 2px dashed #64b5f6">{% trans "Core Player" %}</td>
+                                    <td class="oh-card-dashboard--info p-4" style="background:#e3f2fd !important; border: 2px dashed #64b5f6">{% trans "High Professional" %}</td>
+                                </tr>
+                                <tr>
+                                    <th>{% trans "Low" %}</th>
+                                    <td class="oh-card-dashboard--danger p-4" style="background:#ffebee !important; border: 2px dashed #e57373">{% trans "Risk" %}</td>
+                                    <td class="oh-card-dashboard--danger p-4" style="background:#ffebee !important; border: 2px dashed #e57373">{% trans "Inconsistent" %}</td>
+                                    <td class="oh-card-dashboard--info p-4" style="background:#e3f2fd !important; border: 2px dashed #64b5f6">{% trans "Solid Performer" %}</td>
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th>{% trans "Low" %}</th>
+                                    <th>{% trans "Medium" %}</th>
+                                    <th>{% trans "High" %}</th>
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th colspan="3" class="text-center">{% trans "Performance" %}</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

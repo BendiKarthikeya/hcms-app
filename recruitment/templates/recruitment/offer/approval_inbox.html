@@ -1,0 +1,62 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Offer Approval Inbox" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1000px;margin:24px auto;padding:16px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h1 style="margin:0;font-size:22px;">{% trans "Offer Approval Inbox" %}</h1>
+    <a href="{% url 'offer-list' %}" style="padding:8px 14px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;font-size:13px;">{% trans "← Offer Letters" %}</a>
+  </div>
+
+  {% if pending %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Ref" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Candidate" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Position" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Step" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Due By" %}</th>
+          <th style="padding:10px;text-align:left;font-size:12px;">{% trans "Action" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appr in pending %}
+        <tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:9px 10px;font-size:12px;font-family:monospace;color:#6b7280;">{{ appr.offer.offer_no }}</td>
+          <td style="padding:9px 10px;font-size:13px;font-weight:500;">{{ appr.offer.candidate_id.name }}</td>
+          <td style="padding:9px 10px;font-size:13px;">{{ appr.offer.position }}</td>
+          <td style="padding:9px 10px;font-size:13px;">
+            {% if appr.step %}Step {{ appr.step.sequence }} — {{ appr.step.get_approver_type_display }}{% else %}—{% endif %}
+          </td>
+          <td style="padding:9px 10px;font-size:13px;">
+            {% if appr.due_at %}
+              <span style="color:{% if appr.due_at|date:'U' < now|date:'U' %}#dc2626{% else %}#374151{% endif %};">
+                {{ appr.due_at|date:"d M Y H:i" }}
+              </span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="padding:9px 10px;">
+            <a href="{% url 'offer-detail' appr.offer.id %}" style="padding:6px 14px;border-radius:6px;background:#7c3aed;color:#fff;text-decoration:none;font-size:12px;">
+              {% trans "Review & Approve" %}
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:40px;text-align:center;color:#6b7280;">
+    ✅ {% trans "No offers awaiting your approval." %}
+  </div>
+  {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

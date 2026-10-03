@@ -1,0 +1,91 @@
+{% extends "index.html" %}
+{% load static i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:dashboard' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Dashboard" %}
+                    </a>
+                    <h1 class="oh-page-title">{% trans "Training Courses" %}</h1>
+                </div>
+            </div>
+
+            {% if courses %}
+            <div class="oh-cards-container row">
+                {% for course in courses %}
+                <div class="col-12 col-sm-12 col-md-6 col-lg-4 mb-4">
+                    <div class="oh-card oh-card--training" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+                        <div class="oh-card__header" style="padding: 1.5rem; border-bottom: 1px solid #e0e0e0;">
+                            <h5 class="oh-card__title" style="margin: 0; font-weight: 600; color: #212529; font-size: 1.1rem;">{{ course.name }}</h5>
+                        </div>
+                        <div class="oh-card__body" style="padding: 1.5rem;">
+                            <p class="oh-card__description" style="color: #666; font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.5;">{{ course.description|truncatewords:20 }}</p>
+                            
+                            <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                                {% if course.level %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.9rem; border-bottom: 1px solid #ddd;">
+                                    <span style="font-weight: 600; color: #555;">{% trans "Level" %}:</span>
+                                    <span style="color: #333;">{{ course.get_level_display }}</span>
+                                </div>
+                                {% endif %}
+                                {% if course.duration_hours %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.9rem; border-bottom: 1px solid #ddd;">
+                                    <span style="font-weight: 600; color: #555;">{% trans "Duration" %}:</span>
+                                    <span style="color: #333;">{{ course.duration_hours }} {% trans "hours" %}</span>
+                                </div>
+                                {% endif %}
+                                {% if course.get_format_display %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.9rem; border-bottom: 1px solid #ddd;">
+                                    <span style="font-weight: 600; color: #555;">{% trans "Format" %}:</span>
+                                    <span style="color: #333;">{{ course.get_format_display }}</span>
+                                </div>
+                                {% endif %}
+                                {% if course.instructor %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.9rem;">
+                                    <span style="font-weight: 600; color: #555;">{% trans "Instructor" %}:</span>
+                                    <span style="color: #333;">{{ course.instructor }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="oh-card__footer" style="padding: 1rem 1.5rem; border-top: 1px solid #e0e0e0; display: flex; gap: 0.5rem;">
+                            <a href="{% url 'learning:course_detail' course.pk %}" class="oh-btn oh-btn--secondary oh-btn--sm flex-grow-1" style="text-align: center;">{% trans "View" %}</a>
+                            <a href="{% url 'learning:enroll_course' course.pk %}" class="oh-btn oh-btn--primary oh-btn--sm flex-grow-1" style="text-align: center;">{% trans "Enroll" %}</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">{% trans "First" %}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a></li>
+                    {% endif %}
+
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</span></li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{% trans "Last" %}</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="oh-empty-state" style="text-align: center; padding: 3rem 2rem;">
+                <p style="color: #666; font-size: 1.1rem;">{% trans "No courses available yet." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

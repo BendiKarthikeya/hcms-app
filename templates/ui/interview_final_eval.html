@@ -1,0 +1,331 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}Candidate Final Evaluation — HCMS{% endblock %}
+{% block active_interview %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb" style="margin-bottom:12px">
+  <span class="material-symbols-outlined">keyboard_arrow_left</span>
+  <a href="/ui/interview/" style="color:#6D6D6D;text-decoration:none">Back to Interviews</a>
+</div>
+
+<!-- Page header + buttons -->
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+  <div>
+    <div class="ui-page-title" style="margin-bottom:4px">Candidate Final Evaluation</div>
+    <div class="ui-page-subtitle">Review Interview details and provide evaluation for candidates</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="ui-btn-outlined" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">download</span> Download
+    </button>
+    <button class="ui-btn-outlined" form="final-eval-form" type="submit" name="_save_draft" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">save</span> Save as Draft
+    </button>
+    <button class="ui-btn-primary" form="final-eval-form" type="submit" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">send</span> Submit Evaluation
+    </button>
+  </div>
+</div>
+
+{% if messages %}{% for m in messages %}<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>{% endfor %}{% endif %}
+
+<!-- Candidate info card -->
+<div class="iv-card" style="margin-bottom:16px">
+  <div class="iv-card-section" style="min-width:220px">
+    <div class="iv-avatar">{{ iv.candidate_id.name|slice:":2"|upper|default:"?" }}</div>
+    <div style="margin-left:16px">
+      <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:2px">{{ iv.candidate_id.name|default:"—" }}</div>
+      <div style="font-size:13px;color:#7A7A7A;margin-bottom:2px">{{ iv.candidate_id.email|default:"" }}</div>
+      {% if iv.candidate_id.phone %}<div style="font-size:13px;color:#7A7A7A;margin-bottom:6px">{{ iv.candidate_id.phone }}</div>{% endif %}
+      <div style="background:#DCD9D9;border-radius:7px;padding:4px 10px;display:inline-block;font-size:12px;color:#606060">
+        {% if iv.candidate_id.recruitment_id_id %}REQ-{{ iv.candidate_id.recruitment_id_id }}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="iv-card-divider"></div>
+
+  <div class="iv-card-section" style="flex:1">
+    <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:10px">Interview Summary</div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">person</span>
+      <span class="iv-info-label">Job Title</span>
+      <span class="iv-info-val">{% if iv.candidate_id.recruitment_id %}{{ iv.candidate_id.recruitment_id.title }}{% elif iv.candidate_id.job_position_id %}{{ iv.candidate_id.job_position_id.job_position }}{% else %}—{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">co_present</span>
+      <span class="iv-info-label">Department</span>
+      <span class="iv-info-val">{% if iv.candidate_id.recruitment_id and iv.candidate_id.recruitment_id.department %}{{ iv.candidate_id.recruitment_id.department }}{% else %}—{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">co_present</span>
+      <span class="iv-info-label">Interview Stage</span>
+      <span class="iv-info-val">Final Evaluation</span>
+    </div>
+  </div>
+
+  <div class="iv-card-divider"></div>
+
+  <div class="iv-card-section" style="flex:1">
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">date_range</span>
+      <span class="iv-info-label">Total Rounds</span>
+      <span class="iv-info-val">{{ rounds|length|default:"4" }}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">contacts</span>
+      <span class="iv-info-label">Evaluation Completed on</span>
+      <span class="iv-info-val">{{ iv.interview_date|date:"M d, Y" }}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">phonelink</span>
+      <span class="iv-info-label">Evaluated by</span>
+      <span class="iv-info-val">{% for emp in iv.employee_id.all %}{{ emp }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">link</span>
+      <span class="iv-info-label">Overall Score</span>
+      <span class="iv-info-val" style="color:#0F752F;font-weight:700">{{ overall_pct|default:"83" }}% ({{ total_score|default:"83" }}/{{ total_max|default:"100" }})</span>
+    </div>
+  </div>
+</div>
+
+<!-- Rounds stepper -->
+<div class="iv-rounds-card" style="margin-bottom:16px">
+  <div style="font-size:15px;font-weight:600;color:#111;margin-right:24px;white-space:nowrap">Interview Rounds</div>
+  <div class="iv-rounds-stepper">
+    {% for r in rounds %}
+    <div class="iv-round-step {% if r.completed %}iv-round-step--done{% endif %}">
+      <div class="iv-round-dot"></div>
+      <div style="font-size:13px;font-weight:500;color:{% if r.completed %}#0F752F{% else %}#7A7A7A{% endif %}">Round {{ r.round_number }}</div>
+      <div style="font-size:11px;color:#7A7A7A">{{ r.label }}</div>
+    </div>
+    {% if not forloop.last %}<div class="iv-round-line"></div>{% endif %}
+    {% empty %}
+    <div class="iv-round-step iv-round-step--done">
+      <div class="iv-round-dot"></div>
+      <div style="font-size:13px;font-weight:500;color:#0F752F">Round 1</div>
+      <div style="font-size:11px;color:#7A7A7A">Interview</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="margin-left:auto">
+    <div class="iv-rounds-nav-card">
+      <div style="font-size:11px;font-weight:600;color:#606060">Completed Rounds</div>
+      <div style="font-size:12px;font-weight:700;color:#111;margin-top:2px">{{ completed_rounds|default:rounds|length }} of {{ rounds|length|default:"4" }}</div>
+      <div style="display:flex;gap:4px;position:absolute;right:10px;top:50%;transform:translateY(-50%)">
+        <button class="iv-nav-arrow">‹</button>
+        <button class="iv-nav-arrow">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Score table + summary panel -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+
+  <form id="final-eval-form" method="post" action="">{% csrf_token %}
+    <!-- Evaluation Summary table -->
+    <div class="ui-table-card" style="padding:0;margin-bottom:16px">
+      <div style="padding:20px 24px 12px">
+        <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">Evaluation Summary (All Rounds)</div>
+        <div style="font-size:13px;color:#7A7A7A">Compilation of scores from all interview rounds</div>
+      </div>
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th style="width:6%">Rounds</th>
+            <th style="width:22%">Stage Name</th>
+            <th style="width:10%;text-align:center">Max Score</th>
+            <th style="width:10%;text-align:center">Score</th>
+            <th style="width:24%">Feedback</th>
+            <th style="width:10%;text-align:center">Weightage</th>
+            <th style="width:12%;text-align:center">Weighted Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in round_scores %}
+          <tr style="height:54px">
+            <td style="text-align:center">
+              <div style="width:26px;height:26px;background:#0F752F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">{{ row.round_number }}</div>
+            </td>
+            <td style="font-size:13px;font-weight:500;color:#111">{{ row.label }}</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">{{ row.max_score }}</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">{{ row.score }}/{{ row.max_score }}</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px">{{ row.feedback|default:"—" }}</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">{{ row.weightage }}%</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">{{ row.weighted_score }}/{{ total_max|default:"20" }}</td>
+          </tr>
+          {% empty %}
+          <!-- Static placeholder rows -->
+          <tr style="height:54px">
+            <td style="text-align:center"><div style="width:26px;height:26px;background:#0F752F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">1</div></td>
+            <td style="font-size:13px;font-weight:500;color:#111">Screening Interview</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">25</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">20/25</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px">Understanding of core technological concepts</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">20%</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">16.0/20</td>
+          </tr>
+          <tr style="height:54px">
+            <td style="text-align:center"><div style="width:26px;height:26px;background:#0F752F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">2</div></td>
+            <td style="font-size:13px;font-weight:500;color:#111">Technical Interview</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">25</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">20/25</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px">Understanding of core technological concepts</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">40%</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">33.6/20</td>
+          </tr>
+          <tr style="height:54px">
+            <td style="text-align:center"><div style="width:26px;height:26px;background:#0F752F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">3</div></td>
+            <td style="font-size:13px;font-weight:500;color:#111">HR Interview</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">25</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">20/25</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px">Understanding of core technological concepts</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">20%</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">15.2/20</td>
+          </tr>
+          <tr style="height:54px">
+            <td style="text-align:center"><div style="width:26px;height:26px;background:#0F752F;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">4</div></td>
+            <td style="font-size:13px;font-weight:500;color:#111">Managerial Interview</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">25</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">23/25</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px">Understanding of core technological concepts</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060">20%</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#0F752F">18.4/20</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <!-- Total row -->
+      <div style="background:#E2ECE8;padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:18px;font-weight:700;color:#0D0D0D">Total Score</div>
+        <div style="display:flex;gap:60px;align-items:center">
+          <span style="font-size:15px;font-weight:700;color:#0A0A0A">{{ total_max|default:"100" }}</span>
+          <span style="font-size:15px;font-weight:700;color:#0F752F">{{ total_score|default:"83" }}/{{ total_max|default:"100" }}</span>
+          <span style="font-size:15px;font-weight:700;color:#606060">100%</span>
+          <span style="font-size:15px;font-weight:700;color:#0F752F">{{ total_score|default:"83" }}/{{ total_max|default:"100" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info banner -->
+    <div style="border:1px solid #9C9C9C;border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;background:#fff">
+      <span class="material-symbols-outlined" style="font-size:26px;color:#555">error_outline</span>
+      <span style="font-size:13px;font-weight:500;color:#111;line-height:1.5">Weighted score is calculated based on the weightage assigned to each round.</span>
+    </div>
+
+    <!-- Additional comment -->
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#111;margin-bottom:8px">Additional Comment</div>
+      <div style="border:1px solid #D1D1D1;border-radius:14px;padding:14px 20px;background:#fff;min-height:72px">
+        <textarea name="final_notes" rows="3" placeholder="Write a comment or note"
+          style="width:100%;border:none;outline:none;font-size:13px;color:#333;resize:none;font-family:inherit;background:transparent">{{ final_notes|default:"" }}</textarea>
+      </div>
+    </div>
+  </form>
+
+  <!-- Overall summary panel -->
+  <div style="border:1px solid #D3D3D3;border-radius:16px;padding:20px;background:#fff">
+    <div style="font-size:15px;font-weight:600;color:#111;margin-bottom:16px">Overall Summary</div>
+
+    <!-- Donut -->
+    <div style="display:flex;justify-content:center;margin-bottom:16px">
+      <div style="position:relative;width:140px;height:140px">
+        <canvas id="finalDonut" width="140" height="140"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:26px;font-weight:700;color:#111">{{ overall_pct|default:"83" }}%</div>
+          <div style="font-size:11px;color:#606060;text-align:center;line-height:1.2">Overall<br>Percentage</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendation -->
+    <div style="margin-bottom:6px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">Recommendation</div>
+      <div style="display:inline-block;background:#E2ECE8;border-radius:6px;padding:3px 12px;font-size:12px;font-weight:500;color:#0F752F;margin-bottom:8px">
+        {{ recommendation_display|default:"Strong Hire" }}
+      </div>
+      <p style="font-size:12px;color:#7A7A7A;line-height:1.5">
+        {{ summary_note|default:"Candidate has demonstrated excellent skills and is highly recommended." }}
+      </p>
+    </div>
+
+    <!-- Score Breakdown -->
+    <div style="border-top:1px solid #D1D1D1;padding-top:14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:10px">Score Breakdown</div>
+      {% for row in round_scores %}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:9px;height:9px;background:#68C28C;border-radius:50%"></div>
+          <span style="font-size:13px;color:#5C5656">{{ row.label }}</span>
+        </div>
+        <span style="font-size:13px;font-weight:500;color:#2B2B2B">{{ row.score }}/{{ row.max_score }} ({{ row.pct }}%)</span>
+      </div>
+      {% empty %}
+      {% for item in "Screening Interview:20:25:80,Technical Interview:21:25:84,HR Interview:19:25:76,Managerial Interview:23:25:92"|split:"," %}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:9px;height:9px;background:#68C28C;border-radius:50%"></div>
+          <span style="font-size:13px;color:#5C5656">{{ item|split:":"|first }}</span>
+        </div>
+        <span style="font-size:13px;font-weight:500;color:#2B2B2B">—</span>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+
+    <!-- Strengths -->
+    <div style="border-top:1px solid #D1D1D1;padding-top:14px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">Strengths</div>
+      {% for strength in strengths %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="material-symbols-outlined" style="font-size:15px;color:#0F752F">check_circle</span>
+        <span style="font-size:13px;color:#5C5656">{{ strength }}</span>
+      </div>
+      {% empty %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="material-symbols-outlined" style="font-size:15px;color:#0F752F">check_circle</span><span style="font-size:13px;color:#5C5656">Strong technical knowledge</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="material-symbols-outlined" style="font-size:15px;color:#0F752F">check_circle</span><span style="font-size:13px;color:#5C5656">Excellent coding skills</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:#0F752F">check_circle</span><span style="font-size:13px;color:#5C5656">Good problem solving approach</span></div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+.iv-card { display:flex; align-items:stretch; border:1px solid #D1D1D1; border-radius:14px; background:#fff; overflow:hidden; }
+.iv-card-section { display:flex; align-items:center; padding:20px 24px; }
+.iv-card-divider { width:1px; background:#D1D1D1; flex-shrink:0; margin:16px 0; }
+.iv-avatar { width:100px; height:100px; border-radius:50%; background:#DDD; display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:700; color:#555; flex-shrink:0; }
+.iv-info-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; }
+.iv-info-icon { font-size:16px; color:#606060; background:#F0F0F0; border-radius:5px; padding:2px; }
+.iv-info-label { color:#7A7A7A; font-weight:600; width:140px; flex-shrink:0; }
+.iv-info-val { color:#606060; }
+.iv-rounds-card { display:flex; align-items:center; gap:16px; border:1px solid #D1D1D1; border-radius:14px; background:#fff; padding:16px 20px; position:relative; }
+.iv-rounds-stepper { display:flex; align-items:center; gap:0; flex:1; min-width:0; }
+.iv-round-step { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:80px; }
+.iv-round-dot { width:11px; height:11px; border-radius:50%; background:#D1D1D1; margin-bottom:2px; }
+.iv-round-step--done .iv-round-dot { background:#0F752F; }
+.iv-round-line { flex:1; height:1px; background:#0F752F; margin-bottom:22px; min-width:40px; }
+.iv-rounds-nav-card { background:#F5F5F5; border:1px solid #8E8D8D; border-radius:9px; padding:8px 12px; min-width:160px; position:relative; }
+.iv-nav-arrow { width:28px; height:26px; border:1px solid #C9C9C9; border-radius:4px; background:#fff; cursor:pointer; font-size:14px; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const ctx = document.getElementById("finalDonut");
+  if (!ctx) return;
+  const pct = {{ overall_pct|default:"83" }};
+  const c = ctx.getContext("2d");
+  const r = 55, cx = 70, cy = 70;
+  const start = -Math.PI / 2;
+  const end = start + (pct / 100) * 2 * Math.PI;
+  c.beginPath(); c.arc(cx, cy, r, 0, 2 * Math.PI);
+  c.strokeStyle = "#E0E0E0"; c.lineWidth = 14; c.stroke();
+  c.beginPath(); c.arc(cx, cy, r, start, end);
+  c.strokeStyle = "#0F752F"; c.lineWidth = 14; c.lineCap = "round"; c.stroke();
+});
+</script>
+{% endblock %}

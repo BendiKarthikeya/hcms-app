@@ -1,0 +1,82 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Evaluation Summary" %} — {{ candidate.name }}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:900px;margin:24px auto;padding:16px;">
+  <a href="{% url 'interview-view' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Back" %}</a>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 20px;">
+    <h1 style="margin:0;font-size:20px;">{{ candidate.name }} — {% trans "Panel Summary" %}</h1>
+    <a href="{% url 'interview-evaluation-form' interview_id=interview.id %}" style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;text-decoration:none;font-size:13px;">+ {% trans "Add My Evaluation" %}</a>
+  </div>
+
+  {% if hr_override_justification %}
+  <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#4338ca;margin-bottom:4px;">
+      📝 {% trans "HR Override Justification" %}
+    </div>
+    <div style="font-size:13px;color:#1e293b;white-space:pre-wrap;line-height:1.6;">{{ hr_override_justification }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Overall score card -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:16px;text-align:center;">
+      <div style="font-size:12px;color:#6b7280;text-transform:uppercase;">{% trans "Overall Score" %}</div>
+      <div style="font-size:36px;font-weight:700;color:{% if overall_avg >= 7 %}#16a34a{% elif overall_avg >= 5 %}#d97706{% else %}#dc2626{% endif %};">{{ overall_avg }}</div>
+      <div style="font-size:11px;color:#6b7280;">{% trans "out of 10" %}</div>
+    </div>
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:16px;text-align:center;">
+      <div style="font-size:12px;color:#6b7280;text-transform:uppercase;">{% trans "Panelists" %}</div>
+      <div style="font-size:36px;font-weight:700;">{{ evaluations|length }}</div>
+    </div>
+    {% for rec, count in rec_counts.items %}
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:16px;text-align:center;">
+      <div style="font-size:12px;color:#6b7280;text-transform:uppercase;">{{ recommendation_choices|default:rec }}</div>
+      <div style="font-size:28px;font-weight:700;">{{ count }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Criteria averages -->
+  {% if criteria_avg %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;margin-bottom:16px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Criteria Breakdown" %}</h3>
+    {% for c in criteria_avg %}
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+        <span>{{ c.name }}</span><span style="font-weight:600;">{{ c.avg }} / {{ c.max }}</span>
+      </div>
+      <div style="background:#f3f4f6;border-radius:4px;height:10px;overflow:hidden;">
+        <div style="background:#16a34a;height:100%;width:{{ c.pct }}%;transition:width 0.3s;"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Per-panelist evaluations -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Individual Evaluations" %}</h3>
+    {% for ev in evaluations %}
+    <div style="border-top:1px solid #f3f4f6;padding:14px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:500;font-size:14px;">{{ ev.panelist }}</span>
+        <span style="background:{% if ev.recommendation == 'strong_yes' or ev.recommendation == 'yes' %}#dcfce7{% elif ev.recommendation == 'no' or ev.recommendation == 'strong_no' %}#fee2e2{% else %}#fef3c7{% endif %};padding:2px 10px;border-radius:12px;font-size:12px;">
+          {{ ev.get_recommendation_display }}
+        </span>
+      </div>
+      <div style="font-size:13px;color:#374151;">{% trans "Score" %}: <strong>{{ ev.overall_score }}/10</strong></div>
+      {% if ev.strengths %}<div style="font-size:13px;margin-top:4px;"><span style="color:#16a34a;">+</span> {{ ev.strengths }}</div>{% endif %}
+      {% if ev.weaknesses %}<div style="font-size:13px;"><span style="color:#dc2626;">−</span> {{ ev.weaknesses }}</div>{% endif %}
+      {% if ev.notes %}<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:4px;">{{ ev.notes }}</div>{% endif %}
+    </div>
+    {% empty %}
+    <p style="color:#6b7280;font-size:13px;">{% trans "No evaluations submitted yet." %}</p>
+    {% endfor %}
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'index.html' %}
+{% load static i18n %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <div class="oh-wrapper">
+        <div class="oh-dashboard row">
+            <div class="col-12">
+                <h1 class="oh-main__titlebar-title">{% trans "ICBS Salary Disbursement" %}</h1>
+                <p class="text-muted">{% trans "Automated salary payment through ICBS banking interface." %}</p>
+            </div>
+        </div>
+
+        {% if not is_configured %}
+        <div class="oh-alert oh-alert--warning mt-4">
+            <ion-icon name="warning-outline" class="me-2"></ion-icon>
+            {% trans "ICBS Interface is not yet configured. Please contact your IT administrator to setup the banking API." %}
+        </div>
+        {% else %}
+        <div class="oh-card mt-4">
+            <div class="oh-card__header d-flex justify-content-between align-items-center">
+                <h5 class="oh-card__title">{% trans "Pending Salary Payments" %} (March 2026)</h5>
+                <form method="POST" action="{% url 'icbs-process-bulk' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="oh-btn oh-btn--success oh-btn--shadow" onclick="return confirm('{% trans "Process all pending payments? This action cannot be undone." %}')">
+                        <ion-icon name="paper-plane-outline" class="me-1"></ion-icon>{% trans "Process All via ICBS" %}
+                    </button>
+                </form>
+            </div>
+            <div class="oh-card__body">
+                <div class="oh-table-container">
+                    <table class="oh-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Employee" %}</th>
+                                <th>{% trans "Account Number" %}</th>
+                                <th>{% trans "Gross Amount" %}</th>
+                                <th>{% trans "Deductions" %}</th>
+                                <th>{% trans "Net Payable" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in pending_payments %}
+                            <tr>
+                                <td>{{ payment.employee }}</td>
+                                <td>XXXX-XXXX-1234</td>
+                                <td>{{ payment.amount }}</td>
+                                <td>0</td>
+                                <td>{{ payment.amount }}</td>
+                                <td><span class="oh-badge oh-badge--warning">{% trans "Pending" %}</span></td>
+                                <td>
+                                    <form method="POST" action="{% url 'icbs-process-payment' payment.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="oh-btn oh-btn--secondary oh-btn--sm" onclick="return confirm('{% trans "Process this payment?" %}')">
+                                            {% trans "Pay Now" %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Configuration Settings Section -->
+        <div class="oh-card mt-4">
+            <div class="oh-card__header">
+                <h5 class="oh-card__title">{% trans "Integration Setup" %}</h5>
+            </div>
+            <div class="oh-card__body">
+                <form method="POST" action="{% url 'icbs-config-update' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="oh-label">{% trans "Banking Institution" %}</label>
+                            <input type="text" class="oh-input" name="bank_name" placeholder="Bank Name" value="{{ icbs_config.bank_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="oh-label">{% trans "API Endpoint" %}</label>
+                            <input type="text" class="oh-input" name="api_endpoint" placeholder="https://api.bank.com/v1" value="{{ icbs_config.api_endpoint }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="oh-btn oh-btn--secondary mt-3">{% trans "Update Configuration" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

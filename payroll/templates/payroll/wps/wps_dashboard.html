@@ -1,0 +1,211 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "WPS Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-file-alt"></i>
+                {% trans "WPS Dashboard" %}
+            </h1>
+            <p class="text-muted">{% trans "Wage Protection System - Central Bank of Oman Compliance" %}</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="{% url 'wps-file-list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> {% trans "View All Files" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-primary font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Total Files" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.total_files }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small><a href="{% url 'wps-file-list' %}" class="text-primary">{% trans "View Details" %} →</a></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="text-info font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "This Month" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.submitted_this_month }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small>{% trans "Submitted files" %}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="text-warning font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Pending Approval" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.pending_approval }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small><a href="{% url 'wps-file-list' %}?status=generated" class="text-warning">{% trans "View Details" %} →</a></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="text-success font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Total Submitted" %}</small>
+                    </div>
+                    <h3 class="mb-0">OMR {{ stats.total_submitted_amount|floatformat:2 }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small>{% trans "Processed amount" %}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Files -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Recent Files" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_files %}
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Period" %}</th>
+                                <th>{% trans "Reference" %}</th>
+                                <th>{% trans "Amount" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in recent_files %}
+                            <tr>
+                                <td>{{ file.payroll_period }}</td>
+                                <td><a href="#">{{ file.file_reference_number }}</a></td>
+                                <td>OMR {{ file.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge badge-{% if file.status == 'processed' %}success{% elif file.status == 'submitted' %}info{% elif file.status == 'generated' %}warning{% else %}secondary{% endif %}">
+                                        {{ file.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ file.submitted_date|date:"d M Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-3 text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>{% trans "No files yet" %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <small><a href="{% url 'wps-file-list' %}">{% trans "View all files" %} →</a></small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exceptions -->
+        <div class="col-md-4">
+            <div class="card {% if pending_exceptions %}border-danger{% endif %}">
+                <div class="card-header {% if pending_exceptions %}bg-danger text-white{% endif %}">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% trans "Payment Exceptions" %}
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="{% if pending_exceptions %}text-danger{% else %}text-success{% endif %}">
+                        {{ pending_exceptions }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if pending_exceptions %}
+                            {% trans "Unresolved exceptions" %}
+                        {% else %}
+                            {% trans "No pending exceptions" %}
+                        {% endif %}
+                    </p>
+                </div>
+                {% if pending_exceptions %}
+                <div class="card-footer bg-light">
+                    <small><a href="{% url 'wps-exceptions' %}">{% trans "Resolve exceptions" %} →</a></small>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Quick Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'wps-file-list' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-list"></i> {% trans "View All Files" %}
+                        </a>
+                        <a href="{% url 'wps-global-settings' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog"></i> {% trans "WPS Settings" %}
+                        </a>
+                        <a href="{% url 'wps-exceptions' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-exclamation"></i> {% trans "Manage Exceptions" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .card-body {
+        min-height: 60px;
+    }
+
+    .border-left-primary {
+        border-left: 0.25rem solid #326ce5;
+    }
+
+    .border-left-info {
+        border-left: 0.25rem solid #11cdef;
+    }
+
+    .border-left-warning {
+        border-left: 0.25rem solid #fbb034;
+    }
+
+    .border-left-success {
+        border-left: 0.25rem solid #2dce89;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

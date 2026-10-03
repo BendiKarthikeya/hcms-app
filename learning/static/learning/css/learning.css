@@ -1,0 +1,422 @@
+/* Learning Module Styles */
+
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-bg: #f8f9fa;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+}
+
+/* Course Cards */
+.learning-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    overflow: hidden;
+}
+
+.learning-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.learning-card .card-body {
+    flex-grow: 1;
+    padding: 1.5rem;
+}
+
+.learning-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.learning-card .card-text {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.learning-card-meta {
+    background-color: var(--light-bg);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.learning-card-meta p {
+    margin: 0.25rem 0;
+    color: #555;
+}
+
+.learning-card-meta strong {
+    color: #212529;
+    font-weight: 600;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.meta-item:last-child {
+    border-bottom: none;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.meta-value {
+    color: #333;
+}
+
+/* Buttons */
+.learning-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.learning-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary.learning-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary.learning-btn:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+.btn-success.learning-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success.learning-btn:hover {
+    background-color: #1e7e34;
+    color: white;
+}
+
+.btn-secondary.learning-btn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary.learning-btn:hover {
+    background-color: #545b62;
+    color: white;
+}
+
+/* Button Group in Cards */
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.card-actions .btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Page Header */
+.learning-page-header {
+    margin-bottom: 2rem;
+}
+
+.learning-page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+.back-button {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--light-bg);
+    color: #333;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.back-button:hover {
+    background-color: #e2e6ea;
+    color: #333;
+    text-decoration: none;
+}
+
+/* Dashboard Cards */
+.dashboard-stat-card {
+    border: none;
+    border-radius: var(--border-radius);
+    background: white;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    padding: 2rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-stat-card .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+.dashboard-stat-card .stat-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #555;
+    margin: 0;
+}
+
+/* Table Styles */
+.learning-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.learning-table thead {
+    background-color: var(--light-bg);
+}
+
+.learning-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #212529;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.learning-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    color: #555;
+}
+
+.learning-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Progress Bar */
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+    border-radius: 4px;
+    height: 8px;
+}
+
+/* Badges */
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-primary {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: var(--light-bg);
+    border-radius: var(--border-radius);
+    color: #666;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: var(--light-bg);
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+/* Grid Responsive */
+@media (max-width: 1024px) {
+    .learning-card .card-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .learning-page-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .card-actions .btn {
+        width: 100%;
+    }
+    
+    .meta-item {
+        flex-direction: column;
+    }
+}
+
+/* Alert Styles */
+.alert {
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Spacing Utilities */
+.mt-extra {
+    margin-top: 3rem;
+}
+
+.mb-extra {
+    margin-bottom: 3rem;
+}
+
+/* Form Styles */
+.learning-form-control {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+.learning-form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Skill Cards */
+.skill-card {
+    border-left: 4px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    background: white;
+    box-shadow: var(--card-shadow);
+}
+
+.skill-card .skill-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.skill-card .skill-level {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+}

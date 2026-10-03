@@ -1,0 +1,108 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<div class="oh-wrapper oh-wrapper--padded" style="padding: 24px;">
+    <div class="oh-titlebar" style="margin-bottom: 16px;">
+        <div>
+            <h2 class="oh-titlebar__title" style="font-size: 22px; font-weight: 600;">{% trans "Integrations" %}</h2>
+            <p class="oh-titlebar__subtitle" style="color: #6b7280; margin-top: 4px;">
+                {% trans "Connect external services to send mail and sync data from your own account." %}
+            </p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="oh-alert oh-alert--{{ message.tags|default:'info' }}" style="padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; background: #f3f4f6;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Gmail card -->
+    <div class="oh-card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; max-width: 720px; background: #fff; margin-bottom: 20px;">
+        <div style="display: flex; align-items: flex-start; gap: 16px;">
+            <div style="flex-shrink: 0; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 6.5l-10 6.5L2 6.5V6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v.5z" fill="#EA4335"/>
+                    <path d="M2 6.5l10 6.5 10-6.5V18c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6.5z" fill="#FBBC05"/>
+                    <path d="M22 6.5L12 13 2 6.5V18c0 1.1.9 2 2 2h2V12l6 4 6-4v8h2c1.1 0 2-.9 2-2V6.5z" fill="#34A853"/>
+                    <path d="M6 20V12l6 4 6-4v8H6z" fill="#4285F4"/>
+                </svg>
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">{% trans "Gmail" %}</h3>
+                        <p style="margin: 4px 0 0; color: #6b7280; font-size: 13px;">
+                            {% trans "Send recruitment emails (interview invites, offers, rejections) from your own Gmail address via OAuth." %}
+                        </p>
+                    </div>
+                    {% if gmail %}
+                        <span class="oh-badge" style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;">{% trans "Connected" %}</span>
+                    {% else %}
+                        <span class="oh-badge" style="background: #f3f4f6; color: #6b7280; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;">{% trans "Not connected" %}</span>
+                    {% endif %}
+                </div>
+
+                {% if gmail %}
+                    <div style="margin-top: 14px; padding: 12px 14px; background: #f9fafb; border-radius: 8px; font-size: 13px;">
+                        <div><strong>{% trans "Account" %}:</strong> {{ gmail.email_address }}</div>
+                        {% if gmail.display_name %}<div><strong>{% trans "Name" %}:</strong> {{ gmail.display_name }}</div>{% endif %}
+                        <div><strong>{% trans "Connected" %}:</strong> {{ gmail.created_at|date:"d M Y, H:i" }}</div>
+                        {% if gmail.last_used_at %}<div><strong>{% trans "Last used" %}:</strong> {{ gmail.last_used_at|date:"d M Y, H:i" }}</div>{% endif %}
+                        {% if gmail.last_error %}<div style="color: #b91c1c; margin-top: 6px;"><strong>{% trans "Last error" %}:</strong> {{ gmail.last_error }}</div>{% endif %}
+                    </div>
+
+                    <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        {% if request.user.is_superuser %}
+                        <form method="post" action="{% url 'integrations-gmail-test' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="oh-btn oh-btn--secondary" style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                {% trans "Send test email" %}
+                            </button>
+                        </form>
+                        <a href="{% url 'integrations-gmail-connect' %}" class="oh-btn oh-btn--secondary" style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 14px; border-radius: 6px; text-decoration: none; color: #111; font-size: 13px;">
+                            {% trans "Reconnect" %}
+                        </a>
+                        <form method="post" action="{% url 'integrations-gmail-disconnect' %}" style="display: inline;" onsubmit="return confirm('{% trans 'Disconnect Gmail account?' %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="oh-btn oh-btn--danger" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                {% trans "Disconnect" %}
+                            </button>
+                        </form>
+                        {% else %}
+                        <p style="color: #6b7280; font-size: 13px; margin: 0;">{% trans "All outgoing emails are sent via this account. Contact your administrator to change it." %}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div style="margin-top: 14px;">
+                        {% if request.user.is_superuser %}
+                            {% if gmail_configured %}
+                                <a href="{% url 'integrations-gmail-connect' %}" class="oh-btn oh-btn--primary" style="display: inline-block; background: #1a73e8; color: #fff; padding: 9px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">
+                                    {% trans "Connect Gmail" %}
+                                </a>
+                            {% else %}
+                                <div style="padding: 12px 14px; background: #fef3c7; border: 1px solid #fde68a; color: #92400e; border-radius: 8px; font-size: 13px;">
+                                    <strong>{% trans "Not configured." %}</strong>
+                                    {% trans "Ask your administrator to set" %}
+                                    <code>GMAIL_CLIENT_ID</code>, <code>GMAIL_CLIENT_SECRET</code>
+                                    {% trans "and" %} <code>GMAIL_REDIRECT_URI</code>
+                                    {% trans "(use" %} <code>{{ gmail_redirect_uri }}</code>{% trans ") in the environment." %}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <p style="color: #6b7280; font-size: 13px; margin: 0;">{% trans "No Gmail account connected yet. Contact your administrator to set one up." %}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <p style="margin: 14px 0 0; color: #9ca3af; font-size: 12px;">
+                    {% trans "Scopes requested: send mail as you, read your email address. We never read your inbox." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

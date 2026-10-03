@@ -1,0 +1,105 @@
+{% extends "ui/base.html" %}
+{% block title %}Add Candidate — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D">Back to Candidates</a>
+</div>
+
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Add Candidate</div>
+    <div class="ui-page-subtitle">Create a new candidate record and optionally attach their CV</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+  <form class="ui-panel" method="post" action="" enctype="multipart/form-data">{% csrf_token %}
+    <div class="ui-panel__title">Candidate Details</div>
+
+    {% if messages %}{% for m in messages %}<div style="font-size:12px;padding:8px 12px;margin-bottom:12px;border-radius:6px;background:#FFF0EE;color:#C04730;">{{ m }}</div>{% endfor %}{% endif %}
+
+    <div class="ui-form-row">
+      <div class="ui-form-group">
+        <label class="ui-form-label">Full Name *</label>
+        <input class="ui-form-input" type="text" name="name" placeholder="e.g. Ahmed Al-Khatib" required>
+      </div>
+      <div class="ui-form-group">
+        <label class="ui-form-label">Email *</label>
+        <input class="ui-form-input" type="email" name="email" placeholder="name@example.com" required>
+      </div>
+    </div>
+
+    <div class="ui-form-row">
+      <div class="ui-form-group">
+        <label class="ui-form-label">Mobile</label>
+        <input class="ui-form-input" type="tel" name="mobile" placeholder="+968 …">
+      </div>
+      <div class="ui-form-group">
+        <label class="ui-form-label">Source</label>
+        <select class="ui-form-select" name="source">
+          <option value="application">Application</option>
+          <option value="referral">Referral</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="bayt">Bayt</option>
+          <option value="naukrigulf">Naukri Gulf</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="ui-form-row">
+      <div class="ui-form-group">
+        <label class="ui-form-label">Requisition</label>
+        <select class="ui-form-select" name="recruitment">
+          <option value="">Select requisition…</option>
+          {% for r in recruitments %}<option value="{{ r.id }}" {% if preselect_recruitment_id == r.id|stringformat:"s" %}selected{% endif %}>REQ-{{ r.id }} — {{ r.title|default:r }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="ui-form-group">
+        <label class="ui-form-label">Stage</label>
+        <select class="ui-form-select" name="stage">
+          <option value="">Auto (initial)</option>
+          {% for s in stages %}<option value="{{ s.id }}">{{ s.stage }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="ui-form-group">
+      <label class="ui-form-label">CV / Resume</label>
+      <input class="ui-form-input" type="file" name="resume" accept=".pdf,.doc,.docx">
+      <div style="font-size:11px;color:#888;margin-top:4px">PDF or Word document (optional)</div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <a href="/ui/candidates/" class="ui-btn-outlined">Cancel</a>
+      <button type="submit" class="ui-btn-primary">Add Candidate</button>
+    </div>
+  </form>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="ui-panel" style="padding:20px 24px">
+      <div class="ui-panel__title" style="font-size:16px">Bulk Upload</div>
+      <div style="font-size:13px;color:#555;line-height:1.6">
+        Have several CVs to upload at once? Use the bulk uploader.
+      </div>
+      <a href="/recruitment/candidates/cv-upload/bulk/" class="ui-btn-outlined" style="margin-top:12px;display:inline-flex;width:100%;justify-content:center">
+        <span class="material-symbols-outlined" style="font-size:16px">upload</span> Bulk CV Upload
+      </a>
+    </div>
+
+    <div class="ui-panel" style="padding:20px 24px;background:#F9FCF9;border-color:#C8E0CE">
+      <div style="font-weight:600;font-size:14px;color:#278E53;margin-bottom:8px">💡 Tips</div>
+      <ul style="font-size:13px;color:#555;line-height:1.7;padding-left:16px">
+        <li>Name and email are required.</li>
+        <li>Linking a requisition auto-assigns the initial stage.</li>
+        <li>CV uploads run through AI screening when enabled.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

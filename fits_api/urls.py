@@ -1,0 +1,46 @@
+from django.urls import include, path
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+
+from fits_api.schema import OrderedTagSchemaGenerator
+
+# Create schema view for Swagger and ReDoc
+schema_view = get_schema_view(
+    openapi.Info(
+        title="FITS HCMS API",
+        default_version="v1",
+        description="API documentation for FITS HCMS - Enterprise Human Capital Management System. Click the 'Authorize' button at the top to authenticate.",
+        terms_of_service="https://www.fits-hcms.com/terms/",
+        contact=openapi.Contact(email="contact@fits-hcms.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+    generator_class=OrderedTagSchemaGenerator,
+)
+
+urlpatterns = [
+    # API Documentation URLs
+    path(
+        "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"
+    ),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path("docs/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-docs"),
+    # API Endpoints (static configuration)
+    path("auth/", include("fits_api.api_urls.auth.urls")),
+    path("asset/", include("fits_api.api_urls.asset.urls")),
+    path("audit/", include("fits_api.api_urls.audit_urls")),
+    path("base/", include("fits_api.api_urls.base.urls")),
+    path("employee/", include("fits_api.api_urls.employee.urls")),
+    path("notifications/", include("fits_api.api_urls.notifications.urls")),
+    path("payroll/", include("fits_api.api_urls.payroll.urls")),
+    path("attendance/", include("fits_api.api_urls.attendance.urls")),
+    path("leave/", include("fits_api.api_urls.leave.urls")),
+    path("helpdesk/", include("fits_api.api_urls.helpdesk.urls")),
+]

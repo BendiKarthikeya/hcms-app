@@ -1,0 +1,160 @@
+{% extends 'index.html' %}
+{% block content %}
+{% load static %}
+{% load i18n %}
+
+<div id="messages" class="oh-alert-container"></div>
+
+<section class="oh-wrapper oh-main__topbar" x-data="{searchShow: false}">
+  <div class="oh-main__titlebar oh-main__titlebar--left">
+    <h1 class="oh-main__titlebar-title fw-bold">
+      {% trans "Candidate Database & CV Management" %}
+    </h1>
+    <a class="oh-main__titlebar-search-toggle" role="button" aria-label="Toggle Search"
+      @click="searchShow = !searchShow">
+      <ion-icon name="search-outline" class="oh-main__titlebar-serach-icon"></ion-icon>
+    </a>
+  </div>
+
+  <form id="candidateDbFilterForm"
+    hx-get="{% url 'candidate-database-search' %}"
+    hx-target="#candidateDbResults"
+    hx-trigger="change, keyup delay:400ms from:#candidateDbSearch"
+    class="d-flex"
+    onsubmit="event.preventDefault();">
+
+    <div class="oh-main__titlebar oh-main__titlebar--right">
+      <div class="oh-input-group oh-input__search-group"
+        :class="searchShow ? 'oh-input__search-group--show' : ''">
+        <ion-icon name="search-outline" class="oh-input-group__icon oh-input-group__icon--left"></ion-icon>
+        <input type="text" placeholder="{% trans 'Search by name' %}" id="candidateDbSearch"
+          name="name" class="oh-input oh-input__icon" aria-label="Search Input" />
+      </div>
+
+      <div class="oh-main__titlebar-button-container">
+        <div class="oh-dropdown" x-data="{open: false}">
+          <button class="oh-btn ml-2" @click="open = !open" onclick="event.preventDefault()">
+            <ion-icon name="filter" class="mr-1"></ion-icon>{% trans "Filter" %}
+          </button>
+          <div class="oh-dropdown__menu oh-dropdown__menu--right oh-dropdown__filter p-4"
+            x-show="open" @click.outside="open = false" style="display: none; min-width: 420px;">
+
+            <div class="oh-dropdown__filter-body">
+              <div class="oh-accordion">
+                <div class="oh-accordion-header">{% trans "Candidate" %}</div>
+                <div class="oh-accordion-body">
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.job_position_id.id_for_label }}">
+                          {{ f.form.job_position_id.label }}
+                        </label>
+                        {{ f.form.job_position_id }}
+                      </div>
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.country.id_for_label }}">
+                          {{ f.form.country.label }}
+                        </label>
+                        {{ f.form.country }}
+                      </div>
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.skills.id_for_label }}">
+                          {{ f.form.skills.label }}
+                        </label>
+                        {{ f.form.skills }}
+                      </div>
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.project_id.id_for_label }}">
+                          {{ f.form.project_id.label }}
+                        </label>
+                        {{ f.form.project_id }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="oh-accordion">
+                <div class="oh-accordion-header">{% trans "Experience & Availability" %}</div>
+                <div class="oh-accordion-body">
+                  <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.experience_min.id_for_label }}">
+                          {{ f.form.experience_min.label }}
+                        </label>
+                        {{ f.form.experience_min }}
+                      </div>
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.available_from.id_for_label }}">
+                          {{ f.form.available_from.label }}
+                        </label>
+                        {{ f.form.available_from }}
+                      </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.experience_max.id_for_label }}">
+                          {{ f.form.experience_max.label }}
+                        </label>
+                        {{ f.form.experience_max }}
+                      </div>
+                      <div class="oh-input-group">
+                        <label class="oh-label" for="{{ f.form.available_until.id_for_label }}">
+                          {{ f.form.available_until.label }}
+                        </label>
+                        {{ f.form.available_until }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="oh-dropdown__filter-footer">
+              <button class="oh-btn oh-btn--secondary oh-btn--small w-100 filterButton"
+                onclick="event.stopPropagation(); htmx.trigger('#candidateDbFilterForm', 'change');">
+                {% trans "Apply Filter" %}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</section>
+
+<div class="oh-wrapper">
+  <div id="candidateDbResults"
+    hx-get="{% url 'candidate-database-search' %}"
+    hx-trigger="load"
+    hx-target="this"
+    hx-swap="innerHTML">
+    <div class="d-flex justify-content-center align-items-center" style="min-height:200px;">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="sr-only">{% trans "Loading..." %}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelector('#candidateDbFilterForm').addEventListener('change', function () {
+    const form = document.querySelector('#candidateDbFilterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData).toString();
+    const target = document.querySelector('#candidateDbResults');
+    htmx.ajax('GET', "{% url 'candidate-database-search' %}?" + params, {target: target, swap: 'innerHTML'});
+  });
+
+  document.querySelector('#candidateDbSearch').addEventListener('keyup', function () {
+    const form = document.querySelector('#candidateDbFilterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData).toString();
+    const target = document.querySelector('#candidateDbResults');
+    htmx.ajax('GET', "{% url 'candidate-database-search' %}?" + params, {target: target, swap: 'innerHTML'});
+  });
+</script>
+
+{% endblock %}

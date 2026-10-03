@@ -1,0 +1,116 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Candidate Email Templates" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:960px;margin:24px auto;padding:16px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div>
+      <h1 style="margin:0;font-size:20px;">{% trans "Candidate Email Templates" %}</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">
+        {% trans "Edit the selection and rejection emails sent to candidates. Mark one as default." %}
+      </p>
+    </div>
+    <button onclick="document.getElementById('createPanel').style.display='block';this.style.display='none';"
+      style="padding:9px 18px;border-radius:6px;background:#1d4ed8;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;">
+      + {% trans "New Template" %}
+    </button>
+  </div>
+
+  {% if messages %}
+  {% for msg in messages %}
+  <div style="padding:10px 14px;border-radius:6px;margin-bottom:12px;font-size:13px;
+    background:{% if msg.tags == 'error' %}#fee2e2;color:#991b1b{% else %}#dcfce7;color:#166534{% endif %};">
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Create form (hidden by default) -->
+  <div id="createPanel" style="display:none;background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:20px;margin-bottom:20px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Create New Template" %}</h3>
+    <form method="post" action="{% url 'email-template-list' %}">
+      {% csrf_token %}
+      {% include "recruitment/email_templates/_form_fields.html" %}
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="submit" style="padding:8px 20px;border-radius:6px;background:#1d4ed8;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;">
+          {% trans "Save Template" %}
+        </button>
+        <button type="button" onclick="document.getElementById('createPanel').style.display='none';"
+          style="padding:8px 16px;border-radius:6px;background:#f3f4f6;color:#374151;border:none;cursor:pointer;font-size:13px;">
+          {% trans "Cancel" %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Template list -->
+  {% if templates %}
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    {% for tpl in templates %}
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div>
+          <span style="font-size:15px;font-weight:600;">{{ tpl.name }}</span>
+          {% if tpl.is_default %}
+          <span style="margin-left:8px;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534;">
+            ✓ {% trans "Default" %}
+          </span>
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:8px;">
+          {% if not tpl.is_default %}
+          <form method="post" action="{% url 'email-template-set-default' tpl.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="padding:5px 12px;border-radius:6px;background:#f0fdf4;color:#166534;border:1px solid #86efac;cursor:pointer;font-size:12px;">
+              {% trans "Set Default" %}
+            </button>
+          </form>
+          {% endif %}
+          <a href="{% url 'email-template-edit' tpl.id %}"
+            style="padding:5px 12px;border-radius:6px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;text-decoration:none;font-size:12px;">
+            {% trans "Edit" %}
+          </a>
+          <form method="post" action="{% url 'email-template-delete' tpl.id %}" style="display:inline;"
+            onsubmit="return confirm('{% trans "Delete this template?" %}');">
+            {% csrf_token %}
+            <button type="submit" style="padding:5px 12px;border-radius:6px;background:#fff1f2;color:#be123c;border:1px solid #fecdd3;cursor:pointer;font-size:12px;">
+              {% trans "Delete" %}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;">
+        <div>
+          <div style="color:#6b7280;margin-bottom:3px;">{% trans "Selection Subject" %}</div>
+          <div style="font-weight:500;color:#111;">{{ tpl.selection_subject }}</div>
+        </div>
+        <div>
+          <div style="color:#6b7280;margin-bottom:3px;">{% trans "Rejection Subject" %}</div>
+          <div style="font-weight:500;color:#111;">{{ tpl.rejection_subject }}</div>
+        </div>
+        <div>
+          <div style="color:#6b7280;margin-bottom:3px;">{% trans "Selection Body" %} <span style="color:#9ca3af;">({% trans "preview" %})</span></div>
+          <div style="color:#374151;white-space:pre-line;max-height:60px;overflow:hidden;text-overflow:ellipsis;">{{ tpl.selection_body|truncatechars:120 }}</div>
+        </div>
+        <div>
+          <div style="color:#6b7280;margin-bottom:3px;">{% trans "Rejection Body" %} <span style="color:#9ca3af;">({% trans "preview" %})</span></div>
+          <div style="color:#374151;white-space:pre-line;max-height:60px;overflow:hidden;text-overflow:ellipsis;">{{ tpl.rejection_body|truncatechars:120 }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:48px;color:#9ca3af;font-size:14px;">
+    {% trans "No email templates yet. Create one above." %}
+  </div>
+  {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

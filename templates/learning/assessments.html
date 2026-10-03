@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "Assessments & Quizzes" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--secondary oh-btn--shadow">
+                    <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Create New Assessment" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Manage course evaluations, skills assessments, and knowledge checks." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="oh-card">
+            <div class="oh-card__body py-5 text-center">
+                <ion-icon name="clipboard-outline" style="font-size: 5rem; color: #ddd;" class="mb-3"></ion-icon>
+                <h4 class="text-muted">{% trans "Assessment Portal" %}</h4>
+                <p class="text-muted mb-4">{% trans "No active assessments found for your profile. Please check back later or contact your instructor." %}</p>
+                <button class="oh-btn oh-btn--light">{% trans "View Completed Quizzes" %}</button>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

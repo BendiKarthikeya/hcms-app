@@ -1,0 +1,539 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ proposal.proposal_no }} — HCMS{% endblock %}
+
+{% block content %}
+<style>
+/* ── Proposal detail local styles ── */
+.pd-info-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #F5F5F5; }
+.pd-info-row:last-child { border-bottom:none; }
+.pd-info-icon { width:32px; height:32px; border-radius:8px; background:#F0F7F3; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pd-info-icon .material-symbols-outlined { font-size:16px; color:#278E53; }
+.pd-info-label { font-size:10px; color:#999; font-weight:500; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+.pd-info-value { font-size:13px; color:#222; font-weight:500; }
+
+/* Green info bar */
+.pd-info-bar { background:#E8F5ED; border:1px solid #C3E6CB; border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:8px; font-size:12px; color:#1F5F2F; margin-top:16px; }
+.pd-info-bar .material-symbols-outlined { font-size:16px; flex-shrink:0; }
+
+/* ── Approval chain — offer detail style ───────────────────────────── */
+.od-chain-step { display:flex; gap:14px; padding:0; position:relative; }
+.od-chain-connector { position:absolute; left:17px; top:42px; bottom:0; width:2px; background:#d1d1d1; z-index:0; }
+.od-chain-connector.done { background:#278E53; }
+.od-step-circle {
+  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; color:#fff;
+  background:#d2d2d2; z-index:1; position:relative;
+}
+.od-step-circle.signed   { background:#278E53; }
+.od-step-circle.active   { background:#278E53; box-shadow:0 0 0 4px #E8F5ED; }
+.od-step-circle.rejected { background:#C62828; }
+.od-step-circle.sla-warning { background:#F59E0B; box-shadow:0 0 0 4px #FEF3C7; }
+.od-step-circle.sla-overdue { background:#EF4444; box-shadow:0 0 0 4px #FEE2E2; }
+.od-step-circle.sla-late    { background:#F97316; }
+.od-step-body { flex:1; border-bottom:1px solid #e5e7eb; padding-bottom:18px; padding-top:4px; min-width:0; }
+.od-chain-step:last-child .od-step-body { border-bottom:none; }
+.od-step-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.od-step-title { font-size:16px; font-weight:600; color:#202020; }
+.od-step-name  { font-size:14px; color:#606060; margin-top:4px; }
+.od-step-ts    { font-size:14px; color:#606060; margin-top:4px; }
+.od-badge { height:24px; padding:0 10px; border-radius:6px; font-size:13px; font-weight:500; display:inline-flex; align-items:center; flex-shrink:0; margin-top:4px; }
+.od-badge--signed   { background:#e2ece8; color:#0f752f; }
+.od-badge--active   { background:#e2ece8; color:#0f752f; }
+.od-badge--pending  { background:#f5f0ed; color:#e0812e; }
+.od-badge--rejected { background:#fff0f0; color:#c62828; }
+.od-sig-img-wrap { margin-top:10px; padding:6px 10px; border:1px solid #E0EAE5; border-radius:8px; background:#FAFCFA; display:inline-block; max-width:180px; }
+.od-sig-img-wrap img { max-height:40px; max-width:160px; display:block; }
+.od-feedback-block { font-size:12px; color:#A02929; margin-top:8px; padding:8px 12px; background:#FFF1EF; border-left:3px solid #C04730; border-radius:4px; }
+.od-feedback-label { font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#C04730; margin-bottom:3px; }
+/* Inline sig area */
+.od-sig-area { margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.od-sig-comment { border:1px solid #a7a7a7; border-radius:20px; padding:14px 24px; font-size:13px; font-family:inherit; resize:none; outline:none; color:#8e8d8d; width:100%; box-sizing:border-box; background:#fff; min-height:120px; }
+.od-sig-comment:focus { border-color:#76b590; }
+.od-sig-canvas-wrap { border:1px solid #a7a7a7; border-radius:20px; overflow:hidden; position:relative; min-height:120px; background:#fff; }
+.od-sig-canvas { cursor:crosshair; width:100%; display:block; touch-action:none; }
+.od-sig-watermark { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); color:#D5D5D5; font-size:12px; pointer-events:none; user-select:none; }
+.od-sig-action-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.od-btn-reject { height:47px; border:1px solid #d70d0d; border-radius:10px; background:#fff; font-size:18px; font-weight:600; color:#e33f3f; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.od-btn-reject:hover { background:#fff5f5; }
+.od-btn-approve { height:47px; border:none; border-radius:10px; background:#208e3d; font-size:18px; font-weight:600; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.od-btn-approve:hover { background:#1a7533; }
+.od-notify-bar { background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:10px; font-size:14px; color:#374151; margin-top:16px; }
+.od-notify-bar .material-symbols-outlined { font-size:20px; color:#278E53; flex-shrink:0; }
+
+/* ONEIC document styles */
+.ep-doc { max-width:860px; margin:24px 0 32px; background:#fff; padding:32px; border:1px solid #e5e7eb; border-radius:10px; font-family:"Times New Roman",Georgia,serif; color:#111; }
+.ep-doc h2 { text-align:center;font-size:17px;font-weight:700;margin:0 0 4px; }
+.ep-doc .ep-sub { text-align:center;font-size:14px;font-weight:700;margin-bottom:14px; }
+.ep-doc .ep-sec-title { background:#e5e7eb;text-align:center;font-weight:700;font-size:13px;padding:5px;border:1px solid #9ca3af; }
+.ep-doc table.ep-tbl { width:100%;border-collapse:collapse;margin-bottom:0; }
+.ep-doc table.ep-tbl td { border:1px solid #9ca3af;padding:5px 7px;font-size:12px;vertical-align:top; }
+.ep-doc table.ep-tbl td.lbl { background:#f9fafb;font-weight:600;width:30%; }
+.ep-check-on::before  { content:"☑ "; }
+.ep-check-off::before { content:"☐ "; }
+.ep-sign-box { border:1px solid #9ca3af;padding:8px 12px;min-height:60px;display:flex;flex-direction:column;gap:4px; }
+.ep-sign-box img { max-width:160px;max-height:55px;display:block; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="ui-breadcrumb">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/proposals/">Back to Proposals</a>
+</div>
+
+<!-- Page title -->
+<div style="margin-bottom:20px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:3px">
+    <div class="ui-page-title">{{ proposal.proposal_no }}</div>
+    {% if proposal.status == "approved" %}<span class="ui-pill ui-pill--green">Approved</span>
+    {% elif proposal.status == "rejected" %}<span class="ui-pill ui-pill--red">Rejected</span>
+    {% elif proposal.status == "pending" %}<span class="ui-pill ui-pill--amber">Pending Approval</span>
+    {% elif proposal.status == "converted" %}<span class="ui-pill ui-pill--blue">Converted</span>
+    {% else %}<span class="ui-pill ui-pill--grey">Draft</span>{% endif %}
+
+    {% if proposal.status == "approved" %}
+    <a href="/ui/offer-creator/?candidate={{ proposal.candidate_id }}"
+       style="margin-left:8px;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;background:#1565C0;color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:15px">handshake</span> Create Offer Letter
+    </a>
+    {% endif %}
+  </div>
+  <div class="ui-page-subtitle">Create and send a professional offer to the selected candidate</div>
+</div>
+
+<!-- Two-column layout -->
+<div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start">
+
+  <!-- ═══ LEFT: Proposal Summary ═══ -->
+  <div class="ui-panel">
+    <div class="ui-panel__title" style="font-size:15px">Proposal Summary</div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">title</span></div>
+      <div>
+        <div class="pd-info-label">Request Title</div>
+        <div class="pd-info-value">{{ proposal.post_applied_for|default:"—" }}</div>
+      </div>
+    </div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">corporate_fare</span></div>
+      <div>
+        <div class="pd-info-label">Department</div>
+        <div class="pd-info-value">{{ proposal.division_department|default:"—" }}</div>
+      </div>
+    </div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">description</span></div>
+      <div>
+        <div class="pd-info-label">Request Type</div>
+        <div class="pd-info-value">{{ proposal.get_template_type_display|default:"—" }}</div>
+      </div>
+    </div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">priority_high</span></div>
+      <div>
+        <div class="pd-info-label">Priority</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="pd-info-value">{{ proposal.priority|default:"Medium" }}</div>
+          <span class="ui-pill ui-pill--amber" style="font-size:10px">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">work</span></div>
+      <div>
+        <div class="pd-info-label">Position</div>
+        <div class="pd-info-value">{{ proposal.post_applied_for|default:"—" }}</div>
+        {% if proposal.grade_group %}<div style="font-size:11px;color:#999">Grade: {{ proposal.grade_group }}</div>{% endif %}
+      </div>
+    </div>
+
+    {% if proposal.reporting_to %}
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">manage_accounts</span></div>
+      <div>
+        <div class="pd-info-label">Replacement for</div>
+        <div class="pd-info-value">{{ proposal.reporting_to }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">badge</span></div>
+      <div>
+        <div class="pd-info-label">Employment Type</div>
+        <div class="pd-info-value">
+          {% if proposal.contractual %}Contractual{% else %}Permanent (Full-Time){% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">location_on</span></div>
+      <div>
+        <div class="pd-info-label">Work Mode</div>
+        <div class="pd-info-value">{{ proposal.post_location|default:"On-site" }}</div>
+      </div>
+    </div>
+
+    {% if proposal.contract_period_from %}
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">event</span></div>
+      <div>
+        <div class="pd-info-label">Start Date</div>
+        <div class="pd-info-value">{{ proposal.contract_period_from|date:"d M Y" }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if proposal.interview_date %}
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">calendar_today</span></div>
+      <div>
+        <div class="pd-info-label">Expected Joining Date</div>
+        <div class="pd-info-value">{{ proposal.interview_date|date:"d M Y" }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if proposal.job_no %}
+    <div class="pd-info-row">
+      <div class="pd-info-icon"><span class="material-symbols-outlined">tag</span></div>
+      <div>
+        <div class="pd-info-label">GSM / CPN No.</div>
+        <div class="pd-info-value">{{ proposal.job_no }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Info banner -->
+    <div class="pd-info-bar">
+      <span class="material-symbols-outlined">info</span>
+      This request will be forwarded to your reporting manager for approval
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ═══ RIGHT: Approval Chain ═══ -->
+  <div class="ui-panel" style="padding:24px 25px;">
+    <div style="font-size:20px;font-weight:600;color:#202020;margin-bottom:4px">Approval Chain</div>
+    <div style="font-size:14px;color:#7f7f7f;margin-bottom:22px">Sequential approval and e-sign process</div>
+
+    {% for step in approvals %}
+    <div class="od-chain-step">
+      {% if not forloop.last %}
+        <div class="od-chain-connector {% if step.display_status == 'approved' %}done{% endif %}"></div>
+      {% endif %}
+
+      <div class="od-step-circle {% if step.display_status == 'approved' %}{% if step.sla_status == 'late' %}sla-late{% else %}signed{% endif %}{% elif step.display_status == 'active' %}{% if step.sla_status == 'warning' %}sla-warning{% elif step.sla_status == 'overdue' %}sla-overdue{% else %}active{% endif %}{% elif step.display_status == 'rejected' %}rejected{% endif %}">
+        {% if step.display_status == "approved" %}<span class="material-symbols-outlined" style="font-size:20px">check</span>
+        {% elif step.display_status == "rejected" %}<span class="material-symbols-outlined" style="font-size:20px">close</span>
+        {% elif step.display_status == "active" %}<span class="material-symbols-outlined" style="font-size:16px">draw</span>
+        {% else %}{{ step.sequence }}{% endif %}
+      </div>
+
+      <div class="od-step-body">
+        <div class="od-step-header">
+          <div class="od-step-title">{{ step.role_label|default:step.approver }}</div>
+          {% if step.display_status == "approved" %}<span class="od-badge od-badge--signed">Signed</span>
+          {% elif step.display_status == "rejected" %}<span class="od-badge od-badge--rejected">Rejected</span>
+          {% elif step.display_status == "active" %}<span class="od-badge od-badge--active">Active</span>
+          {% else %}<span class="od-badge od-badge--pending">Pending</span>{% endif %}
+        </div>
+
+        <div class="od-step-name">{{ step.approver }} · Approver · Step {{ step.sequence }}</div>
+
+        {% if step.requested_at and step.display_status != 'waiting' %}
+          <div class="od-step-ts">Received on {{ step.requested_at|date:"M d, Y g:i A" }}</div>
+        {% endif %}
+        {% if step.display_status == "approved" and step.acted_at %}
+          <div class="od-step-ts">Signed on {{ step.acted_at|date:"M d, Y g:i A" }}</div>
+          {% if step.sla_status == 'late' %}<div class="od-step-ts" style="color:#F97316">Signed after SLA deadline (48h)</div>{% endif %}
+          {% if step.signature_image %}
+          <div class="od-sig-img-wrap" style="margin-top:8px">
+            <img src="{{ step.signature_image }}" alt="signature">
+          </div>
+          {% endif %}
+        {% elif step.display_status == "rejected" and step.acted_at %}
+          <div class="od-step-ts">Rejected on {{ step.acted_at|date:"M d, Y g:i A" }}</div>
+        {% elif step.display_status == "active" %}
+          <div class="od-step-ts">Please review the proposal and sign</div>
+          {% if step.sla_status == 'warning' %}<div class="od-step-ts" style="color:#F59E0B">Approaching SLA deadline (48h)</div>
+          {% elif step.sla_status == 'overdue' %}<div class="od-step-ts" style="color:#EF4444">SLA deadline exceeded (48h)</div>{% endif %}
+        {% endif %}
+
+        {% if step.feedback %}
+        <div class="od-feedback-block">
+          <div class="od-feedback-label">Rejection Reason</div>
+          {{ step.feedback }}
+        </div>
+        {% endif %}
+
+        {% if my_active and step.display_status == "active" %}
+        <div class="od-sig-area" id="inlineSigArea">
+          <textarea id="inlineComment" class="od-sig-comment" rows="5"
+                    placeholder="Comment your feedback and reviews here"></textarea>
+          <div class="od-sig-canvas-wrap">
+            <canvas id="inlineSigPad" class="od-sig-canvas" height="120"></canvas>
+            <div class="od-sig-watermark">Sign here</div>
+          </div>
+          <div class="esp-row">
+            <span class="esp-or">or e-sign with a connected account</span>
+            <a class="esp-btn esp-btn--adobe" href="{% url 'ui:esign-pick' provider='adobesign' kind='proposal' obj_id=proposal.id %}">
+              <span class="material-symbols-outlined">draw</span> Adobe eSign
+            </a>
+            <a class="esp-btn esp-btn--docusign" href="{% url 'ui:esign-pick' provider='docusign' kind='proposal' obj_id=proposal.id %}">
+              <span class="material-symbols-outlined">draw</span> DocuSign
+            </a>
+          </div>
+        </div>
+        <div class="od-sig-action-row">
+          <button type="button" class="od-btn-reject"
+                  onclick="document.getElementById('rejectModal').classList.add('open')">
+            <span class="material-symbols-outlined" style="font-size:22px">dangerous</span> Reject
+          </button>
+          <form id="inlineEsignForm" method="post" action="" style="display:contents">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="esign">
+            <input type="hidden" name="signature_data" id="inlineSigData">
+            <button type="submit" onclick="captureInlineSig()" class="od-btn-approve">
+              Sign &amp; Approve
+            </button>
+          </form>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px">
+          <button type="button" onclick="clearInlineSig()"
+                  style="height:28px;padding:0 14px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:12px;cursor:pointer">
+            Clear signature
+          </button>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+    {% empty %}
+    <div style="font-size:13px;color:#9ca3af;text-align:center;padding:24px">No approval chain configured.</div>
+    {% endfor %}
+
+    <div class="od-notify-bar">
+      <span class="material-symbols-outlined">check_circle_outline</span>
+      Approval notification will be sent to the approval chain members
+    </div>
+
+  </div><!-- /right -->
+
+</div><!-- /two-col -->
+
+
+<!-- ════════════════════════
+     ONEIC Proposal Document
+════════════════════════ -->
+<div class="ep-doc">
+  <h2>الشركة الوطنية العمانية للهندسة و الاستثمار ( ش م ع ع )</h2>
+  <h2>Oman National Engineering &amp; Investment Company (SAOG)</h2>
+  <div class="ep-sub">EMPLOYMENT PROPOSAL FORM</div>
+  <div style="text-align:right;font-size:11px;color:#6b7280;margin-bottom:10px;">
+    {{ proposal.proposal_no }} — {{ proposal.get_template_type_display }}
+  </div>
+
+  <!-- General -->
+  <div class="ep-sec-title">General</div>
+  <table class="ep-tbl">
+    <tr>
+      <td class="lbl">Post Applied for</td><td>{{ proposal.post_applied_for|default:"—" }}</td>
+      <td class="lbl">Grade Group</td><td>{{ proposal.grade_group|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Div. / Dept.</td><td>{{ proposal.division_department|default:"—" }}</td>
+      <td class="lbl">Post Location</td><td>{{ proposal.post_location|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Contractual</td>
+      <td>
+        <span class="{% if proposal.contractual %}ep-check-on{% else %}ep-check-off{% endif %}">YES</span>
+        <span class="{% if not proposal.contractual %}ep-check-on{% else %}ep-check-off{% endif %}">NO</span>
+      </td>
+      <td class="lbl">Contract Period</td>
+      <td>{{ proposal.contract_period_from|date:"d-M-Y"|default:"—" }} → {{ proposal.contract_period_to|date:"d-M-Y"|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Reporting to</td><td>{{ proposal.reporting_to|default:"—" }}</td>
+      <td class="lbl">Job No.</td><td>{{ proposal.job_no|default:"—" }}</td>
+    </tr>
+  </table>
+
+  <!-- Summary of Resume -->
+  <div class="ep-sec-title" style="margin-top:8px">Summary of Resume</div>
+  <table class="ep-tbl">
+    <tr>
+      <td class="lbl">Name of Applicant</td><td>{{ proposal.applicant_name|default:proposal.candidate.name }}</td>
+      <td class="lbl">Nationality</td><td>{{ proposal.nationality|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Application Date</td><td>{{ proposal.application_date|date:"d-M-Y"|default:"—" }}</td>
+      <td class="lbl">Interview Date</td><td>{{ proposal.interview_date|date:"d-M-Y"|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Marital Status</td><td>{{ proposal.get_marital_status_display|default:"—" }}</td>
+      <td class="lbl">Date of Birth</td><td>{{ proposal.dob|date:"d-M-Y"|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Qualification (Academic)</td><td>{{ proposal.qualification_academic|default:"—" }}</td>
+      <td class="lbl">Experience</td>
+      <td>Local: {{ proposal.experience_local_years|default:"—" }} / Overseas: {{ proposal.experience_overseas_years|default:"—" }} yrs</td>
+    </tr>
+  </table>
+
+  <!-- Salary Recommendation -->
+  <div class="ep-sec-title" style="margin-top:8px">Salary Recommendation</div>
+  <table class="ep-tbl">
+    <tr>
+      <td class="lbl">Basic Salary</td><td>{{ proposal.basic_salary|default:"—" }}</td>
+      <td class="lbl">HRA Allowance</td><td>{{ proposal.hra_allowance|default:"—" }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Transport Allowance</td><td>{{ proposal.transport_allowance|default:"—" }}</td>
+      <td class="lbl">Food Allowance</td><td>{{ proposal.food_allowance|default:"—" }}</td>
+    </tr>
+    <tr style="background:#f9fafb;font-weight:700">
+      <td>Gross Salary</td><td colspan="3">{{ proposal.gross_salary|default:"—" }}</td>
+    </tr>
+  </table>
+
+  <!-- Notes -->
+  <div class="ep-sec-title" style="margin-top:8px">Notes</div>
+  <table class="ep-tbl">
+    <tr><td class="lbl">Family Status</td><td colspan="3">{{ proposal.get_family_status_display|default:"—" }}</td></tr>
+    <tr><td class="lbl">HOD's Comments</td><td colspan="3">{{ proposal.hod_comments|linebreaksbr|default:"—" }}</td></tr>
+  </table>
+
+  <!-- E-Sign signatures in document -->
+  <div class="ep-sec-title" style="margin-top:8px">Approval Chain (E-Sign)</div>
+  <table class="ep-tbl">
+    {% for step in approvals %}
+    <tr>
+      <td class="lbl" style="width:20%">{{ step.approver }}</td>
+      <td style="width:30%">
+        <div class="ep-sign-box">
+          {% if step.signature_image %}
+            <img src="{{ step.signature_image }}" alt="signature">
+            <div style="font-size:10px;color:#6b7280">{{ step.acted_at|date:"d-M-Y H:i" }}</div>
+          {% else %}
+            <div style="font-size:11px;color:#9ca3af">{% if step.display_status == 'approved' %}Signed{% elif step.display_status == 'active' %}Pending Signature{% else %}Waiting{% endif %}</div>
+          {% endif %}
+        </div>
+      </td>
+      <td style="width:15%;font-size:11px;color:#6b7280;vertical-align:middle;padding-left:8px">
+        {% if step.display_status == "approved" %}
+          <span style="color:#166534;font-weight:600">✓ Signed</span>
+        {% elif step.display_status == "rejected" %}
+          <span style="color:#991b1b;font-weight:600">✗ Rejected</span>
+        {% elif step.display_status == "active" %}
+          <span style="color:#b45309">Pending</span>
+        {% else %}
+          <span style="color:#9ca3af">Waiting</span>
+        {% endif %}
+      </td>
+      {% if forloop.first %}
+      <td rowspan="{{ approvals|length }}" style="vertical-align:top;font-size:11px;color:#6b7280;padding:6px">
+        {{ proposal.proposal_no }}
+      </td>
+      {% endif %}
+    </tr>
+    {% empty %}
+    <tr><td colspan="3" style="font-size:12px;color:#9ca3af;text-align:center;padding:10px">No approvers assigned.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+
+<!-- ════════════════════════
+     E-Sign Modal
+════════════════════════ -->
+<div id="esignModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center"
+     onclick="if(event.target===this)this.classList.remove('open')">
+  <form method="post" action="" style="background:#fff;border-radius:12px;padding:28px 32px;max-width:480px;width:90%">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="esign">
+    <input type="hidden" name="signature_data" id="sigData">
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Sign Proposal</div>
+    <div style="font-size:13px;color:#555;margin-bottom:12px">Draw your signature in the box below</div>
+    <canvas id="sigCanvas" width="400" height="120"
+            style="border:1px solid #E0E0E0;border-radius:6px;cursor:crosshair;width:100%;touch-action:none;display:block"></canvas>
+    <button type="button" onclick="clearSig()"
+            style="margin-top:6px;height:28px;padding:0 12px;border:1px solid #D0D0D0;border-radius:5px;background:#fff;font-size:12px;cursor:pointer">Clear</button>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button type="button" onclick="document.getElementById('esignModal').classList.remove('open')"
+              style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">Cancel</button>
+      <button type="submit" onclick="captureSig()"
+              style="padding:8px 20px;border:none;border-radius:6px;background:#278E53;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Submit Signature</button>
+    </div>
+  </form>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center"
+     onclick="if(event.target===this)this.classList.remove('open')">
+  <form method="post" action="" style="background:#fff;border-radius:12px;padding:28px 32px;max-width:440px;width:90%">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="feedback">
+    <div style="font-size:16px;font-weight:700;margin-bottom:12px">Reject Proposal</div>
+    <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Reason / Feedback</label>
+    <textarea name="feedback" rows="4"
+              style="width:100%;border:1px solid #E0E0E0;border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical"
+              placeholder="Explain reason for rejection…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button type="button" onclick="document.getElementById('rejectModal').classList.remove('open')"
+              style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">Cancel</button>
+      <button type="submit"
+              style="padding:8px 20px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Confirm Reject</button>
+    </div>
+  </form>
+</div>
+
+<style>
+#esignModal.open, #rejectModal.open { display:flex; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>
+<script>
+/* ── Modal e-sign (SignaturePad) ── */
+(function(){
+  var canvas = document.getElementById('sigCanvas');
+  if (!canvas) return;
+  var pad = new SignaturePad(canvas, { minWidth:1, maxWidth:2.5, penColor:'#111' });
+  function resize() {
+    var r = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width  = canvas.offsetWidth  * r;
+    canvas.height = (canvas.offsetHeight || 120) * r;
+    canvas.getContext('2d').scale(r, r);
+    pad.clear();
+  }
+  window.addEventListener('resize', resize); resize();
+  window.clearSig    = function() { pad.clear(); };
+  window.captureSig  = function() { document.getElementById('sigData').value = pad.isEmpty() ? '' : pad.toDataURL(); };
+})();
+
+/* ── Inline sig pad (SignaturePad) ── */
+(function(){
+  var canvas = document.getElementById('inlineSigPad');
+  if (!canvas) return;
+  var pad = new SignaturePad(canvas, { minWidth:1, maxWidth:2.5, penColor:'#111' });
+  function resize() {
+    var r = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width  = canvas.offsetWidth  * r;
+    canvas.height = (canvas.offsetHeight || 120) * r;
+    canvas.getContext('2d').scale(r, r);
+    pad.clear();
+  }
+  window.addEventListener('resize', resize); resize();
+  window.clearInlineSig   = function() { pad.clear(); };
+  window.captureInlineSig = function() { document.getElementById('inlineSigData').value = pad.isEmpty() ? '' : pad.toDataURL(); };
+})();
+</script>
+{% include "ui/_esign_providers.html" %}
+{% endblock %}

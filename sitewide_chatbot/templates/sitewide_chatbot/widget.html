@@ -1,0 +1,46 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'sitewide_chatbot/chatbot.css' %}?v=11">
+<section
+    id="fits-sitewide-chatbot"
+    class="fits-chatbot"
+    data-api-url="{% url 'sitewide_chatbot:chat' %}">
+    <button type="button" class="fits-chatbot__launcher" aria-label="Open FITS assistant">
+        <img class="fits-chatbot__launcher-avatar" src="{% static 'sitewide_chatbot/images/ahmed-avatar.png' %}" alt="Ahmed">
+        <span class="fits-chatbot__launcher-label">I'm Ahmed, your AI assistant</span>
+    </button>
+    <div class="fits-chatbot__panel" role="dialog" aria-label="FITS HCMS assistant">
+        <div class="fits-chatbot__header">
+            <div class="fits-chatbot__header-row">
+                <div>
+                    <div class="fits-chatbot__title">Hi I am Ahmed, your AI assistant!</div>
+                    <div class="fits-chatbot__subtitle">Ask me anything about FITS HCMS.</div>
+                </div>
+                <button type="button" class="fits-chatbot__close" aria-label="Close chat">&#x2715;</button>
+            </div>
+        </div>
+        <div class="fits-chatbot__messages"></div>
+        <div class="fits-chatbot__composer">
+            <div class="fits-chatbot__quick-actions">
+                <button type="button" class="fits-chatbot__quick-action" data-prompt="Where can I view the organization hierarchy?">
+                    Org hierarchy
+                </button>
+                <button type="button" class="fits-chatbot__quick-action" data-prompt="Where do I manage payslips?">
+                    Payslips
+                </button>
+                <button type="button" class="fits-chatbot__quick-action" data-prompt="How do I open the recruitment pipeline?">
+                    Recruitment
+                </button>
+                <button type="button" class="fits-chatbot__quick-action" data-prompt="Where can I find succession planning?">
+                    Succession
+                </button>
+                <button type="button" class="fits-chatbot__reset fits-chatbot__quick-action">New chat</button>
+            </div>
+            <div class="fits-chatbot__input-row">
+                <textarea class="fits-chatbot__textarea" placeholder="Ask where to find a feature, page, or workflow."></textarea>
+                <button type="button" class="fits-chatbot__send">Send</button>
+            </div>
+            
+        </div>
+    </div>
+</section>
+<script src="{% static 'sitewide_chatbot/chatbot.js' %}?v=11" defer></script>

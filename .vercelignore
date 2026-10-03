@@ -1,0 +1,13 @@
+.venv
+venv
+node_modules
+.git
+.github
+.ruff_cache
+.claude
+.playwright-mcp
+db.sqlite3
+staticfiles
+media
+*.pyc
+__pycache__

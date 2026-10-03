@@ -1,0 +1,77 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>My Certifications</h1>
+
+<div class="row mt-3 mb-3">
+    <div class="col-12">
+        <a href="{% url 'learning:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCertModal">+ Add Certificate</button>
+    </div>
+</div>
+
+{% if certifications %}
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Certification</th>
+            <th>Issuing Authority</th>
+            <th>Certificate #</th>
+            <th>Issue Date</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cert in certifications %}
+        <tr>
+            <td>{{ cert.certification.name }}</td>
+            <td>{{ cert.certification.issuing_authority }}</td>
+            <td>{{ cert.certificate_number }}</td>
+            <td>{{ cert.issue_date }}</td>
+            <td>
+                {% if cert.expiry_date %}
+                    {{ cert.expiry_date }}
+                    {% if cert.expiry_date < today %}
+                    <span class="badge bg-danger">Expired</span>
+                    {% else %}
+                    <span class="badge bg-success">Valid</span>
+                    {% endif %}
+                {% else %}
+                    No expiry
+                {% endif %}
+            </td>
+            <td>
+                {% if cert.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-danger">Inactive</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<div class="alert alert-info mt-4">You have no certifications registered yet.</div>
+{% endif %}
+
+<!-- Add Certification Modal -->
+<div class="modal fade" id="addCertModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Certification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Certification management coming soon. Contact HR to add or modify your certifications.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

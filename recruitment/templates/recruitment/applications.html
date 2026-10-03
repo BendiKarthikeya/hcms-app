@@ -1,0 +1,161 @@
+{% extends 'index.html' %}
+{% block content %}
+
+<div class="oh-wrapper">
+
+  <div class="pipeline-header">
+    <h3> Applications</h3>
+  </div>
+
+  <div style="padding:20px;">
+
+    <!-- FILTER -->
+    <select id="jobFilter" class="form-control">
+      <option value="">All Jobs</option>
+    </select>
+
+    <!-- APPLIED -->
+    <div class="oh-card mt-4">
+      <div class="pipeline-header">
+        <h5> Applied</h5>
+      </div>
+      <div id="applied"></div>
+    </div>
+
+    <!-- SCREENED -->
+    <div class="oh-card mt-4">
+      <div class="pipeline-header">
+        <h5> AI Screened</h5>
+      </div>
+      <div id="screened"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const applications = {{ applications|safe }};
+const jobs = {{ jobs|safe }};
+
+const appliedDiv = document.getElementById("applied");
+const screenedDiv = document.getElementById("screened");
+const filter = document.getElementById("jobFilter");
+
+// CSRF helper
+function getCSRFToken() {
+  return document.cookie.split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+}
+
+// dropdown
+jobs.forEach(job => {
+  let opt = document.createElement("option");
+  opt.value = job.id;
+  opt.textContent = job.title;
+  filter.appendChild(opt);
+});
+
+// render
+function render(){
+  appliedDiv.innerHTML = "";
+  screenedDiv.innerHTML = "";
+
+  let job = filter.value;
+
+  applications.forEach(app => {
+
+    if (job && app.job_id != job) return;
+
+    let loading = app.status !== "screened" && app.status !== "rejected";
+
+    // 🎯 STATUS UI
+    let statusHTML = "";
+
+if (loading) {
+  statusHTML = `<span style="color:orange;">⏳ Processing resume...</span>`;
+} 
+else if (app.status === "rejected") {
+  statusHTML = `<span style="color:red; font-weight:bold;">❌ Rejected</span>`;
+} 
+else {
+  statusHTML = `<span style="color:#22c55e;">✅ Selected</span>`;
+}
+
+    let row = document.createElement("div");
+    row.className = "oh-sticky-table__tr";
+
+    // optional fade for rejected
+    if (app.status === "rejected") {
+      row.style.opacity = "0.6";
+    }
+
+    row.innerHTML = `
+      <div class="oh-sticky-table__td"><b>${app.name}</b></div>
+      <div class="oh-sticky-table__td">${app.email}</div>
+      <div class="oh-sticky-table__td">${app.phone || ""}</div>
+      <div class="oh-sticky-table__td">${app.country || ""}</div>
+      <div class="oh-sticky-table__td">${app.job_title}</div>
+      <div class="oh-sticky-table__td">${app.experience || ""}</div>
+      <div class="oh-sticky-table__td">${app.why_apply || ""}</div>
+
+      <div class="oh-sticky-table__td">
+        ${statusHTML}
+      </div>
+
+      <div class="oh-sticky-table__td">
+        Score: ${app.score || "-"}
+      </div>
+
+      <div class="oh-sticky-table__td">
+        <button onclick="downloadResume(${app.id})">Resume</button>
+      </div>
+
+      <div class="oh-sticky-table__td">
+        <button onclick="deleteCandidate(${app.id})">Delete</button>
+      </div>
+    `;
+
+    // 🎯 FINAL LOGIC
+   if (app.status === "screened") {
+  screenedDiv.appendChild(row);  // only selected
+} 
+else {
+  appliedDiv.appendChild(row);   // processing + rejected
+}
+
+  });
+}
+
+// actions
+function downloadResume(id){
+  window.open(`/recruitment/api/download-resume/${id}/`);
+}
+
+function deleteCandidate(id){
+  fetch('/recruitment/api/delete/', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({id})
+  }).then(res => {
+    if (res.ok) location.reload();
+    else alert("Delete failed");
+  });
+}
+
+// filter change
+filter.addEventListener("change", render);
+
+// 🔥 AUTO REFRESH (AI updates)
+setInterval(() => {
+  location.reload();
+}, 10000);
+
+// initial render
+render();
+</script>
+
+{% endblock %}

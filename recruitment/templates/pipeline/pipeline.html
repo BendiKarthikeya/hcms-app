@@ -1,0 +1,1244 @@
+{% extends 'index.html' %} {% load i18n %} {% block content %} {% load static %} {% load recruitmentfilters %}
+<div id="messages" class="oh-alert-container">
+
+</div>
+<style>
+  .oh-tabs__tab--active {
+    border-right: solid 1px #dedede !important;
+}
+  .avatars {
+    display: flex;
+    padding: 8px 10px 8px 10px;
+  }
+
+  .avatars__item {
+    background-color: #596376;
+    border: 2px solid white;
+    border-radius: 100%;
+    color: #ffffff;
+    display: block;
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: 100;
+    height: 26px;
+    width: 26px;
+    line-height: 17px;
+    text-align: center;
+    transition: margin 0.1s ease-in-out;
+    overflow: hidden;
+    margin-left: -10px;
+  }
+
+  .avatars__item:first-child {
+    z-index: 5;
+  }
+
+  .avatars__item:nth-child(2) {
+    z-index: 4;
+  }
+
+  .avatars__item:nth-child(3) {
+    z-index: 3;
+  }
+
+  .avatars__item:nth-child(4) {
+    z-index: 2;
+  }
+
+  .avatars__item:nth-child(5) {
+    z-index: 1;
+  }
+
+  .avatars__item:last-child {
+    z-index: 0;
+  }
+
+  .avatars__item img {
+    width: 100%;
+  }
+
+  .avatars:hover .avatars__item {
+    margin-right: 10px;
+  }
+  .select2-container .select2-selection.select2-selection--multiple{
+    padding: 5px !important;
+    max-height: 70px !important;
+    overflow: hidden;
+    overflow-y: scroll;
+  }
+  .search-highlight{
+    background-color: rgba(255, 68, 0, 0.076);
+  }
+  #enlargeImageContainer {
+    position: absolute;
+    left: -300px;
+    top: 100px;
+    height: 200px;
+    width: 200px;
+  }
+</style>
+<script>
+  $(document).ready(function () {
+    $(".pipeline-toggle").click(function (e) {
+      e.preventDefault();
+      toggle = $(this).attr("data-stage-id");
+      if ($(`[data-stage-toggle-id=${toggle}]`).hasClass("d-none")) {
+        $(`[data-stage-toggle-id=${toggle}]`).removeClass("d-none");
+      }
+      else {
+        setTimeout(function() {
+          $(`[data-stage-toggle-id=${toggle}]`).addClass("d-none");
+        }, 100);
+      }
+
+    });
+  });
+</script>
+<style>
+  .select2-container{
+    width: 100% !important;
+}
+.select2-container .select2-selection {
+    padding: 10px !important;
+    height: 50px !important; /* Adjust the height value as needed */
+}
+  .pipeline-header {
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid hsl(213deg, 22%, 84%);
+    /* display: -webkit-box; */
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+  }
+  .pipeline-toggle {
+    cursor: move;
+  }
+  .ui-sortable-placeholder {
+    min-height: 50px !important
+  }
+  @keyframes placeHolderShimmer {
+    0% {
+      background-position: -800px 0
+    }
+    100% {
+      background-position: 800px 0
+    }
+  }
+
+  .animated-background {
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: placeHolderShimmer;
+    animation-timing-function: linear;
+    background-color: #f6f7f8;
+    background: linear-gradient(to right, #eeeeee9c -58%, #e4e4e496 18%, #eeeeee61 33%);
+    background-size: 800px 64px;
+    height: 300px;
+    position: relative;
+}
+</style>
+
+  <div id="ohMessages"></div>
+  {% include 'pipeline/nav.html' %}
+
+  <!-- ── MAIN TAB BAR ───────────────────────────────── -->
+  <div class="oh-wrapper" style="padding-top:10px;padding-bottom:0;">
+    <div style="display:flex;gap:0;border-bottom:2px solid #e5e7eb;">
+      <button id="mainTabPipeline" onclick="switchMainTab('pipeline')"
+        style="padding:8px 22px;border:none;background:none;font-weight:600;font-size:14px;
+               border-bottom:3px solid #3b82f6;margin-bottom:-2px;cursor:pointer;color:#3b82f6;">
+        {% trans "Pipeline" %}
+      </button>
+      <button id="mainTabApplications" onclick="switchMainTab('applications')"
+        style="padding:8px 22px;border:none;background:none;font-weight:400;font-size:14px;
+               border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;color:#6b7280;">
+        {% trans "Applications" %}
+        <span id="appsCountBadge"
+          style="display:none;background:#ef4444;color:white;border-radius:999px;
+                 font-size:11px;padding:1px 7px;margin-left:5px;"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PIPELINE TAB ───────────────────────────────── -->
+  <div id="pipelineTabContent">
+    <div class="oh-tabs oh-wrapper" hx-get="{% url 'pipeline-search' %}?{{request.GET.urlencode}}"
+         hx-trigger="load" id="pipelineSearchContainer">
+      <div class="animated-background"></div>
+    </div>
+  </div>
+
+  <!-- ── APPLICATIONS TAB ───────────────────────────── -->
+  <div id="applicationsTabContent" style="display:none;">
+    <div class="oh-wrapper" style="padding:20px;">
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <select id="appsJobFilter" class="oh-input" style="max-width:260px;">
+          <option value="">{% trans "All Jobs" %}</option>
+        </select>
+        <select id="appsStatusFilter" class="oh-input" style="max-width:180px;">
+          <option value="">{% trans "All Statuses" %}</option>
+          <option value="applied">⏳ Processing</option>
+          <option value="screened">✅ Shortlisted</option>
+          <option value="rejected">❌ Rejected</option>
+        </select>
+        <input id="appsSkillFilter" type="text" class="oh-input" placeholder="🔍 Filter by skill…"
+          style="max-width:200px;" oninput="renderApplications()">
+        <input id="appsNameFilter" type="text" class="oh-input" placeholder="Search by name / email…"
+          style="max-width:220px;" oninput="renderApplications()">
+        <button onclick="openTemplateModal()" class="oh-btn oh-btn--secondary oh-btn--small"
+          style="white-space:nowrap;">
+          ✉️ {% trans "Email Templates" %}
+        </button>
+      </div>
+      <!-- Table header -->
+      <div class="oh-sticky-table__thead" style="display:flex;padding:6px 0;border-bottom:2px solid #e5e7eb;
+                  font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">
+        <div class="oh-sticky-table__td" style="min-width:160px;">Name</div>
+        <div class="oh-sticky-table__td" style="min-width:180px;">Email</div>
+        <div class="oh-sticky-table__td" style="min-width:100px;">Phone</div>
+        <div class="oh-sticky-table__td" style="min-width:100px;">Country</div>
+        <div class="oh-sticky-table__td" style="min-width:160px;">Job</div>
+        <div class="oh-sticky-table__td" style="min-width:120px;">Status</div>
+        <div class="oh-sticky-table__td" style="min-width:70px;">Score</div>
+        <div class="oh-sticky-table__td" style="min-width:200px;">Skills</div>
+        <div class="oh-sticky-table__td" style="min-width:180px;">Actions</div>
+        <div class="oh-sticky-table__td" style="min-width:100px;">Documents</div>
+      </div>
+
+      <!-- Applied section — ALL applications -->
+      <div class="oh-card mt-2">
+        <div class="pipeline-header">
+          <h5 style="margin:0;"> {% trans "Applied" %}
+            <span id="appliedCount" style="font-size:12px;color:#6b7280;font-weight:400;"></span>
+          </h5>
+        </div>
+        <div id="appliedContainer" class="oh-sticky-table"></div>
+      </div>
+
+      <!-- Interview shortlist — AI-selected + HR-promoted -->
+      <div class="oh-card mt-4">
+        <div class="pipeline-header">
+          <h5 style="margin:0;"> {% trans "Interview Shortlist" %}
+            <span id="interviewCount" style="font-size:12px;color:#6b7280;font-weight:400;"></span>
+          </h5>
+          <button class="oh-btn oh-btn--secondary oh-btn--small"
+            onclick="openSecondFilter()" style="font-size:12px;">
+            ✂️ {% trans "Second Filter" %}
+          </button>
+        </div>
+        <div id="interviewContainer" class="oh-sticky-table"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PDF RESUME MODAL ──────────────────────────── -->
+  <div id="resumeModal" onclick="if(event.target===this)closeResume();"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+           background:rgba(0,0,0,0.75);z-index:99999;align-items:center;
+           justify-content:center;padding:16px;">
+    <div style="background:white;border-radius:12px;width:min(860px,95vw);height:90vh;
+                display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.4);
+                position:relative;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:12px 18px;border-bottom:1px solid #e5e7eb;flex-shrink:0;">
+        <span id="resumeModalName" style="font-weight:600;font-size:15px;"></span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a id="resumeDownloadLink" href="#" download
+            style="padding:6px 14px;border:1px solid #d1d5db;border-radius:7px;
+                   background:white;cursor:pointer;font-size:13px;text-decoration:none;color:#374151;">
+            Download
+          </a>
+          <button onclick="closeResume()" type="button"
+            style="border:none;background:#f3f4f6;border-radius:50%;width:32px;height:32px;
+                   font-size:18px;cursor:pointer;display:flex;align-items:center;
+                   justify-content:center;line-height:1;">×</button>
+        </div>
+      </div>
+      <iframe id="resumeIframe" src="" style="flex:1;border:none;width:100%;"></iframe>
+    </div>
+  </div>
+
+  <!-- ── AI ANALYSIS MODAL ──────────────────────────── -->
+  <div id="analysisModal" onclick="if(event.target===this)closeAnalysis();"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+           background:rgba(0,0,0,0.65);z-index:99999;align-items:center;
+           justify-content:center;padding:16px;">
+    <div style="background:white;border-radius:16px;max-width:580px;width:100%;
+                max-height:90vh;display:flex;flex-direction:column;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;">
+      <!-- sticky header -->
+      <div style="padding:20px 24px 16px;border-bottom:1px solid #f3f4f6;flex-shrink:0;">
+        <button onclick="closeAnalysis()" type="button"
+          style="position:absolute;top:14px;right:16px;border:none;background:#f3f4f6;
+                 border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;
+                 display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+        <h4 id="analysisName" style="margin:0 0 2px;padding-right:36px;font-size:17px;"></h4>
+        <p id="analysisJob" style="color:#6b7280;margin:0;font-size:13px;"></p>
+      </div>
+      <!-- scrollable body -->
+      <div style="overflow-y:auto;padding:20px 24px;flex:1;">
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:18px;">
+          <div style="text-align:center;min-width:60px;">
+            <div id="analysisScore" style="font-size:44px;font-weight:700;line-height:1;"></div>
+            <div style="font-size:11px;color:#9ca3af;">/ 100</div>
+          </div>
+          <div style="flex:1;">
+            <div style="height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;">
+              <div id="analysisScoreFill"
+                style="height:100%;border-radius:999px;width:0%;transition:width 0.7s ease;"></div>
+            </div>
+            <div id="analysisDecision" style="margin-top:10px;font-weight:600;font-size:14px;"></div>
+            <div id="analysisOverrideTag" style="font-size:11px;color:#f59e0b;margin-top:4px;"></div>
+          </div>
+        </div>
+        <div style="background:#f9fafb;border-radius:10px;padding:16px;">
+          <div style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:8px;
+                      text-transform:uppercase;letter-spacing:0.05em;">{% trans "AI Reasoning" %}</div>
+          <div id="analysisReason" style="margin:0;font-size:13.5px;line-height:1.7;color:#374151;"></div>
+        </div>
+      </div>
+      <!-- sticky footer -->
+      <div style="padding:14px 24px;border-top:1px solid #f3f4f6;flex-shrink:0;text-align:right;">
+        <button onclick="closeAnalysis()" type="button"
+          style="padding:8px 22px;border:1px solid #d1d5db;border-radius:8px;
+                 background:white;cursor:pointer;font-size:14px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROMOTE MODAL ────────────────────────────── -->
+  <div id="promoteModal" onclick="if(event.target===this)closePromoteModal();"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+           background:rgba(0,0,0,0.65);z-index:99999;align-items:center;
+           justify-content:center;padding:16px;">
+    <div style="background:white;border-radius:14px;max-width:520px;width:100%;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;padding:28px 28px 24px;">
+      <button onclick="closePromoteModal()" type="button"
+        style="position:absolute;top:14px;right:16px;border:none;background:#f3f4f6;
+               border-radius:50%;width:30px;height:30px;font-size:18px;cursor:pointer;
+               display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+      <h4 style="margin:0 0 4px;font-size:17px;font-weight:700;">⬆ {% trans "Promote Candidate" %}</h4>
+      <p id="promoteModalName" style="color:#6b7280;margin:0 0 18px;font-size:13px;"></p>
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+        {% trans "HR Justification" %} <span style="color:#ef4444;">*</span>
+      </label>
+      <textarea id="promoteJustification" rows="4"
+        placeholder="{% trans 'Explain why this candidate should be promoted despite AI rejection…' %}"
+        style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;
+               font-size:13.5px;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+      <p id="promoteError" style="color:#ef4444;font-size:12px;margin:6px 0 0;display:none;">
+        {% trans "Justification is required." %}
+      </p>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+        <button onclick="closePromoteModal()" type="button"
+          style="padding:8px 20px;border:1px solid #d1d5db;border-radius:8px;
+                 background:#fff;cursor:pointer;font-size:13px;">{% trans "Cancel" %}</button>
+        <button id="promoteConfirmBtn" onclick="confirmPromote()" type="button"
+          style="padding:8px 22px;border:none;border-radius:8px;
+                 background:#16a34a;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">
+          ⬆ {% trans "Promote" %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JUSTIFICATION MODAL ───────────────────────── -->
+  <div id="justificationModal" onclick="if(event.target===this)closeJustification();"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+           background:rgba(0,0,0,0.65);z-index:99999;align-items:center;
+           justify-content:center;padding:16px;">
+    <div style="background:white;border-radius:14px;max-width:520px;width:100%;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;padding:22px 24px;">
+      <button onclick="closeJustification()" type="button"
+        style="position:absolute;top:12px;right:14px;border:none;background:#f3f4f6;
+               border-radius:50%;width:30px;height:30px;font-size:18px;cursor:pointer;
+               display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+      <h4 style="margin:0 0 4px;font-size:16px;">📝 {% trans "HR Override Justification" %}</h4>
+      <p id="justificationName" style="color:#6b7280;margin:0 0 14px;font-size:13px;"></p>
+      <div id="justificationBody" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;
+                  padding:14px;font-size:13.5px;line-height:1.6;color:#374151;
+                  white-space:pre-wrap;max-height:50vh;overflow-y:auto;"></div>
+      <div style="text-align:right;margin-top:14px;">
+        <button onclick="closeJustification()" type="button"
+          style="padding:8px 18px;border:1px solid #d1d5db;border-radius:8px;
+                 background:white;cursor:pointer;font-size:13px;">{% trans "Close" %}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECOND FILTER MODAL ───────────────────────── -->
+  <div id="secondFilterModal"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+           background:rgba(0,0,0,0.65);z-index:99999;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;padding:32px;max-width:480px;width:90%;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;">
+      <button onclick="closeSecondFilter()"
+        style="position:absolute;top:14px;right:18px;border:none;background:none;font-size:22px;cursor:pointer;">×</button>
+      <h4 style="margin:0 0 6px;">✂️ {% trans "Second AI Filter" %}</h4>
+      <p style="color:#6b7280;font-size:13px;margin:0 0 20px;">
+        {% trans "Narrow the Interview Shortlist using stricter AI criteria." %}
+      </p>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+          {% trans "Job / Recruitment" %}
+        </label>
+        <select id="sfJobSelect" class="oh-input w-100">
+          <option value="">-- {% trans "Select Job" %} --</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+          {% trans "Keep top" %} <span id="sfCountLabel">10</span> {% trans "candidates" %}
+        </label>
+        <input type="range" id="sfCountSlider" min="1" max="50" value="10"
+          style="width:100%;accent-color:#3b82f6;"
+          oninput="document.getElementById('sfCountLabel').textContent=this.value;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-top:4px;">
+          <span>1</span><span id="sfSliderMax">50</span>
+        </div>
+      </div>
+
+      <div id="sfCurrentCount" style="font-size:13px;color:#6b7280;margin-bottom:16px;"></div>
+
+      <div id="sfRunning" style="display:none;text-align:center;padding:10px;color:#3b82f6;font-size:14px;">
+        🤖 {% trans "AI is ranking candidates…" %}
+      </div>
+
+      <div id="sfButtons" style="text-align:right;">
+        <button class="oh-btn oh-btn--light" onclick="closeSecondFilter()">{% trans "Cancel" %}</button>
+        <button class="oh-btn oh-btn--primary" onclick="runSecondFilter()" style="margin-left:8px;">
+          🤖 {% trans "Run AI Filter" %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+var appsData = JSON.parse('{{ applications_json|escapejs }}');
+const appsJobs = JSON.parse('{{ jobs_json|escapejs }}');
+
+const appliedCont   = document.getElementById("appliedContainer");
+const interviewCont = document.getElementById("interviewContainer");
+const appsFilter    = document.getElementById("appsJobFilter");
+const countBadge    = document.getElementById("appsCountBadge");
+
+// Populate job dropdowns
+appsJobs.forEach(j => {
+  [appsFilter, document.getElementById("sfJobSelect")].forEach(sel => {
+    const o = document.createElement("option");
+    o.value = j.id; o.textContent = j.title;
+    sel.appendChild(o);
+  });
+});
+
+function getAppsFilters() {
+  return {
+    job: (document.getElementById("appsJobFilter") || {}).value || "",
+    status: (document.getElementById("appsStatusFilter") || {}).value || "",
+    skill: ((document.getElementById("appsSkillFilter") || {}).value || "").trim().toLowerCase(),
+    name: ((document.getElementById("appsNameFilter") || {}).value || "").trim().toLowerCase(),
+  };
+}
+
+function skillBadges(skills) {
+  if (!skills || !skills.length) return '<span style="color:#9ca3af;font-size:11px;">—</span>';
+  return skills.slice(0, 5).map(s =>
+    `<span style="display:inline-block;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;
+                  border-radius:4px;padding:1px 6px;font-size:10px;margin:1px;">${s}</span>`
+  ).join("") + (skills.length > 5 ? `<span style="font-size:10px;color:#9ca3af;"> +${skills.length-5}</span>` : "");
+}
+
+function getCSRF() {
+  return (document.cookie.split('; ').find(r => r.startsWith('csrftoken=')) || '').split('=')[1];
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderApplications() {
+  appliedCont.innerHTML = interviewCont.innerHTML = "";
+  const { job: jf, status: sf, skill: skillF, name: nameF } = getAppsFilters();
+  let processing = 0, interviewActive = 0;
+
+  appsData.forEach(app => {
+    if (jf && String(app.job_id) !== String(jf)) return;
+    if (sf && app.status !== sf) return;
+    if (nameF && !app.name.toLowerCase().includes(nameF) && !app.email.toLowerCase().includes(nameF)) return;
+    if (skillF) {
+      const skillsLow = (app.skills || []).map(s => s.toLowerCase());
+      if (!skillsLow.some(s => s.includes(skillF))) return;
+    }
+
+    const loading = app.status === "applied";
+    if (loading) processing++;
+
+    // ── Applied row (every application) ──
+    const statusBadge = loading
+      ? `<span style="color:orange;display:flex;align-items:center;gap:6px;">
+           <span class="spin-loader"></span> Processing…
+         </span>`
+      : app.status === "rejected"
+        ? `<span style="color:#ef4444;font-weight:600;">❌ Rejected</span>`
+        : `<span style="color:#22c55e;font-weight:600;">✅ Shortlisted</span>`;
+
+    const promoteBtn = (!loading && app.status === "rejected")
+      ? `<button class="oh-btn oh-btn--light oh-btn--small" style="font-size:11px;"
+           onclick="overrideApp(${app.id},'promote')">⬆ Promote</button>`
+      : "";
+    const rejectEmailBtn = (!loading && app.status === "rejected" && !app.rejection_email_sent)
+      ? `<button class="oh-btn oh-btn--danger oh-btn--small" style="font-size:11px;"
+           onclick="openRejectEmailModal(${app.id})">✉ Reject &amp; Email</button>`
+      : (!loading && app.status === "rejected" && app.rejection_email_sent)
+        ? `<span style="font-size:10px;color:#9ca3af;">✓ Email sent</span>`
+        : "";
+    const analysisBtn = !loading
+      ? `<button class="oh-btn oh-btn--light oh-btn--small" style="font-size:11px;"
+           onclick="openAnalysis(${app.id})">🔍 Analysis</button>`
+      : "";
+
+    const appliedRow = document.createElement("div");
+    appliedRow.className = "oh-sticky-table__tr";
+    if (app.status === "rejected") appliedRow.style.opacity = "0.7";
+    appliedRow.innerHTML = `
+      <div class="oh-sticky-table__td" style="min-width:160px;"><b>${app.name}</b></div>
+      <div class="oh-sticky-table__td" style="font-size:12px;min-width:180px;">${app.email}</div>
+      <div class="oh-sticky-table__td" style="min-width:100px;">${app.phone}</div>
+      <div class="oh-sticky-table__td" style="min-width:100px;">${app.country}</div>
+      <div class="oh-sticky-table__td" style="min-width:160px;">${app.job_title}</div>
+      <div class="oh-sticky-table__td" style="min-width:120px;">${statusBadge}</div>
+      <div class="oh-sticky-table__td" style="min-width:70px;">${app.score != null ? app.score+'/100' : '—'}</div>
+      <div class="oh-sticky-table__td" style="min-width:200px;">${skillBadges(app.skills)}</div>
+      <div class="oh-sticky-table__td" style="display:flex;gap:4px;flex-wrap:wrap;min-width:180px;">
+        ${analysisBtn}${promoteBtn}${rejectEmailBtn}
+      </div>
+      <div class="oh-sticky-table__td" style="min-width:100px;">
+        <a class="oh-btn oh-btn--secondary oh-btn--small" href="/recruitment/applications/${app.id}/documents/"
+           style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+          📄 Documents
+        </a>
+      </div>`;
+    appliedCont.appendChild(appliedRow);
+
+    // ── Interview row (screened only) ──
+    if (app.status === "screened") {
+      if (!app.excluded) interviewActive++;
+      const overrideTag = app.hr_override
+        ? `<span style="font-size:10px;color:#f59e0b;margin-left:4px;">HR Override</span>` : "";
+      const excludedTag = app.excluded
+        ? `<span style="font-size:10px;color:#ef4444;margin-left:4px;">Filtered Out</span>` : "";
+      const restoreBtn = app.excluded
+        ? `<button class="oh-btn oh-btn--light oh-btn--small" style="font-size:11px;"
+             onclick="overrideApp(${app.id},'promote')">↩ Restore</button>` : "";
+      const demoteBtn = !app.excluded
+        ? `<button class="oh-btn oh-btn--danger oh-btn--small" style="font-size:11px;"
+             onclick="overrideApp(${app.id},'demote')">✕ Remove</button>` : "";
+      const justificationBtn = (app.hr_override && app.hr_override_justification)
+        ? `<button class="oh-btn oh-btn--light oh-btn--small" style="font-size:11px;"
+             onclick="showJustification(${app.id})">📝 Justification</button>` : "";
+
+      const intRow = document.createElement("div");
+      intRow.className = "oh-sticky-table__tr";
+      if (app.excluded) { intRow.style.opacity = "0.4"; intRow.style.textDecoration = "line-through"; }
+      intRow.innerHTML = `
+        <div class="oh-sticky-table__td"><b>${app.name}</b>${overrideTag}${excludedTag}</div>
+        <div class="oh-sticky-table__td" style="font-size:12px;">${app.email}</div>
+        <div class="oh-sticky-table__td">${app.country}</div>
+        <div class="oh-sticky-table__td">${app.job_title}</div>
+        <div class="oh-sticky-table__td">${app.score}/100</div>
+        <div class="oh-sticky-table__td" style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="oh-btn oh-btn--light oh-btn--small" style="font-size:11px;"
+            onclick="openAnalysis(${app.id})">🔍 Analysis</button>
+          ${justificationBtn}${restoreBtn}${demoteBtn}
+        </div>
+        <div class="oh-sticky-table__td">
+          <button type="button" class="oh-btn oh-btn--danger oh-btn--small"
+            onclick="deleteApplication(event,${app.id},this)">Delete</button>
+        </div>`;
+      interviewCont.appendChild(intRow);
+    }
+  });
+
+  document.getElementById("appliedCount").textContent = `(${appliedCont.children.length})`;
+  document.getElementById("interviewCount").textContent = `(${interviewActive} active)`;
+  countBadge.textContent = processing;
+  countBadge.style.display = processing > 0 ? "inline" : "none";
+
+  const slider = document.getElementById("sfCountSlider");
+  const totalScreened = appsData.filter(a => a.status === "screened").length;
+  slider.max = Math.max(totalScreened, 1);
+  document.getElementById("sfSliderMax").textContent = slider.max;
+  if (parseInt(slider.value) > totalScreened) {
+    slider.value = totalScreened;
+    document.getElementById("sfCountLabel").textContent = totalScreened;
+  }
+}
+
+// ── PIPELINE REFRESH ─────────────────────────────────────────
+function refreshPipeline() {
+  var container = document.getElementById('pipelineSearchContainer');
+  if (container) htmx.trigger(container, 'load');
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────
+function deleteApplication(evt, id, btn) {
+  evt.preventDefault();
+  evt.stopPropagation();
+  evt.stopImmediatePropagation();
+  if (!btn._confirmed) {
+    btn._confirmed = true;
+    btn.textContent = "Sure?";
+    setTimeout(function() {
+      if (btn._confirmed) { btn._confirmed = false; btn.textContent = "Delete"; }
+    }, 3000);
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "…";
+  fetch('/recruitment/api/delete/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+    body: JSON.stringify({id: id})
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error("Server returned " + r.status);
+    return r.json();
+  })
+  .then(function() {
+    appsData = appsData.filter(function(a) { return a.id !== id; });
+    renderApplications();
+    refreshPipeline();
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = "Delete";
+    alert("Delete failed: " + err.message);
+  });
+}
+
+var _pendingPromoteId = null;
+
+function overrideApp(id, action) {
+  if (action === "promote") {
+    const app = appsData.find(a => a.id === id);
+    _pendingPromoteId = id;
+    document.getElementById("promoteModalName").textContent = app ? app.name : "";
+    document.getElementById("promoteJustification").value = "";
+    document.getElementById("promoteError").style.display = "none";
+    document.getElementById("promoteConfirmBtn").disabled = false;
+    document.getElementById("promoteConfirmBtn").textContent = "⬆ {% trans 'Promote' %}";
+    document.getElementById("promoteModal").style.display = "flex";
+    return;
+  }
+  _doOverride(id, action, "");
+}
+
+function closePromoteModal() {
+  document.getElementById("promoteModal").style.display = "none";
+  _pendingPromoteId = null;
+}
+
+function confirmPromote() {
+  const justification = document.getElementById("promoteJustification").value.trim();
+  if (!justification) {
+    document.getElementById("promoteError").style.display = "block";
+    document.getElementById("promoteJustification").focus();
+    return;
+  }
+  document.getElementById("promoteError").style.display = "none";
+  const btn = document.getElementById("promoteConfirmBtn");
+  btn.disabled = true;
+  btn.textContent = "…";
+  _doOverride(_pendingPromoteId, "promote", justification);
+}
+
+function _doOverride(id, action, justification) {
+  fetch('/recruitment/api/hr-override/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':getCSRF()},
+    body:JSON.stringify({id, action, justification})
+  }).then(r => {
+    if (r.ok) r.json().then(d => {
+      if (d.success) {
+        const app = appsData.find(a => a.id === id);
+        if (app) {
+          if (action === "promote") {
+            app.status = "screened"; app.hr_override = true; app.excluded = false;
+            app.hr_override_justification = justification;
+            renderApplications();
+            var recId = app.job_id;
+            // Switch to pipeline tab immediately so user sees it loading
+            switchMainTab("pipeline");
+            // Refresh the pipeline kanban
+            refreshPipeline();
+            // After the HTMX chain completes, click the dept tab containing this recruitment
+            function tryActivateTab(attemptsLeft) {
+              var jobPanel = document.getElementById('jobPanel_' + recId);
+              if (jobPanel) {
+                // Find parent dept tab content
+                var deptContent = jobPanel.closest('.oh-tabs__content');
+                if (deptContent) {
+                  var deptId = deptContent.id; // e.g. "tab_dept_1"
+                  var deptBtn = document.querySelector('[data-target="#' + deptId + '"]');
+                  if (deptBtn) deptBtn.click();
+                  // Extract dept counter and activate job sub-tab
+                  var counter = deptId.replace('tab_dept_', '');
+                  if (typeof switchJobTab === 'function') switchJobTab(parseInt(counter), recId);
+                }
+              } else if (attemptsLeft > 0) {
+                setTimeout(function() { tryActivateTab(attemptsLeft - 1); }, 500);
+              }
+            }
+            setTimeout(function() { tryActivateTab(4); }, 600);
+            closePromoteModal();
+          } else {
+            app.status = "rejected"; app.hr_override = true;
+            renderApplications();
+            refreshPipeline();
+          }
+        }
+      }
+    });
+    else {
+      const btn = document.getElementById("promoteConfirmBtn");
+      if (btn) { btn.disabled = false; btn.textContent = "⬆ {% trans 'Promote' %}"; }
+    }
+  });
+}
+
+function showJustification(id) {
+  const app = appsData.find(a => a.id === id);
+  if (!app) return;
+  const text = app.hr_override_justification || "{% trans 'No justification recorded.' %}";
+  document.getElementById("justificationName").textContent = app.name;
+  document.getElementById("justificationBody").textContent = text;
+  document.getElementById("justificationModal").style.display = "flex";
+}
+function closeJustification() {
+  document.getElementById("justificationModal").style.display = "none";
+}
+
+function deletePipelineCandidate(candId, btn) {
+  if (!confirm("{% trans 'Are you sure you want to delete this candidate?' %}")) return;
+  btn.style.opacity = "0.5";
+  btn.style.pointerEvents = "none";
+  fetch("/recruitment/candidate-delete/" + candId + "/", {
+    method: "POST",
+    headers: {"X-CSRFToken": getCSRF(), "X-Requested-With": "XMLHttpRequest"},
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      refreshPipeline();
+    } else {
+      btn.style.opacity = ""; btn.style.pointerEvents = "";
+      alert(data.error || "Could not delete candidate.");
+    }
+  })
+  .catch(function(err) {
+    btn.style.opacity = ""; btn.style.pointerEvents = "";
+    alert("Delete failed: " + err);
+  });
+}
+
+// ── AI ANALYSIS MODAL ────────────────────────────────────────
+function formatReason(text) {
+  const sectionColors = { "STRENGTHS": "#16a34a", "WEAKNESSES": "#dc2626" };
+  const sectionBg    = { "STRENGTHS": "#f0fdf4", "WEAKNESSES": "#fef2f2" };
+  const lines = text.split('\n');
+  let html = '';
+  let inSection = null;
+  let bulletsBuf = [];
+
+  function flushBullets() {
+    if (!bulletsBuf.length) return;
+    html += `<ul style="margin:4px 0 10px 0;padding-left:1.2rem;">`;
+    bulletsBuf.forEach(b => {
+      html += `<li style="margin:3px 0;">${b}</li>`;
+    });
+    html += `</ul>`;
+    bulletsBuf = [];
+  }
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const sectionMatch = Object.keys(sectionColors).find(k => trimmed.startsWith(k + ':') || trimmed === k);
+    if (sectionMatch) {
+      flushBullets();
+      inSection = sectionMatch;
+      html += `<div style="font-size:11px;font-weight:700;color:${sectionColors[sectionMatch]};
+                            background:${sectionBg[sectionMatch]};border-radius:5px;
+                            padding:3px 8px;display:inline-block;margin:8px 0 4px;">${sectionMatch}</div>`;
+    } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      bulletsBuf.push(trimmed.replace(/^[-•]\s+/, ''));
+    } else {
+      flushBullets();
+      html += `<p style="margin:0 0 6px;">${trimmed}</p>`;
+    }
+  });
+  flushBullets();
+  return html;
+}
+
+function openAnalysis(id) {
+  const app = appsData.find(a => a.id === id);
+  if (!app) return;
+  document.getElementById("analysisName").textContent = app.name;
+  document.getElementById("analysisJob").textContent = `${app.job_title} · ${app.email}`;
+
+  const score = app.score ?? 0;
+  document.getElementById("analysisScore").textContent = score;
+  const fill = document.getElementById("analysisScoreFill");
+  fill.style.width = "0%";
+  fill.style.background = score >= 70 ? "#22c55e" : score >= 40 ? "#f59e0b" : "#ef4444";
+
+  document.getElementById("analysisDecision").innerHTML = app.status === "screened"
+    ? `<span style="color:#22c55e;">✅ Selected for Interview</span>`
+    : `<span style="color:#ef4444;">❌ Not selected</span>`;
+  document.getElementById("analysisOverrideTag").textContent =
+    app.hr_override ? "⚠ HR Override applied" : "";
+  const rawReason = app.ai_reason || "No AI reasoning available.";
+  document.getElementById("analysisReason").innerHTML = formatReason(rawReason);
+
+  const modal = document.getElementById("analysisModal");
+  modal.style.display = "flex";
+  setTimeout(() => { fill.style.width = score + "%"; }, 60);
+}
+function closeAnalysis() {
+  document.getElementById("analysisModal").style.display = "none";
+}
+
+// ── PDF RESUME MODAL ─────────────────────────────────────────
+function openResume(appId) {
+  const app = appsData.find(a => a.id === appId);
+  const viewUrl = `/recruitment/api/view-resume/${appId}/`;
+  const dlUrl   = `/recruitment/api/download-resume/${appId}/`;
+  document.getElementById("resumeModalName").textContent = (app ? app.name : "") + " — Resume";
+  document.getElementById("resumeIframe").src = viewUrl;
+  document.getElementById("resumeDownloadLink").href = dlUrl;
+  document.getElementById("resumeModal").style.display = "flex";
+}
+function closeResume() {
+  document.getElementById("resumeModal").style.display = "none";
+  document.getElementById("resumeIframe").src = "";
+}
+
+// ── SECOND FILTER MODAL ──────────────────────────────────────
+function openSecondFilter() {
+  const jf = appsFilter.value;
+  if (jf) document.getElementById("sfJobSelect").value = jf;
+  const cnt = appsData.filter(a => a.status === "screened" && (!jf || String(a.job_id) === String(jf))).length;
+  document.getElementById("sfCurrentCount").textContent =
+    `Current shortlist: ${cnt} candidate${cnt !== 1 ? "s" : ""}`;
+  const slider = document.getElementById("sfCountSlider");
+  slider.max = Math.max(cnt, 1);
+  slider.value = Math.ceil(cnt / 2);
+  document.getElementById("sfCountLabel").textContent = slider.value;
+  document.getElementById("sfSliderMax").textContent = cnt;
+  document.getElementById("sfRunning").style.display = "none";
+  document.getElementById("sfButtons").style.display = "block";
+  document.getElementById("secondFilterModal").style.display = "flex";
+}
+function closeSecondFilter() {
+  document.getElementById("secondFilterModal").style.display = "none";
+}
+function runSecondFilter() {
+  const rec_id = document.getElementById("sfJobSelect").value;
+  const target_count = parseInt(document.getElementById("sfCountSlider").value);
+  if (!rec_id) { alert("Please select a job."); return; }
+  document.getElementById("sfButtons").style.display = "none";
+  document.getElementById("sfRunning").style.display = "block";
+  fetch('/recruitment/api/second-filter/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':getCSRF()},
+    body:JSON.stringify({rec_id, target_count})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      closeSecondFilter();
+      location.reload();
+    } else {
+      document.getElementById("sfRunning").style.display = "none";
+      document.getElementById("sfButtons").style.display = "block";
+      alert(d.error || "Filter failed");
+    }
+  });
+}
+
+// ── LIVE POLLING (no page reload for AI status updates) ──────
+let pollInterval = null;
+
+function startPolling() {
+  if (pollInterval) return;
+  pollInterval = setInterval(() => {
+    const pending = appsData.filter(a => a.status === "applied");
+    if (pending.length === 0) { clearInterval(pollInterval); pollInterval = null; return; }
+    fetch('/recruitment/api/applications-poll/')
+      .then(r => r.json())
+      .then(data => {
+        let changed = false;
+        data.applications.forEach(updated => {
+          const app = appsData.find(a => a.id === updated.id);
+          if (app && app.status !== updated.status) {
+            app.status    = updated.status;
+            app.score     = updated.score;
+            app.ai_reason = updated.ai_reason || "";
+            app.excluded  = updated.excluded_by_second_filter;
+            app.hr_override = updated.hr_override;
+            changed = true;
+          }
+        });
+        if (changed) renderApplications();
+        if (!appsData.some(a => a.status === "applied")) {
+          clearInterval(pollInterval); pollInterval = null;
+        }
+      });
+  }, 5000);
+}
+
+// ── TAB SWITCHER ─────────────────────────────────────────────
+function switchMainTab(tab) {
+  const isPipeline = tab === "pipeline";
+  document.getElementById("pipelineTabContent").style.display    = isPipeline ? "block" : "none";
+  document.getElementById("applicationsTabContent").style.display = isPipeline ? "none"  : "block";
+  const btnP = document.getElementById("mainTabPipeline");
+  const btnA = document.getElementById("mainTabApplications");
+  btnP.style.fontWeight   = isPipeline ? "600" : "400";
+  btnP.style.color        = isPipeline ? "#3b82f6" : "#6b7280";
+  btnP.style.borderBottom = isPipeline ? "3px solid #3b82f6" : "3px solid transparent";
+  btnA.style.fontWeight   = isPipeline ? "400" : "600";
+  btnA.style.color        = isPipeline ? "#6b7280" : "#3b82f6";
+  btnA.style.borderBottom = isPipeline ? "3px solid transparent" : "3px solid #3b82f6";
+  localStorage.setItem("pipelineMainTab", tab);
+
+  if (!isPipeline && appsData.some(a => a.status === "applied")) startPolling();
+  if (isPipeline && pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+appsFilter.addEventListener("change", renderApplications);
+document.getElementById("appsStatusFilter").addEventListener("change", renderApplications);
+renderApplications();
+
+document.addEventListener("DOMContentLoaded", function () {
+  const saved = localStorage.getItem("pipelineMainTab");
+  const hasApps = appsData.length > 0;
+  switchMainTab(saved || (hasApps ? "applications" : "pipeline"));
+});
+
+// ── REJECT & EMAIL MODAL ─────────────────────────────────────
+let _rejectEmailTargetId = null;
+
+function openRejectEmailModal(id) {
+  _rejectEmailTargetId = id;
+  const app = appsData.find(a => a.id === id);
+  document.getElementById("rejectEmailCandName").textContent = app ? app.name : "";
+  document.getElementById("rejectEmailJustification").value = "";
+  document.getElementById("rejectEmailSendCheck").checked = true;
+  document.getElementById("rejectEmailModal").style.display = "flex";
+}
+function closeRejectEmailModal() {
+  document.getElementById("rejectEmailModal").style.display = "none";
+  _rejectEmailTargetId = null;
+}
+function submitRejectEmail() {
+  if (!_rejectEmailTargetId) return;
+  const justification = document.getElementById("rejectEmailJustification").value.trim();
+  const sendEmail = document.getElementById("rejectEmailSendCheck").checked;
+  const btn = document.getElementById("rejectEmailSubmitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  fetch('/recruitment/api/reject-with-email/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+    body: JSON.stringify({id: _rejectEmailTargetId, justification, send_email: sendEmail})
+  }).then(r => r.json()).then(d => {
+    btn.disabled = false; btn.textContent = "Confirm Reject";
+    if (d.success) {
+      const app = appsData.find(a => a.id === _rejectEmailTargetId);
+      if (app) {
+        app.status = "rejected";
+        app.rejection_email_sent = sendEmail;
+        app.rejection_justification = justification;
+      }
+      closeRejectEmailModal();
+      renderApplications();
+      refreshPipeline();
+    } else {
+      alert(d.error || "Action failed");
+    }
+  }).catch(() => { btn.disabled = false; btn.textContent = "Confirm Reject"; alert("Request failed"); });
+}
+</script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-loader {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid #f59e0b;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+</style>
+
+<script>
+  function submitForm(elem) {
+    $(elem).siblings(".add_more_submit").click();
+  }
+
+	function enlargeImage(src) {
+		var enlargeImageContainer = $('#enlargeImageContainer');
+		enlargeImageContainer.empty();
+    style = "width:100%; height:90%; box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2); background:white"
+		var enlargedImage = $('<iframe>').attr({'src': src,'style': style,});
+    var name =$('<span>').text(src.split('/').pop().replace(/_/g, " "))
+		enlargeImageContainer.append(enlargedImage);
+		enlargeImageContainer.append(name);
+		setTimeout(function() {
+		  enlargeImageContainer.show();
+
+      const iframe = document.querySelector("iframe").contentWindow;
+      var iframe_document = iframe.document
+      iframe_image = iframe_document.getElementsByTagName('img')[0]
+      $(iframe_image).attr("style","width:100%; height:100%;")
+
+		}, 100);
+	}
+
+  function hideEnlargeImage() {
+		var enlargeImageContainer = $('#enlargeImageContainer');
+		enlargeImageContainer.empty();
+  }
+
+  $(document).on('click', function(event){
+    if (!$(event.target).closest('#enlargeImageContainer').length) {
+        hideEnlargeImage();
+    }
+  });
+
+
+  $(document).ready(function () {
+    $(".stage-candidates").change(function (e) {
+      var stageId = $(this).attr("data-stage-id");
+      $(`[data-container='candidate'][data-stage-id=${stageId}] [type=checkbox].stage-candidate-row`).prop("checked",false).closest(".oh-sticky-table__tr")
+      .removeClass("highlight-selected");;
+      $(`[data-container='candidate'][data-stage-id=${stageId}] [type=checkbox].stage-candidate-row`).change()
+      if ($(this).is(":checked")) {
+        $(`[data-container='candidate'][data-stage-id=${stageId}] [type=checkbox].stage-candidate-row`).prop("checked",true).closest(".oh-sticky-table__tr")
+        .addClass("highlight-selected");
+        $(`[data-container='candidate'][data-stage-id=${stageId}] [type=checkbox].stage-candidate-row`).change()
+      }else{
+
+      }
+    });
+    $("[name=bulk_stage]").change(function (e) {
+      e.preventDefault();
+      var currentStageId = $(this).attr("data-stage-id");
+      var nextStageId = $(this).val();
+      var select = $(`.stage-change[data-stage-id=${currentStageId}]`).filter(function() {
+        var checked = $(this).closest(".oh-sticky-table__tr").find("[type=checkbox]").is(":checked")
+        return checked
+      });
+      select.attr("data-stage-id",nextStageId)
+      if (!select.length) {
+        $("#ohMessages").html(`
+        <div class="oh-alert-container">
+          <div class="oh-alert oh-alert--animated oh-alert--info">
+            No candidates are selected on '${$(`[hx-post="/recruitment/stage-title-update/${currentStageId}/"]`).val()}' stage
+          </div>
+        </div>
+        `);
+      }
+      select.val(nextStageId)
+      select.change()
+      $(this).val("");
+      $(this).closest(".oh-table-config__tr").find(".stage-candidates").prop("checked",false).change()
+    });
+  });
+  $(document).ready(function () {
+    $('.oh-tabs__tab').click(function (e) {
+        // Remove fw-bold class from all tabs
+        $('.oh-tabs__tab').removeClass('fw-bold');
+
+        // Add fw-bold class to the clicked tab
+        $(this).addClass('fw-bold');
+
+        // Your existing code for storing the active tab
+        var activeTab = $(this).attr('data-target');
+        localStorage.setItem('activeTabOnboarding', activeTab);
+    });
+
+    // Your existing code for setting the active tab on page load
+    var activeTab = localStorage.getItem('activeTabOnboarding');
+    if (activeTab != null) {
+        var tab = $(`[data-target="${activeTab}"]`);
+        $(tab).addClass('fw-bold');
+    }
+});
+</script>
+<!-- ── REJECT & EMAIL MODAL ───────────────────────── -->
+<div id="rejectEmailModal" onclick="if(event.target===this)closeRejectEmailModal();"
+  style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+         background:rgba(0,0,0,0.65);z-index:99999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:white;border-radius:14px;max-width:460px;width:100%;
+              box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;padding:24px;">
+    <button onclick="closeRejectEmailModal()" type="button"
+      style="position:absolute;top:12px;right:14px;border:none;background:#f3f4f6;
+             border-radius:50%;width:30px;height:30px;font-size:18px;cursor:pointer;
+             display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+    <h4 style="margin:0 0 4px;font-size:16px;color:#dc2626;">✉ Reject &amp; Notify Candidate</h4>
+    <p id="rejectEmailCandName" style="color:#6b7280;margin:0 0 16px;font-size:13px;"></p>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+        {% trans "Rejection Justification" %} <span style="color:#9ca3af;font-weight:400;">(optional, shown to candidate)</span>
+      </label>
+      <textarea id="rejectEmailJustification" rows="3"
+        style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;
+               font-size:13px;resize:vertical;font-family:inherit;"
+        placeholder="e.g. Insufficient years of experience for this role…"></textarea>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;margin-bottom:18px;cursor:pointer;">
+      <input type="checkbox" id="rejectEmailSendCheck" checked style="width:15px;height:15px;accent-color:#dc2626;">
+      {% trans "Send rejection email to candidate" %}
+    </label>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeRejectEmailModal()" type="button"
+        style="padding:8px 16px;border:1px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;">
+        {% trans "Cancel" %}
+      </button>
+      <button id="rejectEmailSubmitBtn" onclick="submitRejectEmail()" type="button"
+        style="padding:8px 18px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+        {% trans "Confirm Reject" %}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EMAIL TEMPLATE MODAL ───────────────────────── -->
+<div id="emailTemplateModal" onclick="if(event.target===this)closeTemplateModal();"
+  style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+         background:rgba(0,0,0,0.65);z-index:99999;align-items:center;
+         justify-content:center;padding:16px;">
+  <div style="background:white;border-radius:14px;width:min(640px,96vw);max-height:88vh;
+              display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:16px 20px;border-bottom:1px solid #f0f1f3;flex-shrink:0;">
+      <div>
+        <div style="font-weight:700;font-size:15px;color:#111827;">✉️ {% trans "Email Templates" %}</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">
+          {% trans "Select the active template used for automated selection & rejection emails." %}
+        </div>
+      </div>
+      <button onclick="closeTemplateModal()" type="button"
+        style="border:none;background:#f3f4f6;border-radius:50%;width:30px;height:30px;
+               font-size:18px;cursor:pointer;line-height:1;flex-shrink:0;">×</button>
+    </div>
+    <div id="templateCardsList" style="overflow-y:auto;padding:16px 20px;flex:1;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
+<script>
+let _emailTemplates = [];
+let _expandedTpl = null;
+
+function openTemplateModal() {
+  fetch('/recruitment/api/email-templates/')
+    .then(r => r.json())
+    .then(data => {
+      _emailTemplates = data.templates;
+      _expandedTpl = null;
+      renderTemplateCards();
+      document.getElementById('emailTemplateModal').style.display = 'flex';
+    });
+}
+
+function closeTemplateModal() {
+  document.getElementById('emailTemplateModal').style.display = 'none';
+}
+
+function toggleTemplateExpand(id) {
+  _expandedTpl = (_expandedTpl === id) ? null : id;
+  renderTemplateCards();
+}
+
+function renderTemplateCards() {
+  const container = document.getElementById('templateCardsList');
+  container.innerHTML = '';
+  _emailTemplates.forEach(t => {
+    const isActive = t.is_default;
+    const isOpen   = _expandedTpl === t.id;
+    const card = document.createElement('div');
+    card.style.cssText = `border:2px solid ${isActive ? '#3b82f6' : '#e5e7eb'};border-radius:10px;
+                          background:${isActive ? '#eff6ff' : '#fafafa'};overflow:hidden;
+                          transition:border-color 0.15s;`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:12px 14px;cursor:pointer;" onclick="toggleTemplateExpand(${t.id})">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-weight:600;font-size:14px;color:#111827;">${t.name}</span>
+          ${isActive
+            ? `<span style="background:#3b82f6;color:white;font-size:10px;font-weight:700;
+                            padding:2px 8px;border-radius:999px;">ACTIVE</span>`
+            : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${!isActive
+            ? `<button onclick="event.stopPropagation();setDefaultTemplate(${t.id})"
+                 style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #3b82f6;
+                        background:white;color:#3b82f6;cursor:pointer;font-weight:600;">
+                 Set Active
+               </button>`
+            : ''}
+          <span style="color:#9ca3af;font-size:16px;">${isOpen ? '▲' : '▼'}</span>
+        </div>
+      </div>
+      ${isOpen ? `
+      <div style="padding:0 14px 14px;border-top:1px solid #e5e7eb;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#22c55e;text-transform:uppercase;
+                      letter-spacing:0.06em;margin-bottom:6px;">Selection Email</div>
+          <div style="font-size:11.5px;font-weight:600;color:#374151;margin-bottom:4px;">${t.selection_subject}</div>
+          <pre style="font-size:11px;color:#6b7280;white-space:pre-wrap;margin:0;
+                      background:white;border:1px solid #e5e7eb;border-radius:6px;padding:8px;
+                      max-height:140px;overflow-y:auto;font-family:inherit;">${t.selection_body}</pre>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;
+                      letter-spacing:0.06em;margin-bottom:6px;">Rejection Email</div>
+          <div style="font-size:11.5px;font-weight:600;color:#374151;margin-bottom:4px;">${t.rejection_subject}</div>
+          <pre style="font-size:11px;color:#6b7280;white-space:pre-wrap;margin:0;
+                      background:white;border:1px solid #e5e7eb;border-radius:6px;padding:8px;
+                      max-height:140px;overflow-y:auto;font-family:inherit;">${t.rejection_body}</pre>
+        </div>
+      </div>` : ''}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function setDefaultTemplate(id) {
+  fetch('/recruitment/api/email-templates/set-default/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+    body: JSON.stringify({id})
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      _emailTemplates.forEach(t => { t.is_default = (t.id === id); });
+      renderTemplateCards();
+    }
+  });
+}
+</script>
+
+{% include 'pipeline/footer_components.html' %} {% endblock %}

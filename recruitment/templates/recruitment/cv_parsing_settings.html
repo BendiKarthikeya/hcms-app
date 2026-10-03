@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CV Parsing Settings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'recruitment/css/cv-screening-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cv-screening-container">
+    <div class="cv-header">
+        <h1>CV Parsing & AI Screening Settings</h1>
+        <p>Configure AI-powered candidate screening and CV parsing options</p>
+    </div>
+
+    <form method="post" class="settings-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Basic Settings -->
+        <div class="settings-section">
+            <h3>Core Settings</h3>
+            <p>Enable or disable AI-powered CV screening features for your recruitment process</p>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.enable_ai_screening.id_for_label }}" name="enable_ai_screening" {% if form.enable_ai_screening.value %}checked{% endif %}>
+                <label for="{{ form.enable_ai_screening.id_for_label }}">
+                    Enable AI CV Screening
+                </label>
+                <small>Automatically analyze CVs and rank candidates based on job requirements</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.auto_parse_cv.id_for_label }}" name="auto_parse_cv" {% if form.auto_parse_cv.value %}checked{% endif %}>
+                <label for="{{ form.auto_parse_cv.id_for_label }}">
+                    Auto-Parse CV on Upload
+                </label>
+                <small>Automatically extract and parse CV data when candidates upload files</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.extract_skills.id_for_label }}" name="extract_skills" {% if form.extract_skills.value %}checked{% endif %}>
+                <label for="{{ form.extract_skills.id_for_label }}">
+                    Auto-Extract Skills
+                </label>
+                <small>Automatically identify and tag technical and soft skills from CVs</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.match_experience.id_for_label }}" name="match_experience" {% if form.match_experience.value %}checked{% endif %}>
+                <label for="{{ form.match_experience.id_for_label }}">
+                    Match Against Job Requirements
+                </label>
+                <small>Compare candidate experience and skills against job position requirements</small>
+            </div>
+        </div>
+
+        <!-- Skill Matching Configuration -->
+        <div class="settings-section">
+            <h3>Skill Matching Configuration</h3>
+            <p>Configure how skills are matched and weighted in the ranking process</p>
+
+            <div class="form-group">
+                <label for="{{ form.required_skills_weight.id_for_label }}">
+                    Required Skills Weight (%)
+                </label>
+                <input type="number" id="{{ form.required_skills_weight.id_for_label }}" name="required_skills_weight" 
+                       min="0" max="100" value="{{ form.required_skills_weight.value|default:40 }}">
+                <small>How much weight to give matching required skills (0-100)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.experience_weight.id_for_label }}">
+                    Experience Weight (%)
+                </label>
+                <input type="number" id="{{ form.experience_weight.id_for_label }}" name="experience_weight" 
+                       min="0" max="100" value="{{ form.experience_weight.value|default:30 }}">
+                <small>How much weight to give years of experience (0-100)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.education_weight.id_for_label }}">
+                    Education Weight (%)
+                </label>
+                <input type="number" id="{{ form.education_weight.id_for_label }}" name="education_weight" 
+                       min="0" max="100" value="{{ form.education_weight.value|default:20 }}">
+                <small>How much weight to give educational qualifications (0-100)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.soft_skills_weight.id_for_label }}">
+                    Soft Skills Weight (%)
+                </label>
+                <input type="number" id="{{ form.soft_skills_weight.id_for_label }}" name="soft_skills_weight" 
+                       min="0" max="100" value="{{ form.soft_skills_weight.value|default:10 }}">
+                <small>How much weight to give soft skills (0-100)</small>
+            </div>
+        </div>
+
+        <!-- Ranking Thresholds -->
+        <div class="settings-section">
+            <h3>Ranking Thresholds</h3>
+            <p>Set minimum score thresholds for candidate classification</p>
+
+            <div class="form-group">
+                <label for="{{ form.excellent_threshold.id_for_label }}">
+                    Excellent Match Threshold (%)
+                </label>
+                <input type="number" id="{{ form.excellent_threshold.id_for_label }}" name="excellent_threshold" 
+                       min="0" max="100" value="{{ form.excellent_threshold.value|default:85 }}">
+                <small>Score above this is considered excellent (85-100)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.good_threshold.id_for_label }}">
+                    Good Match Threshold (%)
+                </label>
+                <input type="number" id="{{ form.good_threshold.id_for_label }}" name="good_threshold" 
+                       min="0" max="100" value="{{ form.good_threshold.value|default:70 }}">
+                <small>Score above this is considered good (70-84)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.minimum_threshold.id_for_label }}">
+                    Minimum Match Threshold (%)
+                </label>
+                <input type="number" id="{{ form.minimum_threshold.id_for_label }}" name="minimum_threshold" 
+                       min="0" max="100" value="{{ form.minimum_threshold.value|default:50 }}">
+                <small>Candidates below this score will not be shortlisted (0-50)</small>
+            </div>
+        </div>
+
+        <!-- Parsing Options -->
+        <div class="settings-section">
+            <h3>CV Parsing Options</h3>
+            <p>Configure how CV data is parsed and extracted</p>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.parse_contact_info.id_for_label }}" name="parse_contact_info" {% if form.parse_contact_info.value %}checked{% endif %}>
+                <label for="{{ form.parse_contact_info.id_for_label }}">
+                    Extract Contact Information
+                </label>
+                <small>Automatically extract email, phone, and address from CV</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.parse_education.id_for_label }}" name="parse_education" {% if form.parse_education.value %}checked{% endif %}>
+                <label for="{{ form.parse_education.id_for_label }}">
+                    Extract Education Details
+                </label>
+                <small>Parse degree, institution, and graduation year</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.parse_experience.id_for_label }}" name="parse_experience" {% if form.parse_experience.value %}checked{% endif %}>
+                <label for="{{ form.parse_experience.id_for_label }}">
+                    Extract Work Experience
+                </label>
+                <small>Parse job titles, companies, and employment dates</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.parse_languages.id_for_label }}" name="parse_languages" {% if form.parse_languages.value %}checked{% endif %}>
+                <label for="{{ form.parse_languages.id_for_label }}">
+                    Extract Language Proficiency
+                </label>
+                <small>Detect languages and proficiency levels mentioned in CV</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.supported_languages.id_for_label }}">
+                    Supported CV Languages
+                </label>
+                {{ form.supported_languages }}
+                <small>Select languages that CVs can be submitted in</small>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-section">
+            <h3>Notification Settings</h3>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.notify_high_matches.id_for_label }}" name="notify_high_matches" {% if form.notify_high_matches.value %}checked{% endif %}>
+                <label for="{{ form.notify_high_matches.id_for_label }}">
+                    Notify on High Matches
+                </label>
+                <small>Send notification when excellent match candidates are found</small>
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" id="{{ form.notify_parsing_errors.id_for_label }}" name="notify_parsing_errors" {% if form.notify_parsing_errors.value %}checked{% endif %}>
+                <label for="{{ form.notify_parsing_errors.id_for_label }}">
+                    Notify on Parsing Errors
+                </label>
+                <small>Alert when CV parsing encounters errors or issues</small>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>💡 AI Screening Information</strong>
+            <p>These settings control how CVs are automatically analyzed and candidates are ranked. Weights must total approximately 100% for accurate ranking. All settings can be adjusted at any time.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <a href="{% url 'recruitment-view' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

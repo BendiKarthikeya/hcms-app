@@ -1,0 +1,63 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Import Preview" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:900px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <h2 style="margin-top:0;">{% trans "Import Preview" %}</h2>
+    <p style="font-size:13px;color:#6b7280;">
+      {% with valid=preview|length %}
+        {{ valid }} {% trans "rows found" %}.
+        {% if is_manpower %}{% trans "Review below then commit." %}{% else %}{% trans "Review then commit." %}{% endif %}
+      {% endwith %}
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:8px;text-align:left;">#</th>
+          {% if is_manpower %}
+          <th style="padding:8px;text-align:left;">{% trans "Data" %}</th>
+          {% else %}
+          <th style="padding:8px;text-align:left;">{% trans "Name" %}</th>
+          <th style="padding:8px;text-align:left;">{% trans "Email" %}</th>
+          {% endif %}
+          <th style="padding:8px;text-align:left;">{% trans "Status" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in preview %}
+        <tr style="border-top:1px solid #f3f4f6;background:{% if row.errors %}#fff7f7{% else %}#f0fdf4{% endif %};">
+          <td style="padding:7px 8px;">{{ row.row }}</td>
+          {% if is_manpower %}
+          <td style="padding:7px 8px;">{{ row.data }}</td>
+          {% else %}
+          <td style="padding:7px 8px;">{{ row.name }}</td>
+          <td style="padding:7px 8px;">{{ row.email }}</td>
+          {% endif %}
+          <td style="padding:7px 8px;">
+            {% if row.errors %}
+            <span style="color:#dc2626;font-size:12px;">✗ {{ row.errors|join:", " }}</span>
+            {% else %}
+            <span style="color:#16a34a;font-size:12px;">✓ {% trans "OK" %}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="raw_csv" value="{{ raw_csv|escape }}">
+      <input type="hidden" name="action" value="commit">
+      <div style="display:flex;gap:8px;">
+        <a href="javascript:history.back()" style="padding:9px 16px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Back" %}</a>
+        <button type="submit" style="padding:9px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Commit Import" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+{% endblock %}

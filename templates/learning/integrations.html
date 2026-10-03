@@ -1,0 +1,76 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "External Content Integrations" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <form method="POST" action="{% url 'sync-external-catalog' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="oh-btn oh-btn--primary oh-btn--shadow" onclick="return confirm('{% trans "This will sync all external course catalogs. Continue?" %}')">
+                        <ion-icon name="sync-outline" class="me-1"></ion-icon>{% trans "Sync External Catalog" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Connect LinkedIn Learning and Udemy for Business with single sign-on (SSO) and progress tracking." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="row">
+            <!-- LinkedIn -->
+            <div class="col-md-6">
+                <div class="oh-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <ion-icon name="logo-linkedin" style="font-size: 3rem; color: #0077b5;" class="me-3"></ion-icon>
+                        <div>
+                            <h4 class="oh-card__title mb-0">LinkedIn Learning</h4>
+                            <span class="oh-badge oh-badge--light">v2.0 API</span>
+                        </div>
+                    </div>
+                    <form method="POST" action="{% url 'connect-linkedin' %}">
+                        {% csrf_token %}
+                        <div class="oh-input-group mb-3">
+                            <label class="oh-label">{% trans "Client ID" %} <span class="text-danger">*</span></label>
+                            <input type="text" class="oh-input" name="client_id" placeholder="Enter LinkedIn Client ID" required>
+                        </div>
+                        <div class="oh-input-group mb-4">
+                            <label class="oh-label">{% trans "Client Secret" %} <span class="text-danger">*</span></label>
+                            <input type="password" class="oh-input" name="client_secret" placeholder="••••••••••••••••" required>
+                        </div>
+                        <button type="submit" class="oh-btn oh-btn--secondary w-100">{% trans "Connect LinkedIn" %}</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Udemy -->
+            <div class="col-md-6">
+                <div class="oh-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <ion-icon name="logo-playstation" style="font-size: 3rem; color: #a435f0;" class="me-3"></ion-icon>
+                        <div>
+                            <h4 class="oh-card__title mb-0">Udemy for Business</h4>
+                            <span class="oh-badge oh-badge--light">SCIM Enabled</span>
+                        </div>
+                    </div>
+                    <form method="POST" action="{% url 'connect-udemy' %}">
+                        {% csrf_token %}
+                        <div class="oh-input-group mb-3">
+                            <label class="oh-label">{% trans "Organization ID" %} <span class="text-danger">*</span></label>
+                            <input type="text" class="oh-input" name="org_id" placeholder="Enter Udemy Org ID" required>
+                        </div>
+                        <div class="oh-input-group mb-4">
+                            <label class="oh-label">{% trans "API Key" %} <span class="text-danger">*</span></label>
+                            <input type="password" class="oh-input" name="api_key" placeholder="••••••••••••••••" required>
+                        </div>
+                        <button type="submit" class="oh-btn oh-btn--secondary w-100">{% trans "Connect Udemy" %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

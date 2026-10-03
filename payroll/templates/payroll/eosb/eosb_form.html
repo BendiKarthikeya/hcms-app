@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create EOSB{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>Calculate End of Service Benefits</h1>
+        <p>Create and calculate EOSB for a separated employee</p>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.employee.id_for_label }}">
+                Employee <span class="required">*</span>
+            </label>
+            {{ form.employee }}
+            {% if form.employee.errors %}<div class="error-message">{{ form.employee.errors.0 }}</div>{% endif %}
+            <small>Select the employee being separated</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.separation_date.id_for_label }}">
+                    Separation Date <span class="required">*</span>
+                </label>
+                {{ form.separation_date }}
+                {% if form.separation_date.errors %}<div class="error-message">{{ form.separation_date.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">
+                    Reason for Separation
+                </label>
+                {{ form.reason }}
+                {% if form.reason.errors %}<div class="error-message">{{ form.reason.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.final_salary.id_for_label }}">
+                    Final Salary (OMR)
+                </label>
+                {{ form.final_salary }}
+                {% if form.final_salary.errors %}<div class="error-message">{{ form.final_salary.errors.0 }}</div>{% endif %}
+                <small>Last drawn monthly salary</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.outstanding_leave_days.id_for_label }}">
+                    Outstanding Leave Days
+                </label>
+                {{ form.outstanding_leave_days }}
+                {% if form.outstanding_leave_days.errors %}<div class="error-message">{{ form.outstanding_leave_days.errors.0 }}</div>{% endif %}
+                <small>Unused leave days to be paid</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">
+                Notes
+            </label>
+            {{ form.notes }}
+            {% if form.notes.errors %}<div class="error-message">{{ form.notes.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="alert alert-info">
+            <strong>System will calculate:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Years of service based on employment date</li>
+                <li>Applicable gratuity rate (1/3, 1/2, or full month)</li>
+                <li>Gross EOSB amount</li>
+                <li>Deductions (loans, advances if applicable)</li>
+                <li>Net EOSB amount due</li>
+            </ul>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Calculate & Create EOSB</button>
+            <a href="{% url 'eosb-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "ui/base.html" %}
+{% block title %}Integrations — HCMS{% endblock %}
+
+{% block content %}
+<style>
+.ig-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.ig-card { background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:18px 20px; display:flex; flex-direction:column; min-height:170px; }
+.ig-card__head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ig-card__icon { width:38px; height:38px; border-radius:8px; background:#E8F0EA; display:flex; align-items:center; justify-content:center; }
+.ig-card__icon .material-symbols-outlined { font-size:20px; color:#1F5F2F; }
+.ig-card__title { font-size:13px; font-weight:600; color:#111; margin-bottom:4px; }
+.ig-card__desc { font-size:11px; color:#888; flex:1; line-height:1.45; margin-bottom:12px; }
+.ig-card__foot { display:flex; align-items:center; justify-content:space-between; }
+.ig-pill { font-size:10px; font-weight:600; padding:3px 8px; border-radius:12px; }
+.ig-pill--on  { background:#E8F5ED; color:#278E53; }
+.ig-pill--off { background:#F2F2F2; color:#888; }
+.ig-pill--dis { background:#FFF3E0; color:#B07600; }
+.ig-card__btn { font-size:11px; font-weight:600; color:#278E53; border:1px solid #A8D4B4; border-radius:6px; padding:5px 12px; background:#fff; cursor:pointer; text-decoration:none; }
+.ig-card__btn:hover { background:#E8F0EA; }
+.ig-card__btn--muted { color:#999; border-color:#E0E0E0; pointer-events:none; }
+</style>
+
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Integrations</div>
+    <div class="ui-page-subtitle">External services connected to HCMS</div>
+  </div>
+</div>
+
+<div class="ig-grid">
+  {% for it in items %}
+  <div class="ig-card">
+    <div class="ig-card__head">
+      <div class="ig-card__icon"><span class="material-symbols-outlined">{{ it.icon }}</span></div>
+      {% if not it.enabled %}
+        <span class="ig-pill ig-pill--dis">Disabled</span>
+      {% elif it.connected %}
+        <span class="ig-pill ig-pill--on">Connected</span>
+      {% else %}
+        <span class="ig-pill ig-pill--off">Not connected</span>
+      {% endif %}
+    </div>
+    <div class="ig-card__title">{{ it.name }}</div>
+    <div class="ig-card__desc">{{ it.desc }}</div>
+    <div class="ig-card__foot">
+      {% if it.enabled and it.url != "#" %}
+        <a href="{{ it.url }}" class="ig-card__btn">{% if it.connected %}Configure{% else %}Connect{% endif %} →</a>
+      {% else %}
+        <span class="ig-card__btn ig-card__btn--muted">Unavailable</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- ════ Adobe eSign (real Adobe Acrobat Sign OAuth) ════ -->
+  <div class="ig-card">
+    <div class="ig-card__head">
+      <div class="ig-card__icon"><span class="material-symbols-outlined">draw</span></div>
+      {% if not adobesign_configured %}
+        <span class="ig-pill ig-pill--dis">Not configured</span>
+      {% elif adobesign_connected %}
+        <span class="ig-pill ig-pill--on">Connected</span>
+      {% else %}
+        <span class="ig-pill ig-pill--off">Not connected</span>
+      {% endif %}
+    </div>
+    <div class="ig-card__title">Adobe eSign</div>
+    <div class="ig-card__desc">Connect your Adobe Acrobat Sign account to e-sign offer letters and proposals.</div>
+    <div class="ig-card__foot">
+      {% if not adobesign_configured %}
+        <span class="ig-card__btn ig-card__btn--muted">Set ADOBE_SIGN_* keys</span>
+      {% elif adobesign_connected %}
+        <a href="/integrations/adobesign/disconnect/" class="ig-card__btn" style="color:#C04730;border-color:#e8b3a8">Disconnect</a>
+      {% else %}
+        <a href="/integrations/adobesign/connect/" class="ig-card__btn">Connect →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ════ DocuSign (real DocuSign eSignature OAuth) ════ -->
+  <div class="ig-card">
+    <div class="ig-card__head">
+      <div class="ig-card__icon"><span class="material-symbols-outlined">draw</span></div>
+      {% if not docusign_configured %}
+        <span class="ig-pill ig-pill--dis">Not configured</span>
+      {% elif docusign_connected %}
+        <span class="ig-pill ig-pill--on">Connected</span>
+      {% else %}
+        <span class="ig-pill ig-pill--off">Not connected</span>
+      {% endif %}
+    </div>
+    <div class="ig-card__title">DocuSign</div>
+    <div class="ig-card__desc">Connect your DocuSign account to e-sign offer letters and proposals.</div>
+    <div class="ig-card__foot">
+      {% if not docusign_configured %}
+        <span class="ig-card__btn ig-card__btn--muted">Set DOCUSIGN_* keys</span>
+      {% elif docusign_connected %}
+        <a href="/integrations/docusign/disconnect/" class="ig-card__btn" style="color:#C04730;border-color:#e8b3a8">Disconnect</a>
+      {% else %}
+        <a href="/integrations/docusign/connect/" class="ig-card__btn">Connect →</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

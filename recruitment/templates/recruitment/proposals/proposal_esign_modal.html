@@ -1,0 +1,112 @@
+{% load i18n %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+
+<!-- ── E-Sign modal ─────────────────────────────────────────────── -->
+<div id="proposalEsignModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="background:#dcfce7;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+        <ion-icon name="pen-outline" style="font-size:20px;color:#16a34a;"></ion-icon>
+      </div>
+      <div>
+        <h5 style="margin:0;font-size:16px;">{% trans "E-Sign Employment Proposal" %}</h5>
+        <p style="margin:0;font-size:12px;color:#6b7280;" id="proposalEsignSubtitle"></p>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#374151;margin-bottom:8px;">{% trans "Draw your signature below:" %}</p>
+    <div style="border:2px solid #d1d5db;border-radius:8px;background:#f9fafb;position:relative;">
+      <canvas id="proposalSignatureCanvas" style="width:100%;display:block;touch-action:none;" height="160"></canvas>
+      <button type="button" onclick="clearProposalSignature()"
+              style="position:absolute;top:6px;right:8px;background:none;border:none;font-size:11px;color:#9ca3af;cursor:pointer;">
+        {% trans "Clear" %}
+      </button>
+    </div>
+    <p style="font-size:11px;color:#9ca3af;margin-top:4px;">{% trans "Sign using your mouse or touch." %}</p>
+    <form id="proposalEsignForm" method="post" style="margin-top:16px;">
+      {% csrf_token %}
+      <input type="hidden" name="signature_data" id="proposalSignatureDataInput">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" onclick="closeProposalEsign()"
+                style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="button" onclick="submitProposalEsign()"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600;">
+          <ion-icon name="checkmark-circle-outline" style="vertical-align:middle;margin-right:4px;"></ion-icon>
+          {% trans "Confirm E-Sign" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Feedback (reject) modal ───────────────────────────────────── -->
+<div id="proposalFeedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;padding:28px;max-width:480px;width:90%;">
+    <h5 style="margin-top:0;">
+      <ion-icon name="chatbubble-outline" style="vertical-align:middle;margin-right:6px;color:#f59e0b;"></ion-icon>
+      {% trans "Reject with Feedback" %}
+    </h5>
+    <p style="color:#6b7280;font-size:14px;">{% trans "Your feedback will be sent to HR." %}</p>
+    <form method="post" id="proposalFeedbackForm">
+      {% csrf_token %}
+      <textarea name="feedback" rows="4" required
+                style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px;font-size:13px;"
+                placeholder="{% trans 'Reason for rejection…' %}"></textarea>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+        <button type="button" onclick="closeProposalFeedback()"
+                style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;">
+          {% trans "Cancel" %}
+        </button>
+        <button type="submit"
+                style="padding:8px 20px;border:none;border-radius:6px;background:#dc2626;color:#fff;cursor:pointer;font-weight:600;">
+          {% trans "Submit Rejection" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var pad = null;
+  function ensurePad() {
+    var canvas = document.getElementById('proposalSignatureCanvas');
+    if (!canvas) return null;
+    var ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width  = canvas.offsetWidth  * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext('2d').scale(ratio, ratio);
+    if (!pad) pad = new SignaturePad(canvas, { backgroundColor: '#f9fafb' });
+    pad.clear();
+    return pad;
+  }
+  window.openEsign = function (id, no) {
+    document.getElementById('proposalEsignSubtitle').textContent = no || '';
+    document.getElementById('proposalEsignForm').action = '/recruitment/proposals/' + id + '/esign/';
+    document.getElementById('proposalEsignModal').style.display = 'flex';
+    setTimeout(ensurePad, 50);
+  };
+  window.closeProposalEsign = function () {
+    document.getElementById('proposalEsignModal').style.display = 'none';
+  };
+  window.clearProposalSignature = function () {
+    if (pad) pad.clear();
+  };
+  window.submitProposalEsign = function () {
+    if (!pad || pad.isEmpty()) {
+      alert('Please draw your signature first.');
+      return;
+    }
+    document.getElementById('proposalSignatureDataInput').value = pad.toDataURL('image/png');
+    document.getElementById('proposalEsignForm').submit();
+  };
+  window.openFeedback = function (id) {
+    document.getElementById('proposalFeedbackForm').action = '/recruitment/proposals/' + id + '/reject/';
+    document.getElementById('proposalFeedbackModal').style.display = 'flex';
+  };
+  window.closeProposalFeedback = function () {
+    document.getElementById('proposalFeedbackModal').style.display = 'none';
+  };
+})();
+</script>

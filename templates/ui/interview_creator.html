@@ -1,0 +1,545 @@
+{% extends "ui/base.html" %}
+{% block title %}Schedule Interview — HCMS{% endblock %}
+{% block active_interview %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/interview/" style="color:#6D6D6D">Back to Interviews</a>
+</div>
+
+<div class="ui-page-header">
+  <div class="ui-page-title">Schedule Interview</div>
+  <div class="ui-page-subtitle">Create a new interview session for a shortlisted candidate</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+  <!-- Form -->
+  <form class="ui-panel" id="interview-form" method="post" action="">{% csrf_token %}
+    <div class="ui-panel__title">Interview Details</div>
+
+    {% if messages %}{% for m in messages %}<div style="font-size:12px;padding:8px 12px;margin-bottom:12px;border-radius:6px;background:#FFF0EE;color:#C04730;">{{ m }}</div>{% endfor %}{% endif %}
+
+    <div class="ui-form-group">
+      <label class="ui-form-label">Candidate *</label>
+      <select class="ui-form-select" name="candidate" id="candidate-select" required>
+        <option value="">Select candidate…</option>
+        {% for c in candidates %}<option value="{{ c.id }}"
+          data-name="{{ c.name }}"
+          data-email="{{ c.email|default:'' }}"
+          data-phone="{{ c.phone|default:'' }}"
+          data-job="{% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id.job_position }}{% endif %}"
+          data-dept="{{ c.dept_display|default:'' }}"
+          data-source="{{ c.source|default:'Direct' }}"
+          {% if preselect_candidate_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}{% if c.recruitment_id %} — {{ c.recruitment_id.title }}{% elif c.job_position_id %} — {{ c.job_position_id.job_position }}{% endif %}</option>{% endfor %}
+      </select>
+    </div>
+
+    <!-- Meeting Platform FIRST -->
+    <div class="ui-form-group">
+      <label class="ui-form-label">Meeting Platform</label>
+      <select class="ui-form-select" name="platform" id="platform-select">
+        <option value="manual">In-Person / Other</option>
+        <option value="meet">Google Meet</option>
+        <option value="teams">Microsoft Teams</option>
+        <option value="zoom">Zoom</option>
+      </select>
+    </div>
+
+    <!-- Online Meeting Link — greyed when In-Person -->
+    <div class="ui-form-group">
+      <label class="ui-form-label" id="link-label" style="color:#bbb">Online Meeting Link</label>
+      <input class="ui-form-input" id="meeting-link-input" type="url" name="meeting_link"
+             placeholder="https://meet.google.com/…"
+             style="color:#bbb;border-color:#E8E8E8;background:#F8F8F8;pointer-events:none" disabled>
+    </div>
+
+    <!-- Global Panelists (multi-select pill widget) -->
+    <div class="ui-form-group" id="panelists-widget">
+      <label class="ui-form-label">Panelists / Interviewers *</label>
+
+      <div id="panelists-box" onclick="document.getElementById('panelists-search').focus()"
+           style="min-height:42px;border:1px solid #E0E0E0;border-radius:8px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;cursor:text;background:#fff;transition:border-color .15s">
+        <span id="panelists-placeholder" style="color:#aaa;font-size:13px;user-select:none">Search panelists…</span>
+        <input id="panelists-search" type="text" autocomplete="off" placeholder=""
+               style="border:none;outline:none;font-size:13px;flex:1;min-width:120px;padding:2px 0;background:transparent">
+      </div>
+
+      <div id="panelists-dropdown"
+           style="display:none;position:absolute;z-index:999;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:220px;overflow-y:auto;margin-top:4px;width:100%">
+        {% for emp in employees %}
+        <div class="panelists-opt" data-id="{{ emp.id }}" data-name="{{ emp }}"
+             style="padding:9px 14px;font-size:13px;cursor:pointer;color:#1f2937">{{ emp }}</div>
+        {% endfor %}
+      </div>
+
+      <select name="panelists" multiple id="panelists-hidden" style="display:none" required>
+        {% for emp in employees %}<option value="{{ emp.id }}">{{ emp }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <!-- Interview Rounds -->
+    <div class="ui-panel__title" style="font-size:16px;margin-top:8px;margin-bottom:12px">Interview Rounds</div>
+    <div id="rounds-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px">
+      <div class="round-row" style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #E0E0E0;border-radius:8px;background:#FAFAFA">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="round-badge" style="width:24px;height:24px;background:#278E53;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</span>
+          <input class="ui-form-input" name="round_label" style="flex:1" type="text" value="Technical Interview" placeholder="Round label">
+          <button type="button" onclick="removeRound(this)" style="border:none;background:none;color:#C62828;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
+        </div>
+        <div style="display:flex;gap:10px;padding-left:34px">
+          <div style="flex:1">
+            <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Date *</label>
+            <input class="ui-form-input" type="date" name="round_date" style="width:100%" required>
+          </div>
+          <div style="flex:1">
+            <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Time</label>
+            <input class="ui-form-input" type="time" name="round_time" style="width:100%">
+          </div>
+        </div>
+        <div style="padding-left:34px">
+          <label style="font-size:11px;color:#888;display:block;margin-bottom:4px">Interviewers for this round</label>
+          <div class="rpnl-widget" style="min-height:36px;border:1px solid #E0E0E0;border-radius:8px;padding:5px 10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;background:#fff;cursor:pointer;position:relative">
+            <span class="rpnl-empty" style="color:#aaa;font-size:12px">Add panelists above first</span>
+            <div class="rpnl-dropdown" style="display:none;position:absolute;left:0;top:calc(100% + 4px);width:100%;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;padding:4px 0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button type="button" onclick="addRound()" class="ui-btn-outlined" style="height:36px;font-size:14px;padding:0 14px">
+      <span style="font-size:18px">+</span> Add Round
+    </button>
+
+    <div class="ui-divider"></div>
+
+    <div class="ui-form-group">
+      <label class="ui-form-label">Additional Notes</label>
+      <textarea class="ui-form-textarea" name="description" rows="3" placeholder="Notes for panelists or candidate…"></textarea>
+    </div>
+
+    <!-- Hidden: serialized round interviewers -->
+    <input type="hidden" name="round_interviewers_json" id="round-interviewers-json" value="[]">
+
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <a href="/ui/interview/" class="ui-btn-outlined">Cancel</a>
+      <button type="submit" class="ui-btn-primary">Schedule Interview</button>
+    </div>
+  </form>
+
+  <!-- Candidate Summary side panel -->
+  <div class="ui-panel" style="padding:20px 24px">
+    <div class="ui-panel__title" style="font-size:16px">Candidate Summary</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="ui-avatar" id="csum-avatar" style="width:48px;height:48px;font-size:18px;flex-shrink:0">?</div>
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:15px;word-break:break-word" id="csum-name">Select a candidate</div>
+        <div style="font-size:12px;color:#278E53;font-weight:500;margin-top:1px" id="csum-job"></div>
+        <div style="font-size:12px;color:#888" id="csum-dept"></div>
+      </div>
+    </div>
+    <div id="csum-details" style="display:none">
+      <div class="ui-kv-row"><span class="ui-kv-label">Email</span><span class="ui-kv-value" id="csum-email" style="word-break:break-all;font-size:11px">—</span></div>
+      <div class="ui-kv-row" id="csum-phone-row"><span class="ui-kv-label">Phone</span><span class="ui-kv-value" id="csum-phone">—</span></div>
+      <div class="ui-kv-row"><span class="ui-kv-label">Source</span><span class="ui-kv-value" id="csum-source">—</span></div>
+    </div>
+    <div id="csum-empty-msg" style="font-size:13px;color:#888;margin-bottom:16px">Details will appear here</div>
+    <div class="ui-divider"></div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      <p>An invitation email with .ics calendar attachment will be sent to:</p>
+      <ul style="padding-left:16px;margin-top:6px">
+        <li>All selected panelists</li>
+        <li>The candidate</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* ── Field sizing ── */
+.ui-form-input, .ui-form-select, .ui-form-textarea {
+  border-radius: 8px !important;
+  box-sizing: border-box;
+  width: 100%;
+}
+.ui-form-select, #panelists-box { min-height: 42px; }
+.ui-form-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+/* Fix Safari: font-size:12px+padding misaligns the time/date segment click areas */
+input[type="time"].ui-form-input,
+input[type="date"].ui-form-input {
+  font-size: 14px;
+  padding: 6px 8px;
+  cursor: pointer;
+  -webkit-appearance: auto;
+  appearance: auto;
+}
+#panelists-box { border-radius: 8px; box-sizing: border-box; }
+#panelists-box:focus-within { border-color: #76B590; }
+.panelists-opt:hover { background: #F0F8F3; }
+.panelists-opt.selected { color: #aaa; pointer-events: none; }
+.panelists-opt.selected::after { content: ' ✓'; color: #278E53; }
+
+/* ── Panelist pill (global + per-round) ── */
+.panelists-pill, .rpnl-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 26px; padding: 0 10px;
+  border: 1px solid #D0E8D8; border-radius: 20px;
+  font-size: 12px; font-weight: 500; color: #278E53; background: #F0F8F3;
+  white-space: nowrap;
+}
+.panelists-pill button, .rpnl-pill button {
+  border: none; background: none; color: #278E53; cursor: pointer;
+  padding: 0; line-height: 1; font-size: 14px; display: flex; align-items: center;
+}
+/* ── Per-round panelist widget ── */
+.rpnl-widget { transition: border-color .15s; }
+.rpnl-widget:focus-within { border-color: #76B590; }
+.rpnl-option {
+  padding: 8px 14px; font-size: 13px; cursor: pointer; color: #1f2937;
+  display: flex; align-items: center; gap: 8px;
+}
+.rpnl-option:hover { background: #F0F8F3; }
+.rpnl-option.selected { color: #aaa; }
+.rpnl-option.selected .rpnl-check { opacity: 1; }
+.rpnl-check { color: #278E53; font-size: 16px; margin-left: auto; opacity: 0; }
+.rpnl-empty-msg { padding: 10px 14px; font-size: 12px; color: #aaa; }
+</style>
+
+<script>
+/* ════════════════════════════════════════════════════
+   GLOBAL PANELISTS STATE
+   Shared with per-round widgets via window.gPanelists
+   ════════════════════════════════════════════════════ */
+window.gPanelists = new Map(); // id -> name
+
+function gPanelistAdd(id, name) {
+  id = String(id);
+  gPanelists.set(id, name);
+  document.querySelectorAll('.rpnl-widget').forEach(w => rpnlAdd(w, id, name));
+}
+function gPanelistRemove(id) {
+  id = String(id);
+  gPanelists.delete(id);
+  document.querySelectorAll('.rpnl-widget').forEach(w => rpnlRemove(w, id));
+}
+
+/* ════════════════════════════════════════════════════
+   GLOBAL PANELISTS WIDGET
+   ════════════════════════════════════════════════════ */
+(function () {
+  const box    = document.getElementById('panelists-box');
+  const search = document.getElementById('panelists-search');
+  const dd     = document.getElementById('panelists-dropdown');
+  const hidden = document.getElementById('panelists-hidden');
+  const ph     = document.getElementById('panelists-placeholder');
+  const opts   = Array.from(dd.querySelectorAll('.panelists-opt'));
+  const sel    = new Set();
+
+  function syncHidden() {
+    Array.from(hidden.options).forEach(o => { o.selected = sel.has(o.value); });
+    ph.style.display = sel.size ? 'none' : '';
+  }
+
+  function addPill(id, name) {
+    if (sel.has(id)) return;
+    sel.add(id);
+    const pill = document.createElement('span');
+    pill.className = 'panelists-pill';
+    pill.dataset.id = id;
+    pill.innerHTML = `${name}<button type="button" title="Remove">×</button>`;
+    pill.querySelector('button').addEventListener('click', e => {
+      e.stopPropagation();
+      pill.remove();
+      sel.delete(id);
+      opts.find(o => o.dataset.id === id)?.classList.remove('selected');
+      syncHidden();
+      gPanelistRemove(id);
+    });
+    box.insertBefore(pill, search);
+    opts.find(o => o.dataset.id === id)?.classList.add('selected');
+    syncHidden();
+    search.value = '';
+    filterOpts('');
+    gPanelistAdd(id, name);
+  }
+
+  function filterOpts(q) {
+    q = q.toLowerCase();
+    let vis = 0;
+    opts.forEach(o => {
+      const show = o.dataset.name.toLowerCase().includes(q);
+      o.style.display = show ? '' : 'none';
+      if (show) vis++;
+    });
+    dd.style.display = vis ? '' : 'none';
+  }
+
+  search.addEventListener('input', () => filterOpts(search.value));
+  search.addEventListener('focus', () => { filterOpts(search.value); dd.style.display = ''; });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('panelists-widget').contains(e.target)) dd.style.display = 'none';
+  });
+  opts.forEach(o => o.addEventListener('click', () => { addPill(o.dataset.id, o.dataset.name); search.focus(); }));
+  document.getElementById('panelists-widget').style.position = 'relative';
+
+  // Auto-preselect requester + approval chain
+  const defaults = {{ default_panelist_ids_json|safe }};
+  defaults.forEach(id => {
+    const opt = opts.find(o => o.dataset.id === String(id));
+    if (opt) addPill(opt.dataset.id, opt.dataset.name);
+  });
+})();
+
+/* ════════════════════════════════════════════════════
+   PER-ROUND PANELIST WIDGET
+   ════════════════════════════════════════════════════ */
+function rpnlInit(widget) {
+  const dd = widget.querySelector('.rpnl-dropdown');
+  const selIds = new Set();
+
+  function renderEmpty() {
+    const empty = widget.querySelector('.rpnl-empty');
+    if (empty) {
+      empty.textContent = gPanelists.size === 0
+        ? 'Add panelists above first'
+        : 'Click to select interviewers…';
+    }
+  }
+
+  function buildOptions() {
+    dd.innerHTML = '';
+    if (gPanelists.size === 0) {
+      dd.innerHTML = '<div class="rpnl-empty-msg">No panelists selected above</div>';
+      return;
+    }
+    gPanelists.forEach((name, id) => {
+      const row = document.createElement('div');
+      row.className = 'rpnl-option' + (selIds.has(id) ? ' selected' : '');
+      row.dataset.id = id;
+      row.innerHTML = `${name}<span class="material-symbols-outlined rpnl-check">check</span>`;
+      row.addEventListener('click', e => {
+        e.stopPropagation();
+        if (selIds.has(id)) { selIds.delete(id); row.classList.remove('selected'); }
+        else { selIds.add(id); row.classList.add('selected'); }
+        syncPills();
+      });
+      dd.appendChild(row);
+    });
+  }
+
+  function syncPills() {
+    // Remove pills not in selIds
+    widget.querySelectorAll('.rpnl-pill').forEach(p => {
+      if (!selIds.has(p.dataset.id)) p.remove();
+    });
+    // Add pills for selIds
+    const emptySpan = widget.querySelector('.rpnl-empty');
+    selIds.forEach(id => {
+      if (!widget.querySelector(`.rpnl-pill[data-id="${id}"]`)) {
+        const name = gPanelists.get(id) || id;
+        const pill = document.createElement('span');
+        pill.className = 'rpnl-pill';
+        pill.dataset.id = id;
+        pill.innerHTML = `${name}<button type="button" title="Remove">×</button>`;
+        pill.querySelector('button').addEventListener('click', e => {
+          e.stopPropagation();
+          selIds.delete(id);
+          pill.remove();
+          const opt = dd.querySelector(`.rpnl-option[data-id="${id}"]`);
+          if (opt) opt.classList.remove('selected');
+          renderEmpty();
+        });
+        widget.insertBefore(pill, emptySpan || dd);
+      }
+    });
+    if (emptySpan) emptySpan.style.display = selIds.size ? 'none' : '';
+    renderEmpty();
+  }
+
+  // Toggle selection
+  window.toggleRpnl = window.toggleRpnl || function(w, id, name) {};
+  const _toggle = function(w, id, name) {
+    if (w !== widget) return;
+    if (selIds.has(id)) {
+      selIds.delete(id);
+    } else {
+      selIds.add(id);
+    }
+    syncPills();
+    buildOptions();
+  };
+
+  widget._rpnl = {
+    getSelected: () => Array.from(selIds),
+    onAdd: (id, name) => { renderEmpty(); buildOptions(); },
+    onRemove: (id) => { selIds.delete(id); syncPills(); buildOptions(); },
+  };
+
+  widget.addEventListener('click', e => {
+    if (e.target.closest('.rpnl-pill')) return;
+    buildOptions();
+    const isOpen = dd.style.display !== 'none';
+    document.querySelectorAll('.rpnl-dropdown').forEach(d => d.style.display = 'none');
+    if (!isOpen) dd.style.display = '';
+  });
+
+  dd.addEventListener('click', e => {
+    const opt = e.target.closest('.rpnl-option');
+    if (!opt) return;
+    e.stopPropagation();
+    const id = opt.dataset.id, name = gPanelists.get(id) || '';
+    if (selIds.has(id)) { selIds.delete(id); opt.classList.remove('selected'); }
+    else { selIds.add(id); opt.classList.add('selected'); }
+    syncPills();
+  });
+
+  renderEmpty();
+}
+
+function rpnlAdd(widget, id, name) {
+  if (widget._rpnl) widget._rpnl.onAdd(id, name);
+}
+function rpnlRemove(widget, id) {
+  if (widget._rpnl) widget._rpnl.onRemove(id);
+}
+
+// Close per-round dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.rpnl-widget')) {
+    document.querySelectorAll('.rpnl-dropdown').forEach(d => d.style.display = 'none');
+  }
+});
+
+// Init first round widget
+document.querySelectorAll('.rpnl-widget').forEach(rpnlInit);
+
+/* ════════════════════════════════════════════════════
+   MEETING PLATFORM ↔ LINK TOGGLE
+   ════════════════════════════════════════════════════ */
+(function () {
+  const platformSel = document.getElementById('platform-select');
+  const linkInput   = document.getElementById('meeting-link-input');
+  const linkLabel   = document.getElementById('link-label');
+
+  function updateLink() {
+    const inPerson = platformSel.value === 'manual';
+    linkInput.disabled = inPerson;
+    linkInput.style.color           = inPerson ? '#bbb' : '';
+    linkInput.style.borderColor     = inPerson ? '#E8E8E8' : '';
+    linkInput.style.background      = inPerson ? '#F8F8F8' : '';
+    linkInput.style.pointerEvents   = inPerson ? 'none' : '';
+    linkLabel.style.color           = inPerson ? '#bbb' : '';
+    if (inPerson) linkInput.value = '';
+  }
+
+  platformSel.addEventListener('change', updateLink);
+  updateLink();
+})();
+
+/* ════════════════════════════════════════════════════
+   ADD / REMOVE ROUNDS
+   ════════════════════════════════════════════════════ */
+function addRound() {
+  const list = document.getElementById('rounds-list');
+  const n = list.querySelectorAll('.round-row').length + 1;
+  const div = document.createElement('div');
+  div.className = 'round-row';
+  div.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #E0E0E0;border-radius:8px;background:#FAFAFA';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="round-badge" style="width:24px;height:24px;background:#278E53;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${n}</span>
+      <input class="ui-form-input" name="round_label" style="flex:1" type="text" placeholder="Round ${n} label">
+      <button type="button" onclick="removeRound(this)" style="border:none;background:none;color:#C62828;cursor:pointer"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
+    </div>
+    <div style="display:flex;gap:10px;padding-left:34px">
+      <div style="flex:1">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Date *</label>
+        <input class="ui-form-input" type="date" name="round_date" style="width:100%" required>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:3px">Time</label>
+        <input class="ui-form-input" type="time" name="round_time" style="width:100%">
+      </div>
+    </div>
+    <div style="padding-left:34px">
+      <label style="font-size:11px;color:#888;display:block;margin-bottom:4px">Interviewers for this round</label>
+      <div class="rpnl-widget" style="min-height:36px;border:1px solid #E0E0E0;border-radius:8px;padding:5px 10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;background:#fff;cursor:pointer;position:relative">
+        <span class="rpnl-empty" style="color:#aaa;font-size:12px">Add panelists above first</span>
+        <div class="rpnl-dropdown" style="display:none;position:absolute;left:0;top:calc(100% + 4px);width:100%;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;padding:4px 0"></div>
+      </div>
+    </div>`;
+  list.appendChild(div);
+  rpnlInit(div.querySelector('.rpnl-widget'));
+}
+
+function removeRound(btn) {
+  btn.closest('.round-row').remove();
+  document.querySelectorAll('#rounds-list .round-badge').forEach((b, i) => { b.textContent = i + 1; });
+}
+
+/* ════════════════════════════════════════════════════
+   FORM SUBMIT — serialize round interviewers as JSON
+   ════════════════════════════════════════════════════ */
+document.getElementById('interview-form').addEventListener('submit', function () {
+  const rows = document.querySelectorAll('#rounds-list .round-row');
+  const data = Array.from(rows).map(row => {
+    const w = row.querySelector('.rpnl-widget');
+    return w && w._rpnl ? w._rpnl.getSelected() : [];
+  });
+  document.getElementById('round-interviewers-json').value = JSON.stringify(data);
+});
+
+/* ════════════════════════════════════════════════════
+   CANDIDATE SUMMARY
+   ════════════════════════════════════════════════════ */
+(function () {
+  const sel      = document.getElementById('candidate-select');
+  const avatar   = document.getElementById('csum-avatar');
+  const nameEl   = document.getElementById('csum-name');
+  const jobEl    = document.getElementById('csum-job');
+  const deptEl   = document.getElementById('csum-dept');
+  const details  = document.getElementById('csum-details');
+  const emptyMsg = document.getElementById('csum-empty-msg');
+  const emailEl  = document.getElementById('csum-email');
+  const phoneEl  = document.getElementById('csum-phone');
+  const phoneRow = document.getElementById('csum-phone-row');
+  const sourceEl = document.getElementById('csum-source');
+
+  function update() {
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) {
+      avatar.textContent = '?';
+      nameEl.textContent = 'Select a candidate';
+      jobEl.textContent  = '';
+      deptEl.textContent = '';
+      details.style.display  = 'none';
+      emptyMsg.style.display = '';
+      return;
+    }
+    const n = opt.dataset.name || opt.text;
+    avatar.textContent  = n.slice(0, 2).toUpperCase();
+    nameEl.textContent  = n;
+    jobEl.textContent   = opt.dataset.job  || '';
+    deptEl.textContent  = opt.dataset.dept || '';
+    emailEl.textContent = opt.dataset.email  || '—';
+    sourceEl.textContent= opt.dataset.source || '—';
+    const ph = opt.dataset.phone;
+    phoneEl.textContent      = ph || '—';
+    phoneRow.style.display   = ph ? '' : 'none';
+    details.style.display    = '';
+    emptyMsg.style.display   = 'none';
+  }
+
+  sel.addEventListener('change', update);
+  if (sel.value) update();
+})();
+</script>
+{% endblock %}

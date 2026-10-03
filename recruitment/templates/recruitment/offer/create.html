@@ -1,0 +1,158 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Offer Letter" %} — {{ candidate.name }}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:760px;margin:24px auto;padding:16px;">
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:24px;">
+    <a href="{% url 'offer-list' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Offer Letters" %}</a>
+    <h2 style="margin:8px 0 16px;">{% trans "Create Offer Letter" %}</h2>
+
+    <!-- Candidate info card -->
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px 18px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <span style="font-size:11px;color:#0369a1;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">{% trans "Candidate" %}</span>
+        <div style="font-size:14px;font-weight:600;color:#0c4a6e;margin-top:2px;">{{ candidate.name }}</div>
+      </div>
+      <div>
+        <span style="font-size:11px;color:#0369a1;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">{% trans "Email" %}</span>
+        <div style="font-size:14px;color:#0c4a6e;margin-top:2px;">{{ candidate.email }}</div>
+      </div>
+      <div>
+        <span style="font-size:11px;color:#0369a1;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">{% trans "Position" %}</span>
+        <div style="font-size:14px;color:#0c4a6e;margin-top:2px;">{{ candidate.job_position_id|default:"—" }}</div>
+      </div>
+      <div>
+        <span style="font-size:11px;color:#0369a1;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">{% trans "Department" %}</span>
+        <div style="font-size:14px;color:#0c4a6e;margin-top:2px;">{{ dept|default:"—" }}</div>
+      </div>
+    </div>
+
+    {% if templates %}
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+      <label style="font-size:12px;color:#166534;font-weight:600;display:block;margin-bottom:6px;">
+        ✨ {% trans "Load a saved template" %}
+      </label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="tplSelector" style="flex:1;padding:7px;border:1px solid #86efac;border-radius:6px;font-size:13px;">
+          <option value="">— {% trans "Choose template" %} —</option>
+          {% for tpl in templates %}
+          <option value="{{ tpl.id }}" {% if default_tpl.id == tpl.id %}selected{% endif %}>{{ tpl.name }}{% if tpl.is_default %} ★{% endif %}</option>
+          {% endfor %}
+        </select>
+        <button type="button" onclick="loadSelectedTemplate()"
+          style="padding:7px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;font-size:13px;">
+          {% trans "Load" %}
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="template_id" id="chosenTemplateId">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Position" %} *</label>
+          <input type="text" name="position" required
+            value="{{ candidate.job_position_id|default:'' }}"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Department" %}</label>
+          <input type="text" name="department" value="{{ dept }}"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Currency" %}</label>
+          <select name="currency" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;">
+            <option value="OMR">OMR</option>
+            <option value="USD">USD</option>
+            <option value="AED">AED</option>
+            <option value="SAR">SAR</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Basic Salary" %} *</label>
+          <input type="number" name="basic_salary" min="0" step="0.01" required
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Gross Salary" %}</label>
+          <input type="number" name="gross_salary" min="0" step="0.01"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Joining Date" %} *</label>
+          <input type="date" name="joining_date" required
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Probation Period (months)" %}</label>
+          <input type="number" name="probation_period" value="3" min="0"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Contract Duration (months, blank = permanent)" %}</label>
+          <input type="number" name="contract_duration" min="1"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;">
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Job Description" %}</label>
+          <textarea name="job_description" rows="3"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">{% trans "Terms & Conditions" %}</label>
+          <textarea name="terms_conditions" rows="3"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:3px;">
+            {% trans "Letter Body (template)" %}
+            <span style="font-weight:400;"> — {% trans "supports" %} <code>{{candidate_name}}</code>, <code>{{position}}</code>, <code>{{basic_salary}}</code> {% trans "etc." %}</span>
+          </label>
+          <textarea name="letter_template" id="letterTemplateField" rows="10"
+            style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;resize:vertical;box-sizing:border-box;font-family:monospace;font-size:13px;"
+            placeholder="Dear {{candidate_name}},&#10;&#10;We are pleased to offer you the position of {{position}}..."></textarea>
+        </div>
+
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+        <a href="{% url 'offer-list' %}" style="padding:9px 16px;border-radius:6px;background:#e5e7eb;color:#111827;text-decoration:none;">{% trans "Cancel" %}</a>
+        <button type="submit" style="padding:9px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Create Offer Letter" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</main>
+<script>
+function loadSelectedTemplate(){
+  const sel = document.getElementById('tplSelector');
+  const id = sel && sel.value;
+  if(!id) return;
+  document.getElementById('chosenTemplateId').value = id;
+  fetch(`/recruitment/offers/templates/${id}/preview/`)
+    .then(r => r.text())
+    .then(text => {
+      document.getElementById('letterTemplateField').value = text;
+    });
+}
+(function(){
+  const sel = document.getElementById('tplSelector');
+  if(sel && sel.value) loadSelectedTemplate();
+})();
+</script>
+{% endblock %}

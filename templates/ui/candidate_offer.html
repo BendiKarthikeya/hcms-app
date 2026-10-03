@@ -1,0 +1,542 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}{{ c.name }} — Offer — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+
+<!-- ── Breadcrumb ─────────────────────────────────────────────────────────── -->
+<div class="ui-breadcrumb" style="margin-bottom:16px">
+  <span class="material-symbols-outlined">arrow_back</span>
+  <a href="/ui/candidates/" style="color:#6D6D6D;text-decoration:none">Back to Candidates</a>
+  <span style="color:#ccc;margin:0 6px">/</span>
+  <a href="/ui/candidate/{{ c.id }}/" style="color:#6D6D6D;text-decoration:none">{{ c.name }}</a>
+  <span style="color:#ccc;margin:0 6px">/</span>
+  <span style="color:#111">Offer</span>
+</div>
+
+<!-- ── Candidate Header ───────────────────────────────────────────────────── -->
+<div class="coffer-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="ui-avatar" style="width:64px;height:64px;font-size:22px;flex-shrink:0">
+      {{ c.name|slice:":2"|upper }}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:20px;font-weight:700;color:#111">{{ c.name }}</span>
+        {% if c.canceled %}
+          <span class="ui-pill ui-pill--red" style="font-size:12px">Rejected</span>
+        {% elif c.hired %}
+          <span class="ui-pill ui-pill--blue" style="font-size:12px">Hired</span>
+        {% else %}
+          <span class="ui-pill ui-pill--green" style="font-size:12px">Active</span>
+        {% endif %}
+      </div>
+      <div style="font-size:13px;color:#555;margin-top:3px">
+        {% if c.recruitment_id %}{{ c.recruitment_id.title }}{% elif c.job_position_id %}{{ c.job_position_id }}{% else %}—{% endif %}
+        {% if c.recruitment_id and c.recruitment_id.reference_number %}&nbsp;·&nbsp;<span style="color:#888">{{ c.recruitment_id.reference_number }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    {% if offer %}
+    <a href="{% url 'ui:offer-detail' offer.id %}" target="_blank"
+       class="ui-btn-outlined"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">download</span>Download Offer Letter
+    </a>
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}&update={{ offer.id }}"
+       class="ui-btn-primary"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span>Send Offer
+    </a>
+    {% else %}
+    <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}"
+       class="ui-btn-primary"
+       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span>Create Offer
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Sub-tab navigation ─────────────────────────────────────────────────── -->
+<div class="cdet-tabs">
+  <a href="/ui/candidate/{{ c.id }}/?tab=profile"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">account_circle</span>Profile
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/?tab=documents"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">file_copy</span>Documents
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/?tab=interviews"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">calendar_month</span>Interviews
+  </a>
+  <a href="/ui/candidate/{{ c.id }}/communication/"
+     class="cdet-tab" style="text-decoration:none">
+    <span class="material-symbols-outlined">forum</span>Communication
+  </a>
+  <a href="{% url 'ui:candidate-offer' c.id %}"
+     class="cdet-tab active" style="text-decoration:none">
+    <span class="material-symbols-outlined">handshake</span>Offer
+  </a>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+{% if offer %}
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     OFFER EXISTS — full detail layout
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Offer created notice banner -->
+<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#F0F8F4;border:1px solid #C8E6D0;border-radius:10px;margin-bottom:20px">
+  <span class="material-symbols-outlined" style="font-size:18px;color:#278E53">check_circle</span>
+  <span style="font-size:13px;color:#1F5F2F">
+    Offer letter created — go to the
+    <a href="{% url 'ui:offer-detail' offer.id %}" style="color:#278E53;font-weight:600;text-decoration:none">offer letter page</a>
+    to view and edit the offer letter.
+  </span>
+</div>
+
+<div class="coffer-grid">
+
+  <!-- ── Left column ──────────────────────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+
+    <!-- Offer Information card -->
+    <div class="ui-panel">
+      <div class="ui-panel__title">Offer Information</div>
+      <div class="coffer-info-grid">
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Candidate</div>
+          <div class="coffer-field__value">
+            {{ c.name }}
+            <span class="ui-pill ui-pill--green" style="font-size:11px;margin-left:6px">Active</span>
+          </div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Offer ID</div>
+          <div class="coffer-field__value">
+            <span style="font-family:monospace">OFF-{{ offer.id|stringformat:"04d" }}</span>
+          </div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Job Title</div>
+          <div class="coffer-field__value">{{ offer.job_title|default:c.recruitment_id.title|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Department</div>
+          <div class="coffer-field__value">{{ offer.department|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Employment Type</div>
+          <div class="coffer-field__value">{{ offer.employment_type|default:"Full Time" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Work Location</div>
+          <div class="coffer-field__value">{{ offer.work_location|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Date of Joining</div>
+          <div class="coffer-field__value">{{ offer.joining_date|date:"d M Y"|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Offer Expiry Date</div>
+          <div class="coffer-field__value">{{ offer.expiry_date|date:"d M Y"|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Probation Period</div>
+          <div class="coffer-field__value">{{ offer.probation_period|default:"—" }}</div>
+        </div>
+
+        <div class="coffer-field">
+          <div class="coffer-field__label">Status</div>
+          <div class="coffer-field__value">
+            {% if offer.status == "approved" or offer.status == "accepted" %}
+              <span class="ui-pill ui-pill--green">{{ offer.status|capfirst }}</span>
+            {% elif offer.status == "rejected" %}
+              <span class="ui-pill ui-pill--red">Rejected</span>
+            {% elif offer.status == "pending_approval" %}
+              <span class="ui-pill ui-pill--amber">Pending Approval</span>
+            {% elif offer.status == "sent" %}
+              <span class="ui-pill ui-pill--blue">Sent</span>
+            {% elif offer.status == "draft" %}
+              <span class="ui-pill ui-pill--grey">Draft</span>
+            {% else %}
+              <span class="ui-pill ui-pill--grey">{{ offer.status|capfirst }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Benefits & Perks card -->
+    <div class="ui-panel">
+      <div class="ui-panel__title">Benefits &amp; Perks</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        {% for benefit in "Health Insurance,Annual Leave (30 days),Performance Bonus,Flexible Working,Professional Development,Employee Wellness Program"|split:"," %}
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333">
+          <span class="material-symbols-outlined" style="font-size:16px;color:#278E53;flex-shrink:0">check_circle</span>
+          {{ benefit }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Documents card -->
+    <div class="ui-panel" style="padding:0;overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:1px solid #F0F0F0">
+        <div class="ui-panel__title" style="margin-bottom:0">Documents</div>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        {% for doc_name, filename in doc_list %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #F8F8F8">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#C62828;flex-shrink:0">picture_as_pdf</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#111">{{ doc_name }}</div>
+              <div style="font-size:11px;color:#999;margin-top:1px">{{ filename }}</div>
+            </div>
+          </div>
+          <a href="#"
+             style="height:30px;padding:0 12px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:12px;font-weight:500;color:#333;display:inline-flex;align-items:center;gap:4px;text-decoration:none">
+            <span class="material-symbols-outlined" style="font-size:13px">download</span>Download
+          </a>
+        </div>
+        {% empty %}
+        <!-- fallback static doc list -->
+        {% for item in "Offer Letter|offer-letter-{{ c.name|lower|slugify }}.pdf,CTC Breakup|ctc-breakup.pdf,Company Policy|company-policy.pdf,Terms & Conditions|terms-conditions.pdf"|split:"," %}
+        {% with parts=item|split:"|" %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #F8F8F8">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#C62828;flex-shrink:0">picture_as_pdf</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#111">{{ parts.0 }}</div>
+              <div style="font-size:11px;color:#999;margin-top:1px">{{ parts.1 }}</div>
+            </div>
+          </div>
+          <a href="#"
+             style="height:30px;padding:0 12px;border:1px solid #E0E0E0;border-radius:6px;background:#fff;font-size:12px;font-weight:500;color:#333;display:inline-flex;align-items:center;gap:4px;text-decoration:none">
+            <span class="material-symbols-outlined" style="font-size:13px">download</span>Download
+          </a>
+        </div>
+        {% endwith %}
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ── Right column ─────────────────────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:20px">
+
+    <!-- Compensation & Benefits card -->
+    <div class="ui-panel">
+      <div class="ui-panel__title">Compensation &amp; Benefits</div>
+
+      <!-- Annual CTC highlight -->
+      <div style="padding:14px 0 14px;border-bottom:1px solid #F0F0F0;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#888;letter-spacing:.4px;margin-bottom:4px">Annual CTC</div>
+        <div style="font-size:32px;font-weight:700;color:#278E53">
+          {% if offer.salary %}OMR {{ offer.salary|floatformat:0 }}{% else %}—{% endif %}
+        </div>
+      </div>
+
+      <!-- Breakdown rows -->
+      <div style="display:flex;flex-direction:column;gap:2px">
+        {% if offer.basic_salary %}
+        <div class="coffer-comp-row">
+          <span>Base Salary</span>
+          <span>OMR {{ offer.basic_salary|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+        {% if offer.allowances %}
+        <div class="coffer-comp-row">
+          <span>Allowance</span>
+          <span>OMR {{ offer.allowances|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+        {% if offer.bonus %}
+        <div class="coffer-comp-row">
+          <span>Bonus</span>
+          <span>OMR {{ offer.bonus|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+        <div class="coffer-comp-row">
+          <span>Payment Frequency</span>
+          <span>Monthly</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-sign chain card -->
+    {% if approvals %}
+    <div class="ui-panel">
+      <div class="ui-panel__title">E-Sign Chain</div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        {% for ap in approvals %}
+        <div class="coffer-esign-row {% if not forloop.last %}coffer-esign-row--lined{% endif %}">
+          <!-- Step connector dot -->
+          <div class="coffer-esign-step">
+            <div class="coffer-esign-dot
+              {% if ap.display_status == 'approved' %}coffer-esign-dot--approved
+              {% elif ap.display_status == 'active' %}coffer-esign-dot--active
+              {% elif ap.display_status == 'rejected' %}coffer-esign-dot--rejected
+              {% else %}coffer-esign-dot--waiting{% endif %}">
+              {% if ap.display_status == 'approved' %}
+                <span class="material-symbols-outlined" style="font-size:13px;color:#fff">check</span>
+              {% elif ap.display_status == 'rejected' %}
+                <span class="material-symbols-outlined" style="font-size:13px;color:#fff">close</span>
+              {% else %}
+                <span style="font-size:11px;font-weight:700;color:#fff">{{ forloop.counter }}</span>
+              {% endif %}
+            </div>
+            {% if not forloop.last %}<div class="coffer-esign-line"></div>{% endif %}
+          </div>
+          <!-- Approver info -->
+          <div style="flex:1;padding-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#111">
+                  {% if ap.approver.employee_user_id %}
+                    {{ ap.approver.employee_user_id.get_full_name|default:ap.approver.employee_user_id.email }}
+                  {% else %}
+                    {{ ap.approver }}
+                  {% endif %}
+                </div>
+                <div style="font-size:11px;color:#888;margin-top:2px">
+                  {{ ap.approver.job_position_id|default:"" }}
+                </div>
+              </div>
+              {% if ap.display_status == 'approved' %}
+                <span class="ui-pill ui-pill--blue" style="font-size:11px">Approved</span>
+              {% elif ap.display_status == 'active' %}
+                <span class="ui-pill ui-pill--green" style="font-size:11px">Active</span>
+              {% elif ap.display_status == 'rejected' %}
+                <span class="ui-pill ui-pill--red" style="font-size:11px">Rejected</span>
+              {% else %}
+                <span class="ui-pill ui-pill--grey" style="font-size:11px">Waiting</span>
+              {% endif %}
+            </div>
+            {% if ap.signature_image %}
+            <div style="margin-top:8px">
+              <img src="{{ ap.signature_image }}" alt="Signature"
+                   style="max-height:40px;border:1px solid #E8E8E8;border-radius:4px;padding:2px 6px;background:#fff">
+            </div>
+            {% endif %}
+            {% if ap.acted_at %}
+            <div style="font-size:11px;color:#aaa;margin-top:4px">
+              {{ ap.acted_at|date:"d M Y, g:i A" }}
+            </div>
+            {% endif %}
+            {% if ap.feedback %}
+            <div style="font-size:12px;color:#C62828;margin-top:4px;font-style:italic">"{{ ap.feedback }}"</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Action buttons card -->
+    <div class="ui-panel" style="padding:16px 20px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="{% url 'ui:offer-detail' offer.id %}" target="_blank"
+           class="ui-btn-outlined"
+           style="height:40px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:600;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:17px">download</span>Download Offer Letter
+        </a>
+        <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}&update={{ offer.id }}"
+           class="ui-btn-outlined"
+           style="height:40px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:17px">edit</span>Update Offer Letter
+        </a>
+        <a href="{% url 'ui:offer-detail' offer.id %}"
+           class="ui-btn-primary"
+           style="height:40px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;text-decoration:none">
+          <span class="material-symbols-outlined" style="font-size:17px">open_in_new</span>Go to Offer Letter
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /right -->
+</div><!-- /grid -->
+
+{% else %}
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NO OFFER — empty state
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div style="text-align:center;padding:72px 24px;background:#fff;border:1px solid #EFEFEF;border-radius:14px">
+  <span class="material-symbols-outlined" style="font-size:56px;color:#D0D0D0;display:block;margin-bottom:14px">handshake</span>
+  <div style="font-size:17px;font-weight:700;color:#333;margin-bottom:6px">No offer created yet</div>
+  <div style="font-size:13px;color:#999;margin-bottom:24px;max-width:360px;margin-left:auto;margin-right:auto">
+    Create an offer letter for {{ c.name }} to begin the hiring process.
+    Once created, the offer will go through the e-sign chain for approval.
+  </div>
+  <a href="{% url 'ui:offer-creator' %}?candidate={{ c.id }}"
+     class="ui-btn-primary"
+     style="height:40px;padding:0 24px;font-size:13px;display:inline-flex;align-items:center;gap:7px;text-decoration:none">
+    <span class="material-symbols-outlined" style="font-size:17px">add</span>Create Offer Letter
+  </a>
+</div>
+{% endif %}
+
+<!-- ── Styles ─────────────────────────────────────────────────────────────── -->
+<style>
+/* Breadcrumb */
+.ui-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6D6D6D;
+}
+.ui-breadcrumb .material-symbols-outlined { font-size: 18px; color: #999; }
+
+/* Header card */
+.coffer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 22px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+}
+
+/* Tab bar */
+.cdet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #EFEFEF;
+  margin-bottom: 24px;
+}
+.cdet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.cdet-tab .material-symbols-outlined { font-size: 17px; }
+.cdet-tab:hover { color: #278E53; }
+.cdet-tab.active { color: #278E53; border-bottom-color: #278E53; font-weight: 600; }
+
+/* Two-column grid */
+.coffer-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Info grid inside the card */
+.coffer-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.coffer-field {
+  padding: 10px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+.coffer-field:nth-last-child(-n+2) { border-bottom: none; }
+.coffer-field__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #999;
+  margin-bottom: 3px;
+}
+.coffer-field__value { font-size: 13px; color: #111; font-weight: 500; }
+
+/* Compensation rows */
+.coffer-comp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid #F5F5F5;
+  font-size: 13px;
+}
+.coffer-comp-row:last-child { border-bottom: none; }
+.coffer-comp-row span:first-child { color: #666; }
+.coffer-comp-row span:last-child { font-weight: 600; color: #111; }
+
+/* E-sign chain */
+.coffer-esign-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.coffer-esign-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+.coffer-esign-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #D0D0D0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.coffer-esign-dot--active   { background: #278E53; }
+.coffer-esign-dot--approved { background: #1565C0; }
+.coffer-esign-dot--rejected { background: #C62828; }
+.coffer-esign-dot--waiting  { background: #BDBDBD; }
+.coffer-esign-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #E8E8E8;
+  margin: 2px 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .coffer-grid { grid-template-columns: 1fr; }
+  .coffer-info-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+{% endblock %}

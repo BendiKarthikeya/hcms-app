@@ -1,0 +1,105 @@
+{% extends "ui/base.html" %}
+{% block title %}Notifications — HCMS{% endblock %}
+
+{% block content %}
+<style>
+.nf-list { background:#fff; border:1px solid #EFEFEF; border-radius:10px; overflow:hidden; }
+.nf-item { display:flex; align-items:flex-start; gap:12px; padding:14px 18px; border-bottom:1px solid #F5F5F5; cursor:pointer; }
+.nf-item:last-child { border-bottom:none; }
+.nf-item.unread { background:#F8FBF9; }
+.nf-item:hover { background:#F5F9F6; }
+.nf-dot { width:32px; height:32px; border-radius:50%; background:#E8F0EA; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.nf-dot .material-symbols-outlined { font-size:16px; color:#278E53; }
+.nf-body { flex:1; min-width:0; }
+.nf-verb { font-size:12px; font-weight:500; color:#222; }
+.nf-desc { font-size:11px; color:#666; margin-top:2px; }
+.nf-actor { font-size:11px; color:#999; margin-top:3px; }
+.nf-time { font-size:11px; color:#999; white-space:nowrap; }
+.nf-empty { padding:40px; text-align:center; color:#999; font-size:12px; }
+.nf-mark-btn { background:none; border:none; cursor:pointer; padding:2px 4px; color:#bbb; display:flex; align-items:center; flex-shrink:0; }
+.nf-mark-btn:hover { color:#278E53; }
+.nf-header-actions { display:flex; gap:8px; align-items:center; }
+</style>
+
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Notifications</div>
+    <div class="ui-page-subtitle">Recent activity and alerts</div>
+  </div>
+  {% if items %}
+  <div class="nf-header-actions">
+    <button class="ui-btn-outlined" id="nf-mark-all-btn">
+      <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;">done_all</span>
+      Mark all as read
+    </button>
+    <button class="ui-btn-danger" id="nf-clear-btn">
+      <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;">delete_sweep</span>
+      Clear all
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="nf-list" id="nf-list">
+  {% for n in items %}
+  <div class="nf-item{% if n.unread %} unread{% endif %}"
+       id="nf-item-{{ n.id }}"
+       data-id="{{ n.id }}"
+       data-redirect="{{ n.ui_redirect|default:'' }}">
+    <div class="nf-dot"><span class="material-symbols-outlined">notifications</span></div>
+    <div class="nf-body">
+      <div class="nf-verb">{{ n.verb }}</div>
+      {% if n.description %}<div class="nf-desc">{{ n.description }}</div>{% endif %}
+      <div class="nf-actor">
+        {{ n.timestamp|timesince }} ago by
+        {% if n.actor.employee_first_name %}{{ n.actor.employee_first_name }}{% elif n.data.label %}{{ n.data.label }}{% else %}System{% endif %}
+      </div>
+    </div>
+    <div class="nf-time">{{ n.timestamp|timesince }} ago</div>
+    {% if n.unread %}
+    <button class="nf-mark-btn" title="Mark as read" data-id="{{ n.id }}" onclick="event.stopPropagation(); nfMarkOne({{ n.id }});">
+      <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+    </button>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="nf-empty">You have no notifications.</div>
+  {% endfor %}
+</div>
+
+<script>
+const NF_CSRF = '{{ csrf_token }}';
+
+document.querySelectorAll('.nf-item[data-id]').forEach(function(item) {
+  item.addEventListener('click', function() {
+    const id = this.dataset.id;
+    const redirect = this.dataset.redirect;
+    nfMarkOne(id, redirect);
+  });
+});
+
+document.getElementById('nf-mark-all-btn') && document.getElementById('nf-mark-all-btn').addEventListener('click', function() {
+  fetch('/read-notifications', {headers: {'X-CSRFToken': NF_CSRF}}).then(function() { location.reload(); });
+});
+
+document.getElementById('nf-clear-btn') && document.getElementById('nf-clear-btn').addEventListener('click', function() {
+  fetch('/clear-notifications', {headers: {'X-CSRFToken': NF_CSRF}}).then(function() { location.reload(); });
+});
+
+function nfMarkOne(id, redirect) {
+  fetch('/mark-as-read-notification-json/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': NF_CSRF},
+    body: 'notification_id=' + id,
+  }).then(function() {
+    var item = document.getElementById('nf-item-' + id);
+    if (item) {
+      item.classList.remove('unread');
+      var btn = item.querySelector('.nf-mark-btn');
+      if (btn) btn.remove();
+    }
+    if (redirect) window.location.href = redirect;
+  });
+}
+</script>
+{% endblock %}

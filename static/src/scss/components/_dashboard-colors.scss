@@ -1,0 +1,174 @@
+// =============================================================================
+// Dashboard & Status Colors - Consistent Palette
+// =============================================================================
+// This file defines the standard color system used across all HCMS UI pages
+// All new UI pages should use these colors for consistency
+
+// Status Badge Colors (Consistent with Dashboard)
+// =============================================================================
+
+// SUCCESS - Green - For positive actions (Create, Approve, Active)
+.oh-badge--success,
+.oh-status--success,
+.oh-action--create {
+  background-color: hsl(148, 70%, 40%);
+  color: hsl(0, 0%, 100%);
+  
+  &.oh-badge {
+    border-color: hsl(148, 70%, 40%);
+  }
+}
+
+// DANGER/DELETE - Red - For destructive actions (Delete, Reject, Failed)
+.oh-badge--danger,
+.oh-status--danger,
+.oh-action--delete,
+.oh-action--rejected {
+  background-color: hsl(1, 64%, 49%);
+  color: hsl(0, 0%, 100%);
+  
+  &.oh-badge {
+    border-color: hsl(1, 64%, 49%);
+  }
+}
+
+// WARNING - Orange - For pending/caution actions (Modify, Pending, Review)
+.oh-badge--warning,
+.oh-status--warning,
+.oh-action--modify,
+.oh-action--pending {
+  background-color: hsl(37, 90%, 47%);
+  color: hsl(0, 0%, 100%);
+  
+  &.oh-badge {
+    border-color: hsl(37, 90%, 47%);
+  }
+}
+
+// NEUTRAL/INFO - Gray - For neutral/system actions (System, Info)
+.oh-badge--neutral,
+.oh-badge--info,
+.oh-status--neutral,
+.oh-status--info {
+  background-color: hsl(216, 18%, 64%);
+  color: hsl(0, 0%, 100%);
+  
+  &.oh-badge {
+    border-color: hsl(216, 18%, 64%);
+  }
+}
+
+// Light Variant Background Colors (for alert/notification containers)
+.oh-alert-bg--success {
+  background-color: hsl(137, 78%, 93%);
+  border-color: hsl(148, 70%, 40%);
+  color: hsl(148, 70%, 40%);
+}
+
+.oh-alert-bg--danger {
+  background-color: hsl(0, 75%, 97%);
+  border-color: hsl(1, 64%, 49%);
+  color: hsl(1, 64%, 49%);
+}
+
+.oh-alert-bg--warning {
+  background-color: hsl(48, 100%, 94%);
+  border-color: hsl(37, 90%, 47%);
+  color: hsl(37, 90%, 47%);
+}
+
+.oh-alert-bg--neutral {
+  background-color: hsl(213, 22%, 93%);
+  border-color: hsl(216, 18%, 64%);
+  color: hsl(216, 18%, 64%);
+}
+
+// Status Table Styling
+table.oh-table--status tbody tr {
+  border-bottom: 1px solid hsl(213, 22%, 93%);
+}
+
+table.oh-table--status thead {
+  background-color: hsl(0, 0%, 97.5%);
+  border-bottom: 1px solid hsl(213, 22%, 84%);
+}
+
+table.oh-table--status th {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid hsl(213, 22%, 93%);
+  color: hsl(0, 0%, 37%);
+}
+
+table.oh-table--status td {
+  padding: 12px;
+  border: 1px solid hsl(213, 22%, 93%);
+}
+
+// Dashboard Card Badges
+.oh-card-dashboard--badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 25px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+// Generic Status Indicator
+.oh-status-indicator {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.created {
+    @extend .oh-badge--success;
+  }
+  
+  &.modified {
+    @extend .oh-badge--warning;
+  }
+  
+  &.deleted {
+    @extend .oh-badge--danger;
+  }
+  
+  &.system {
+    @extend .oh-badge--neutral;
+  }
+}
+
+// Text Color Classes
+.oh-text--success {
+  color: hsl(148, 70%, 40%);
+}
+
+.oh-text--danger {
+  color: hsl(1, 64%, 49%);
+}
+
+.oh-text--warning {
+  color: hsl(37, 90%, 47%);
+}
+
+.oh-text--neutral {
+  color: hsl(216, 18%, 64%);
+}
+
+// Border Color Classes
+.oh-border--success {
+  border-color: hsl(148, 70%, 40%);
+}
+
+.oh-border--danger {
+  border-color: hsl(1, 64%, 49%);
+}
+
+.oh-border--warning {
+  border-color: hsl(37, 90%, 47%);
+}
+
+.oh-border--neutral {
+  border-color: hsl(216, 18%, 64%);
+}

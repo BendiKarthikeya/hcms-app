@@ -1,0 +1,118 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Approvals Inbox" %}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:960px;margin:24px auto;padding:16px;">
+
+  <h1 style="font-size:22px;margin-bottom:20px;">
+    {% trans "Approvals Inbox" %}
+    {% with total=pending|length|add:submitted_no_rule|length %}
+    <span style="background:#fef3c7;color:#92400e;border-radius:12px;padding:2px 10px;font-size:14px;margin-left:6px;">{{ total }}</span>
+    {% endwith %}
+  </h1>
+
+  <!-- ── Pending approval-step records ────────────────────────────── -->
+  {% for a in pending %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:16px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:15px;">{{ a.request.requisition_no }} – {{ a.request.job_position|default:"No position" }}</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:3px;">
+          {{ a.request.department|default:"—" }} · {{ a.request.get_employment_type_display }} · {{ a.request.positions_count }} position(s)
+        </div>
+        <div style="font-size:13px;color:#6b7280;">
+          {% trans "Requested by" %}: {{ a.request.requested_by|default:"—" }} on {{ a.request.requested_on|date:"d M Y" }}
+        </div>
+        {% if a.step %}<div style="font-size:12px;color:#6b7280;margin-top:2px;">{% trans "Step" %}: {{ a.step.get_approver_type_display }} · SLA: {{ a.step.sla_hours }}h</div>{% endif %}
+        <div style="font-size:13px;margin-top:6px;color:#374151;">{{ a.request.justification|truncatechars:200 }}</div>
+        <div style="margin-top:6px;">
+          <a href="{% url 'manpower-detail' a.request.id %}" style="font-size:12px;color:#16a34a;">{% trans "View full request →" %}</a>
+        </div>
+      </div>
+      <div style="min-width:230px;">
+        <form method="post" action="{% url 'approval-action' a.id %}">
+          {% csrf_token %}
+          <textarea name="comment" rows="2" placeholder="{% trans 'Comment (or query if sending back)' %}"
+            style="width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;resize:none;box-sizing:border-box;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button name="action" value="approved"
+              style="flex:1;padding:8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;">
+              ✓ {% trans "Approve" %}
+            </button>
+            <button name="action" value="rejected"
+              style="flex:1;padding:8px;border-radius:6px;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;">
+              ✗ {% trans "Reject" %}
+            </button>
+          </div>
+          <button name="action" value="queried"
+            style="width:100%;margin-top:6px;padding:8px;border-radius:6px;background:#f59e0b;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;"
+            onclick="return this.form.comment.value.trim() || (alert('Please type the query in the comment field.'), false);">
+            ↩ {% trans "Send Back with Query" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- ── Submitted with no rule (manual HR decision needed) ──────── -->
+  {% if submitted_no_rule %}
+  <div style="margin:20px 0 10px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:13px;color:#92400e;">
+    ⚠️ {% trans "The following requests were submitted but no approval rule matched. Review and approve or reject manually." %}
+  </div>
+  {% for mr in submitted_no_rule %}
+  <div style="background:#fff;border:2px solid #fde68a;border-radius:8px;padding:16px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:15px;">
+          {{ mr.requisition_no }} – {{ mr.job_position|default:"No position" }}
+          <span style="background:#fef3c7;color:#92400e;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px;">No rule matched</span>
+        </div>
+        <div style="font-size:13px;color:#6b7280;margin-top:3px;">
+          {{ mr.department|default:"—" }} · {{ mr.get_employment_type_display }} · {{ mr.positions_count }} position(s)
+        </div>
+        <div style="font-size:13px;color:#6b7280;">
+          {% trans "Requested by" %}: {{ mr.requested_by|default:"—" }} on {{ mr.requested_on|date:"d M Y" }}
+        </div>
+        <div style="font-size:13px;margin-top:6px;color:#374151;">{{ mr.justification|truncatechars:200 }}</div>
+        <div style="margin-top:6px;">
+          <a href="{% url 'manpower-detail' mr.id %}" style="font-size:12px;color:#16a34a;">{% trans "View full request →" %}</a>
+        </div>
+      </div>
+      <div style="min-width:230px;">
+        <form method="post" action="{% url 'manual-approve' mr.id %}">
+          {% csrf_token %}
+          <textarea name="comment" rows="2" placeholder="{% trans 'Comment (optional)' %}"
+            style="width:100%;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;resize:none;box-sizing:border-box;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button name="action" value="approved"
+              style="flex:1;padding:8px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;">
+              ✓ {% trans "Approve" %}
+            </button>
+            <button name="action" value="rejected"
+              style="flex:1;padding:8px;border-radius:6px;background:#dc2626;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;">
+              ✗ {% trans "Reject" %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ── Empty state ───────────────────────────────────────────────── -->
+  {% if not pending and not submitted_no_rule %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:40px;text-align:center;color:#6b7280;">
+    <div style="font-size:32px;margin-bottom:8px;">✅</div>
+    <div style="font-weight:500;margin-bottom:4px;">{% trans "No pending approvals" %}</div>
+    <div style="font-size:13px;">{% trans "You're all caught up!" %}</div>
+  </div>
+  {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

@@ -1,0 +1,798 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}Employment Proposal — HCMS{% endblock %}
+{% block active_emp_proposal %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb" style="margin-bottom:12px">
+  <span class="material-symbols-outlined">keyboard_arrow_left</span>
+  <a href="/ui/job-requisition/" style="color:#6D6D6D;text-decoration:none">Back to Job Requisitions</a>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+  <div>
+    <div class="ui-page-title" style="margin-bottom:4px">Employment Proposal Form</div>
+    <div class="ui-page-subtitle">Raise an ONEIC employment proposal for approval — Permanent or Contractual S-O-M Grade</div>
+  </div>
+  {% if chosen_template %}
+  <div style="display:flex;gap:10px">
+    <button type="submit" form="epForm" name="_action" value="submit" class="ui-btn-primary" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:16px">send</span> Submit for Approval
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+{% if messages %}{% for m in messages %}
+<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F;border:1px solid #B6D9C3">{{ m }}</div>
+{% endfor %}{% endif %}
+
+{% if not chosen_template %}
+<!-- ═══════════════════════ TEMPLATE PICKER ═══════════════════════ -->
+<div style="max-width:780px">
+  <div style="font-size:14px;color:#6b7280;margin-bottom:20px">
+    Select the ONEIC Employment Proposal Form type that matches this hire.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <a href="?template=permanent{% if prefill_candidate_id %}&candidate_id={{ prefill_candidate_id }}{% endif %}{% if prefill_interview_id %}&interview_id={{ prefill_interview_id }}{% endif %}" class="ep-tpl-card ep-tpl-card--green">
+      <div class="ep-tpl-icon" style="background:#F0FDF4;border:1px solid #86EFAC">
+        <span class="material-symbols-outlined" style="font-size:28px;color:#16a34a">work_history</span>
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#166534;margin-bottom:6px">Permanent (Non-Contractual)</div>
+      <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:12px">
+        HR&amp;A/EPF/V3 — standard permanent hire.<br>
+        Includes Overtime Allowance and HRC/CEO salary columns.
+      </div>
+      <div style="font-size:11px;font-weight:600;color:#16a34a;margin-bottom:4px">Approval Chain</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        {% for step in permanent_chain %}
+        <span style="font-size:10px;padding:2px 7px;border-radius:12px;background:#DCFCE7;color:#166534">{{ step.role }}</span>
+        {% if not forloop.last %}<span style="font-size:10px;color:#9CA3AF;align-self:center">›</span>{% endif %}
+        {% endfor %}
+      </div>
+    </a>
+
+    <a href="?template=contractual{% if prefill_candidate_id %}&candidate_id={{ prefill_candidate_id }}{% endif %}{% if prefill_interview_id %}&interview_id={{ prefill_interview_id }}{% endif %}" class="ep-tpl-card ep-tpl-card--blue">
+      <div class="ep-tpl-icon" style="background:#EFF6FF;border:1px solid #93C5FD">
+        <span class="material-symbols-outlined" style="font-size:28px;color:#2563eb">assignment</span>
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#1d4ed8;margin-bottom:6px">Contractual — S-O-M Grade</div>
+      <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:12px">
+        HR&amp;A/EPF-S/V4 — contractual positions (S, O, M grade).<br>
+        Shorter approval chain, HR Suggestion column.
+      </div>
+      <div style="font-size:11px;font-weight:600;color:#2563eb;margin-bottom:4px">Approval Chain</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        {% for step in contractual_chain %}
+        <span style="font-size:10px;padding:2px 7px;border-radius:12px;background:#DBEAFE;color:#1e40af">{{ step.role }}</span>
+        {% if not forloop.last %}<span style="font-size:10px;color:#9CA3AF;align-self:center">›</span>{% endif %}
+        {% endfor %}
+      </div>
+    </a>
+
+  </div>
+</div>
+
+{% else %}
+<!-- ═══════════════════════ FULL FORM ═══════════════════════ -->
+
+<!-- Template badge -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;border-radius:8px;
+  {% if chosen_template == 'permanent' %}background:#F0FDF4;border:1px solid #86EFAC{% else %}background:#EFF6FF;border:1px solid #93C5FD{% endif %}">
+  <span class="material-symbols-outlined" style="font-size:17px;color:{% if chosen_template == 'permanent' %}#16a34a{% else %}#2563eb{% endif %}">
+    {% if chosen_template == 'permanent' %}work_history{% else %}assignment{% endif %}
+  </span>
+  <span style="font-size:13px;font-weight:600;color:#111">{{ chosen_template_label }}</span>
+  <a href="/ui/employment-proposal/{% if prefill_candidate_id %}?candidate_id={{ prefill_candidate_id }}{% if prefill_interview_id %}&interview_id={{ prefill_interview_id }}{% endif %}{% endif %}" style="margin-left:auto;font-size:12px;color:#666;text-decoration:none">Change template</a>
+</div>
+
+<form id="epForm" method="post" action="">{% csrf_token %}
+<input type="hidden" name="proposal_template" value="{{ chosen_template }}">
+{% if prefill.candidate_id %}<input type="hidden" name="candidate_id" value="{{ prefill.candidate_id }}">{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start">
+
+<!-- ════════ LEFT: form sections ════════ -->
+<div style="display:flex;flex-direction:column;gap:14px">
+
+  <!-- ── 1. GENERAL ─────────────────────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">1</div>
+      <span>General</span>
+      <span style="margin-left:auto;font-size:11px;color:#888;font-weight:400">
+        {% if chosen_template == 'contractual' %}HR&amp;A/EPF-S/V4{% else %}HR&amp;A/EPF/V3{% endif %}
+      </span>
+    </div>
+    <div class="ep-grid3">
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Post Applied for <span class="ep-req">*</span></label>
+        <input class="ep-input" name="post_applied_for" placeholder="e.g. Account Head" required value="{{ prefill.post_applied_for|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Grade Group</label>
+        <input class="ep-input" name="grade_group" placeholder="e.g. M">
+      </div>
+
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Division / Department</label>
+        <input class="ep-input" name="division_department" placeholder="e.g. Travel &amp; Tourism" value="{{ prefill.division_department|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Post Location</label>
+        <input class="ep-input" name="post_location" placeholder="e.g. Muscat HQ">
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label">Contract Name</label>
+        <input class="ep-input" name="contract_name" placeholder="e.g. ONEIC-2025-001"
+          {% if chosen_template != 'contractual' %}style="opacity:.5"{% endif %}>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Contract Period From</label>
+        <input class="ep-input" type="date" name="contract_period_from">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Contract Period To</label>
+        <input class="ep-input" type="date" name="contract_period_to">
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label">Job No.</label>
+        <input class="ep-input" name="job_no" placeholder="e.g. 83001">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Reporting to</label>
+        <input class="ep-input" name="reporting_to" placeholder="Manager name">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Staff No.</label>
+        <input class="ep-input" name="reporting_staff_no" placeholder="e.g. 17707">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">GSM / CPN No.</label>
+        <input class="ep-input" name="gsm_cpn_no" placeholder="e.g. 9724XXXX">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. BRIEF (RECRUITMENT) ──────────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">2</div>
+      <span>Brief (Recruitment)</span>
+    </div>
+    <div class="ep-grid3">
+
+      <!-- New Appointment -->
+      <div class="ep-field">
+        <label class="ep-label">New Appointment</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="is_new_appointment" value="yes" checked> Yes</label>
+          <label class="ep-radio"><input type="radio" name="is_new_appointment" value="no" id="replRadio"> No</label>
+        </div>
+      </div>
+      <div class="ep-field ep-span2" id="replWrap" style="display:none">
+        <label class="ep-label">Replacement for Staff No.</label>
+        <input class="ep-input" name="replacement_staff_no" id="replacementField" placeholder="Staff No.">
+      </div>
+
+      <!-- Candidate Referred -->
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Candidate Referred via</label>
+        <div class="ep-radio-row" style="flex-wrap:wrap;gap:10px">
+          <label class="ep-radio"><input type="radio" name="candidate_referred" value="client"> Client</label>
+          <label class="ep-radio"><input type="radio" name="candidate_referred" value="consultancy"> Consultancy</label>
+          <label class="ep-radio"><input type="radio" name="candidate_referred" value="direct" checked> Direct</label>
+          <label class="ep-radio"><input type="radio" name="candidate_referred" value="staff_number"> Staff Number</label>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Staff / Ref. Number</label>
+        <input class="ep-input" name="referral_staff_number" placeholder="Staff No. (if applicable)">
+      </div>
+
+      <!-- Consultancy -->
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Consultancy</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="voltech_hr"> Voltech HR</label>
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="zen"> Zen</label>
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="trehan"> Trehan</label>
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="sinclus"> Sinclus</label>
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="alyousuf"> ALYousuf</label>
+          <label class="ep-check"><input type="radio" name="consultancy_reg" value="others" id="consOtherRadio"> Others</label>
+        </div>
+      </div>
+      <div class="ep-field" id="consOtherWrap" style="display:none">
+        <label class="ep-label">Other (specify)</label>
+        <input class="ep-input" name="consultancy_other" placeholder="Consultancy name">
+      </div>
+
+      <!-- Employment Contract -->
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Employment Contract</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="employment_contract_type" value="temporary" id="tmpRadio"> Temporary</label>
+          <label class="ep-radio" style="margin-left:8px">
+            <input type="number" name="employment_contract_months" id="tmpMonths" min="1" max="60" placeholder="months"
+              style="width:70px;height:28px;border:1px solid #D8D8D8;border-radius:6px;padding:0 8px;font-size:12px;font-family:inherit;outline:none"> months
+          </label>
+          <label class="ep-radio" style="margin-left:12px"><input type="radio" name="employment_contract_type" value="permanent" checked> Permanent (Two years basis)</label>
+        </div>
+      </div>
+      <div class="ep-field" style="display:flex;align-items:flex-end;gap:6px">
+      </div>
+
+      <!-- Relative in company -->
+      <div class="ep-field ep-span3">
+        <label class="ep-label" style="margin-bottom:6px">Does the candidate have any relation working in the Company?</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="has_relative" value="yes" id="hasRelYes"> Yes</label>
+          <label class="ep-radio"><input type="radio" name="has_relative" value="no" checked> No</label>
+        </div>
+      </div>
+      <div class="ep-field ep-span3" id="relativeWrap" style="display:none">
+        <div class="ep-grid3" style="gap:10px">
+          <div>
+            <label class="ep-label">Relative Name</label>
+            <input class="ep-input" name="relative_name" placeholder="Full name">
+          </div>
+          <div>
+            <label class="ep-label">Staff No.</label>
+            <input class="ep-input" name="relative_staff_no" placeholder="Staff No.">
+          </div>
+          <div>
+            <label class="ep-label">Work Location</label>
+            <input class="ep-input" name="relative_location" placeholder="Department / Site">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 3. SUMMARY OF RESUME ────────────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">3</div>
+      <span>Summary of Resume</span>
+    </div>
+    <div class="ep-grid3">
+
+      <div class="ep-field">
+        <label class="ep-label">Application Date</label>
+        <input class="ep-input" type="date" name="application_date">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Interview Date</label>
+        <input class="ep-input" type="date" name="interview_date" value="{{ prefill.interview_date|default:'' }}">
+      </div>
+      <div class="ep-field"></div>
+
+      <!-- Candidate selector / name -->
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Candidate <span class="ep-req">*</span></label>
+        <div class="ep-select-wrap">
+          <select name="candidate_id" class="ep-select" id="candidateSel" onchange="syncCandidateName(this)">
+            <option value="">— Select existing candidate (or enter name below) —</option>
+            {% for c in candidates %}
+            <option value="{{ c.id }}"{% if prefill.candidate_id and c.id == prefill.candidate_id %} selected{% endif %}>{{ c.name }}{% if c.recruitment_id %} — {{ c.recruitment_id.title }}{% endif %}</option>
+            {% endfor %}
+          </select>
+          <span class="material-symbols-outlined ep-sel-arrow">expand_more</span>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Nationality</label>
+        <input class="ep-input" name="nationality" placeholder="e.g. Indian" value="{{ prefill.nationality|default:'' }}">
+      </div>
+
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Name of Applicant <span class="ep-req">*</span></label>
+        <input class="ep-input" name="applicant_name" id="applicantName" placeholder="Full name" required value="{{ prefill.applicant_name|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Present Employer</label>
+        <input class="ep-input" name="present_employer" placeholder="Current company">
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label">Date of Birth</label>
+        <input class="ep-input" type="date" name="dob" value="{{ prefill.dob|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Place of Birth</label>
+        <input class="ep-input" name="place_of_birth" placeholder="City, Country">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Local Transfer</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="local_transfer" value="yes"> Yes</label>
+          <label class="ep-radio"><input type="radio" name="local_transfer" value="no" checked> No</label>
+        </div>
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label">Marital Status</label>
+        <div class="ep-select-wrap">
+          <select name="marital_status" class="ep-select">
+            <option value="">— Select —</option>
+            <option value="single"{% if prefill.marital_status == 'single' %} selected{% endif %}>Single</option>
+            <option value="married"{% if prefill.marital_status == 'married' %} selected{% endif %}>Married</option>
+            <option value="divorced"{% if prefill.marital_status == 'divorced' %} selected{% endif %}>Divorced</option>
+            <option value="widow"{% if prefill.marital_status == 'widow' %} selected{% endif %}>Widow</option>
+            <option value="other"{% if prefill.marital_status and prefill.marital_status not in 'single,married,divorced,widow' %} selected{% endif %}>Other</option>
+          </select>
+          <span class="material-symbols-outlined ep-sel-arrow">expand_more</span>
+        </div>
+      </div>
+      <div class="ep-field ep-span2"></div>
+
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Qualification (Academic)</label>
+        <input class="ep-input" name="qualification_academic" placeholder="e.g. Master of Business Administration" value="{{ prefill.qualification_academic|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Professional / Technical</label>
+        <input class="ep-input" name="qualification_professional" placeholder="e.g. CPA, PMP" value="{{ prefill.qualification_professional|default:'' }}">
+      </div>
+
+      <div class="ep-field">
+        <label class="ep-label">Experience — Local (years)</label>
+        <input class="ep-input" type="number" name="experience_local_years" min="0" max="50" step="0.5" placeholder="0" value="{{ prefill.experience_local_years|default:'' }}">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Experience — Overseas (years)</label>
+        <input class="ep-input" type="number" name="experience_overseas_years" min="0" max="50" step="0.5" placeholder="0" value="{{ prefill.experience_overseas_years|default:'' }}">
+      </div>
+      <div class="ep-field"></div>
+
+      <div class="ep-field">
+        <label class="ep-label">Languages</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+          <label class="ep-check"><input type="checkbox" name="lang_arabic"> Arabic</label>
+          <label class="ep-check"><input type="checkbox" name="lang_english" checked> English</label>
+        </div>
+        <input class="ep-input" name="lang_others" placeholder="Others (specify)" style="margin-top:6px">
+      </div>
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Driving License</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+          <label class="ep-radio"><input type="radio" name="driving_license" value="omani"> Omani</label>
+          <label class="ep-radio"><input type="radio" name="driving_license" value="gcc"> GCC</label>
+          <label class="ep-radio"><input type="radio" name="driving_license" value="other"> Other</label>
+          <label class="ep-radio"><input type="radio" name="driving_license" value="none" checked> None</label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 4. SALARY RECOMMENDATION ───────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">4</div>
+      <span>Salary Recommendation</span>
+    </div>
+    <div style="padding:16px 20px">
+
+      <!-- Budget type -->
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:12px;font-weight:600;color:#444;margin-right:6px">Salary OMR —</span>
+        <label class="ep-radio"><input type="radio" name="salary_budgeted" value="budgeted" checked> Budgeted</label>
+        <label class="ep-radio"><input type="radio" name="salary_budgeted" value="not_budgeted"> Not Budgeted</label>
+        <label class="ep-radio"><input type="radio" name="salary_budgeted" value="contractual"> Contractual</label>
+      </div>
+
+      <!-- Salary table -->
+      <div style="overflow-x:auto">
+        <table class="ep-sal-table">
+          <thead>
+            <tr>
+              <th style="width:30%">Salary Description</th>
+              <th>Proposed</th>
+              {% if chosen_template == 'permanent' %}
+              <th>HRC Suggestion</th>
+              <th>CEO Approval</th>
+              {% else %}
+              <th>HR Suggestion</th>
+              {% endif %}
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ep-sal-desc">Basic Salary</td>
+              <td><input class="ep-sal-inp" type="number" name="basic_salary" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_basic_salary" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_basic_salary" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_basic_salary" placeholder="—"></td>
+            </tr>
+            <tr>
+              <td class="ep-sal-desc">HRA (Inc. E&amp;W, Tel. &amp; GSM)</td>
+              <td><input class="ep-sal-inp" type="number" name="hra_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_hra_allowance" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_hra_allowance" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_hra_allowance" placeholder="—"></td>
+            </tr>
+            <tr>
+              <td class="ep-sal-desc">Transport Allowance</td>
+              <td><input class="ep-sal-inp" type="number" name="transport_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_transport_allowance" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_transport_allowance" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_transport_allowance" placeholder="—"></td>
+            </tr>
+            <tr>
+              <td class="ep-sal-desc">Addl. Resp. Allowance</td>
+              <td><input class="ep-sal-inp" type="number" name="addl_resp_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_addl_resp_allowance" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_addl_resp_allowance" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_addl_resp_allowance" placeholder="—"></td>
+            </tr>
+            {% if chosen_template == 'permanent' %}
+            <tr>
+              <td class="ep-sal-desc">Overtime Allowance</td>
+              <td><input class="ep-sal-inp" type="number" name="overtime_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_overtime_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="ceo_overtime_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="text" name="rmk_overtime_allowance" placeholder="—"></td>
+            </tr>
+            {% endif %}
+            <tr>
+              <td class="ep-sal-desc">Food Allowance</td>
+              <td><input class="ep-sal-inp" type="number" name="food_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_food_allowance" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_food_allowance" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_food_allowance" placeholder="—"></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="ep-sal-desc">Living Standard Allowance (LSA)</div>
+                <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">
+                  <label class="ep-radio" style="font-size:10px"><input type="radio" name="lsa_tier" value="tier_50"> RO 50 (&lt;300)</label>
+                  <label class="ep-radio" style="font-size:10px"><input type="radio" name="lsa_tier" value="tier_40"> RO 40 (301–500)</label>
+                  <label class="ep-radio" style="font-size:10px"><input type="radio" name="lsa_tier" value="tier_30"> RO 30 (501–999)</label>
+                  <label class="ep-radio" style="font-size:10px"><input type="radio" name="lsa_tier" value="tier_20"> RO 20 (1000+)</label>
+                </div>
+              </td>
+              <td><input class="ep-sal-inp" type="number" name="lsa_allowance" step="0.001" placeholder="0.000"></td>
+              <td><input class="ep-sal-inp" type="number" name="hrc_lsa_allowance" step="0.001" placeholder="0.000"></td>
+              {% if chosen_template == 'permanent' %}<td><input class="ep-sal-inp" type="number" name="ceo_lsa_allowance" step="0.001" placeholder="0.000"></td>{% endif %}
+              <td><input class="ep-sal-inp" type="text" name="rmk_lsa_allowance" placeholder="—"></td>
+            </tr>
+            <tr style="background:#F8FBF9;font-weight:700">
+              <td class="ep-sal-desc" style="font-weight:700">Gross Salary →</td>
+              <td><input class="ep-sal-inp" type="number" name="gross_salary" step="0.001" placeholder="0.000" id="grossSalaryInput" style="font-weight:700;background:#F0FDF4;border-color:#86EFAC"></td>
+              <td colspan="{% if chosen_template == 'permanent' %}3{% else %}2{% endif %}">
+                <span style="font-size:11px;color:#888">* Auto-sum or enter manually</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 5. NOTES ────────────────────────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">5</div>
+      <span>Notes</span>
+    </div>
+    <div class="ep-grid3" style="padding:16px 20px">
+
+      <div class="ep-field">
+        <label class="ep-label">Contract Period From</label>
+        <input class="ep-input" type="date" name="notes_contract_from">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Contract Period To</label>
+        <input class="ep-input" type="date" name="notes_contract_to">
+      </div>
+      <div class="ep-field"></div>
+
+      <div class="ep-field">
+        <label class="ep-label">Air Passage From</label>
+        <input class="ep-input" name="air_passage_from" placeholder="e.g. India">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Air Passage To</label>
+        <input class="ep-input" name="air_passage_to" value="MUSCAT">
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Entitlement</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="air_passage_months" value="12" checked> 12 months</label>
+          <label class="ep-radio"><input type="radio" name="air_passage_months" value="24"> 24 months</label>
+        </div>
+      </div>
+
+      <div class="ep-field ep-span2">
+        <label class="ep-label">Family Status</label>
+        <div class="ep-radio-row">
+          <label class="ep-radio"><input type="radio" name="family_status" value="family"> Family (Wife, 2 children up to 18 yrs)</label>
+          <label class="ep-radio"><input type="radio" name="family_status" value="bachelor" checked> Bachelor</label>
+        </div>
+      </div>
+      <div class="ep-field">
+        <label class="ep-label">Medical</label>
+        <label class="ep-check">
+          <input type="checkbox" name="medical_clause" checked>
+          As per Company's medical insurance policy and Oman Labour Law
+        </label>
+      </div>
+
+      <div class="ep-field ep-span3">
+        <label class="ep-label">Salary Increase Clause</label>
+        <input class="ep-input" name="salary_increase_clause" placeholder="e.g. Increase by RO __ after 3/6 months in basic / Addl. Resp. Allow.">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 6. HOD COMMENTS ─────────────────────────────────────────── -->
+  <div class="ep-card">
+    <div class="ep-card-hd">
+      <div class="ep-badge">6</div>
+      <span>HOD Comments &amp; Remarks</span>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label class="ep-label">HOD's Comments</label>
+        <textarea class="ep-input" name="hod_comments" rows="2" placeholder="Head of Department remarks (if any)"
+          style="height:auto;padding:8px 10px;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label class="ep-label">Additional Remarks</label>
+        <textarea class="ep-input" name="remarks" rows="2" placeholder="Any additional notes"
+          style="height:auto;padding:8px 10px;resize:vertical"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit button at bottom -->
+  <div style="margin-top:4px">
+    <button type="submit" class="ui-btn-primary" style="width:100%;height:44px;font-size:14px;justify-content:center;gap:8px">
+      <span class="material-symbols-outlined" style="font-size:18px">send</span> Submit for Approval
+    </button>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ════════ RIGHT: sticky summary + approval chain ════════ -->
+<div style="position:sticky;top:16px;display:flex;flex-direction:column;gap:14px">
+
+  <!-- Approval Chain -->
+  <div style="border:1px solid #D1D1D1;border-radius:15px;overflow:hidden;background:#fff">
+    <div style="padding:18px 20px 10px">
+      <div style="font-size:16px;font-weight:600;color:#202020;line-height:1.4">Approval Chain</div>
+      <div style="font-size:13px;color:#7f7f7f;margin-top:3px">Sequential approval and e-sign process</div>
+    </div>
+    <div style="padding:6px 0 14px">
+      {% if chosen_template == 'contractual' %}
+        {% for step in contractual_chain %}
+        <div style="display:flex;align-items:stretch;gap:0;position:relative">
+          <!-- left column: icon + line -->
+          <div style="display:flex;flex-direction:column;align-items:center;width:56px;flex-shrink:0">
+            <div style="width:35px;height:35px;border-radius:50%;background:#D2D2D2;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#202020;flex-shrink:0;margin-top:14px">{{ forloop.counter }}</div>
+            {% if not forloop.last %}<div style="width:2px;flex:1;min-height:20px;background:#CCCCCC;border-radius:2px;margin-top:4px;margin-bottom:0"></div>{% endif %}
+          </div>
+          <!-- right column: content -->
+          <div style="flex:1;border-bottom:{% if not forloop.last %}1px solid #CCC{% else %}none{% endif %};padding:14px 16px 14px 0;min-height:70px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+              <div style="font-size:14px;font-weight:600;color:#202020">{{ forloop.counter }}. {{ step.role }}</div>
+              <div style="background:#F5F0ED;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:500;color:#E0812E;white-space:nowrap;flex-shrink:0">Pending</div>
+            </div>
+            <div style="font-size:13px;color:#202020;margin-top:4px">{{ step.name }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for step in permanent_chain %}
+        <div style="display:flex;align-items:stretch;gap:0;position:relative">
+          <div style="display:flex;flex-direction:column;align-items:center;width:56px;flex-shrink:0">
+            <div style="width:35px;height:35px;border-radius:50%;background:#D2D2D2;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#202020;flex-shrink:0;margin-top:14px">{{ forloop.counter }}</div>
+            {% if not forloop.last %}<div style="width:2px;flex:1;min-height:20px;background:#CCCCCC;border-radius:2px;margin-top:4px"></div>{% endif %}
+          </div>
+          <div style="flex:1;border-bottom:{% if not forloop.last %}1px solid #CCC{% else %}none{% endif %};padding:14px 16px 14px 0;min-height:70px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+              <div style="font-size:14px;font-weight:600;color:#202020">{{ forloop.counter }}. {{ step.role }}</div>
+              <div style="background:#F5F0ED;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:500;color:#E0812E;white-space:nowrap;flex-shrink:0">Pending</div>
+            </div>
+            <div style="font-size:13px;color:#202020;margin-top:4px">{{ step.name }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <!-- info banner -->
+    <div style="margin:0 14px 14px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:center">
+      <span class="material-symbols-outlined" style="font-size:22px;color:#10B981;flex-shrink:0">check_circle</span>
+      <span style="font-size:12px;color:#374151;line-height:1.5">Approval notification will be sent to the approval chain members</span>
+    </div>
+  </div>
+
+  <!-- Proposal summary -->
+  <div class="ep-card" style="padding:0">
+    <div style="padding:14px 16px;border-bottom:1px solid #F0F0F0">
+      <div style="font-size:13px;font-weight:700;color:#111">Proposal Summary</div>
+    </div>
+    <div style="padding:12px 16px">
+      <div class="ep-sum-row"><span class="material-symbols-outlined ep-sum-icon">badge</span><span class="ep-sum-key">Template</span><span class="ep-sum-val">{% if chosen_template == 'contractual' %}S-O-M Contractual{% else %}Permanent{% endif %}</span></div>
+      <div class="ep-sum-row"><span class="material-symbols-outlined ep-sum-icon">person</span><span class="ep-sum-key">Applicant</span><span class="ep-sum-val" id="sumApplicant">—</span></div>
+      <div class="ep-sum-row"><span class="material-symbols-outlined ep-sum-icon">work</span><span class="ep-sum-key">Post</span><span class="ep-sum-val" id="sumPost">—</span></div>
+      <div class="ep-sum-row"><span class="material-symbols-outlined ep-sum-icon">co_present</span><span class="ep-sum-key">Department</span><span class="ep-sum-val" id="sumDept">—</span></div>
+      <div class="ep-sum-row"><span class="material-symbols-outlined ep-sum-icon">payments</span><span class="ep-sum-key">Gross Salary</span><span class="ep-sum-val" id="sumGross">—</span></div>
+    </div>
+    <div style="margin:0 12px 12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:center">
+      <span class="material-symbols-outlined" style="font-size:22px;color:#10B981;flex-shrink:0">check_circle</span>
+      <span style="font-size:11px;color:#374151;line-height:1.4">This proposal will be routed through the approval chain immediately upon submission.</span>
+    </div>
+  </div>
+
+</div><!-- /right -->
+
+</div><!-- /grid -->
+</form>
+{% endif %}
+
+<style>
+/* ── Viewport fit ── */
+.ui-main    { height:100vh !important; overflow:hidden !important; }
+.ui-content { height:calc(100vh - 86px); overflow-y:auto; padding:14px 20px 16px; }
+
+/* ── Template picker cards ── */
+.ep-tpl-card {
+  display:block;border-radius:12px;padding:22px;text-decoration:none;color:inherit;
+  transition:box-shadow .15s;cursor:pointer;
+}
+.ep-tpl-card--green { border:2px solid #86EFAC;background:#F0FDF4; }
+.ep-tpl-card--green:hover { box-shadow:0 4px 16px rgba(22,163,74,.15); }
+.ep-tpl-card--blue  { border:2px solid #93C5FD;background:#EFF6FF; }
+.ep-tpl-card--blue:hover  { box-shadow:0 4px 16px rgba(37,99,235,.15); }
+.ep-tpl-icon { width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px; }
+
+/* ── Form cards ── */
+.ep-card { background:#fff;border:1px solid #D8D8D8;border-radius:12px;overflow:hidden; }
+.ep-card-hd {
+  display:flex;align-items:center;gap:10px;padding:14px 18px 12px;
+  border-bottom:1px solid #EFEFEF;font-size:14px;font-weight:700;color:#111;
+}
+.ep-badge {
+  width:22px;height:22px;border-radius:50%;background:#E8F5EC;color:#0F752F;
+  font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ep-grid3 { padding:14px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px; }
+.ep-field { display:flex;flex-direction:column;gap:5px; }
+.ep-span2 { grid-column:span 2; }
+.ep-span3 { grid-column:span 3; }
+.ep-label { font-size:12px;font-weight:500;color:#444; }
+.ep-req   { color:#C62828; }
+
+/* ── Inputs ── */
+.ep-input {
+  width:100%;height:34px;border:1px solid #D8D8D8;border-radius:7px;
+  padding:0 10px;font-size:13px;font-family:inherit;color:#111;background:#fff;
+  outline:none;box-sizing:border-box;transition:border-color .15s;
+}
+.ep-input:focus { border-color:#0F752F; }
+.ep-select-wrap { position:relative; }
+.ep-select {
+  width:100%;height:34px;border:1px solid #D8D8D8;border-radius:7px;padding:0 30px 0 10px;
+  font-size:13px;font-family:inherit;color:#111;background:#fff;
+  appearance:none;-webkit-appearance:none;outline:none;cursor:pointer;box-sizing:border-box;
+}
+.ep-select:focus { border-color:#0F752F; }
+.ep-sel-arrow { position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;color:#888;pointer-events:none; }
+
+/* ── Radio / checkbox ── */
+.ep-radio-row { display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:2px; }
+.ep-radio { display:flex;align-items:center;gap:4px;font-size:12px;color:#333;cursor:pointer; }
+.ep-check  { display:flex;align-items:center;gap:5px;font-size:12px;color:#333;cursor:pointer;padding:4px 8px;border:1px solid #E0E0E0;border-radius:6px; }
+.ep-check:hover { border-color:#0F752F; }
+
+/* ── Salary table ── */
+.ep-sal-table { width:100%;border-collapse:collapse;font-size:12px; }
+.ep-sal-table thead tr { background:#FAFAFA; }
+.ep-sal-table th { text-align:left;padding:8px 10px;font-size:11px;font-weight:600;color:#606060;border-bottom:1px solid #E8E8E8;white-space:nowrap; }
+.ep-sal-table td { padding:6px 6px;border-bottom:1px solid #F5F5F5;vertical-align:middle; }
+.ep-sal-desc { font-size:12px;color:#333;font-weight:500;padding-left:10px;white-space:nowrap; }
+.ep-sal-inp {
+  width:100%;height:30px;border:1px solid #D8D8D8;border-radius:5px;
+  padding:0 8px;font-size:12px;font-family:inherit;color:#111;background:#fff;
+  outline:none;box-sizing:border-box;transition:border-color .1s;
+}
+.ep-sal-inp:focus { border-color:#0F752F; }
+
+/* ── Summary panel ── */
+.ep-sum-row { display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F5F5F5;font-size:12px; }
+.ep-sum-icon { font-size:14px;color:#606060;background:#F0F0F0;border-radius:5px;padding:2px;flex-shrink:0; }
+.ep-sum-key { color:#7A7A7A;font-weight:500;width:80px;flex-shrink:0; }
+.ep-sum-val { color:#111;font-weight:500;flex:1;text-align:right;word-break:break-word; }
+</style>
+
+<script>
+// Show/hide replacement field
+document.querySelectorAll('[name="is_new_appointment"]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    var w = document.getElementById('replWrap');
+    if (w) w.style.display = (this.value === 'no') ? '' : 'none';
+  });
+});
+
+// Show/hide relative fields
+var relYes = document.getElementById('hasRelYes');
+if (relYes) {
+  relYes.closest('.ep-field').parentElement.parentElement
+    .querySelectorAll('[name="has_relative"]').forEach(function(r) {
+    r.addEventListener('change', function() {
+      var w = document.getElementById('relativeWrap');
+      if (w) w.style.display = (this.value === 'yes') ? '' : 'none';
+    });
+  });
+}
+
+// Show/hide Other consultancy field
+document.querySelectorAll('[name="consultancy_reg"]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    var w = document.getElementById('consOtherWrap');
+    if (w) w.style.display = (this.value === 'others') ? '' : 'none';
+  });
+});
+
+// Sync candidate name from dropdown
+function syncCandidateName(sel) {
+  var txt = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  var nameField = document.getElementById('applicantName');
+  if (nameField && sel.value) {
+    var name = txt.split(' — ')[0].trim();
+    nameField.value = name;
+    document.getElementById('sumApplicant').textContent = name || '—';
+  }
+}
+
+// Summary sync
+function syncSummary() {
+  var post = document.querySelector('[name="post_applied_for"]');
+  var dept = document.querySelector('[name="division_department"]');
+  var name = document.querySelector('[name="applicant_name"]');
+  var gross = document.getElementById('grossSalaryInput');
+  if (post) document.getElementById('sumPost').textContent = post.value || '—';
+  if (dept) document.getElementById('sumDept').textContent = dept.value || '—';
+  if (name) document.getElementById('sumApplicant').textContent = name.value || '—';
+  if (gross) document.getElementById('sumGross').textContent = gross.value ? 'OMR ' + parseFloat(gross.value).toFixed(3) : '—';
+}
+
+// Auto-calc gross salary from proposed column
+function calcGross() {
+  var rows = ['basic_salary','hra_allowance','transport_allowance','addl_resp_allowance',
+              'overtime_allowance','food_allowance','lsa_allowance'];
+  var total = 0;
+  rows.forEach(function(r) {
+    var el = document.querySelector('[name="' + r + '"]:not([name^="hrc_"]):not([name^="ceo_"])');
+    if (el && !el.name.startsWith('hrc') && !el.name.startsWith('ceo') && !el.name.startsWith('rmk')) {
+      total += parseFloat(el.value) || 0;
+    }
+  });
+  var grossEl = document.getElementById('grossSalaryInput');
+  if (grossEl && !grossEl.dataset.manualEdit) grossEl.value = total > 0 ? total.toFixed(3) : '';
+  syncSummary();
+}
+
+// Attach listeners
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ep-sal-inp[type="number"]').forEach(function(inp) {
+    inp.addEventListener('input', function() {
+      if (this.id === 'grossSalaryInput') { this.dataset.manualEdit = '1'; syncSummary(); }
+      else calcGross();
+    });
+  });
+  document.querySelectorAll('[name="post_applied_for"],[name="division_department"],[name="applicant_name"]').forEach(function(el) {
+    el.addEventListener('input', syncSummary);
+  });
+});
+</script>
+{% endblock %}

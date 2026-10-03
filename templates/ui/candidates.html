@@ -1,0 +1,944 @@
+{% extends "ui/base.html" %}
+{% block title %}Candidates & CV — HCMS{% endblock %}
+{% block active_candidates %}active{% endblock %}
+
+{% block content %}
+<style>
+/* ── No-scroll viewport layout ── */
+.ui-main    { height:100vh !important; overflow:hidden !important; }
+.ui-content { height:calc(100vh - 86px); overflow:hidden; padding:14px 20px 10px; display:flex; flex-direction:column; }
+.cand-body  { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; gap:12px; }
+
+/* ── Header ── */
+.cand-header { display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
+
+/* ── KPI row ── */
+.cand-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; flex-shrink:0; }
+.cand-kpi { background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:14px; }
+.cand-kpi__icon { width:40px; height:40px; background:#1F5F2F; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cand-kpi__icon .material-symbols-outlined { font-size:20px; color:#fff; }
+.cand-kpi__value { font-size:22px; font-weight:700; color:#111; line-height:1; margin-bottom:2px; }
+.cand-kpi__label { font-size:11px; color:#888; }
+.cand-kpi__trend { font-size:10px; color:#278E53; margin-top:2px; }
+
+/* ── Tabs ── */
+.cand-tabs { display:flex; gap:0; border-bottom:2px solid #EFEFEF; margin-bottom:0; padding:0 16px; background:#fff; border-radius:10px 10px 0 0; border:1px solid #EFEFEF; border-bottom:none; }
+.cand-tab { padding:12px 18px; font-size:12px; font-weight:500; color:#888; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; user-select:none; transition:color .15s; background:none; border-left:none; border-right:none; border-top:none; font-family:inherit; }
+.cand-tab:hover { color:#1F5F2F; }
+.cand-tab.active { color:#1F5F2F; font-weight:600; border-bottom:2px solid #1F5F2F; }
+
+/* ── Filter bar ── */
+.cand-filter-bar { display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid #F3F3F3; flex-wrap:wrap; }
+.cand-filter-bar input[type="text"] { flex:1; min-width:200px; max-width:280px; height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 10px; font-size:12px; font-family:inherit; color:#333; outline:none; background:#FAFAFA; }
+.cand-filter-bar input[type="text"]:focus { border-color:#A8D4B4; background:#fff; }
+.cand-select { height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 8px; font-size:12px; font-family:inherit; color:#444; background:#fff; outline:none; cursor:pointer; }
+.cand-filter-btn { height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 12px; font-size:12px; font-family:inherit; color:#444; background:#fff; display:flex; align-items:center; gap:4px; cursor:pointer; }
+.cand-filter-btn .material-symbols-outlined { font-size:15px; }
+.cand-filter-btn:hover { background:#F5F5F5; }
+
+/* ── Avatar chip (candidate cell) ── */
+.ui-avatar-chip { display:flex; align-items:center; gap:9px; }
+.ui-avatar { width:32px; height:32px; border-radius:50%; background:#278E53; color:#fff; font-weight:700; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+.ui-avatar-chip__name { font-size:12px; font-weight:600; color:#1A1A1A; line-height:1.2; }
+.ui-avatar-chip__email { font-size:11px; color:#999; line-height:1.3; }
+.ui-avatar-chip__req { font-size:10px; color:#ABABAB; margin-top:1px; }
+
+/* ── Stage pill ── */
+.stage-shortlisted { font-size:10px; font-weight:600; background:#E8F5ED; color:#1F5F2F; border-radius:4px; padding:3px 8px; }
+.stage-interview   { font-size:10px; font-weight:600; background:#E3F2FD; color:#1565C0; border-radius:4px; padding:3px 8px; }
+.stage-new         { font-size:10px; font-weight:600; background:#F5F5F5; color:#666;    border-radius:4px; padding:3px 8px; }
+.stage-rejected    { font-size:10px; font-weight:600; background:#FFEBEE; color:#C62828; border-radius:4px; padding:3px 8px; }
+.stage-sub { font-size:10px; color:#ABABAB; margin-top:2px; }
+
+/* ── Source tag ── */
+.source-tag { font-size:11px; color:#555; background:#F5F5F5; border-radius:4px; padding:2px 7px; white-space:nowrap; display:inline-block; }
+
+/* ── Action buttons ── */
+.act-view-cv  { height:28px; padding:0 11px; background:#fff; border:1px solid #D0D0D0; border-radius:6px; font-size:11px; font-weight:500; color:#333; cursor:pointer; display:inline-flex; align-items:center; white-space:nowrap; text-decoration:none; }
+.act-view-cv:hover { background:#F5F5F5; }
+.act-approve  { height:28px; padding:0 11px; background:#1F5F2F; border:none; border-radius:6px; font-size:11px; font-weight:600; color:#fff; cursor:pointer; display:inline-flex; align-items:center; white-space:nowrap; }
+.act-approve:hover { background:#194f27; }
+.act-shortlisted-badge { height:28px; padding:0 11px; background:#E8F5ED; border:1px solid #A8D4B4; border-radius:6px; font-size:11px; font-weight:600; color:#1F5F2F; display:inline-flex; align-items:center; white-space:nowrap; gap:4px; }
+.act-hr-override { height:28px; padding:0 11px; background:#FFF3E0; border:1px solid #FFCC80; border-radius:6px; font-size:11px; font-weight:600; color:#E65100; cursor:pointer; display:inline-flex; align-items:center; white-space:nowrap; gap:4px; }
+.act-hr-override:hover { background:#FFE0B2; }
+.act-more     { width:28px; height:28px; border:1px solid #E8E8E8; border-radius:6px; background:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.act-more .material-symbols-outlined { font-size:16px; color:#666; }
+.act-more:hover { background:#F5F5F5; }
+.act-promote  { height:28px; padding:0 10px; background:#1F5F2F; border:none; border-radius:6px; font-size:11px; font-weight:600; color:#fff; cursor:pointer; }
+.act-promote:hover { background:#194f27; }
+.act-reject   { height:28px; padding:0 10px; background:#fff; border:1px solid #E8B4B4; border-radius:6px; font-size:11px; font-weight:600; color:#C62828; cursor:pointer; }
+.act-reject:hover { background:#FFF5F5; }
+.act-icon     { width:28px; height:28px; border:1px solid #E8E8E8; border-radius:6px; background:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.act-icon .material-symbols-outlined { font-size:16px; color:#666; }
+.act-icon:hover { background:#F5F5F5; }
+
+/* ── AI score ── */
+.score-pill  { display:inline-flex; align-items:center; justify-content:center; min-width:42px; height:24px; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; }
+.score-strong { background:#E8F5ED; color:#1F5F2F; }
+.score-mid    { background:#E3F2FD; color:#1565C0; }
+.score-weak   { background:#FFF3E0; color:#E65100; }
+.rec-label    { font-size:9px; color:#999; margin-top:3px; text-transform:uppercase; letter-spacing:.3px; }
+.score-none   { color:#bbb; font-size:11px; }
+.score-loading { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:#8E8D8D; }
+.score-spinner { width:16px; height:16px; border:2px solid #D1D5DB; border-top-color:#0F752F; border-radius:50%; animation:spin-score .7s linear infinite; flex-shrink:0; }
+@keyframes spin-score { to { transform:rotate(360deg) } }
+
+/* ── Skill chips ── */
+.skill-chip      { display:inline-block; font-size:10px; background:#F1F3F4; color:#444; border-radius:4px; padding:2px 6px; margin:0 3px 3px 0; }
+.skill-chip.match { background:#E8F5ED; color:#1F5F2F; }
+.skill-more      { font-size:10px; color:#999; }
+
+/* ── Analysis modal ── */
+.ai-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:1000; align-items:center; justify-content:center; }
+.ai-modal-overlay.open { display:flex; }
+.ai-modal { background:#fff; width:520px; max-width:92vw; max-height:84vh; overflow:auto; border-radius:12px; padding:22px 24px; }
+.ai-modal h3 { font-size:16px; font-weight:700; color:#111; margin:0 0 2px; }
+.ai-modal .sub { font-size:12px; color:#888; margin-bottom:14px; }
+.ai-modal .row { display:flex; gap:18px; margin-bottom:14px; }
+.ai-modal .stat { font-size:11px; color:#888; }
+.ai-modal .stat b { display:block; font-size:18px; color:#111; }
+.ai-modal .sec-title { font-size:11px; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:.4px; margin:14px 0 6px; }
+.ai-modal .summary-text { font-size:13px; color:#333; line-height:1.5; }
+.ai-modal-close { float:right; cursor:pointer; color:#999; border:none; background:none; font-size:20px; line-height:1; }
+
+/* ── Tooltips ── */
+[title].act-view-cv, [title].act-promote, [title].act-reject, [title].act-icon, [title].act-more { position:relative; }
+[title].act-view-cv:hover::after, [title].act-promote:hover::after, [title].act-reject:hover::after, [title].act-icon:hover::after, [title].act-more:hover::after {
+  content:attr(title); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+  background:#1f2937; color:#fff; font-size:11px; white-space:nowrap; padding:4px 8px; border-radius:5px; pointer-events:none; z-index:200;
+}
+[title].act-view-cv:hover::before, [title].act-promote:hover::before, [title].act-reject:hover::before, [title].act-icon:hover::before, [title].act-more:hover::before {
+  content:''; position:absolute; bottom:calc(100% + 1px); left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:#1f2937; pointer-events:none; z-index:200;
+}
+
+/* ── Kanban pipeline ── */
+.pipeline-wrapper { padding:16px; overflow-x:auto; }
+.pipeline-board   { display:flex; gap:12px; min-width:max-content; padding-bottom:8px; }
+.pipeline-col     { width:220px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+.pipeline-col__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.pipeline-col__label  { font-size:12px; font-weight:600; color:#333; }
+.pipeline-col__badge  { background:#F0F0F0; color:#666; font-size:10px; font-weight:600; border-radius:10px; padding:2px 7px; min-width:22px; text-align:center; }
+.pipeline-card  { background:#fff; border:1px solid #EFEFEF; border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px; cursor:grab; transition:box-shadow .15s; }
+.pipeline-card:hover { box-shadow:0 2px 10px rgba(0,0,0,.08); }
+.pipeline-card__top  { display:flex; align-items:center; gap:8px; }
+.pipeline-card__av   { width:30px; height:30px; border-radius:50%; background:#278E53; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; text-transform:uppercase; }
+.pipeline-card__name { font-size:12px; font-weight:600; color:#1A1A1A; line-height:1.2; }
+.pipeline-card__role { font-size:11px; color:#888; line-height:1.3; }
+.pipeline-card__meta { display:flex; align-items:center; justify-content:space-between; }
+.pipeline-card__date { font-size:10px; color:#ABABAB; }
+.pipeline-card__src  { font-size:10px; background:#F0F5F1; color:#1F5F2F; border-radius:4px; padding:2px 6px; }
+.pipeline-add-btn    { width:100%; height:30px; border:1px dashed #D0D0D0; border-radius:6px; background:transparent; color:#ABABAB; font-size:11px; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; margin-top:2px; }
+.pipeline-add-btn:hover { border-color:#1F5F2F; color:#1F5F2F; background:#F0F5F1; }
+.pipeline-add-btn .material-symbols-outlined { font-size:14px; }
+.pipeline-drag-hint  { text-align:center; font-size:11px; color:#C0C0C0; padding:12px 0 4px; letter-spacing:.2px; }
+
+/* ── Table card fills remaining height ── */
+.ui-table-card { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+#panel-list    { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+#panel-pipeline{ flex:1; min-height:0; overflow:hidden; }
+.cand-table-scroll { flex:1; min-height:0; overflow-y:auto; }
+
+/* Pagination */
+.cand-pagination-label { font-size:11px; color:#888; }
+</style>
+
+<div class="cand-body">
+<!-- Header -->
+<div class="cand-header">
+  <div>
+    <div class="ui-page-title">Candidates & CV</div>
+    <div class="ui-page-subtitle">Browse and manage candidates across all job requisitions</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="ui-btn-outlined">
+      <span class="material-symbols-outlined" style="font-size:15px">upload</span> Export
+    </button>
+    <button class="ui-btn-outlined" type="button" onclick="openUploadCv()">
+      <span class="material-symbols-outlined" style="font-size:15px">upload_file</span> Upload CV
+    </button>
+    <a class="ui-btn-primary" href="/ui/job-requisition/" style="height:36px;padding:0 16px;border-radius:8px;gap:6px;text-decoration:none;">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span> Create Requisition
+    </a>
+  </div>
+</div>
+
+<!-- KPI cards -->
+<div class="cand-kpi-row">
+  <div class="cand-kpi">
+    <div class="cand-kpi__icon"><span class="material-symbols-outlined">groups</span></div>
+    <div>
+      <div class="cand-kpi__value" id="kpi-total">{{ kpi_total }}</div>
+      <div class="cand-kpi__label">Total Candidates</div>
+      <div class="cand-kpi__trend">↑ 20% from last month</div>
+    </div>
+  </div>
+  <div class="cand-kpi">
+    <div class="cand-kpi__icon"><span class="material-symbols-outlined">person_add</span></div>
+    <div>
+      <div class="cand-kpi__value" id="kpi-new-month">{{ kpi_new_month }}</div>
+      <div class="cand-kpi__label">New This Month</div>
+      <div class="cand-kpi__trend">↑ 13% from last month</div>
+    </div>
+  </div>
+  <div class="cand-kpi">
+    <div class="cand-kpi__icon"><span class="material-symbols-outlined">sync</span></div>
+    <div>
+      <div class="cand-kpi__value" id="kpi-in-pipeline">{{ kpi_in_pipeline }}</div>
+      <div class="cand-kpi__label">In Progress</div>
+      <div class="cand-kpi__trend">↑ 20% from last month</div>
+    </div>
+  </div>
+  <div class="cand-kpi">
+    <div class="cand-kpi__icon"><span class="material-symbols-outlined">star</span></div>
+    <div>
+      <div class="cand-kpi__value" id="kpi-shortlist">{{ kpi_shortlist }}</div>
+      <div class="cand-kpi__label">Shortlist</div>
+      <div class="cand-kpi__trend">↑ 13% from last month</div>
+    </div>
+  </div>
+  <div class="cand-kpi">
+    <div class="cand-kpi__icon" style="background:#C62828;"><span class="material-symbols-outlined">cancel</span></div>
+    <div>
+      <div class="cand-kpi__value" id="kpi-rejected">{{ kpi_rejected }}</div>
+      <div class="cand-kpi__label">Rejected</div>
+      <div class="cand-kpi__trend" style="color:#C62828">↓ 25% from last month</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab bar + content card -->
+<div class="ui-table-card">
+
+  <!-- Tabs -->
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #EFEFEF;padding:0 16px;">
+    <div style="display:flex;gap:0;">
+      <button class="cand-tab active" id="tab-list" onclick="switchTab('list')">Candidate List</button>
+      <button class="cand-tab" id="tab-pipeline" onclick="switchTab('pipeline')">Candidate Pipeline</button>
+    </div>
+    <span style="font-size:11px;color:#ABABAB;padding-bottom:2px;" id="tab-record-count">
+      {% if candidates_page %}{{ candidates_page.paginator.count }} record{{ candidates_page.paginator.count|pluralize }}{% endif %}
+    </span>
+  </div>
+
+  <!-- ═══════════════════════════════
+       TAB 1 — CANDIDATE LIST
+  ═══════════════════════════════ -->
+  <div id="panel-list">
+
+    <!-- Filter bar -->
+    <form class="cand-filter-bar" method="get" action="" id="cand-filter-form">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search by Requisition ID, Job title…">
+
+      <select class="cand-select" name="phase" onchange="this.form.submit()">
+        <option value="">All Status</option>
+        <option value="application" {% if filters.phase == "application" %}selected{% endif %}>Application</option>
+        <option value="interview"   {% if filters.phase == "interview"   %}selected{% endif %}>Interview</option>
+        <option value="proposal"    {% if filters.phase == "proposal"    %}selected{% endif %}>Proposal</option>
+        <option value="offer_letter" {% if filters.phase == "offer_letter" %}selected{% endif %}>Offer Letter</option>
+        <option value="hired"       {% if filters.phase == "hired"       %}selected{% endif %}>Hired</option>
+        <option value="cancelled"   {% if filters.phase == "cancelled"   %}selected{% endif %}>Rejected</option>
+      </select>
+
+      <select class="cand-select" name="stage" onchange="this.form.submit()">
+        <option value="">All Department</option>
+        {% for s in stages %}<option value="{{ s.id }}" {% if filters.stage|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>{{ s.stage }}</option>{% endfor %}
+      </select>
+
+      <select class="cand-select" name="recruitment" onchange="this.form.submit()">
+        <option value="">All Requisition Types</option>
+        {% for r in open_recruitments %}<option value="{{ r.id }}" {% if filters.recruitment|stringformat:"s" == r.id|stringformat:"s" %}selected{% endif %}>{{ r.title|default:r }}</option>{% endfor %}
+      </select>
+
+      <select class="cand-select" name="top_n" onchange="this.form.submit()" title="Show top N candidates by AI score">
+        <option value="">All Candidates</option>
+        <option value="10"  {% if filters.top_n == "10"  %}selected{% endif %}>Top 10 by Score</option>
+        <option value="25"  {% if filters.top_n == "25"  %}selected{% endif %}>Top 25 by Score</option>
+        <option value="50"  {% if filters.top_n == "50"  %}selected{% endif %}>Top 50 by Score</option>
+      </select>
+
+      <button type="submit" class="cand-filter-btn">
+        <span class="material-symbols-outlined">tune</span> Filters
+      </button>
+    </form>
+
+    <!-- Table -->
+    <div class="cand-table-scroll">
+    <table class="ui-table">
+      <thead>
+        <tr>
+          <th>Requisition ID</th>
+          <th>Job Title</th>
+          <th>Stage</th>
+          <th>AI Score</th>
+          <th>Source</th>
+          <th>Applied On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidates_page %}
+        {% with p=c.screening_profile %}
+        <tr>
+          <!-- REQUISITION ID cell — avatar + name + email + phone + req ID -->
+          <td style="min-width:220px;">
+            <div class="ui-avatar-chip">
+              <div class="ui-avatar">{{ c.name|slice:":2"|upper|default:"??" }}</div>
+              <div>
+                <div class="ui-avatar-chip__name">{{ c.name|default:"—" }}</div>
+                <div class="ui-avatar-chip__email">{{ c.email|default:"" }}</div>
+                {% if c.phone %}<div class="ui-avatar-chip__req">{{ c.phone }}</div>{% endif %}
+                <div class="ui-avatar-chip__req">REQ-{{ c.recruitment_id_id|default:"—" }}</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- JOB TITLE -->
+          <td style="font-size:12px;font-weight:500;color:#222;white-space:nowrap;">
+            {% if c.recruitment_id %}{{ c.recruitment_id.title|default:"—" }}
+            {% elif c.job_position_id %}{{ c.job_position_id }}
+            {% else %}—{% endif %}
+          </td>
+
+          <!-- STAGE -->
+          <td>
+            {% if c.canceled or c.stage_id.stage_type == "cancelled" %}
+              <span class="stage-rejected">Rejected</span>
+              <div class="stage-sub">{{ c.stage_id.stage|default:"Cancelled" }}</div>
+            {% elif c.hired or c.stage_id.stage_type == "hired" %}
+              <span class="stage-shortlisted">Hired</span>
+              <div class="stage-sub">Onboarded</div>
+            {% elif c.has_interview %}
+              <span class="stage-interview">{{ c.stage_id.stage|default:"Interview" }}</span>
+              <div class="stage-sub">Interview Round</div>
+            {% elif c.stage_id %}
+              <span class="stage-new">{{ c.stage_id.stage }}</span>
+              {% if c.stage_id.stage_type %}<div class="stage-sub">{{ c.stage_id.get_stage_type_display }}</div>{% endif %}
+            {% else %}
+              <span class="stage-new">New</span>
+              <div class="stage-sub">Application</div>
+            {% endif %}
+          </td>
+
+          <!-- AI SCORE -->
+          <td id="ai-score-cell-{{ c.id }}">
+            {% if p and p.status != "pending" %}
+              <span class="score-pill {% if p.matching_score >= 80 %}score-strong{% elif p.matching_score >= 60 %}score-mid{% else %}score-weak{% endif %}"
+                    title="Click for AI analysis"
+                    onclick="openAnalysis({{ c.id }})">{{ p.matching_score }}%</span>
+              {% if p.recommendation %}<div class="rec-label">{{ p.get_recommendation_display }}</div>{% endif %}
+              <script type="application/json" id="ai-{{ c.id }}">{{ c.ai_json|safe }}</script>
+            {% else %}
+              <span class="score-none">Not screened</span>
+            {% endif %}
+          </td>
+
+          <!-- SOURCE -->
+          <td>
+            <span class="source-tag">{{ c.get_source_display|default:c.source|default:"—" }}</span>
+          </td>
+
+          <!-- APPLIED ON -->
+          <td style="font-size:12px;color:#555;white-space:nowrap;">{{ c.created_at|date:"M d, Y" }}</td>
+
+          <!-- ACTIONS -->
+          <td>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <a class="act-view-cv" href="/ui/candidate/{{ c.id }}/" title="View profile">View Profile</a>
+
+              {% if not c.canceled and not c.hired %}
+                {% if p and p.status == "shortlisted" %}
+                  <a class="act-approve" href="/ui/interview-creator/?candidate={{ c.id }}" title="{% if p.hr_override %}HR Override — schedule interview{% else %}Shortlisted — schedule interview{% endif %}" style="text-decoration:none;">
+                    <span class="material-symbols-outlined" style="font-size:13px;margin-right:3px;">forum</span>Interview
+                  </a>
+                {% elif p and p.recommendation == "reject" %}
+                  <button type="button" class="act-hr-override" title="AI recommends reject — add HR justification to shortlist"
+                    onclick="openHROverride({{ c.id }}, '{{ c.name|escapejs }}')">
+                    <span class="material-symbols-outlined" style="font-size:13px;">shield</span> HR Override
+                  </button>
+                {% else %}
+                  <form method="post" action="{% url 'ui:candidate-promote' c.id %}" style="display:inline">{% csrf_token %}
+                    <button type="submit" class="act-approve" title="Shortlist candidate">Shortlist</button>
+                  </form>
+                {% endif %}
+              {% endif %}
+
+              <!-- three-dot dropdown -->
+              <div style="position:relative;">
+                <button class="act-more" title="More options" onclick="toggleMoreMenu(event, {{ c.id }})">
+                  <span class="material-symbols-outlined">more_vert</span>
+                </button>
+                <div id="more-menu-{{ c.id }}" style="display:none;position:absolute;right:0;top:32px;background:#fff;border:1px solid #E8E8E8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:160px;z-index:300;padding:4px 0;">
+                  {% if c.resume %}<a href="{{ c.resume.url }}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#333;"><span class="material-symbols-outlined" style="font-size:14px;color:#888;">description</span>View CV</a>{% endif %}
+                  {% if c.resume %}
+                  <button type="button"
+                    onclick="runAIScreen({{ c.id }}, '{% url 'ui:candidate-screen' c.id %}', '/ui/candidate/{{ c.id }}/screen-status/'); closeAllMoreMenus();"
+                    style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#333;background:none;border:none;width:100%;text-align:left;font-family:inherit;cursor:pointer;">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:#888;">auto_awesome</span>{% if p %}Re-run{% else %}Run{% endif %} AI Screen
+                  </button>
+                  {% endif %}
+                  {% if not c.canceled and not c.hired %}
+                  <div style="height:1px;background:#F0F0F0;margin:2px 0;"></div>
+                  <button type="button" onclick="openReject({{ c.id }}, '{{ c.name|escapejs }}'); closeAllMoreMenus();" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#C62828;background:none;border:none;width:100%;text-align:left;font-family:inherit;cursor:pointer;">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:#C62828;">cancel</span>Reject
+                  </button>
+                  {% endif %}
+                  <div style="height:1px;background:#F0F0F0;margin:2px 0;"></div>
+                  <button type="button" onclick="confirmDelete('{% url 'ui:candidate-delete' c.id %}', '{{ c.name|escapejs }}', 'candidate'); closeAllMoreMenus();" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#C62828;background:none;border:none;width:100%;text-align:left;font-family:inherit;cursor:pointer;">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:#C62828;">delete</span>Delete
+                  </button>
+                </div>
+              </div>
+
+              {% if p and p.status != "pending" %}
+                <button class="act-icon" title="AI analysis" onclick="openAnalysis({{ c.id }})">
+                  <span class="material-symbols-outlined">auto_awesome</span>
+                </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;color:#999;padding:32px;">No candidates found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div><!-- /cand-table-scroll -->
+
+    <!-- Pagination -->
+    <div class="ui-pagination-row">
+      <span class="ui-pagination-label">
+        Showing {{ candidates_page.number }} of {{ candidates_page.paginator.num_pages }} pages
+        &nbsp;·&nbsp; {{ candidates_page.paginator.count }} candidate{{ candidates_page.paginator.count|pluralize }}
+      </span>
+      <div class="ui-pagination-btns">
+        {% if candidates_page.has_previous %}
+          <a class="ui-pagination-btn" href="?{% for k,v in request.GET.items %}{% if k != "page" %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ candidates_page.previous_page_number }}">‹</a>
+        {% else %}
+          <button class="ui-pagination-btn" disabled>‹</button>
+        {% endif %}
+        <button class="ui-pagination-btn active">{{ candidates_page.number }}</button>
+        {% if candidates_page.has_next %}
+          <a class="ui-pagination-btn" href="?{% for k,v in request.GET.items %}{% if k != "page" %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ candidates_page.next_page_number }}">›</a>
+        {% else %}
+          <button class="ui-pagination-btn" disabled>›</button>
+        {% endif %}
+      </div>
+    </div>
+  </div><!-- /panel-list -->
+
+
+  <!-- ═══════════════════════════════
+       TAB 2 — CANDIDATE PIPELINE (Kanban)
+  ═══════════════════════════════ -->
+  <div id="panel-pipeline" style="display:none;">
+    <div class="pipeline-wrapper">
+      <div class="pipeline-board">
+        {% if pipeline_columns %}
+          {% for col in pipeline_columns %}
+          <div class="pipeline-col">
+            <div class="pipeline-col__header">
+              <span class="pipeline-col__label">{{ col.label }}</span>
+              <span class="pipeline-col__badge">{{ col.count }}</span>
+            </div>
+            {% for c in col.candidates %}
+            <div class="pipeline-card" draggable="true">
+              <div class="pipeline-card__top">
+                <div class="pipeline-card__av">{{ c.name|slice:":2"|upper|default:"??" }}</div>
+                <div>
+                  <div class="pipeline-card__name">{{ c.name|default:"—" }}</div>
+                  <div class="pipeline-card__role">
+                    {% if c.recruitment_id %}{{ c.recruitment_id.title|default:"—" }}
+                    {% elif c.job_position_id %}{{ c.job_position_id }}
+                    {% else %}—{% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="pipeline-card__meta">
+                <span class="pipeline-card__date">{{ c.created_at|date:"M d, Y" }}</span>
+                <span class="pipeline-card__src">{{ c.get_source_display|default:c.source|default:"—" }}</span>
+              </div>
+            </div>
+            {% empty %}
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:16px 0;">No candidates</div>
+            {% endfor %}
+            <button class="pipeline-add-btn" onclick="openUploadCv()">
+              <span class="material-symbols-outlined">add</span> Add Candidate
+            </button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <!-- Static fallback columns when pipeline_columns is not in context -->
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">New Application</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">Screening</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">Technical Interview</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">HR Interview</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">Offer</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col__header"><span class="pipeline-col__label">Hired</span><span class="pipeline-col__badge">0</span></div>
+            <div style="font-size:11px;color:#CCCCCC;text-align:center;padding:20px 0;">No candidates</div>
+            <button class="pipeline-add-btn" onclick="openUploadCv()"><span class="material-symbols-outlined">add</span> Add Candidate</button>
+          </div>
+        {% endif %}
+      </div>
+      <div class="pipeline-drag-hint">
+        <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle;">drag_indicator</span>
+        Drag and drop candidates to move between stages
+      </div>
+    </div>
+  </div><!-- /panel-pipeline -->
+
+</div><!-- /ui-table-card -->
+</div><!-- /cand-body -->
+
+
+<!-- ── AI Analysis modal ── -->
+<div class="ai-modal-overlay" id="aiModal" onclick="if(event.target===this)closeAnalysis()">
+  <div class="ai-modal" style="width:580px;max-width:95vw">
+    <button class="ai-modal-close" onclick="closeAnalysis()">&times;</button>
+    <h3 id="aiName">Candidate</h3>
+    <div class="sub" id="aiRec">AI CV Screening</div>
+
+    <!-- Score row -->
+    <div class="row">
+      <div class="stat"><b id="aiScore">0%</b>Match Score</div>
+      <div class="stat"><b id="aiExp">0</b>Years Experience</div>
+      <div class="stat" id="aiGrandWrap" style="display:none"><b id="aiGrand">—</b>ONEIC Score</div>
+    </div>
+
+    <!-- Tab bar -->
+    <div style="display:flex;gap:0;border-bottom:2px solid #F0F0F0;margin:14px 0 0">
+      <button id="tab-skills" onclick="switchAITab('skills')"
+        style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:600;color:#0F752F;border-bottom:2px solid #0F752F;margin-bottom:-2px;cursor:pointer;font-family:inherit">Skills</button>
+      <button id="tab-reasoning" onclick="switchAITab('reasoning')"
+        style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:500;color:#8E8D8D;cursor:pointer;font-family:inherit">Reasoning</button>
+    </div>
+
+    <!-- Skills tab -->
+    <div id="tab-panel-skills">
+      <div class="sec-title" style="margin-top:14px">Summary</div>
+      <div class="summary-text" id="aiSummary">—</div>
+      <div class="sec-title">Matching Skills</div>
+      <div id="aiMatching"></div>
+      <div class="sec-title">Missing Skills</div>
+      <div id="aiMissing"></div>
+    </div>
+
+    <!-- Reasoning tab -->
+    <div id="tab-panel-reasoning" style="display:none;padding-top:12px">
+      <!-- AI reasoning text -->
+      <div id="aiReasoningText" style="font-size:13px;color:#374151;line-height:1.65;padding:10px 12px;background:#F9FAFB;border-radius:8px;margin-bottom:14px"></div>
+
+      <!-- ONEIC 8-criteria table -->
+      <div id="aiBreakdownWrap">
+        <div style="font-size:11px;font-weight:700;color:#8E8D8D;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
+          ONEIC Evaluation — HR&amp;A/IAF/3.0/17
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px" id="aiBreakdownTable">
+          <thead>
+            <tr style="background:#F9FAFB;border-bottom:1px solid #E5E7EB">
+              <th style="padding:7px 10px;text-align:left;font-weight:600;color:#6B7280">Criteria</th>
+              <th style="padding:7px 10px;text-align:center;font-weight:600;color:#6B7280;width:60px">Score</th>
+              <th style="padding:7px 10px;text-align:left;font-weight:600;color:#6B7280">Comment</th>
+            </tr>
+          </thead>
+          <tbody id="aiBreakdownBody"></tbody>
+          <tfoot>
+            <tr style="border-top:2px solid #E5E7EB;background:#F9FAFB">
+              <td style="padding:8px 10px;font-weight:700;color:#111">Grand Total</td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#111" id="aiGrandTotal">—</td>
+              <td style="padding:8px 10px">
+                <span id="aiONEICStatus" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px"></span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reject modal ── -->
+<div class="ai-modal-overlay" id="rejectModal" onclick="if(event.target===this)closeReject()">
+  <form class="ai-modal" method="post" id="rejectForm">{% csrf_token %}
+    <button type="button" class="ai-modal-close" onclick="closeReject()">&times;</button>
+    <h3>Reject Candidate</h3>
+    <div class="sub" id="rejectName"></div>
+    <div class="sec-title">Justification (optional — included in email)</div>
+    <textarea name="justification" rows="3" style="width:100%;border:1px solid #E0E0E0;border-radius:7px;padding:8px;font-family:inherit;font-size:13px;" placeholder="Reason for rejection…"></textarea>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#555;margin-top:10px;">
+      <input type="checkbox" name="send_email" value="1" checked> Send rejection email to candidate
+    </label>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button type="button" class="act-view-cv" onclick="closeReject()">Cancel</button>
+      <button type="submit" class="act-reject">Reject Candidate</button>
+    </div>
+  </form>
+</div>
+
+<!-- ── Upload CV modal (runs the same AI screening as the careers page) ── -->
+<style>
+.ucv-field { margin-bottom:14px; }
+.ucv-label { display:block; font-size:12px; font-weight:600; color:#3A3A3A; margin-bottom:6px; }
+.ucv-label .req { color:#C62828; }
+.ucv-input,
+.ucv-select {
+  width:100%; height:40px; border:1px solid #E0E0E0; border-radius:8px; padding:0 12px;
+  font-family:inherit; font-size:13px; color:#222; background:#fff; outline:none;
+  box-sizing:border-box; transition:border-color .15s, box-shadow .15s;
+}
+.ucv-select { cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
+}
+.ucv-input::placeholder { color:#B0B0B0; }
+.ucv-input:focus,
+.ucv-select:focus { border-color:#208E3D; box-shadow:0 0 0 3px rgba(32,142,61,.12); }
+.ucv-drop {
+  display:flex; align-items:center; gap:10px; width:100%; border:1.5px dashed #D0D0D0; border-radius:8px;
+  padding:14px 14px; cursor:pointer; background:#FAFBFA; transition:border-color .15s, background .15s; box-sizing:border-box;
+}
+.ucv-drop:hover { border-color:#208E3D; background:#F2F8F4; }
+.ucv-drop .material-symbols-outlined { font-size:22px; color:#208E3D; }
+.ucv-drop__text { font-size:12px; color:#666; line-height:1.3; }
+.ucv-drop__text b { color:#208E3D; }
+.ucv-drop__name { font-size:12px; font-weight:600; color:#1A1A1A; }
+.ucv-row { display:flex; gap:12px; }
+.ucv-row > .ucv-field { flex:1; }
+</style>
+<div class="ai-modal-overlay" id="uploadCvModal" onclick="if(event.target===this)closeUploadCv()">
+  <form class="ai-modal" method="post" action="{% url 'ui:candidate-create' %}" enctype="multipart/form-data" id="uploadCvForm" style="width:540px;">{% csrf_token %}
+    <button type="button" class="ai-modal-close" onclick="closeUploadCv()">&times;</button>
+    <h3>Upload CV</h3>
+    <div class="sub">The CV is parsed and scored automatically by AI — the same screening the careers page runs.</div>
+
+    <div class="ucv-row">
+      <div class="ucv-field">
+        <label class="ucv-label">Candidate Name <span class="req">*</span></label>
+        <input class="ucv-input" type="text" name="name" required placeholder="Full name">
+      </div>
+      <div class="ucv-field">
+        <label class="ucv-label">Mobile</label>
+        <input class="ucv-input" type="text" name="mobile" placeholder="Optional">
+      </div>
+    </div>
+
+    <div class="ucv-field">
+      <label class="ucv-label">Email <span class="req">*</span></label>
+      <input class="ucv-input" type="email" name="email" required placeholder="name@example.com">
+    </div>
+
+    <div class="ucv-field">
+      <label class="ucv-label">Job Requisition</label>
+      <select class="ucv-select" name="recruitment">
+        <option value="">— Not linked (generic screening) —</option>
+        {% for r in open_recruitments %}
+          <option value="{{ r.id }}">{{ r.title|default:r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="ucv-field">
+      <label class="ucv-label">CV / Resume (PDF) <span class="req">*</span></label>
+      <label class="ucv-drop" for="ucvResume">
+        <span class="material-symbols-outlined">upload_file</span>
+        <span class="ucv-drop__text" id="ucvDropText"><b>Click to choose</b> a PDF file — drag &amp; drop also works</span>
+      </label>
+      <input id="ucvResume" type="file" name="resume" accept=".pdf,application/pdf" required style="display:none;"
+             onchange="document.getElementById('ucvDropText').innerHTML = this.files.length ? '<span class=\'ucv-drop__name\'>'+this.files[0].name+'</span>' : '<b>Click to choose</b> a PDF file — drag &amp; drop also works';">
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+      <button type="button" class="act-view-cv" onclick="closeUploadCv()">Cancel</button>
+      <button type="submit" class="ui-btn-primary" style="height:36px;padding:0 18px;border-radius:8px;gap:6px;">Upload &amp; Screen</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function openUploadCv()  { document.getElementById('uploadCvModal').classList.add('open'); }
+function closeUploadCv() { document.getElementById('uploadCvModal').classList.remove('open'); }
+</script>
+
+<script>
+/* ── Refresh KPI cards after screening ── */
+function refreshKPIs() {
+  fetch('/ui/candidates/kpi/')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+      set('kpi-total',       d.total);
+      set('kpi-new-month',   d.new_month);
+      set('kpi-in-pipeline', d.in_pipeline);
+      set('kpi-shortlist',   d.shortlist);
+      set('kpi-rejected',    d.rejected);
+    })
+    .catch(function() {});
+}
+
+/* ── Re-run AI Screen (per-row, no page reload) ── */
+function runAIScreen(id, screenUrl, statusUrl) {
+  var cell = document.getElementById('ai-score-cell-' + id);
+  if (!cell) return;
+
+  // Show spinner in the score cell
+  cell.innerHTML = '<span class="score-loading"><span class="score-spinner"></span>Analysing…</span>';
+
+  // POST to trigger screening (fetch mode)
+  var csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  fetch(screenUrl, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'fetch', 'X-CSRFToken': csrf },
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (!res.ok && !res.started) {
+      cell.innerHTML = '<span class="score-none" title="' + (res.error || 'Error') + '">Failed</span>';
+      return;
+    }
+    // Poll until status != "pending"
+    var attempts = 0;
+    var maxAttempts = 40; // 40 × 3s = 2 min timeout
+    var poll = setInterval(function() {
+      attempts++;
+      fetch(statusUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.status && d.status !== 'pending') {
+            clearInterval(poll);
+            // Update cell with new score
+            var score = d.score || 0;
+            var cls = score >= 80 ? 'score-strong' : score >= 60 ? 'score-mid' : 'score-weak';
+            var recLabel = d.recommendation ? '<div class="rec-label">' + d.recommendation + '</div>' : '';
+            var jsonBlob = '<script type="application/json" id="ai-' + id + '">'
+              + JSON.stringify({
+                  name: d.name, score: d.score, recommendation: d.recommendation,
+                  experience: d.experience, summary: d.summary,
+                  matching: d.matching, missing: d.missing,
+                  scoring_breakdown: d.scoring_breakdown, ai_reasoning: d.ai_reasoning,
+                  grand_total: d.grand_total, percentage: d.percentage,
+                })
+              + '<\/script>';
+            cell.innerHTML = '<span class="score-pill ' + cls + '" title="Click for AI analysis" onclick="openAnalysis(' + id + ')">'
+              + score + '%</span>' + recLabel + jsonBlob;
+            refreshKPIs();
+          } else if (attempts >= maxAttempts) {
+            clearInterval(poll);
+            cell.innerHTML = '<span class="score-none">Timed out</span>';
+          }
+        })
+        .catch(function() {
+          if (attempts >= maxAttempts) { clearInterval(poll); cell.innerHTML = '<span class="score-none">Error</span>'; }
+        });
+    }, 3000);
+  })
+  .catch(function() {
+    cell.innerHTML = '<span class="score-none">Network error</span>';
+  });
+}
+
+/* ── Tab switching ── */
+function switchTab(tab) {
+  var showList     = tab === 'list';
+  document.getElementById('panel-list').style.display     = showList ? '' : 'none';
+  document.getElementById('panel-pipeline').style.display = showList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', showList);
+  document.getElementById('tab-pipeline').classList.toggle('active', !showList);
+  var countEl = document.getElementById('tab-record-count');
+  if (countEl) countEl.style.display = showList ? '' : 'none';
+}
+
+/* ── Three-dot menus ── */
+function closeAllMoreMenus() {
+  document.querySelectorAll('[id^="more-menu-"]').forEach(function(m){ m.style.display='none'; });
+}
+function toggleMoreMenu(evt, id) {
+  evt.stopPropagation();
+  var menu = document.getElementById('more-menu-' + id);
+  var isOpen = menu.style.display !== 'none';
+  closeAllMoreMenus();
+  if (!isOpen) menu.style.display = 'block';
+}
+document.addEventListener('click', function(){ closeAllMoreMenus(); });
+
+/* ── AI analysis modal tab switcher ── */
+function switchAITab(tab) {
+  var isSkills = tab === 'skills';
+  document.getElementById('tab-panel-skills').style.display    = isSkills ? '' : 'none';
+  document.getElementById('tab-panel-reasoning').style.display = isSkills ? 'none' : '';
+  var ts = document.getElementById('tab-skills');
+  var tr = document.getElementById('tab-reasoning');
+  ts.style.color = isSkills ? '#0F752F' : '#8E8D8D';
+  ts.style.borderBottom = isSkills ? '2px solid #0F752F' : '2px solid transparent';
+  ts.style.fontWeight = isSkills ? '600' : '500';
+  tr.style.color = isSkills ? '#8E8D8D' : '#0F752F';
+  tr.style.borderBottom = isSkills ? '2px solid transparent' : '2px solid #0F752F';
+  tr.style.fontWeight = isSkills ? '500' : '600';
+}
+
+/* ── AI analysis modal ── */
+var CRITERIA_LABELS = {
+  work_experience:    'Work Experience',
+  qualifications:     'Education & Qualifications',
+  technical_skills:   'Technical Skills',
+  career_progression: 'Career Progression',
+  achievements_impact:'Achievements & Impact',
+  role_relevance:     'Role Relevance',
+  document_quality:   'Document Quality',
+  industry_knowledge: 'Industry Knowledge',
+};
+function openAnalysis(id) {
+  var el = document.getElementById('ai-' + id);
+  if (!el) return;
+  var d = JSON.parse(el.textContent);
+  document.getElementById('aiName').textContent  = d.name;
+  document.getElementById('aiRec').textContent   = 'Recommendation: ' + (d.recommendation || '—');
+  document.getElementById('aiScore').textContent = (d.score || 0) + '%';
+  document.getElementById('aiExp').textContent   = (d.experience || 0) + ' yrs';
+
+  // ONEIC score chip
+  var pct = d.percentage || d.score || 0;
+  var gt  = d.grand_total || 0;
+  var grandWrap = document.getElementById('aiGrandWrap');
+  if (gt > 0) {
+    grandWrap.style.display = '';
+    document.getElementById('aiGrand').textContent = gt + ' / 80';
+  } else {
+    grandWrap.style.display = 'none';
+  }
+
+  document.getElementById('aiSummary').textContent = d.summary || 'No summary available.';
+  var chips = function(arr, cls) {
+    if (!arr || !arr.length) return '<span class="score-none">—</span>';
+    return arr.map(function(s){ return '<span class="skill-chip ' + cls + '">' + s + '</span>'; }).join('');
+  };
+  document.getElementById('aiMatching').innerHTML = chips(d.matching, 'match');
+  document.getElementById('aiMissing').innerHTML  = chips(d.missing, '');
+
+  // Reasoning tab
+  document.getElementById('aiReasoningText').textContent = d.ai_reasoning || 'No reasoning available. Re-run screening to generate ONEIC evaluation.';
+
+  var tbody = document.getElementById('aiBreakdownBody');
+  tbody.innerHTML = '';
+  var breakdown = d.scoring_breakdown || {};
+  var keys = Object.keys(CRITERIA_LABELS);
+  var grandSum = 0;
+  keys.forEach(function(key) {
+    var item = breakdown[key] || {};
+    var score = parseInt(item.score || 0);
+    grandSum += score;
+    var color = score >= 7 ? '#166534' : score >= 5 ? '#92400E' : '#991B1B';
+    var bg    = score >= 7 ? '#DCFCE7' : score >= 5 ? '#FEF3C7' : '#FEE2E2';
+    var tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #F3F4F6';
+    tr.innerHTML = '<td style="padding:6px 10px;color:#374151">' + (CRITERIA_LABELS[key] || key) + '</td>'
+      + '<td style="padding:6px 10px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:24px;border-radius:5px;font-weight:700;font-size:12px;background:' + bg + ';color:' + color + '">' + (score || '–') + '</span></td>'
+      + '<td style="padding:6px 10px;color:#6B7280;font-size:11px">' + (item.comment || '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Grand total + ONEIC status
+  var displayTotal = gt > 0 ? gt : grandSum;
+  document.getElementById('aiGrandTotal').textContent = displayTotal + ' / 80';
+  var pctVal = displayTotal > 0 ? Math.round(displayTotal / 80 * 100) : pct;
+  var statusEl = document.getElementById('aiONEICStatus');
+  if (pctVal >= 70) {
+    statusEl.textContent = 'Suitable (≥70%)';
+    statusEl.style.background = '#DCFCE7'; statusEl.style.color = '#166534';
+  } else if (pctVal >= 60) {
+    statusEl.textContent = 'Standby (60–69%)';
+    statusEl.style.background = '#FEF3C7'; statusEl.style.color = '#92400E';
+  } else {
+    statusEl.textContent = 'Rejected (<60%)';
+    statusEl.style.background = '#FEE2E2'; statusEl.style.color = '#991B1B';
+  }
+
+  switchAITab('skills');
+  document.getElementById('aiModal').classList.add('open');
+}
+function closeAnalysis() { document.getElementById('aiModal').classList.remove('open'); }
+
+/* ── Reject modal ── */
+function openReject(id, name) {
+  var f = document.getElementById('rejectForm');
+  f.action = '/ui/candidate/' + id + '/reject/';
+  document.getElementById('rejectName').textContent = name;
+  document.getElementById('rejectModal').classList.add('open');
+}
+function closeReject() { document.getElementById('rejectModal').classList.remove('open'); }
+
+/* ── HR Override modal ── */
+function openHROverride(id, name) {
+  var f = document.getElementById('hrOverrideForm');
+  f.action = '/ui/candidate/' + id + '/hr-override/';
+  document.getElementById('hrOverrideName').textContent = name;
+  f.querySelector('textarea').value = '';
+  document.getElementById('hrOverrideModal').classList.add('open');
+}
+function closeHROverride() { document.getElementById('hrOverrideModal').classList.remove('open'); }
+function confirmDelete(url, name, type) {
+  document.getElementById('deleteMsg').textContent = 'Delete ' + type + ' "' + name + '"? This cannot be undone.';
+  document.getElementById('deleteConfirmForm').action = url;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDelete() { document.getElementById('deleteModal').classList.remove('open'); }
+</script>
+
+<!-- ── HR Override modal ── -->
+<div class="ai-modal-overlay" id="hrOverrideModal" onclick="if(event.target===this)closeHROverride()">
+  <form class="ai-modal" method="post" id="hrOverrideForm">{% csrf_token %}
+    <button type="button" class="ai-modal-close" onclick="closeHROverride()">&times;</button>
+    <h3>HR Override</h3>
+    <div class="sub" id="hrOverrideName"></div>
+    <div style="background:#FFF3E0;border:1px solid #FFCC80;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#E65100;display:flex;align-items:flex-start;gap:8px;">
+      <span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0;margin-top:1px;">warning</span>
+      <span>The AI has recommended <strong>Reject</strong> for this candidate. To shortlist them, you must provide a justification. This will be recorded as an HR Override.</span>
+    </div>
+    <div class="sec-title">Justification <span style="color:#C62828">*</span></div>
+    <textarea name="justification" rows="4" required style="width:100%;border:1px solid #E0E0E0;border-radius:7px;padding:8px;font-family:inherit;font-size:13px;" placeholder="Explain why this candidate should be shortlisted despite the AI recommendation…"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button type="button" class="act-view-cv" onclick="closeHROverride()">Cancel</button>
+      <button type="submit" class="act-hr-override" style="height:32px;padding:0 16px;">
+        <span class="material-symbols-outlined" style="font-size:13px;">shield</span> Confirm HR Override &amp; Shortlist
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="ai-modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDelete()">
+  <div class="ai-modal" style="max-width:420px">
+    <button type="button" class="ai-modal-close" onclick="closeDelete()">&times;</button>
+    <h3 style="color:#C62828">Confirm Delete</h3>
+    <p id="deleteMsg" style="font-size:14px;color:#444;margin:12px 0 20px"></p>
+    <form method="post" id="deleteConfirmForm">
+      {% csrf_token %}
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" class="act-view-cv" onclick="closeDelete()">Cancel</button>
+        <button type="submit" style="height:32px;padding:0 16px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

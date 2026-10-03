@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - PIP{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'pms/css/pip-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pip-form-container">
+    <div class="pip-form-header">
+        <h1>{{ page_title }}</h1>
+        <p>Create and manage PIP templates for your organization</p>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            <strong>Error:</strong>
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group {% if form.name.errors %}error{% endif %}">
+                <label for="{{ form.name.id_for_label }}">
+                    Template Name <span class="required">*</span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="error-message">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group {% if form.duration_days.errors %}error{% endif %}">
+                <label for="{{ form.duration_days.id_for_label }}">
+                    Duration (Days) <span class="required">*</span>
+                </label>
+                {{ form.duration_days }}
+                {% if form.duration_days.errors %}
+                    <div class="error-message">{{ form.duration_days.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group {% if form.description.errors %}error{% endif %}">
+            <label for="{{ form.description.id_for_label }}">
+                Description
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="error-message">{{ form.description.errors.0 }}</div>
+            {% endif %}
+            <small>Provide details about this template's purpose and usage</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group {% if form.frequency_of_reviews.errors %}error{% endif %}">
+                <label for="{{ form.frequency_of_reviews.id_for_label }}">
+                    Review Frequency <span class="required">*</span>
+                </label>
+                {{ form.frequency_of_reviews }}
+                {% if form.frequency_of_reviews.errors %}
+                    <div class="error-message">{{ form.frequency_of_reviews.errors.0 }}</div>
+                {% endif %}
+                <small>How often reviews should be conducted (days)</small>
+            </div>
+
+            <div class="form-group {% if form.success_criteria.errors %}error{% endif %}">
+                <label for="{{ form.success_criteria.id_for_label }}">
+                    Success Criteria
+                </label>
+                {{ form.success_criteria }}
+                {% if form.success_criteria.errors %}
+                    <div class="error-message">{{ form.success_criteria.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span>{% if object %}Update Template{% else %}Create Template{% endif %}</span>
+            </button>
+            <a href="{% url 'pip-template-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

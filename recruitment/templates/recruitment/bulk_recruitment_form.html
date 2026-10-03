@@ -1,0 +1,114 @@
+{% load i18n %}
+<div class="oh-modal__dialog-header">
+    <h5 class="oh-modal__dialog-title">{% trans "Bulk Recruitment" %}</h5>
+    <button class="oh-modal__close" aria-label="Close">
+        <ion-icon name="close-outline"></ion-icon>
+    </button>
+</div>
+<div class="oh-modal__dialog-body">
+    <form method="post" enctype="multipart/form-data" action="{% url 'bulk-recruitment' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="oh-label required-star">{% trans "Excel File (Title, Vacancy columns)" %}</label>
+            <input type="file" name="excel_file" id="bulkExcelInput"
+                   accept=".xlsx,.xls"
+                   class="oh-input" required>
+            <div style="font-size:12px;color:#888;margin-top:4px;">
+                {% trans "Upload an .xlsx file. The first row must include 'Title' and 'Vacancy' headers." %}
+            </div>
+        </div>
+
+        <div id="bulkPreviewWrap" style="display:none;" class="mb-3">
+            <label class="oh-label">{% trans "Preview" %}</label>
+            <div class="oh-table-responsive" style="max-height:280px;overflow:auto;border:1px solid #eee;border-radius:6px;">
+                <table class="oh-table oh-table--striped" style="margin:0;">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">#</th>
+                            <th>{% trans "Title" %}</th>
+                            <th style="width:120px;">{% trans "Vacancy" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulkPreviewBody"></tbody>
+                </table>
+            </div>
+            <div id="bulkPreviewSummary" style="font-size:12px;color:#555;margin-top:4px;"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="oh-label required-star">{% trans "Approval Document" %}</label>
+            <input type="file" name="approval_document" id="bulkApprovalInput"
+                   class="oh-input" required>
+            <div style="font-size:12px;color:#888;margin-top:4px;">
+                {% trans "Attach the signed approval document (PDF / image). Save unlocks once this is attached." %}
+            </div>
+        </div>
+
+        <div class="d-flex flex-row-reverse w-100 align-items-right mt-4">
+            <button type="submit" id="bulkSaveBtn" class="oh-btn oh-btn--secondary pl-5 pr-5" disabled>
+                {% trans "Save" %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+  const excelIn   = document.getElementById("bulkExcelInput");
+  const approvalIn= document.getElementById("bulkApprovalInput");
+  const previewWrap = document.getElementById("bulkPreviewWrap");
+  const previewBody = document.getElementById("bulkPreviewBody");
+  const summary   = document.getElementById("bulkPreviewSummary");
+  const saveBtn   = document.getElementById("bulkSaveBtn");
+
+  let parsedRows = [];
+
+  function refreshSave(){
+    saveBtn.disabled = !(parsedRows.length > 0 && approvalIn.files && approvalIn.files.length > 0);
+  }
+
+  function parseExcel(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:"array"});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws, {defval:""});
+        parsedRows = [];
+        previewBody.innerHTML = "";
+        json.forEach((row, i) => {
+          // Tolerant header lookup (case-insensitive)
+          const titleKey   = Object.keys(row).find(k => k.toLowerCase().trim() === "title");
+          const vacancyKey = Object.keys(row).find(k => k.toLowerCase().trim() === "vacancy");
+          const title   = titleKey   ? String(row[titleKey]).trim()   : "";
+          const vacancy = vacancyKey ? parseInt(row[vacancyKey], 10) || 0 : 0;
+          if (!title) return;
+          parsedRows.push({title, vacancy});
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${parsedRows.length}</td><td>${title}</td><td>${vacancy}</td>`;
+          previewBody.appendChild(tr);
+        });
+        previewWrap.style.display = parsedRows.length ? "" : "none";
+        summary.textContent = parsedRows.length
+          ? `${parsedRows.length} row(s) ready to import.`
+          : "No valid rows found. Make sure the headers are 'Title' and 'Vacancy'.";
+      } catch(err){
+        previewWrap.style.display = "none";
+        summary.textContent = "Could not read file: " + err.message;
+        parsedRows = [];
+      }
+      refreshSave();
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  excelIn.addEventListener("change", function(){
+    if (excelIn.files && excelIn.files[0]) parseExcel(excelIn.files[0]);
+    else { parsedRows = []; previewWrap.style.display="none"; refreshSave(); }
+  });
+  approvalIn.addEventListener("change", refreshSave);
+})();
+</script>

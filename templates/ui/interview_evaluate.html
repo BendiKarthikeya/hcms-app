@@ -1,0 +1,612 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}Interview Evaluation — HCMS{% endblock %}
+{% block active_interview %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb" style="margin-bottom:12px">
+  <span class="material-symbols-outlined">keyboard_arrow_left</span>
+  <a href="/ui/interview/" style="color:#6D6D6D;text-decoration:none">Back to Interviews</a>
+</div>
+
+<!-- Page header + action buttons -->
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+  <div>
+    <div class="ui-page-title" style="margin-bottom:4px">Interviews Details &amp; Evaluation</div>
+    <div class="ui-page-subtitle">Review Interview details and provide evaluation for candidates</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="ui-btn-outlined" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">download</span> Download
+    </button>
+    {% if show_generate_proposal %}
+    <a href="/ui/employment-proposal/?candidate_id={{ iv.candidate_id.id }}&interview_id={{ iv.id }}"
+       class="ui-btn-primary" style="gap:6px;text-decoration:none;display:flex;align-items:center">
+      <span class="material-symbols-outlined" style="font-size:17px">description</span> Generate Proposal
+    </a>
+    {% endif %}
+    {% if not is_hr_view %}
+    <button class="ui-btn-outlined" form="eval-form" type="submit" name="_save_draft" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">save</span> Save as Draft
+    </button>
+    <button class="ui-btn-primary" form="eval-form" type="submit" style="gap:6px">
+      <span class="material-symbols-outlined" style="font-size:17px">send</span> Submit Evaluation
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+{% if messages %}{% for m in messages %}<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>{% endfor %}{% endif %}
+
+<!-- Candidate info card -->
+<div class="iv-card" style="margin-bottom:16px">
+  <div class="iv-card-section" style="min-width:220px">
+    <div class="iv-avatar">{{ iv.candidate_id.name|slice:":2"|upper|default:"?" }}</div>
+    <div style="margin-left:16px">
+      <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:2px">{{ iv.candidate_id.name|default:"—" }}</div>
+      <div style="font-size:13px;color:#7A7A7A;margin-bottom:2px">{{ iv.candidate_id.email|default:"" }}</div>
+      {% if iv.candidate_id.phone %}<div style="font-size:13px;color:#7A7A7A;margin-bottom:6px">{{ iv.candidate_id.phone }}</div>{% endif %}
+      <div style="background:#DCD9D9;border-radius:7px;padding:4px 10px;display:inline-block;font-size:12px;color:#606060">
+        {% if iv.candidate_id.recruitment_id_id %}REQ-{{ iv.candidate_id.recruitment_id_id }}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="iv-card-divider"></div>
+
+  <div class="iv-card-section" style="flex:1;flex-direction:column;align-items:flex-start">
+    <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:10px">Interview Summary</div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">person</span>
+      <span class="iv-info-label">Job Title</span>
+      <span class="iv-info-val">{% if iv.candidate_id.recruitment_id %}{{ iv.candidate_id.recruitment_id.title }}{% elif iv.candidate_id.job_position_id %}{{ iv.candidate_id.job_position_id.job_position }}{% else %}—{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">co_present</span>
+      <span class="iv-info-label">Department</span>
+      <span class="iv-info-val">{% if iv.candidate_id.recruitment_id and iv.candidate_id.recruitment_id.department %}{{ iv.candidate_id.recruitment_id.department }}{% else %}—{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">co_present</span>
+      <span class="iv-info-label">Interview Type</span>
+      <span class="iv-info-val" id="round-interview-type-val">{% if current_round.label %}{{ current_round.label }}{% else %}{{ iv.get_interview_type_display|default:"Technical Interview" }}{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">co_present</span>
+      <span class="iv-info-label">Interview Stage</span>
+      <span class="iv-info-val">Evaluation</span>
+    </div>
+  </div>
+
+  <div class="iv-card-divider"></div>
+
+  <div class="iv-card-section" style="flex:1;flex-direction:column;align-items:flex-start">
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">date_range</span>
+      <span class="iv-info-label">Interview Date &amp; Time</span>
+      <span class="iv-info-val">{{ iv.interview_date|date:"M d, Y" }}{% if iv.interview_time %} — {{ iv.interview_time|time:"g:i A" }}{% endif %}</span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">contacts</span>
+      <span class="iv-info-label">Interviewers</span>
+      <span class="iv-info-val" id="round-interviewers-display">
+        {% for emp in current_round_interviewers %}{{ emp }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+      </span>
+    </div>
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">phonelink</span>
+      <span class="iv-info-label">Mode</span>
+      <span class="iv-info-val">{% if iv.online_meeting_link %}Online{% else %}In-Person{% endif %}</span>
+    </div>
+    {% if iv.online_meeting_link %}
+    <div class="iv-info-row">
+      <span class="material-symbols-outlined iv-info-icon">link</span>
+      <span class="iv-info-label">Meeting Link</span>
+      <a href="{{ iv.online_meeting_link }}" class="iv-info-val" style="color:#4F8FE8;text-decoration:underline" target="_blank">{{ iv.online_meeting_link|truncatechars:40 }}</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Rounds stepper -->
+<div class="iv-rounds-card" style="margin-bottom:16px">
+  <div style="font-size:15px;font-weight:600;color:#111;margin-right:24px;white-space:nowrap">Interview Rounds</div>
+  <div class="iv-rounds-stepper">
+    {% for r in rounds %}
+    <div class="iv-round-step {% if r.is_current %}iv-round-step--active{% elif r.completed_display %}iv-round-step--done{% endif %}{% if not r.is_assigned %} iv-round-step--locked{% endif %}"
+         data-round="{{ r.round_number }}" data-assigned="{% if r.is_assigned %}true{% else %}false{% endif %}">
+      <div class="iv-round-dot"></div>
+      <div style="display:flex;align-items:center;gap:3px;font-size:13px;font-weight:500;color:{% if r.completed_display or r.is_current %}#0F752F{% else %}#7A7A7A{% endif %}">
+        Round {{ r.round_number }}{% if not r.is_assigned %}<span class="material-symbols-outlined" style="font-size:13px;color:#BBBBBB">lock</span>{% endif %}
+      </div>
+      <div style="font-size:11px;color:#7A7A7A">{{ r.label }}</div>
+    </div>
+    {% if not forloop.last %}<div class="iv-round-line"></div>{% endif %}
+    {% empty %}
+    <div class="iv-round-step iv-round-step--active" data-round="1">
+      <div class="iv-round-dot"></div>
+      <div style="font-size:13px;font-weight:500;color:#0F752F">Round 1</div>
+      <div style="font-size:11px;color:#7A7A7A">{{ iv.get_interview_type_display|default:"Interview" }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="margin-left:auto">
+    <div class="iv-rounds-nav-card">
+      <div style="font-size:11px;font-weight:600;color:#606060">Current Round</div>
+      <div style="font-size:12px;font-weight:700;color:#111;margin-top:2px" id="round-nav-display">{{ current_round_display|default:"1 of 1" }}</div>
+      <div style="display:flex;gap:4px;position:absolute;right:10px;top:50%;transform:translateY(-50%)">
+        <button type="button" class="iv-nav-arrow" id="round-prev">‹</button>
+        <button type="button" class="iv-nav-arrow" id="round-next">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Evaluation form + summary panel -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+
+  <!-- Evaluation form card -->
+  <form id="eval-form" method="post" action="">{% csrf_token %}
+    <input type="hidden" name="round_num" id="form-round-num" value="{{ current_round_num }}">
+    <div class="ui-table-card" style="padding:0">
+      {% if is_hr_view %}
+      <div id="round-hr-banner" style="display:flex;margin:16px 24px 0;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;font-size:12px;color:#1D4ED8;align-items:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">visibility</span>
+        HR Overview — All rounds are visible in read-only mode. Scores below reflect the average across all panelist submissions for this round.
+      </div>
+      {% else %}
+      <div id="round-locked-banner" style="display:none;margin:16px 24px 0;background:#FEF3C7;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400E;align-items:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">lock</span>
+        You are not assigned to this round. Only the panelists assigned to this round can fill in the evaluation.
+      </div>
+      {% endif %}
+      <div style="padding:20px 24px 12px">
+        <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">
+          Evaluation Form — <span id="eval-form-round-title">{% if current_round_label %}{{ current_round_label }}{% else %}{{ iv.get_interview_type_display|default:"Interview" }}{% endif %}</span>
+        </div>
+        <div style="font-size:13px;color:#7A7A7A">Rate the candidate on each criteria according to the interview</div>
+      </div>
+      <table class="ui-table" style="margin-top:0">
+        <thead>
+          <tr>
+            <th style="width:20%">Evaluation Criteria</th>
+            <th style="width:26%">Description</th>
+            <th style="width:7%;text-align:center">Max<br>Score</th>
+            <th style="width:22%;text-align:center">Score{% if is_hr_view and round_submissions %}<br><span style="font-size:10px;font-weight:400;color:#888">avg of {{ round_submissions|length }} panelist{{ round_submissions|length|pluralize }}</span>{% endif %}</th>
+            <th>Comments</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for crit in criteria %}
+          <tr>
+            <td style="font-size:13px;font-weight:500;color:#111;vertical-align:top;padding-top:14px">{{ crit.name }}</td>
+            <td style="font-size:12px;color:#606060;border-left:1px solid #8E8D8D;padding-left:12px;vertical-align:top;padding-top:14px">{{ crit.description }}</td>
+            <td style="text-align:center;font-size:13px;font-weight:700;color:#606060;vertical-align:top;padding-top:14px">{{ crit.max_score }}</td>
+            <td style="border-left:1px solid #8E8D8D;padding-left:10px;vertical-align:top;padding-top:12px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="iv-stars" data-name="score_{{ crit.id }}" data-max="{{ crit.max_score }}" data-score="{{ crit.current_score|default:0 }}">
+                  <span class="iv-star" data-val="1">★</span>
+                  <span class="iv-star" data-val="2">★</span>
+                  <span class="iv-star" data-val="3">★</span>
+                  <span class="iv-star" data-val="4">★</span>
+                  <span class="iv-star" data-val="5">★</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="number" name="score_{{ crit.id }}" value="{{ crit.current_score|default:'' }}"
+                    min="0" max="{{ crit.max_score }}" step="1" class="eval-score-input"
+                    style="width:46px;height:32px;border:1px solid #BCBCBC;border-radius:6px;background:#F3F3F3;text-align:center;font-size:13px;padding:0 4px">
+                  <span style="font-size:12px;color:#8E8D8D">/{{ crit.max_score }}</span>
+                </div>
+              </div>
+            </td>
+            <td style="vertical-align:top;padding-top:12px">
+              <textarea name="comment_{{ crit.id }}" placeholder="Enter your remarks"
+                style="width:100%;min-height:68px;border:1px solid #BCBCBC;border-radius:6px;background:#F3F3F3;font-size:12px;padding:8px 10px;resize:vertical;font-family:inherit;color:#333;outline:none">{{ crit.current_comment|default:'' }}</textarea>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="text-align:center;color:#999;padding:20px">No evaluation criteria configured.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #F0F0F0">
+        <div style="font-size:15px;font-weight:600;color:#0D0D0D">Total Score</div>
+        <div style="font-size:18px;font-weight:700;color:#0F752F" id="total-score-display">--/{{ total_max }}</div>
+      </div>
+
+      {% if is_hr_view %}
+      <div style="padding:0 24px 20px">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:10px">Submissions for Round {{ current_round_num }}</div>
+        {% if round_submissions %}
+          {% for sub in round_submissions %}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:#F8F8F8;border-radius:8px;margin-bottom:6px;border:1px solid #EBEBEB">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:28px;height:28px;border-radius:50%;background:#DDD;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#555">{{ sub.panelist|slice:":2"|upper }}</div>
+              <span style="font-size:13px;font-weight:500;color:#333">{{ sub.panelist }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="font-size:12px;color:#606060">{{ sub.total }}/{{ sub.max }}</span>
+              <span style="font-size:13px;font-weight:700;color:{% if sub.pct >= 70 %}#0F752F{% elif sub.pct >= 60 %}#D97706{% else %}#DC2626{% endif %}">{{ sub.pct }}%</span>
+              <span style="font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;background:{% if sub.pct >= 70 %}#E2ECE8{% elif sub.pct >= 60 %}#FEF3C7{% else %}#FEE2E2{% endif %};color:{% if sub.pct >= 70 %}#0F752F{% elif sub.pct >= 60 %}#D97706{% else %}#DC2626{% endif %}">{{ sub.rec }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;padding:20px 0;color:#9E9E9E;font-size:13px">
+            <span class="material-symbols-outlined" style="font-size:28px;display:block;margin-bottom:6px;color:#CCC">assignment</span>
+            No evaluations submitted for this round yet.
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Additional comment -->
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:500;color:#111;margin-bottom:8px">Additional Comment</div>
+      <div style="border:1px solid #D1D1D1;border-radius:14px;padding:14px 20px;background:#fff;min-height:100px">
+        <textarea name="notes" rows="4" placeholder="Write a comment or note about the candidate's overall performance…"
+          style="width:100%;border:none;outline:none;font-size:13px;color:#333;resize:vertical;font-family:inherit;background:transparent;min-height:72px">{{ existing.notes|default:"" }}</textarea>
+      </div>
+    </div>
+  </form>
+
+  <!-- Overall summary panel -->
+  <div style="border:1px solid #D3D3D3;border-radius:16px;padding:20px;background:#fff;position:sticky;top:16px">
+    <div style="font-size:15px;font-weight:600;color:#111;margin-bottom:16px">Overall Summary</div>
+
+    <!-- Donut chart -->
+    <div style="display:flex;justify-content:center;margin-bottom:16px">
+      <div style="position:relative;width:140px;height:140px">
+        <canvas id="evalDonut" width="140" height="140"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:26px;font-weight:700;color:#111" id="donut-pct-text">{{ overall_pct|default:"0" }}%</div>
+          <div style="font-size:11px;color:#606060;text-align:center;line-height:1.2">Overall<br>Percentage</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto recommendation -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">Recommendation</div>
+      <div id="recommend-badge" style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#E2ECE8;color:#0F752F;margin-bottom:8px">—</div>
+      <p id="recommend-text" style="font-size:13px;color:#7A7A7A;line-height:1.5;margin:0"></p>
+    </div>
+
+    <!-- Recruitment summary table -->
+    <div style="border-top:1px solid #D1D1D1;padding-top:12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px">Recruitment Summary</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse">
+        <thead>
+          <tr style="color:#888">
+            <th style="text-align:left;padding:3px 6px;font-weight:500">Status</th>
+            <th style="text-align:right;padding:3px 6px;font-weight:500">Min %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="summary-row-suitable" style="background:transparent">
+            <td style="padding:3px 6px;color:#0F752F;font-weight:500">Suitable</td>
+            <td style="padding:3px 6px;text-align:right;color:#555">≥ 70%</td>
+          </tr>
+          <tr id="summary-row-standby" style="background:transparent">
+            <td style="padding:3px 6px;color:#D97706;font-weight:500">Standby</td>
+            <td style="padding:3px 6px;text-align:right;color:#555">60–69%</td>
+          </tr>
+          <tr id="summary-row-rejected" style="background:transparent">
+            <td style="padding:3px 6px;color:#DC2626;font-weight:500">Rejected</td>
+            <td style="padding:3px 6px;text-align:right;color:#555">< 60%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Strengths -->
+    <div style="border-top:1px solid #D1D1D1;padding-top:14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">Strengths</div>
+      {% if is_hr_view %}
+        {% for sub_ev in all_evals %}{% if sub_ev.strengths %}
+        <div style="font-size:12px;color:#333;padding:8px 12px;background:#F8F8F8;border-radius:6px;margin-bottom:6px">
+          <span style="font-size:11px;color:#888;display:block;margin-bottom:2px">{{ sub_ev.panelist }}</span>{{ sub_ev.strengths }}
+        </div>
+        {% endif %}{% empty %}
+        <div style="font-size:12px;color:#9E9E9E">No strengths recorded yet.</div>
+        {% endfor %}
+      {% else %}
+      <textarea name="strengths" form="eval-form" placeholder="List candidate strengths…"
+        style="width:100%;min-height:72px;border:1px solid #BCBCBC;border-radius:8px;background:#F8F8F8;font-size:12px;padding:8px 10px;resize:vertical;font-family:inherit;color:#333;outline:none;box-sizing:border-box">{{ existing.strengths|default:"" }}</textarea>
+      {% endif %}
+    </div>
+
+    <!-- Areas for improvement -->
+    <div style="border-top:1px solid #D1D1D1;padding-top:14px">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">Areas for Improvement</div>
+      {% if is_hr_view %}
+        {% for sub_ev in all_evals %}{% if sub_ev.weaknesses %}
+        <div style="font-size:12px;color:#333;padding:8px 12px;background:#F8F8F8;border-radius:6px;margin-bottom:6px">
+          <span style="font-size:11px;color:#888;display:block;margin-bottom:2px">{{ sub_ev.panelist }}</span>{{ sub_ev.weaknesses }}
+        </div>
+        {% endif %}{% empty %}
+        <div style="font-size:12px;color:#9E9E9E">No improvement notes recorded yet.</div>
+        {% endfor %}
+      {% else %}
+      <textarea name="weaknesses" form="eval-form" placeholder="List areas for improvement…"
+        style="width:100%;min-height:72px;border:1px solid #BCBCBC;border-radius:8px;background:#F8F8F8;font-size:12px;padding:8px 10px;resize:vertical;font-family:inherit;color:#333;outline:none;box-sizing:border-box">{{ existing.weaknesses|default:"" }}</textarea>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+.ui-main    { height: 100vh !important; overflow: hidden !important; }
+.ui-content { height: calc(100vh - 86px); overflow-y: auto; padding: 14px 20px 16px; }
+
+.iv-card {
+  display:flex; align-items:stretch; border:1px solid #D1D1D1; border-radius:14px;
+  background:#fff; overflow:hidden;
+}
+.iv-card-section { display:flex; align-items:center; padding:20px 24px; }
+.iv-card-divider { width:1px; background:#D1D1D1; flex-shrink:0; margin:16px 0; }
+.iv-avatar {
+  width:100px; height:100px; border-radius:50%; background:#DDD; display:flex;
+  align-items:center; justify-content:center; font-size:36px; font-weight:700;
+  color:#555; flex-shrink:0;
+}
+.iv-info-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; }
+.iv-info-icon { font-size:16px; color:#606060; background:#F0F0F0; border-radius:5px; padding:2px; }
+.iv-info-label { color:#7A7A7A; font-weight:600; width:150px; flex-shrink:0; white-space:nowrap; }
+.iv-info-val { color:#606060; }
+
+.iv-rounds-card {
+  display:flex; align-items:center; gap:16px;
+  border:1px solid #D1D1D1; border-radius:14px; background:#fff; padding:16px 20px;
+  position:relative;
+}
+.iv-rounds-stepper { display:flex; align-items:center; gap:0; flex:1; min-width:0; overflow-x:auto; }
+.iv-round-step {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  min-width:80px; cursor:pointer; padding:4px 6px; border-radius:8px; transition:background .15s;
+}
+.iv-round-step:hover { background:#F0F8F3; }
+.iv-round-dot { width:11px; height:11px; border-radius:50%; background:#D1D1D1; margin-bottom:2px; }
+.iv-round-step--active .iv-round-dot,
+.iv-round-step--done .iv-round-dot { background:#0F752F; }
+.iv-round-line { flex:1; height:1px; background:#D1D1D1; margin-bottom:22px; min-width:24px; }
+.iv-round-step--active ~ .iv-round-line,
+.iv-round-step--done ~ .iv-round-line { background:#0F752F; }
+.iv-rounds-nav-card {
+  background:#F5F5F5; border:1px solid #8E8D8D; border-radius:9px; padding:8px 12px;
+  min-width:160px; position:relative;
+}
+.iv-nav-arrow {
+  width:28px; height:26px; border:1px solid #C9C9C9; border-radius:4px;
+  background:#fff; cursor:pointer; font-size:14px;
+}
+.iv-nav-arrow:disabled { opacity:.4; cursor:default; }
+.iv-stars { display:flex; gap:3px; }
+.iv-star { font-size:22px; color:#D9D9D9; cursor:pointer; transition:color 0.1s; line-height:1; }
+.iv-star--filled { color:#0F752F; }
+.iv-star:hover,
+.iv-star:hover ~ .iv-star { color:#D9D9D9; }
+.iv-stars:hover .iv-star { color:#0F752F; }
+.iv-stars .iv-star:hover ~ .iv-star { color:#D9D9D9; }
+.eval-score-input:focus { border-color:#76B590; outline:none; }
+.eval-score-input:disabled { background:#F0F0F0; color:#999; cursor:default; }
+.summary-row-active td { background:#F0F8F3 !important; border-radius:4px; }
+.iv-round-step--locked { opacity:0.6; cursor:default; }
+.iv-round-step--locked .iv-round-dot { background:#CCCCCC !important; }
+</style>
+
+<script>
+(function () {
+  /* ── Round data from server ── */
+  var ROUNDS = {{ rounds_json|safe }};
+  var totalRounds = ROUNDS.length || 1;
+  var pageRound = {{ current_round_num|default:1 }};  /* round whose scores are in the form */
+  var currentRound = pageRound;
+  var totalMax = {{ total_max|default:80 }};
+  var isHrView = {{ is_hr_view|yesno:"true,false" }};
+
+  /* ── Stars ↔ score two-way sync ── */
+  function setStars(group, score, maxScore) {
+    var stars = group.querySelectorAll('.iv-star');
+    var filled = Math.round(score * 5 / maxScore);
+    stars.forEach(function (s, i) {
+      s.classList.toggle('iv-star--filled', i < filled);
+    });
+  }
+
+  document.querySelectorAll('.iv-stars').forEach(function (group) {
+    var stars = group.querySelectorAll('.iv-star');
+    var maxScore = parseInt(group.dataset.max) || 10;
+    var name = group.dataset.name;
+    var input = name ? document.querySelector('input[name="' + name + '"]') : null;
+
+    /* Initial fill from data-score */
+    var initScore = parseFloat(group.dataset.score) || 0;
+    setStars(group, initScore, maxScore);
+
+    /* Click star → set score */
+    stars.forEach(function (star, i) {
+      star.addEventListener('click', function () {
+        var score = Math.round((i + 1) * maxScore / 5);
+        setStars(group, score, maxScore);
+        if (input) { input.value = score; updateSummary(); }
+      });
+      /* Hover preview */
+      star.addEventListener('mouseenter', function () {
+        stars.forEach(function (s, j) { s.classList.toggle('iv-star--filled', j <= i); });
+      });
+      star.addEventListener('mouseleave', function () {
+        var cur = input ? (parseFloat(input.value) || 0) : 0;
+        setStars(group, cur, maxScore);
+      });
+    });
+
+    /* Score input → update stars */
+    if (input) {
+      input.addEventListener('input', function () {
+        var v = Math.max(0, Math.min(maxScore, parseFloat(this.value) || 0));
+        setStars(group, v, maxScore);
+        updateSummary();
+      });
+    }
+  });
+
+  /* ── Live summary (donut + recommendation + total) ── */
+  var donutCanvas = document.getElementById('evalDonut');
+  var donutCtx = donutCanvas ? donutCanvas.getContext('2d') : null;
+
+  function drawDonut(pct) {
+    if (!donutCtx) return;
+    var r = 55, cx = 70, cy = 70;
+    var start = -Math.PI / 2;
+    var end = start + (pct / 100) * 2 * Math.PI;
+    donutCtx.clearRect(0, 0, 140, 140);
+    donutCtx.beginPath(); donutCtx.arc(cx, cy, r, 0, 2 * Math.PI);
+    donutCtx.strokeStyle = '#E0E0E0'; donutCtx.lineWidth = 14; donutCtx.stroke();
+    if (pct > 0) {
+      donutCtx.beginPath(); donutCtx.arc(cx, cy, r, start, end);
+      var color = pct >= 70 ? '#0F752F' : (pct >= 60 ? '#D97706' : '#DC2626');
+      donutCtx.strokeStyle = color; donutCtx.lineWidth = 14; donutCtx.lineCap = 'round'; donutCtx.stroke();
+    }
+  }
+
+  var RECOMMEND = {
+    suitable: { label: 'Suitable', bg: '#E2ECE8', color: '#0F752F', text: 'Candidate meets the evaluation criteria and is recommended for hire.', row: 'summary-row-suitable' },
+    standby:  { label: 'Standby',  bg: '#FEF3C7', color: '#D97706', text: 'Candidate is a potential standby hire. Further review may be needed.', row: 'summary-row-standby' },
+    rejected: { label: 'Rejected', bg: '#FEE2E2', color: '#DC2626', text: 'Candidate does not meet the required criteria at this time.', row: 'summary-row-rejected' },
+  };
+
+  function updateSummary() {
+    var total = 0;
+    document.querySelectorAll('.eval-score-input').forEach(function (inp) {
+      total += parseFloat(inp.value) || 0;
+    });
+    var pct = totalMax > 0 ? Math.round(total / totalMax * 100) : 0;
+
+    /* Total score */
+    var td = document.getElementById('total-score-display');
+    if (td) td.textContent = Math.round(total) + '/' + totalMax;
+
+    /* Donut */
+    drawDonut(pct);
+    var ptxt = document.getElementById('donut-pct-text');
+    if (ptxt) ptxt.textContent = pct + '%';
+
+    /* Recommendation */
+    var rec = pct >= 70 ? RECOMMEND.suitable : (pct >= 60 ? RECOMMEND.standby : RECOMMEND.rejected);
+    var badge = document.getElementById('recommend-badge');
+    var rtxt = document.getElementById('recommend-text');
+    if (badge) { badge.textContent = rec.label; badge.style.background = rec.bg; badge.style.color = rec.color; }
+    if (rtxt) rtxt.textContent = total > 0 ? rec.text : '';
+
+    /* Highlight active summary row */
+    ['summary-row-suitable','summary-row-standby','summary-row-rejected'].forEach(function (id) {
+      var row = document.getElementById(id);
+      if (row) row.classList.toggle('summary-row-active', id === rec.row && total > 0);
+    });
+  }
+
+  /* Initial draw */
+  updateSummary();
+
+  /* ── Round navigation ── */
+  function getInterviewers(roundNum) {
+    var r = ROUNDS.find(function (x) { return x.num === roundNum; });
+    return r ? (r.interviewers.length ? r.interviewers.join(', ') : '—') : '—';
+  }
+
+  function applyRoundLock(shouldLock) {
+    /* Locked banner (panelist mode only — HR banner is static) */
+    var banner = document.getElementById('round-locked-banner');
+    if (banner) banner.style.display = shouldLock ? 'flex' : 'none';
+
+    /* Form inputs */
+    var form = document.getElementById('eval-form');
+    if (form) {
+      form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(function (inp) {
+        inp.disabled = shouldLock;
+      });
+    }
+
+    /* Star pointer-events */
+    document.querySelectorAll('.iv-stars').forEach(function (grp) {
+      grp.style.pointerEvents = shouldLock ? 'none' : '';
+      grp.style.opacity = shouldLock ? '0.45' : '';
+    });
+
+    /* Submit / Save buttons in the page header */
+    document.querySelectorAll('button[form="eval-form"]').forEach(function (btn) {
+      btn.disabled = shouldLock;
+      btn.style.opacity = shouldLock ? '0.4' : '';
+      btn.style.cursor = shouldLock ? 'not-allowed' : '';
+    });
+  }
+
+  function goToRound(n) {
+    n = Math.max(1, Math.min(totalRounds, n));
+
+    var r = ROUNDS.find(function (x) { return x.num === n; });
+    var roundLabel = r ? (r.label || '') : '';
+    var isAssigned = r ? !!r.assigned : true;
+
+    /* Any navigable round that differs from the loaded page → reload to fetch correct data.
+       HR view: all rounds are navigable. Panelist: only assigned rounds navigate. */
+    var canNavigate = isHrView || isAssigned;
+    if (canNavigate && n !== pageRound) {
+      window.location.href = '?round=' + n;
+      return;
+    }
+
+    currentRound = n;
+
+    /* Nav display */
+    var nav = document.getElementById('round-nav-display');
+    if (nav) nav.textContent = n + ' of ' + totalRounds;
+
+    /* Interviewers */
+    var ivEl = document.getElementById('round-interviewers-display');
+    if (ivEl) ivEl.textContent = getInterviewers(n);
+
+    /* Interview Type label */
+    var typeEl = document.getElementById('round-interview-type-val');
+    if (typeEl) typeEl.textContent = roundLabel || '—';
+
+    /* Form card title */
+    var titleEl = document.getElementById('eval-form-round-title');
+    if (titleEl) titleEl.textContent = roundLabel || 'Interview';
+
+    /* Step dots */
+    document.querySelectorAll('.iv-round-step').forEach(function (step) {
+      var rn = parseInt(step.dataset.round);
+      step.classList.toggle('iv-round-step--active', rn === n);
+      step.classList.toggle('iv-round-step--done', rn < n);
+      var label = step.querySelector('div:nth-child(2)');
+      if (label) label.style.color = (rn <= n) ? '#0F752F' : '#7A7A7A';
+    });
+
+    /* Nav arrows */
+    var prev = document.getElementById('round-prev');
+    var next = document.getElementById('round-next');
+    if (prev) prev.disabled = (n <= 1);
+    if (next) next.disabled = (n >= totalRounds);
+
+    /* Lock / unlock — HR always locked (read-only), panelist locked only on non-assigned rounds */
+    applyRoundLock(isHrView || !isAssigned);
+  }
+
+  var prevBtn = document.getElementById('round-prev');
+  var nextBtn = document.getElementById('round-next');
+  if (prevBtn) prevBtn.addEventListener('click', function () { goToRound(currentRound - 1); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { goToRound(currentRound + 1); });
+
+  document.querySelectorAll('.iv-round-step').forEach(function (step) {
+    step.addEventListener('click', function () { goToRound(parseInt(step.dataset.round)); });
+  });
+
+  /* Init */
+  goToRound(pageRound);
+})();
+</script>
+{% endblock %}

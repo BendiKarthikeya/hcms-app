@@ -1,0 +1,293 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Offer Letter" %} — {{ offer.candidate_id.name }}{% endblock %}
+{% block additional_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:900px;margin:24px auto;padding:16px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div>
+      <a href="{% url 'offer-list' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Offer Letters" %}</a>
+      <h1 style="margin:4px 0 0;font-size:20px;">{{ offer.candidate_id.name }} — {{ offer.position }}</h1>
+      <span style="font-size:12px;color:#9ca3af;">{% trans "Ref:" %} {{ offer.offer_no }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="{% url 'offer-pdf' offer.id %}"
+        style="padding:7px 16px;border-radius:6px;background:#0891b2;color:#fff;text-decoration:none;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+        <ion-icon name="download-outline"></ion-icon> {% trans "Download PDF" %}
+      </a>
+
+      {% if show_visa_btn %}
+        {% if offer.visa_status == 'in_progress' or offer.visa_status == 'cleared' %}
+        <span style="padding:7px 16px;border-radius:6px;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+          <ion-icon name="checkmark-circle-outline"></ion-icon> {% trans "Visa Requested" %}
+        </span>
+        {% else %}
+        <form method="post" action="{% url 'offer-request-visa' offer.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit"
+            style="padding:7px 16px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+            <ion-icon name="airplane-outline"></ion-icon> {% trans "Generate Visa" %}
+          </button>
+        </form>
+        {% endif %}
+      {% endif %}
+
+      <span style="padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;background:
+      {% if offer.status == 'accepted' %}#dcfce7;color:#166534
+      {% elif offer.status == 'rejected' %}#fee2e2;color:#991b1b
+      {% elif offer.status == 'sent' %}#dbeafe;color:#1e40af
+      {% elif offer.status == 'pending_approval' %}#fef9c3;color:#854d0e
+      {% elif offer.status == 'joined' %}#d1fae5;color:#065f46
+      {% else %}#f3f4f6;color:#374151{% endif %};">
+      {{ offer.get_status_display }}
+    </span>
+    </div>
+  </div>
+
+  <!-- Offer details card -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:20px;margin-bottom:16px;">
+    <h3 style="margin-top:0;font-size:15px;border-bottom:1px solid #f3f4f6;padding-bottom:10px;">{% trans "Offer Details" %}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+      <div><span style="color:#6b7280;">{% trans "Candidate" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.candidate_id.name }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Email" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.candidate_id.email }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Position" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.position }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Department" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.department|default:"—" }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Basic Salary" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.currency }} {{ offer.basic_salary }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Gross Salary" %}</span><div style="font-weight:500;margin-top:2px;">{% if offer.gross_salary %}{{ offer.currency }} {{ offer.gross_salary }}{% else %}—{% endif %}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Joining Date" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.joining_date|date:"d M Y" }}</div></div>
+      <div><span style="color:#6b7280;">{% trans "Probation" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.probation_period }} {% trans "months" %}</div></div>
+      {% if offer.contract_duration %}<div><span style="color:#6b7280;">{% trans "Contract" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.contract_duration }} {% trans "months" %}</div></div>{% endif %}
+      <div><span style="color:#6b7280;">{% trans "Created On" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.created_on|date:"d M Y" }}</div></div>
+      {% if offer.approval_submitted_at %}
+      <div><span style="color:#6b7280;">{% trans "Submitted for Approval" %}</span><div style="font-weight:500;margin-top:2px;">{{ offer.approval_submitted_at|date:"d M Y H:i" }}</div></div>
+      {% endif %}
+    </div>
+    {% if offer.job_description %}
+    <div style="margin-top:12px;"><span style="font-size:12px;color:#6b7280;">{% trans "Job Description" %}</span><div style="font-size:13px;margin-top:4px;">{{ offer.job_description }}</div></div>
+    {% endif %}
+  </div>
+
+  <!-- Candidate e-signature status -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:20px;margin-bottom:16px;">
+    <h3 style="margin-top:0;font-size:15px;border-bottom:1px solid #f3f4f6;padding-bottom:10px;">{% trans "Candidate Digital Signature" %}</h3>
+    {% if offer.candidate_signed_at %}
+    <div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:12px 16px;color:#166534;font-size:13px;">
+      ✅ {% trans "Signed by" %} {{ offer.candidate_id.name }} {% trans "on" %} {{ offer.candidate_signed_at|date:"d M Y H:i" }} UTC
+    </div>
+    {% else %}
+    <div style="font-size:13px;color:#6b7280;margin-bottom:10px;">
+      ⏳ {% trans "Candidate has not yet signed." %}
+    </div>
+    {% if sign_url %}
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <input type="text" value="{{ request.scheme }}://{{ request.get_host }}{{ sign_url }}" readonly
+        style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;color:#374151;min-width:200px;"
+        onclick="this.select()">
+      <button onclick="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{{ sign_url }}'); this.textContent='Copied!';"
+        style="padding:8px 14px;border-radius:6px;background:#6b7280;color:#fff;border:none;cursor:pointer;font-size:12px;">
+        {% trans "Copy Link" %}
+      </button>
+    </div>
+    <div style="font-size:11px;color:#9ca3af;margin-top:6px;">
+      {% trans "This link is automatically included in the offer email. You can also copy and send it manually." %}
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- Approval chain -->
+  {% if approvals %}
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:20px;margin-bottom:16px;">
+    <h3 style="margin-top:0;font-size:15px;border-bottom:1px solid #f3f4f6;padding-bottom:10px;">
+      <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:6px;color:#1d4ed8;"></ion-icon>
+      {% trans "E-Sign Chain" %}
+    </h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:8px 10px;text-align:left;color:#6b7280;font-weight:500;">#</th>
+          <th style="padding:8px 10px;text-align:left;color:#6b7280;font-weight:500;">{% trans "Signatory" %}</th>
+          <th style="padding:8px 10px;text-align:left;color:#6b7280;font-weight:500;">{% trans "Status" %}</th>
+          <th style="padding:8px 10px;text-align:left;color:#6b7280;font-weight:500;">{% trans "Signed At" %}</th>
+          <th style="padding:8px 10px;text-align:left;color:#6b7280;font-weight:500;">{% trans "Comment" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appr in approvals %}
+        <tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:8px 10px;">{{ appr.step.sequence }}</td>
+          <td style="padding:8px 10px;">{{ appr.approver|default:"—" }}</td>
+          <td style="padding:8px 10px;">
+            <span style="padding:2px 10px;border-radius:20px;font-size:12px;
+              {% if appr.action == 'approved' %}background:#dbeafe;color:#1e40af;
+              {% elif appr.action == 'rejected' %}background:#fef3c7;color:#92400e;
+              {% else %}background:#fef9c3;color:#854d0e;{% endif %}">
+              {% if appr.action == 'approved' %}✍ {% trans "E-Signed" %}
+              {% elif appr.action == 'rejected' %}💬 {% trans "Feedback" %}
+              {% else %}⏳ {% trans "Pending" %}{% endif %}
+            </span>
+          </td>
+          <td style="padding:8px 10px;">{{ appr.acted_at|date:"d M Y H:i"|default:"—" }}</td>
+          <td style="padding:8px 10px;">{{ appr.comment|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- E-sign / Feedback action (when this user has a pending step) -->
+  {% if pending_approval %}
+  <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:18px;margin-bottom:16px;">
+    <h3 style="margin-top:0;font-size:15px;color:#854d0e;">
+      <ion-icon name="pen-outline" style="vertical-align:middle;margin-right:6px;"></ion-icon>
+      {% trans "Your E-Signature Required" %}
+    </h3>
+    <p style="font-size:13px;color:#78350f;margin-bottom:12px;">
+      {% trans "You are in the e-sign chain for this offer letter. Please review and sign or leave feedback." %}
+      {% if pending_approval.due_at %}<br>{% trans "Due:" %} {{ pending_approval.due_at|date:"d M Y H:i" }}{% endif %}
+    </p>
+    <form method="post" action="{% url 'offer-approval-action' offer.id %}" id="offerEsignForm">
+      {% csrf_token %}
+      <input type="hidden" name="signature_data" id="offerSignatureData">
+      <input type="hidden" name="action" id="offerActionInput">
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Draw your signature" %}</label>
+        <div style="border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;overflow:hidden;">
+          <canvas id="offerSignatureCanvas" style="width:100%;display:block;touch-action:none;" height="120"></canvas>
+        </div>
+        <button type="button" onclick="offerClearSig()" style="margin-top:6px;font-size:11px;color:#6b7280;background:none;border:none;cursor:pointer;text-decoration:underline;">
+          {% trans "Clear" %}
+        </button>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">{% trans "Comment (optional)" %}</label>
+        <input type="text" name="comment" placeholder="{% trans 'Optional comment...' %}"
+          style="padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;">
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" onclick="offerSubmitEsign()"
+          style="padding:9px 22px;border-radius:6px;background:#1d4ed8;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+          <ion-icon name="pencil-outline"></ion-icon> {% trans "E-Sign" %}
+        </button>
+        <button type="button" onclick="offerSubmitFeedback()"
+          style="padding:9px 22px;border-radius:6px;background:#f59e0b;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+          <ion-icon name="chatbubble-outline"></ion-icon> {% trans "Feedback / Reject" %}
+        </button>
+      </div>
+    </form>
+
+    <script>
+    (function() {
+      var _pad;
+      function initPad() {
+        var canvas = document.getElementById('offerSignatureCanvas');
+        if (!canvas || _pad) return;
+        canvas.width = canvas.offsetWidth;
+        _pad = new SignaturePad(canvas, { backgroundColor: 'rgb(249,250,251)', penColor: '#1f2937' });
+      }
+      window.offerClearSig = function() { if (_pad) _pad.clear(); };
+      window.offerSubmitEsign = function() {
+        if (!_pad || _pad.isEmpty()) {
+          alert('{% trans "Please draw your signature before e-signing." %}');
+          return;
+        }
+        document.getElementById('offerSignatureData').value = _pad.toDataURL();
+        document.getElementById('offerActionInput').value = 'esign';
+        document.getElementById('offerEsignForm').submit();
+      };
+      window.offerSubmitFeedback = function() {
+        document.getElementById('offerActionInput').value = 'feedback';
+        document.getElementById('offerEsignForm').submit();
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPad);
+      } else {
+        initPad();
+      }
+    })();
+    </script>
+  </div>
+  {% endif %}
+
+  <!-- Action buttons based on status -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Actions" %}</h3>
+
+    {% if offer.status == 'draft' %}
+    <p style="font-size:13px;color:#6b7280;">{% trans "Offer is in draft. Submit for approval or send directly." %}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <form method="post" action="{% url 'offer-submit-approval' offer.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="padding:9px 18px;border-radius:6px;background:#7c3aed;color:#fff;border:none;cursor:pointer;">
+          ⬆ {% trans "Submit for Approval" %}
+        </button>
+      </form>
+      <form method="post" action="{% url 'offer-send' offer.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="padding:9px 18px;border-radius:6px;background:#0891b2;color:#fff;border:none;cursor:pointer;">
+          📧 {% trans "Send Directly to Candidate" %}
+        </button>
+      </form>
+    </div>
+
+    {% elif offer.status == 'pending_approval' %}
+    <div style="background:#fef9c3;border-radius:6px;padding:12px 16px;color:#854d0e;font-size:13px;">
+      ⏳ {% trans "Offer is in the approval queue. Awaiting approver action." %}
+      <a href="{% url 'offer-approval-inbox' %}" style="color:#7c3aed;margin-left:8px;font-weight:600;">{% trans "View Approval Inbox →" %}</a>
+    </div>
+
+    {% elif offer.status == 'sent' %}
+    <p style="font-size:13px;color:#6b7280;">{% trans "Offer sent. Mark below once candidate responds." %}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <form method="post" action="{% url 'offer-accept' offer.id %}">
+        {% csrf_token %}
+        <button type="submit" style="padding:9px 18px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">
+          ✓ {% trans "Mark as Accepted" %}
+        </button>
+      </form>
+      <form method="post" action="{% url 'offer-reject' offer.id %}">
+        {% csrf_token %}
+        <input type="text" name="reason" placeholder="{% trans 'Rejection reason (optional)' %}"
+          style="padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;width:220px;">
+        <button type="submit" style="padding:9px 18px;border-radius:6px;background:#dc2626;color:#fff;border:none;cursor:pointer;margin-left:6px;">
+          ✗ {% trans "Mark as Rejected" %}
+        </button>
+      </form>
+    </div>
+
+    {% elif offer.status == 'accepted' %}
+    <div style="background:#dcfce7;border-radius:6px;padding:12px 16px;color:#166534;font-size:13px;">
+      ✅ {% trans "Offer accepted!" %} {{ offer.candidate_id.name }} {% trans "is joining on" %} {{ offer.joining_date|date:"d M Y" }}.
+      <a href="{% url 'offer-tracking' %}" style="color:#16a34a;font-weight:600;margin-left:8px;">{% trans "View in Offer Tracking →" %}</a>
+    </div>
+
+    {% elif offer.status == 'joined' %}
+    <div style="background:#d1fae5;border-radius:6px;padding:12px 16px;color:#065f46;font-size:13px;">
+      🎉 {% trans "Candidate has joined!" %}
+      {% if offer.candidate_id.converted_employee_id %}
+        <a href="/employee/{{ offer.candidate_id.converted_employee_id.id }}/" style="color:#047857;font-weight:600;margin-left:8px;">
+          {% trans "View Employee Profile →" %}
+        </a>
+      {% endif %}
+    </div>
+
+    {% elif offer.status == 'rejected' %}
+    <div style="background:#fee2e2;border-radius:6px;padding:12px 16px;color:#991b1b;font-size:13px;">
+      ✗ {% trans "Offer rejected." %} {% if offer.rejection_reason %}{% trans "Reason" %}: {{ offer.rejection_reason }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+</main>
+{% endblock %}

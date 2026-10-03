@@ -1,0 +1,89 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <div class="oh-wrapper">
+        <div class="oh-header--wrapper">
+            <div class="oh-header--title">
+                <h2>{% trans "PIP Templates" %}</h2>
+            </div>
+            <div class="oh-header--actions">
+                {% if perms.pms.add_piptemplate %}
+                    <a href="{% url 'pip-template-create' %}" class="oh-btn oh-btn--primary">
+                        <ion-icon name="add-outline" class="me-2"></ion-icon>
+                        {% trans "Create Template" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="oh-table-container">
+            {% if templates %}
+                <table class="oh-table">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Description" %}</th>
+                            <th>{% trans "Days" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'pip-template-update' template.id %}">
+                                        {{ template.name }}
+                                    </a>
+                                </td>
+                                <td>{{ template.description|truncatewords:10 }}</td>
+                                <td>{{ template.duration_days }}</td>
+                                <td>
+                                    <div class="oh-dropdown">
+                                        <a class="oh-dropdown__toggle" role="button" data-bs-toggle="dropdown">
+                                            <ion-icon name="ellipsis-vertical"></ion-icon>
+                                        </a>
+                                        <ul class="oh-dropdown__menu">
+                                            {% if perms.pms.view_piptemplate %}
+                                                <li>
+                                                    <a href="{% url 'pip-template-update' template.id %}" class="oh-dropdown__link">
+                                                        {% trans "Edit" %}
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% if perms.pms.delete_piptemplate %}
+                                                <li>
+                                                    <a href="{% url 'pip-template-delete' template.id %}" 
+                                                       onclick="return confirm('{% trans "Are you sure?" %}')" 
+                                                       class="oh-dropdown__link oh-dropdown__link--danger">
+                                                        {% trans "Delete" %}
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="oh-empty-state">
+                    <div class="oh-empty-state__icon">
+                        <ion-icon name="document"></ion-icon>
+                    </div>
+                    <h3>{% trans "No templates found" %}</h3>
+                    <p>{% trans "Create your first PIP template to get started" %}</p>
+                    {% if perms.pms.add_piptemplate %}
+                        <a href="{% url 'pip-template-create' %}" class="oh-btn oh-btn--primary">
+                            {% trans "Create Template" %}
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

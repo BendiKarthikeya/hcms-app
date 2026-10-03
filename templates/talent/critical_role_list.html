@@ -1,0 +1,63 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="oh-card__header">
+            <h2 class="oh-card__title">{% trans "Critical Roles" %}</h2>
+        </div>
+        <div class="oh-card__body">
+            {% if critical_roles %}
+                <div class="oh-table">
+                    <table class="oh-table__table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Role Name" %}</th>
+                                <th>{% trans "Department" %}</th>
+                                <th>{% trans "Job Position" %}</th>
+                                <th>{% trans "Criticality Level" %}</th>
+                                <th>{% trans "Vacancy Risk" %}</th>
+                                <th>{% trans "Succession Required" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in critical_roles %}
+                            <tr>
+                                <td>{{ role.role_name }}</td>
+                                <td>{{ role.department }}</td>
+                                <td>{{ role.job_position }}</td>
+                                <td>{{ role.get_criticality_level_display }}</td>
+                                <td>{{ role.get_vacancy_risk_display }}</td>
+                                <td>
+                                    {% if role.succession_required %}
+                                        <span class="oh-badge oh-badge--success">{% trans "Yes" %}</span>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--secondary">{% trans "No" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'talent:critical_role_detail' role.id %}" class="oh-btn oh-btn--small oh-btn--info">
+                                        {% trans "View" %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="oh-empty">
+                    <div class="oh-empty__icon">
+                        <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                    </div>
+                    <h5 class="oh-empty__title">{% trans "No critical roles found" %}</h5>
+                    <p class="oh-empty__subtitle">{% trans "There are no critical roles defined at the moment." %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

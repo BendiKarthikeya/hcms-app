@@ -1,0 +1,165 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Header Section -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "WPS File Management" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <a href="{% url 'wps-file-generate' %}" class="oh-btn oh-btn--secondary oh-btn--shadow">
+                    <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Generate WPS File" %}
+                </a>
+                <a href="{% url 'wps-global-settings' %}" class="oh-btn oh-btn--light ms-2">
+                    <ion-icon name="settings-outline" class="me-1"></ion-icon>{% trans "Settings" %}
+                </a>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Complimentary Wage Protection System file generation and tracking." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <!-- Stats Row -->
+        <div class="row mb-5">
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Total Files" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ wps_files|length }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--info">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Submitted Amt" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">{{ total_submitted_amount|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--warning">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Pending Appr." %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="oh-card-dashboard oh-card-dashboard--danger">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "WPS Exceptions" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="oh-card mb-4 mt-4">
+            <div class="oh-card__body">
+                <form method="GET" class="row">
+                    <div class="col-md-3">
+                        <div class="oh-input-group">
+                            <label class="oh-label">{% trans "Status" %}</label>
+                            <select name="status" class="oh-select w-100">
+                                <option value="">{% trans "All" %}</option>
+                                {% for choice_val, choice_label in statuses %}
+                                <option value="{{ choice_val }}" {% if request.GET.status == choice_val %}selected{% endif %}>{{ choice_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="oh-input-group">
+                            <label class="oh-label">{% trans "Period" %}</label>
+                            <input type="month" name="period" class="oh-input w-100" value="{{ request.GET.period }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2 mt-4 d-flex align-items-end">
+                        <button type="submit" class="oh-btn oh-btn--primary w-100">
+                            <ion-icon name="funnel-outline" class="me-1"></ion-icon>{% trans "Filter" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- WPS File Table Section -->
+        <div class="oh-card mt-5">
+            <div class="oh-card__header d-flex justify-content-between align-items-center">
+                <h5 class="oh-card__title">{% trans "File History" %}</h5>
+                <a href="{% url 'wps-exceptions' %}" class="oh-btn oh-btn--warning oh-btn--sm pt-2 pb-2 ps-3 pe-3">
+                    <ion-icon name="alert-circle-outline" class="me-1" style="vertical-align: middle;"></ion-icon>{% trans "Exceptions" %}
+                </a>
+            </div>
+            <div class="oh-card__body p-0">
+                <div class="oh-table-container">
+                    <table class="oh-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Payroll Period" %}</th>
+                                <th>{% trans "Batch ID" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Total Amt" %}</th>
+                                <th>{% trans "Created On" %}</th>
+                                <th>{% trans "Submit On" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wps_file in wps_files %}
+                            <tr>
+                                <td><span class="font-weight-bold text-dark">{{ wps_file.payroll_period }}</span></td>
+                                <td><code>#WPS-{{ wps_file.id }}</code></td>
+                                <td>
+                                    {% if wps_file.status == 'generated' %}
+                                        <span class="oh-badge oh-badge--info">{% trans "Generated" %}</span>
+                                    {% elif wps_file.status == 'submitted' %}
+                                        <span class="oh-badge oh-badge--warning">{% trans "Submitted" %}</span>
+                                    {% elif wps_file.status == 'processed' %}
+                                        <span class="oh-badge oh-badge--success">{% trans "Processed" %}</span>
+                                    {% elif wps_file.status == 'rejected' %}
+                                        <span class="oh-badge oh-badge--danger">{% trans "Rejected" %}</span>
+                                    {% else %}
+                                        <span class="oh-badge oh-badge--light">{{ wps_file.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ wps_file.total_amount|default:0 }}</strong></td>
+                                <td>{{ wps_file.created_at|date:"d M Y" }}</td>
+                                <td>{{ wps_file.submitted_at|date:"d M Y"|default:"---" }}</td>
+                                <td>
+                                    <div class="oh-btn-group">
+                                        <a href="{% url 'wps-file-detail' wps_file.id %}" class="oh-btn oh-btn--light oh-btn--sm"><ion-icon name="eye-outline"></ion-icon></a>
+                                        {% if wps_file.status == "generated" %}
+                                            <a href="{% url 'wps-file-approve' wps_file.id %}" class="oh-btn oh-btn--success oh-btn--sm"><ion-icon name="checkmark-outline"></ion-icon></a>
+                                            <a href="{% url 'wps-file-submit' wps_file.id %}" class="oh-btn oh-btn--info oh-btn--sm"><ion-icon name="send-outline"></ion-icon></a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <ion-icon name="layers-outline" class="fa-3x mb-3 text-muted"></ion-icon>
+                                    <p class="text-muted">{% trans "No WPS files available for display." %}</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

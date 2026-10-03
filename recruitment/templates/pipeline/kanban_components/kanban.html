@@ -1,0 +1,114 @@
+
+{% load i18n recruitmentfilters static %}
+{% include 'pipeline/pipeline_tabs.html' %}
+{% include "filter_tags.html" %}
+
+<div class="oh-tabs__contents">
+  {% for dept, dept_recs in dept_groups %}
+    <div class="oh-tabs__content oh-tabs__content" id="tab_dept_{{ forloop.counter }}">
+
+      {# Job-posting sub-tabs for this department #}
+      <div style="display:flex;gap:0;border-bottom:1px solid #e5e7eb;margin-bottom:12px;flex-wrap:wrap;">
+        {% for rec in dept_recs %}
+          {% if request.user|stage_manages:rec or perms.recruitment.view_recruitment %}
+            <button
+              id="jobTabBtnK_{{ rec.id }}"
+              onclick="switchJobTabKanban({{ forloop.parentloop.counter }}, {{ rec.id }})"
+              style="padding:6px 18px;border:none;background:none;font-size:13px;cursor:pointer;
+                     border-bottom:3px solid transparent;margin-bottom:-1px;
+                     {% if forloop.first %}font-weight:600;border-bottom-color:#3b82f6;color:#3b82f6;{% else %}color:#6b7280;{% endif %}
+                     {% if rec.closed %}text-decoration:line-through;{% endif %}">
+              {{ rec }}
+              <span style="background:#6b7280;color:white;border-radius:999px;
+                           font-size:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;"
+                    title="{{ rec.stage_set.count }} {% trans 'Stages' %}">
+                {{ rec.stage_set.count }}
+              </span>
+            </button>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {# Kanban panels per job posting #}
+      {% for rec in dept_recs %}
+        {% if request.user|stage_manages:rec or perms.recruitment.view_recruitment %}
+          <div id="jobPanelK_{{ rec.id }}"
+               style="{% if not forloop.first %}display:none;{% endif %}">
+            <div class="ui-sortable">
+              <div class="oh-kanban ui-sortable drop-target"
+                   id="stageContainer{{ rec.id }}"
+                   hx-trigger="load"
+                   hx-get="{% url 'pipeline-stages-component' 'card' %}?rec_id={{ rec.id }}&view=card">
+                <div class="animated-background"></div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+  {% endfor %}
+</div>
+
+<div class="oh-wrapper mb-5">
+  <div class="oh-pagination">
+    <span class="oh-pagination__page" data-toggle="modal" data-target="#addEmployeeModal">
+      {% trans "Page" %} {{ recruitment.number }} {% trans "of" %} {{ recruitment.paginator.num_pages }}.
+    </span>
+    <nav class="oh-pagination__nav">
+      <div class="oh-pagination__input-container me-3">
+        <span class="oh-pagination__label me-1">{% trans "Page" %}</span>
+        <input type="number" name="page" class="oh-pagination__input"
+          value="{{ recruitment.number }}"
+          hx-target="#pipelineSearchContainer"
+          hx-get="{% url 'pipeline-search' %}?{{ pd }}"
+          min="1" />
+        <span class="oh-pagination__label">{% trans "of" %} {{ recruitment.paginator.num_pages }}</span>
+      </div>
+      <ul class="oh-pagination__items">
+        {% if recruitment.has_previous %}
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page=1"
+               class="oh-pagination__link">{% trans "First" %}</a>
+          </li>
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.previous_page_number }}"
+               class="oh-pagination__link">{% trans "Previous" %}</a>
+          </li>
+        {% endif %}
+        {% if recruitment.has_next %}
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.next_page_number }}"
+               class="oh-pagination__link">{% trans "Next" %}</a>
+          </li>
+          <li class="oh-pagination__item oh-pagination__item--wide">
+            <a hx-target="#pipelineSearchContainer"
+               hx-get="{% url 'pipeline-search' %}?{{ pd }}&page={{ recruitment.paginator.num_pages }}"
+               class="oh-pagination__link">{% trans "Last" %}</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<script>
+function switchJobTabKanban(deptCounter, recId) {
+  var deptPanel = document.getElementById('tab_dept_' + deptCounter);
+  if (!deptPanel) return;
+  deptPanel.querySelectorAll('[id^="jobPanelK_"]').forEach(function(p) { p.style.display = 'none'; });
+  deptPanel.querySelectorAll('[id^="jobTabBtnK_"]').forEach(function(b) {
+    b.style.fontWeight = ''; b.style.borderBottomColor = 'transparent'; b.style.color = '#6b7280';
+  });
+  var panel = document.getElementById('jobPanelK_' + recId);
+  if (panel) panel.style.display = '';
+  var btn = document.getElementById('jobTabBtnK_' + recId);
+  if (btn) { btn.style.fontWeight = '600'; btn.style.borderBottomColor = '#3b82f6'; btn.style.color = '#3b82f6'; }
+}
+</script>
+
+{% include 'pipeline/footer_components.html' %}
+<script src="{% static 'kanban/stageSequence.js' %}"></script>

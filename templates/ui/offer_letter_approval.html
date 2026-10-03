@@ -1,0 +1,214 @@
+{% extends "ui/base.html" %}
+{% load ui_filters %}
+{% block title %}{{ offer.offer_id|default:"OFFL" }} — Letter Approval — HCMS{% endblock %}
+{% block active_approvals %}active{% endblock %}
+
+{% block content %}
+<div class="ui-breadcrumb" style="margin-bottom:12px">
+  <span class="material-symbols-outlined">keyboard_arrow_left</span>
+  <a href="/ui/approvals/" style="color:#6D6D6D;text-decoration:none">Back to Approvals</a>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+  <div>
+    <div class="ui-page-title" style="margin-bottom:4px">{{ offer.offer_id|default:"OFFL-—" }}</div>
+    <div class="ui-page-subtitle">Create and send a professional offer to the selected candidate</div>
+  </div>
+</div>
+
+{% if messages %}{% for m in messages %}<div style="font-size:13px;padding:10px 14px;margin-bottom:12px;border-radius:6px;background:#F0F8F3;color:#1F5F2F">{{ m }}</div>{% endfor %}{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start">
+
+  <!-- LEFT: Offer Letter Preview -->
+  <div style="border:1px solid #D1D1D1;border-radius:14px;background:#fff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #EFEFEF">
+      <div style="font-size:15px;font-weight:600;color:#111">Offer Letter Preview</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="ui-btn-outlined" style="height:32px;padding:0 12px;font-size:12px;gap:5px" onclick="navigator.clipboard.writeText(document.getElementById('letterBody').innerText)">
+          <span class="material-symbols-outlined" style="font-size:15px">content_copy</span> Copy
+        </button>
+        {% if offer.candidate_id.offer_letter_file %}
+        <a href="{{ offer.candidate_id.offer_letter_file.url }}" download class="ui-btn-outlined" style="height:32px;padding:0 12px;font-size:12px;gap:5px">
+          <span class="material-symbols-outlined" style="font-size:15px">download</span> Download
+        </a>
+        {% else %}
+        <button class="ui-btn-outlined" style="height:32px;padding:0 12px;font-size:12px;gap:5px">
+          <span class="material-symbols-outlined" style="font-size:15px">download</span> Download
+        </button>
+        {% endif %}
+        <button class="ui-btn-outlined" style="height:32px;width:32px;padding:0;justify-content:center">
+          <span class="material-symbols-outlined" style="font-size:16px">more_vert</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Letter body -->
+    <div id="letterBody" style="padding:32px 40px;font-family:'Times New Roman',Georgia,serif;font-size:13px;color:#111;line-height:1.7;max-height:620px;overflow-y:auto">
+      <div style="font-size:18px;font-weight:700;margin-bottom:20px">FITS HCMS</div>
+
+      <div style="margin-bottom:16px;color:#555">{{ offer.joining_date|date:"M d, Y"|default:"May 16, 2026" }}</div>
+
+      <div style="margin-bottom:16px">Dear {{ offer.candidate_id.name|default:"Candidate" }},</div>
+
+      <div style="margin-bottom:16px">
+        We are pleased to offer you the position of
+        <strong>{% if offer.candidate_id.recruitment_id %}{{ offer.candidate_id.recruitment_id.title }}{% elif offer.candidate_id.job_position_id %}{{ offer.candidate_id.job_position_id }}{% else %}{{ offer.position|default:"the position" }}{% endif %}</strong>
+        in the
+        <strong>{{ offer.department|default:"Engineering" }}</strong> department.
+        We believe your skills and experience will be a great addition to our team.
+      </div>
+
+      <ul style="margin:0 0 16px 20px;padding:0">
+        {% if offer.candidate_id.recruitment_id %}<li><strong>Department:</strong> {{ offer.candidate_id.recruitment_id.department|default:offer.department|default:"Engineering" }}</li>{% endif %}
+        <li><strong>Employment Type:</strong> {{ offer.role_type|default:"Full-time" }}</li>
+        <li><strong>Work Location:</strong> {{ offer.work_location|default:"Dubai, UAE" }}</li>
+        <li><strong>Date of Joining:</strong> {{ offer.joining_date|date:"M d, Y"|default:"—" }}</li>
+        {% if offer.reporting_manager %}<li><strong>Reporting Manager:</strong> {{ offer.reporting_manager }}</li>{% endif %}
+        <li><strong>Probation Period:</strong> {{ offer.probation_period|default:"6 Months" }}</li>
+        {% if offer.gross_salary or offer.basic_salary %}<li><strong>Annual CTC:</strong> AED {{ offer.gross_salary|default:offer.basic_salary }}</li>{% endif %}
+      </ul>
+
+      <div style="margin-bottom:12px"><strong>Benefits &amp; Perks</strong></div>
+      <ul style="margin:0 0 20px 20px;padding:0">
+        <li>Health Insurance</li>
+        <li>Annual Leave</li>
+        <li>Performance Bonus</li>
+        <li>Flexible Working</li>
+      </ul>
+
+      <div style="margin-bottom:20px">
+        Please review the offer and confirm your acceptance by
+        {{ offer.expiry_date|date:"M d, Y"|default:"May 30, 2026" }}.
+        We look forward to welcoming you to the team!
+      </div>
+
+      <div>Sincerely,</div>
+      <div style="margin-top:6px">HR Department</div>
+      <div style="margin-top:2px;font-weight:600">FITS HCMS</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Approval Chain -->
+  <div style="border:1px solid #D1D1D1;border-radius:14px;background:#fff;padding:20px">
+    <div style="font-size:15px;font-weight:600;color:#111;margin-bottom:4px">Approval Chain</div>
+    <div style="font-size:12px;color:#7A7A7A;margin-bottom:20px">Sequential approval and e-sign process</div>
+
+    {% for step in approvals %}
+    <div style="display:flex;gap:14px;margin-bottom:20px;align-items:flex-start">
+      <!-- Number + line -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;
+          {% if step.status == 'approved' %}background:#E2ECE8;color:#0F752F{% elif step.is_active %}background:#0F752F;color:#fff{% else %}background:#F0F0F0;color:#888{% endif %}">
+          {% if step.status == 'approved' %}
+            <span class="material-symbols-outlined" style="font-size:16px">check</span>
+          {% else %}
+            {{ forloop.counter }}
+          {% endif %}
+        </div>
+        {% if not forloop.last %}
+        <div style="width:1px;height:24px;background:#D1D1D1;margin:4px 0"></div>
+        {% endif %}
+      </div>
+      <!-- Content -->
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:1px">{{ step.approver.get_full_name|default:step.approver }}</div>
+        <div style="font-size:11px;color:#7A7A7A;margin-bottom:6px">{{ step.approver.employee_get.job_position|default:"" }}</div>
+
+        {% if step.status == 'approved' %}
+          <div style="font-size:11px;color:#555;margin-bottom:6px">Signed on {{ step.acted_at|date:"M d, Y g:i A"|default:"" }}</div>
+          {% if step.signature_image %}
+          <div style="border:1px solid #E0E0E0;border-radius:6px;padding:6px 10px;max-width:180px;margin-bottom:6px">
+            <img src="{{ step.signature_image }}" style="max-width:160px;max-height:50px;display:block">
+          </div>
+          {% endif %}
+          <span style="display:inline-block;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:600;background:#DBEAFE;color:#1D4ED8">Signed</span>
+
+        {% elif step.is_active and my_active and step.id == active_id %}
+          <div style="font-size:12px;color:#555;margin-bottom:8px">Please review the offer details and sign</div>
+          <textarea placeholder="Comment your feedback and review here"
+            style="width:100%;border:1px solid #D1D1D1;border-radius:7px;padding:8px;font-size:12px;font-family:inherit;resize:none;height:52px;margin-bottom:8px;color:#555"></textarea>
+          <!-- Signature pad -->
+          <div style="border:1px solid #D1D1D1;border-radius:7px;background:#FAFAFA;height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;position:relative">
+            <canvas id="sigCanvas_{{ step.id }}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+            <span style="font-size:22px;color:#BCBCBC;font-style:italic;pointer-events:none" id="sigHint_{{ step.id }}">Si_gn</span>
+          </div>
+          <form method="post" action="{% url 'ui:offer-esign' offer.id %}">{% csrf_token %}
+            <input type="hidden" name="step_id" value="{{ step.id }}">
+            <input type="hidden" name="action" value="esign">
+            <input type="hidden" name="signature_image" id="sigData_{{ step.id }}">
+            <input type="hidden" name="feedback" id="feedback_{{ step.id }}">
+            <div style="display:flex;gap:8px">
+              <button type="button" onclick="document.getElementById('rejectModal').classList.add('open')"
+                style="flex:1;height:36px;border:1px solid #E05252;border-radius:8px;background:#fff;color:#C62828;font-size:13px;font-weight:600;cursor:pointer">
+                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">close</span> Reject
+              </button>
+              <button type="submit" onclick="captureSignature_{{ step.id }}()"
+                style="flex:2;height:36px;background:#0F752F;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+                Sign &amp; Approve
+              </button>
+            </div>
+          </form>
+          <script>
+          (function(){
+            var canvas = document.getElementById('sigCanvas_{{ step.id }}');
+            var hint   = document.getElementById('sigHint_{{ step.id }}');
+            var data   = document.getElementById('sigData_{{ step.id }}');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d'); var drawing = false;
+            function resize(){ canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; }
+            resize(); window.addEventListener('resize', resize);
+            canvas.addEventListener('mousedown', function(e){ drawing=true; ctx.beginPath(); hint.style.display='none'; });
+            canvas.addEventListener('mousemove', function(e){ if(!drawing) return; var r=canvas.getBoundingClientRect(); ctx.lineTo(e.clientX-r.left,e.clientY-r.top); ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.stroke(); });
+            canvas.addEventListener('mouseup', function(){ drawing=false; });
+            canvas.addEventListener('touchstart', function(e){ e.preventDefault(); drawing=true; ctx.beginPath(); hint.style.display='none'; });
+            canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if(!drawing) return; var r=canvas.getBoundingClientRect(),t=e.touches[0]; ctx.lineTo(t.clientX-r.left,t.clientY-r.top); ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.stroke(); });
+            canvas.addEventListener('touchend', function(){ drawing=false; });
+            window.captureSignature_{{ step.id }} = function(){ data.value = canvas.toDataURL('image/png'); };
+          })();
+          </script>
+
+        {% else %}
+          <span style="display:inline-block;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:600;background:#FFF8EC;color:#B07600">Pending</span>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <!-- Static fallback chain -->
+    {% for item in "1:Senior Engineer:Signed,2:Engineering Head:Signed,3:HR Manager:Pending,4:Candidate:Pending"|split:"," %}
+    <div style="font-size:12px;color:#555;padding:8px 0;border-bottom:1px solid #F5F5F5">{{ item }}</div>
+    {% endfor %}
+    {% endfor %}
+
+    <!-- Info bar -->
+    <div style="background:#E2ECE8;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-top:12px">
+      <span class="material-symbols-outlined" style="font-size:18px;color:#0F752F">check_circle</span>
+      <span style="font-size:12px;color:#111;font-weight:500">Approval notification will be sent to the approval chain members</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center"
+     onclick="if(event.target===this)this.style.display='none'">
+  <form class="ai-modal" method="post" action="{% url 'ui:offer-esign' offer.id %}" style="background:#fff;border-radius:12px;padding:28px 32px;max-width:440px;width:90%">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="feedback">
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px">Reject Offer Letter</div>
+    <div style="font-size:13px;color:#888;margin-bottom:16px">Provide a reason for rejecting this offer letter.</div>
+    <textarea name="feedback" rows="3"
+      style="width:100%;border:1px solid #E0E0E0;border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical"
+      placeholder="Reason for rejection…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button type="button" onclick="document.getElementById('rejectModal').style.display='none'"
+        style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">Cancel</button>
+      <button type="submit"
+        style="padding:8px 20px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Reject</button>
+    </div>
+  </form>
+</div>
+<style>
+#rejectModal.open { display:flex; }
+</style>
+{% endblock %}

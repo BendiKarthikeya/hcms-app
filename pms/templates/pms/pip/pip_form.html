@@ -1,0 +1,272 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+  {% if form.instance.pk %}
+    {% trans "Edit Performance Improvement Plan" %}
+  {% else %}
+    {% trans "Create Performance Improvement Plan" %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                {% if form.instance.pk %}
+                    {% trans "Edit PIP" %}: {{ form.instance.title }}
+                {% else %}
+                    {% trans "Create New Performance Improvement Plan" %}
+                {% endif %}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pip-list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> {% trans "Back to List" %}
+            </a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Main Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-check"></i> {% trans "PIP Information" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.employee.label }}</label>
+                        {{ form.employee }}
+                        {% if form.employee.errors %}
+                            <div class="invalid-feedback d-block">{{ form.employee.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.template.label }}</label>
+                        {{ form.template }}
+                        <small class="form-text text-muted">{% trans "Optional: Use a template as starting point" %}</small>
+                        {% if form.template.errors %}
+                            <div class="invalid-feedback d-block">{{ form.template.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.reason.label }}</label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                        <div class="invalid-feedback d-block">{{ form.reason.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.reason_details.label }}</label>
+                    {{ form.reason_details }}
+                    <small class="form-text text-muted">{% trans "Detailed explanation of performance issues and expected improvements" %}</small>
+                    {% if form.reason_details.errors %}
+                        <div class="invalid-feedback d-block">{{ form.reason_details.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.start_date.label }}</label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.start_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.end_date.label }}</label>
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.end_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.mid_review_date.label }}</label>
+                        {{ form.mid_review_date }}
+                        <small class="form-text text-muted">{% trans "Optional: Mid-point review date" %}</small>
+                        {% if form.mid_review_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.mid_review_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expected Outcomes -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-target"></i> {% trans "Expected Outcomes" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">{{ form.expected_outcomes.label }}</label>
+                    {{ form.expected_outcomes }}
+                    <small class="form-text text-muted">{% trans "What success looks like at the end of PIP period" %}</small>
+                    {% if form.expected_outcomes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.expected_outcomes.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.support_provided.label }}</label>
+                    {{ form.support_provided }}
+                    <small class="form-text text-muted">{% trans "Training, coaching, or resources provided to support improvement" %}</small>
+                    {% if form.support_provided.errors %}
+                        <div class="invalid-feedback d-block">{{ form.support_provided.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Milestones Formset -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> {% trans "Performance Milestones" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    {% trans "Define specific, measurable milestones to track progress" %}
+                </div>
+
+                <div id="milestones-formset">
+                    {{ milestone_formset.management_form }}
+
+                    {% for form_milestone in milestone_formset %}
+                    <div class="milestone-form card mb-3">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label">{% trans "Milestone Title" %}</label>
+                                    {{ form_milestone.milestone_title }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">{% trans "Order" %}</label>
+                                    {{ form_milestone.order }}
+                                </div>
+                                <div class="col-md-2">
+                                    {% if not forloop.first %}
+                                        <label>&nbsp;</label>
+                                        <button type="button" class="btn btn-sm btn-danger w-100" onclick="removeFormset(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{% trans "Target Date" %}</label>
+                                    {{ form_milestone.target_date }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{% trans "Status" %}</label>
+                                    {{ form_milestone.status }}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Success Criteria" %}</label>
+                                {{ form_milestone.success_criteria }}
+                                <small class="form-text text-muted">{% trans "How to measure if this milestone is successfully completed" %}</small>
+                            </div>
+
+                            {{ form_milestone.id }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="btn btn-outline-primary" onclick="addFormset()">
+                    <i class="fas fa-plus"></i> {% trans "Add Milestone" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if form.instance.pk and form.instance.status == 'draft' %}
+                            <button type="submit" class="btn btn-primary btn-lg w-100" name="action" value="save">
+                                <i class="fas fa-save"></i> {% trans "Save PIP" %}
+                            </button>
+                        {% elif not form.instance.pk %}
+                            <button type="submit" class="btn btn-primary btn-lg w-100" name="action" value="save">
+                                <i class="fas fa-save"></i> {% trans "Create PIP" %}
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn btn-secondary btn-lg w-100" disabled>
+                                <i class="fas fa-lock"></i> {% trans "PIP Locked" %}
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'pip-list' %}" class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="fas fa-times"></i> {% trans "Cancel" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+    }
+    .invalid-feedback {
+        color: #dc3545;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<script>
+// Formset management
+function addFormset() {
+    const formCount = document.querySelectorAll('.milestone-form').length;
+    const totalForms = document.querySelector('[name="form-TOTAL_FORMS"]');
+    const newForm = document.querySelector('.milestone-form:last-child').cloneNode(true);
+    
+    // Update form indices
+    const inputs = newForm.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (input.name) {
+            input.name = input.name.replace(/\d+/, formCount);
+        }
+    });
+    
+    document.querySelector('#milestones-formset').appendChild(newForm);
+    totalForms.value = formCount + 1;
+}
+
+function removeFormset(button) {
+    button.closest('.milestone-form').remove();
+    updateFormsetCount();
+}
+
+function updateFormsetCount() {
+    const totalForms = document.querySelector('[name="form-TOTAL_FORMS"]');
+    totalForms.value = document.querySelectorAll('.milestone-form').length;
+}
+</script>
+{% endblock %}

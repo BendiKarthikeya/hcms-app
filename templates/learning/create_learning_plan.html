@@ -1,0 +1,82 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<div class="learning-page-header">
+    <a href="{% url 'learning:my_learning_plans' %}" class="back-button">← Back to Learning Plans</a>
+    <h1>Create New Learning Plan</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 col-md-8 mx-auto">
+        <div class="learning-card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="id_title" class="form-label"><strong>Plan Title</strong></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="alert alert-danger mt-2 small">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_description" class="form-label"><strong>Description</strong></label>
+                        {{ form.description }}
+                        <small class="form-text text-muted d-block mt-2">Describe the purpose and goals of this learning plan.</small>
+                        {% if form.description.errors %}
+                        <div class="alert alert-danger mt-2 small">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="id_start_date" class="form-label"><strong>Start Date</strong></label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                            <div class="alert alert-danger mt-2 small">{{ form.start_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <label for="id_end_date" class="form-label"><strong>End Date</strong></label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                            <div class="alert alert-danger mt-2 small">{{ form.end_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'learning:my_learning_plans' %}" class="btn btn-secondary learning-btn">Cancel</a>
+                        <button type="submit" class="btn btn-primary learning-btn">Create Plan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"], textarea, input[type="date"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    input[type="text"]:focus, textarea:focus, input[type="date"]:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+</style>
+{% endblock %}

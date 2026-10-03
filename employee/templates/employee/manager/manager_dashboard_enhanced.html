@@ -1,0 +1,706 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Manager Dashboard" %}{% endblock %}
+{% block content %}
+<style>
+  .dashboard-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .dashboard-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .refresh-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .card-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+  
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .kpi-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  .kpi-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 0.5rem 0;
+  }
+  
+  .kpi-label {
+    color: #555;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 350px;
+    margin-bottom: 2rem;
+  }
+  
+  .heatmap-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+  }
+  
+  .heatmap-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    min-width: 100%;
+  }
+  
+  .heatmap-day {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .heatmap-day:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+  }
+  
+  .heatmap-low {
+    background: #c6e48b;
+  }
+  
+  .heatmap-medium {
+    background: #7bc96f;
+  }
+  
+  .heatmap-high {
+    background: #239a3b;
+  }
+  
+  .heatmap-critical {
+    background: #051d11;
+    color: #ff6b6b;
+  }
+  
+  .risk-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+  
+  .risk-high {
+    background: #ffebee;
+    color: #c62828;
+  }
+  
+  .risk-medium {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+  
+  .risk-low {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .employee-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    align-items: center;
+  }
+  
+  .employee-row:last-child {
+    border-bottom: none;
+  }
+  
+  .employee-name {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .risk-factors {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 4px;
+  }
+  
+  .loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(102, 126, 234, 0.3);
+    border-radius: 50%;
+    border-top-color: #667eea;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .tab-content {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  .tab-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    overflow-x: auto;
+    pointer-events: auto;
+  }
+  
+  .tab-button {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+  .tab-button:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+    border-bottom-color: rgba(102, 126, 234, 0.5);
+  }
+  
+  .tab-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+    font-weight: 600;
+  }
+</style>
+
+<div class="container-fluid" style="padding: 2rem; background: #f8f9fa; min-height: 100vh;">
+  
+  <!-- Dashboard Header -->
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">{% trans "Manager Dashboard" %}</h1>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">
+          {% trans "Welcome" %}, {{ manager.get_full_name }} • {{ team_count }} {% trans "direct reports" %}
+        </p>
+      </div>
+      <button class="refresh-btn" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise"></i> {% trans "Refresh" %}
+      </button>
+    </div>
+  </div>
+  
+  <!-- KPI Overview Cards -->
+  <div class="card-section">
+    <h2 class="section-title">{% trans "Team KPI Overview" %}</h2>
+    <div id="kpi-container" class="kpi-grid">
+      <div style="text-align: center; grid-column: 1/-1;">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tabs for different analytics -->
+  <div class="card-section">
+    <div class="tab-nav">
+      <button type="button" class="tab-button active" data-tab="attendance">
+        {% trans "Attendance Heatmap" %}
+      </button>
+      <button type="button" class="tab-button" data-tab="forecast">
+        {% trans "Leave Forecast" %}
+      </button>
+      <button type="button" class="tab-button" data-tab="risk">
+        {% trans "Risk Assessment" %}
+      </button>
+      <button type="button" class="tab-button" data-tab="utilization">
+        {% trans "Team Utilization" %}
+      </button>
+    </div>
+    
+    <!-- Attendance Heatmap Tab -->
+    <div id="attendance" class="tab-content active">
+      <h2 class="section-title">{% trans "30-Day Attendance Heatmap" %}</h2>
+      <div id="heatmap-container" class="heatmap-container">
+        <div style="text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Leave Forecast Tab -->
+    <div id="forecast" class="tab-content">
+      <h2 class="section-title">{% trans "90-Day Leave Forecast" %}</h2>
+      <div class="chart-container">
+        <canvas id="forecastChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Risk Assessment Tab -->
+    <div id="risk" class="tab-content">
+      <h2 class="section-title">{% trans "Turnover Risk Assessment" %}</h2>
+      <div id="risk-container">
+        <div style="text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Team Utilization Tab -->
+    <div id="utilization" class="tab-content">
+      <h2 class="section-title">{% trans "Team Utilization & Capacity" %}</h2>
+      <div id="utilization-container">
+        <div style="text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Department Distribution -->
+  <div class="card-section">
+    <h2 class="section-title">{% trans "Department Distribution" %}</h2>
+    <div class="chart-container">
+      <canvas id="departmentChart"></canvas>
+    </div>
+  </div>
+  
+  <!-- Performance Reviews Due -->
+  <div class="card-section">
+    <h2 class="section-title">{% trans "Performance Reviews Due (30 Days)" %}</h2>
+    <div id="reviews-container">
+      <p style="text-align: center; color: #999;">{% trans "Loading..." %}</p>
+    </div>
+  </div>
+  
+</div>
+
+<!-- Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  const API_BASE = '/api/employee/dashboard';
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(tabName, button) {
+    console.log("Switching to:", tabName);
+
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+
+    const activeTab = document.getElementById(tabName);
+    if (activeTab) activeTab.classList.add('active');
+    if (button) button.classList.add('active');
+
+    setTimeout(() => {
+      try {
+        loadTabData(tabName);
+      } catch (e) {
+        console.error("Tab load error:", e);
+      }
+    }, 100);
+  }
+
+  function loadTabData(tabName) {
+    switch (tabName) {
+      case 'forecast':    loadLeaveForecast();  break;
+      case 'risk':        loadTurnoverRisk();   break;
+      case 'utilization': loadUtilization();    break;
+      case 'attendance':  loadAttendanceHeatmap(); break;
+    }
+  }
+
+  // Attach tab click handlers
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', function () {
+      switchTab(this.dataset.tab, this);
+    });
+  });
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function authHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('access_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }
+
+  // ── KPI Dashboard ──────────────────────────────────────────────────────────
+  function loadKPIs() {
+    fetch(`${API_BASE}/kpi/`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const kpis = data.data;
+        const html = `
+          <div class="kpi-card">
+            <div class="kpi-label">{% trans "Team Size" %}</div>
+            <div class="kpi-value">${kpis.total_team_size}</div>
+            <div style="font-size: 0.85rem; color: #999;">{% trans "Direct reports" %}</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: #4facfe;">
+            <div class="kpi-label">{% trans "Active Today" %}</div>
+            <div class="kpi-value" style="color: #4facfe;">${kpis.active_today}</div>
+            <div style="font-size: 0.85rem; color: #999;">{% trans "Present" %}</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: #f5576c;">
+            <div class="kpi-label">{% trans "On Leave" %}</div>
+            <div class="kpi-value" style="color: #f5576c;">${kpis.on_leave}</div>
+            <div style="font-size: 0.85rem; color: #999;">{% trans "Approved" %}</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: #ffa500;">
+            <div class="kpi-label">{% trans "Absent" %}</div>
+            <div class="kpi-value" style="color: #ffa500;">${kpis.absent}</div>
+            <div style="font-size: 0.85rem; color: #999;">{% trans "No leave" %}</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: #43e97b;">
+            <div class="kpi-label">{% trans "Attendance %" %}</div>
+            <div class="kpi-value" style="color: #43e97b;">${kpis.avg_attendance_rate}%</div>
+            <div style="font-size: 0.85rem; color: #999;">{% trans "30-day avg" %}</div>
+          </div>
+        `;
+        document.getElementById('kpi-container').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error loading KPIs:', error);
+        document.getElementById('kpi-container').innerHTML =
+          '<p style="color: red;">{% trans "Error loading KPIs" %}</p>';
+      });
+  }
+
+  // ── Attendance Heatmap ─────────────────────────────────────────────────────
+  function loadAttendanceHeatmap() {
+    fetch(`${API_BASE}/attendance-heatmap/?days_back=30`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const heatmap = data.data;
+        const dates = Object.keys(heatmap).sort();
+
+        let html = '<div class="heatmap-calendar">';
+        dates.forEach(date => {
+          const stats = heatmap[date];
+          const presentPct = stats.present_percentage || 0;
+          let color = 'heatmap-low';
+          if (presentPct >= 80)      color = 'heatmap-high';
+          else if (presentPct >= 60) color = 'heatmap-medium';
+          else if (presentPct > 0)   color = 'heatmap-low';
+          else                       color = 'heatmap-critical';
+
+          html += `
+            <div class="heatmap-day ${color}" title="${date}: ${stats.present}/${stats.total} present">
+              ${new Date(date).getDate()}
+            </div>
+          `;
+        });
+        html += '</div>';
+        document.getElementById('heatmap-container').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error loading heatmap:', error);
+        document.getElementById('heatmap-container').innerHTML =
+          `<p style="color: #c62828;">{% trans "Unable to load attendance heatmap" %}: ${error.message}</p>`;
+      });
+  }
+
+  // ── Leave Forecast ─────────────────────────────────────────────────────────
+  function loadLeaveForecast() {
+    fetch(`${API_BASE}/leave-forecast/?forecast_days=90`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const forecast = data.data;
+        const weeks  = Object.keys(forecast.leaves_by_week);
+        const values = Object.values(forecast.leaves_by_week);
+
+        const ctx = document.getElementById('forecastChart');
+        if (ctx) {
+          if (window.forecastChartInstance) window.forecastChartInstance.destroy();
+          window.forecastChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: weeks,
+              datasets: [{
+                label: 'Team Members on Leave',
+                data: values,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error loading forecast:', error);
+        const forecastTab = document.getElementById('forecast');
+        if (forecastTab) {
+          forecastTab.innerHTML = `
+            <h2 class="section-title">{% trans "90-Day Leave Forecast" %}</h2>
+            <p style="color: #c62828;">{% trans "Unable to load leave forecast" %}: ${error.message}</p>
+          `;
+        }
+      });
+  }
+
+  // ── Turnover Risk ──────────────────────────────────────────────────────────
+  function loadTurnoverRisk() {
+    fetch(`${API_BASE}/turnover-risk/`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const risk = data.data;
+        const atRiskCount = risk.at_risk_employees.length;
+
+        let html = `<p style="color: #666; margin-bottom: 1rem;">
+                      <strong>${atRiskCount}</strong> {% trans "employees identified with retention risk" %}
+                    </p>`;
+
+        if (atRiskCount > 0) {
+          html += '<div style="max-height: 500px; overflow-y: auto;">';
+          risk.at_risk_employees.forEach(emp => {
+            const riskClass = emp.risk_level === 'High'   ? 'risk-high'   :
+                              emp.risk_level === 'Medium' ? 'risk-medium' : 'risk-low';
+            html += `
+              <div class="employee-row">
+                <div>
+                  <div class="employee-name">${emp.name}</div>
+                  <div class="risk-factors">${emp.risk_factors.join(', ')}</div>
+                </div>
+                <div style="text-align: right;">
+                  <span class="risk-badge ${riskClass}">${emp.risk_level}: ${emp.risk_score}/100</span>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        document.getElementById('risk-container').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error loading risk:', error);
+        document.getElementById('risk-container').innerHTML =
+          `<p style="color: #c62828;">{% trans "Unable to load risk assessment" %}: ${error.message}</p>`;
+      });
+  }
+
+  // ── Utilization ────────────────────────────────────────────────────────────
+  function loadUtilization() {
+    fetch(`${API_BASE}/team-utilization/`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const util = data.data;
+        const utilPct  = util.utilization_percentage;
+        const barColor = utilPct <= 100 ? '#43e97b' : '#f5576c';
+
+        const html = `
+          <div style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span style="font-weight: 600;">{% trans "Capacity Utilization" %}</span>
+              <span style="font-weight: 700; color: ${barColor};">${utilPct}%</span>
+            </div>
+            <div style="background: #e0e0e0; border-radius: 8px; height: 20px; overflow: hidden;">
+              <div style="background: ${barColor}; height: 100%; width: ${Math.min(utilPct, 100)}%; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">{% trans "Total Capacity" %}</div>
+              <div class="kpi-value">${util.total_capacity} hrs</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">{% trans "Utilized" %}</div>
+              <div class="kpi-value" style="color: #4facfe;">${util.utilized_capacity} hrs</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">{% trans "Available" %}</div>
+              <div class="kpi-value" style="color: #43e97b;">${util.available_capacity} hrs</div>
+            </div>
+          </div>
+        `;
+        document.getElementById('utilization-container').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error loading utilization:', error);
+        document.getElementById('utilization-container').innerHTML =
+          `<p style="color: #c62828;">{% trans "Unable to load utilization metrics" %}: ${error.message}</p>`;
+      });
+  }
+
+  // ── Department Distribution ────────────────────────────────────────────────
+  function loadDepartmentDistribution() {
+    fetch(`${API_BASE}/department-distribution/`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const distribution = data.data;
+        const labels = Object.keys(distribution);
+        const values = Object.values(distribution);
+
+        const ctx = document.getElementById('departmentChart');
+        if (ctx) {
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: values,
+                backgroundColor: [
+                  '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe',
+                  '#00f2fe', '#43e97b', '#38f9d7', '#f4d03f', '#ff6b9d'
+                ]
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { position: 'right' } }
+            }
+          });
+        }
+      })
+      .catch(error => console.error('Error loading department:', error));
+  }
+
+  // ── Performance Reviews ────────────────────────────────────────────────────
+  function loadPerformanceReviews() {
+    fetch(`${API_BASE}/performance-reviews-due/?days_ahead=30`, { headers: authHeaders() })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!data || !data.data) throw new Error("Invalid API response");
+        const reviews = data.data || [];
+
+        if (reviews.length === 0) {
+          document.getElementById('reviews-container').innerHTML =
+            '<p style="text-align: center; color: #999;">{% trans "No performance reviews due in the next 30 days" %}</p>';
+        } else {
+          let html = '';
+          reviews.forEach(review => {
+            html += `
+              <div class="employee-row">
+                <div>
+                  <div class="employee-name">${review.employee_name}</div>
+                  <div class="risk-factors">${review.objective_title}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: 600; color: #667eea;">${review.due_date}</div>
+                  <div style="font-size: 0.85rem; color: #999;">${review.days_remaining} {% trans "days" %}</div>
+                </div>
+              </div>
+            `;
+          });
+          document.getElementById('reviews-container').innerHTML = html;
+        }
+      })
+      .catch(error => console.error('Error loading reviews:', error));
+  }
+
+  // ── Initial page load ──────────────────────────────────────────────────────
+  try {
+    loadKPIs();
+    loadAttendanceHeatmap();
+    loadDepartmentDistribution();
+    loadPerformanceReviews();
+  } catch (e) {
+    console.error("Initial load error:", e);
+  }
+</script>
+{% endblock %}

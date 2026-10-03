@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Service Award Form{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>Service Award</h1>
+        <p>Record service award payment for employee milestone</p>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.employee.id_for_label }}">
+                Employee <span class="required">*</span>
+            </label>
+            {{ form.employee }}
+            {% if form.employee.errors %}<div class="error-message">{{ form.employee.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.service_years.id_for_label }}">
+                    Years of Service <span class="required">*</span>
+                </label>
+                {{ form.service_years }}
+                {% if form.service_years.errors %}<div class="error-message">{{ form.service_years.errors.0 }}</div>{% endif %}
+                <small>Complete years of service when award is given</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.award_date.id_for_label }}">
+                    Award Date <span class="required">*</span>
+                </label>
+                {{ form.award_date }}
+                {% if form.award_date.errors %}<div class="error-message">{{ form.award_date.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.award_amount.id_for_label }}">
+                    Award Amount (OMR) <span class="required">*</span>
+                </label>
+                {{ form.award_amount }}
+                {% if form.award_amount.errors %}<div class="error-message">{{ form.award_amount.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.award_type.id_for_label }}">
+                    Award Type
+                </label>
+                {{ form.award_type }}
+                {% if form.award_type.errors %}<div class="error-message">{{ form.award_type.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.remarks.id_for_label }}">
+                Remarks
+            </label>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}<div class="error-message">{{ form.remarks.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Service Awards:</strong> Paid to employees on completion of specified years of service (typically at 5, 10, 15, 20 years, etc.) as per company policy and labor regulations.
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{% if object %}Update Award{% else %}Create Award{% endif %}</button>
+            <a href="{% url 'service-award-list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

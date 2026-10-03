@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Director Approval - EOSB for {{ eosb.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>Director Approval - End of Service Benefits</h1>
+        <p>Final authorization for EOSB payment to {{ eosb.employee.get_name }}</p>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Status:</strong> This EOSB has been approved by HR and requires your final authorization
+    </div>
+
+    <div class="employee-card">
+        <div class="avatar">{{ eosb.employee.get_name|slice:":1" }}</div>
+        <div class="details">
+            <h3>{{ eosb.employee.get_name }}</h3>
+            <p><strong>Designation:</strong> {{ eosb.employee.designation }}</p>
+            <p><strong>Department:</strong> {{ eosb.employee.department }}</p>
+            <p><strong>Separation:</strong> {{ eosb.separation_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+
+    <div class="calculation-box">
+        <h3>EOSB Payment Summary</h3>
+        
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Service Period:</strong>
+                <span class="value">{{ eosb.years_of_service }} years</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Final Monthly Salary:</strong>
+                <span class="value">OMR {{ eosb.final_salary }}</span>
+            </div>
+        </div>
+
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Gratuity Entitlement:</strong>
+                <span class="value">{{ eosb.gratuity_rate }} months salary</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Gross Amount:</strong>
+                <span class="value">OMR {{ eosb.gross_gratuity }}</span>
+            </div>
+        </div>
+
+        {% if eosb.deductions %}
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Deductions:</strong>
+                <span class="value">OMR {{ eosb.deductions }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="total-eosb">
+            <div class="total-amount">
+                <div class="label">Total Due</div>
+                <div class="amount">OMR {{ eosb.net_amount }}</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.director_notes.id_for_label }}">
+                Director Authorization Notes
+            </label>
+            {{ form.director_notes }}
+            <small>Final remarks or conditions for payment</small>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>⚠️ Important:</strong>
+            <p>Approving this will authorize payment. Ensure all calculations are verified before proceeding. Once approved, the EOSB will move to payment stage.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" name="action" value="approve" class="btn btn-success">Authorize Payment</button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger">Reject for Review</button>
+            <a href="{% url 'eosb-detail' eosb.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "Gamification & Leaderboards" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--primary oh-btn--shadow">
+                    <ion-icon name="trophy-outline" class="me-1"></ion-icon>{% trans "View My Badges" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Earn points and badges by completing courses and assessments." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="row mb-5">
+            <div class="col-md-4">
+                <div class="oh-card-dashboard oh-card-dashboard--success text-center">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Global Rank" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">---</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="oh-card-dashboard oh-card-dashboard--warning text-center">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Total Points" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="oh-card-dashboard oh-card-dashboard--info text-center">
+                    <div class="oh-card-dashboard__header">
+                        <span class="oh-card-dashboard__title font-weight-bold">{% trans "Badges Earned" %}</span>
+                    </div>
+                    <div class="oh-card-dashboard__body">
+                        <span class="oh-card-dashboard__count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="oh-card">
+            <div class="oh-card__header">
+                <h5 class="oh-card__title">{% trans "Leaderboard" %}</h5>
+            </div>
+            <div class="oh-card__body p-0">
+                <div class="oh-table-container">
+                    <table class="oh-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Rank" %}</th>
+                                <th>{% trans "Employee" %}</th>
+                                <th>{% trans "Department" %}</th>
+                                <th>{% trans "Points" %}</th>
+                                <th>{% trans "Level" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">{% trans "Leaderboard calculation in progress. Start earning points now!" %}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

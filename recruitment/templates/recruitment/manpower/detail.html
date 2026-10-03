@@ -1,0 +1,150 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block title %}{{ mr.requisition_no }}{% endblock %}
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div style="max-width:1000px;margin:24px auto;padding:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div>
+      <a href="{% url 'manpower-list' %}" style="color:#6b7280;font-size:13px;text-decoration:none;">← {% trans "Back" %}</a>
+      <h1 style="margin:4px 0 0;font-size:20px;">{{ mr.requisition_no }} – {{ mr.job_position|default:"No position" }}</h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      {% if mr.status == 'draft' %}
+      <form method="post" action="{% url 'manpower-submit' mr.id %}">{% csrf_token %}
+        <button style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "Submit for Approval" %}</button>
+      </form>
+      {% elif mr.status == 'queried' %}
+      <span style="padding:8px 14px;border-radius:6px;background:#fef3c7;color:#92400e;font-size:13px;">
+        {% trans "Returned with query — scroll down to resubmit" %}
+      </span>
+      {% elif mr.status == 'approved' %}
+      <form method="post" action="{% url 'manpower-advance-stage' mr.id %}">{% csrf_token %}
+        <input type="hidden" name="status" value="sourcing">
+        <button style="padding:8px 14px;border-radius:6px;background:#0891b2;color:#fff;border:none;cursor:pointer;">{% trans "→ Start Sourcing" %}</button>
+      </form>
+      {% elif mr.status == 'sourcing' %}
+      <form method="post" action="{% url 'manpower-advance-stage' mr.id %}">{% csrf_token %}
+        <input type="hidden" name="status" value="interviewing">
+        <button style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;cursor:pointer;">{% trans "→ Interviewing" %}</button>
+      </form>
+      {% elif mr.status == 'interviewing' %}
+      <form method="post" action="{% url 'manpower-advance-stage' mr.id %}">{% csrf_token %}
+        <input type="hidden" name="status" value="offer">
+        <button style="padding:8px 14px;border-radius:6px;background:#d97706;color:#fff;border:none;cursor:pointer;">{% trans "→ Offer Stage" %}</button>
+      </form>
+      {% elif mr.status == 'offer' %}
+      <form method="post" action="{% url 'manpower-advance-stage' mr.id %}">{% csrf_token %}
+        <input type="hidden" name="status" value="joined">
+        <button style="padding:8px 14px;border-radius:6px;background:#16a34a;color:#fff;border:none;cursor:pointer;">{% trans "→ Mark Joined" %}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pipeline progress bar -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:14px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:0;">
+      {% for stage_val,stage_label in mr.STATUS_CHOICES %}
+      {% if stage_val not in 'draft,submitted,rejected,closed' %}
+      <div style="flex:1;text-align:center;">
+        <div style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;
+          background:{% if mr.status == stage_val %}#16a34a{% elif stage_val == 'under_approval' and mr.status in 'approved,sourcing,interviewing,offer,joined' %}#16a34a{% elif stage_val == 'approved' and mr.status in 'sourcing,interviewing,offer,joined' %}#16a34a{% elif stage_val == 'sourcing' and mr.status in 'interviewing,offer,joined' %}#16a34a{% elif stage_val == 'interviewing' and mr.status in 'offer,joined' %}#16a34a{% elif stage_val == 'offer' and mr.status == 'joined' %}#16a34a{% else %}#e5e7eb{% endif %};
+          color:{% if mr.status == stage_val or stage_val == 'under_approval' and mr.status in 'approved,sourcing,interviewing,offer,joined' or stage_val == 'approved' and mr.status in 'sourcing,interviewing,offer,joined' or stage_val == 'sourcing' and mr.status in 'interviewing,offer,joined' or stage_val == 'interviewing' and mr.status in 'offer,joined' or stage_val == 'offer' and mr.status == 'joined' %}#fff{% else %}#9ca3af{% endif %};">✓</div>
+        <div style="font-size:10px;color:{% if mr.status == stage_val %}#16a34a{% else %}#9ca3af{% endif %};">{{ stage_label }}</div>
+      </div>
+      {% if not forloop.last %}<div style="flex:0 0 20px;height:2px;background:#e5e7eb;margin-bottom:18px;"></div>{% endif %}
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;">
+    <!-- Details card -->
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Request Details" %}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        {% for label, val in details %}
+        <tr><td style="padding:5px 0;color:#6b7280;width:45%;">{{ label }}</td><td style="padding:5px 0;font-weight:500;">{{ val|default:"—" }}</td></tr>
+        {% endfor %}
+        <tr><td style="padding:5px 0;color:#6b7280;">{% trans "Status" %}</td>
+            <td><span style="padding:2px 10px;border-radius:12px;background:{% if mr.status == 'approved' %}#dcfce7{% elif mr.status == 'rejected' %}#fee2e2{% elif mr.status == 'under_approval' %}#fef3c7{% else %}#f3f4f6{% endif %};font-size:12px;">{{ mr.get_status_display }}</span></td></tr>
+        <tr><td style="padding:5px 0;color:#6b7280;">{% trans "Justification" %}</td><td style="padding:5px 0;">{{ mr.justification }}</td></tr>
+      </table>
+    </div>
+
+    <!-- Approval timeline -->
+    <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;">
+      <h3 style="margin-top:0;font-size:15px;">{% trans "Approval Timeline" %}</h3>
+      {% for a in approvals %}
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:{% if a.action == 'approved' %}#16a34a{% elif a.action == 'rejected' %}#dc2626{% elif a.action == 'queried' %}#f59e0b{% elif a.action == 'pending' %}#f59e0b{% else %}#6b7280{% endif %};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0;">
+          {% if a.action == 'approved' %}✓{% elif a.action == 'rejected' %}✗{% elif a.action == 'queried' %}?{% else %}…{% endif %}
+        </div>
+        <div style="font-size:13px;">
+          <div style="font-weight:500;">{{ a.display_approver|default:"—" }}</div>
+          <div style="color:#6b7280;">{{ a.get_action_display }} {% if a.acted_at %}· {{ a.acted_at|date:"d M Y" }}{% else %}({% trans "pending" %}){% endif %}</div>
+          {% if a.comment %}<div style="font-style:italic;color:#374151;">{{ a.comment }}</div>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:#6b7280;font-size:13px;">{% trans "No approval steps yet. Submit the request to start the workflow." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Status log -->
+  <div style="background:#fff;border:1px solid hsl(213,22%,93%);border-radius:8px;padding:18px;margin-top:16px;">
+    <h3 style="margin-top:0;font-size:15px;">{% trans "Status History" %}</h3>
+    {% for log in logs %}
+    <div style="display:flex;gap:12px;font-size:13px;padding:5px 0;border-bottom:1px solid #f3f4f6;">
+      <span style="color:#6b7280;width:120px;">{{ log.at|date:"d M Y H:i" }}</span>
+      <span>{{ log.from_status|default:"—" }} → <strong>{{ log.to_status }}</strong></span>
+      <span style="color:#6b7280;">{{ log.changed_by|default:"System" }}</span>
+      {% if log.note %}<span style="font-style:italic;">{{ log.note }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if mr.status == 'queried' %}
+  <div style="background:#fff;border:1px solid #f59e0b;border-radius:8px;padding:18px;margin-top:16px;">
+    <h3 style="margin-top:0;font-size:15px;color:#92400e;">↩ {% trans "Approver Query — Action Required" %}</h3>
+    {% if mr.last_query %}
+    <div style="padding:10px 12px;background:#fef3c7;border-radius:6px;margin-bottom:14px;font-size:13px;color:#92400e;">
+      <strong>{% trans "Query" %}:</strong> {{ mr.last_query }}
+    </div>
+    {% endif %}
+    {% if mr.requested_by_id == request.user.employee_get.id or request.user.is_superuser %}
+    <form method="post" action="{% url 'manpower-resubmit' mr.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px;">
+        {% trans "Clarification Document" %} <span style="color:#dc2626;">*</span>
+      </label>
+      <input type="file" name="clarification_document" required
+             style="display:block;margin-bottom:10px;font-size:13px;">
+      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:4px;">{% trans "Your Response" %}</label>
+      <textarea name="comment" rows="3" placeholder="{% trans 'e.g. Attached the 2026 manpower-plan extract — row 14 confirms this requisition.' %}"
+        style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+      <button type="submit"
+        style="margin-top:10px;padding:9px 16px;border-radius:6px;background:#f59e0b;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:500;">
+        ↻ {% trans "Resubmit to Approver" %}
+      </button>
+    </form>
+    {% else %}
+    <div style="font-size:13px;color:#6b7280;">{% trans "Waiting on the requester to attach a clarification and resubmit." %}</div>
+    {% endif %}
+    {% if mr.clarification_document %}
+    <div style="margin-top:10px;font-size:12px;">
+      <a href="{{ mr.clarification_document.url }}" target="_blank" style="color:#0891b2;">
+        📎 {% trans "View latest clarification" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

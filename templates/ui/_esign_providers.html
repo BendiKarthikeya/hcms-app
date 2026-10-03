@@ -1,0 +1,156 @@
+{% comment %}
+Reusable e-sign provider flow (Adobe eSign / DocuSign).
+Connection state + the account signatory name are stored client-side
+(localStorage), set when the user "connects" a provider on /ui/integrations/.
+At signing time the provider asks for a 2FA code, then applies the
+signature pulled from the connected account and submits the form.
+
+Usage: include once per page, then call from a provider button:
+  EsignProviders.sign('adobe', {inputId:'inlineSigData', formId:'inlineEsignForm'})
+Optional opts: commentSourceId (textarea/input id to copy into the form's
+[name=comments] field before submit).
+{% endcomment %}
+<style>
+.esp-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.esp-or  { font-size:11px; color:#9a9a9a; margin-right:2px; }
+.esp-btn { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px;
+           border:1px solid #d9d9d9; border-radius:7px; background:#fff; cursor:pointer;
+           font-size:12px; font-weight:600; color:#333; }
+.esp-btn:hover { background:#f6f6f6; }
+.esp-btn .material-symbols-outlined { font-size:16px; }
+.esp-btn--adobe    { border-color:#f2b8b4; color:#C8201A; }
+.esp-btn--docusign { border-color:#e6d27a; color:#9a7d00; }
+
+.esp-overlay { display:none; position:fixed; inset:0; background:rgba(17,24,39,.45);
+               z-index:10000; align-items:center; justify-content:center; }
+.esp-overlay.open { display:flex; }
+.esp-modal { background:#fff; border-radius:14px; padding:26px 28px; width:90%; max-width:400px;
+             box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.esp-modal__brand { display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+.esp-modal__logo { width:34px; height:34px; border-radius:8px; display:flex; align-items:center;
+                   justify-content:center; color:#fff; font-weight:700; font-size:15px; }
+.esp-modal__logo--adobe { background:#E1251B; }
+.esp-modal__logo--docusign { background:#D8B500; }
+.esp-modal__title { font-size:15px; font-weight:700; color:#111; }
+.esp-modal__sub { font-size:12px; color:#777; margin-top:1px; }
+.esp-modal p { font-size:12.5px; color:#444; line-height:1.5; margin:8px 0 14px; }
+.esp-modal__acct { font-weight:600; color:#111; }
+.esp-code { width:100%; height:46px; text-align:center; letter-spacing:8px; font-size:22px;
+            font-weight:700; border:1px solid #d9d9d9; border-radius:9px; outline:none; }
+.esp-code:focus { border-color:#208e3d; }
+.esp-hint { font-size:11px; color:#9a9a9a; margin-top:7px; text-align:center; }
+.esp-actions { display:flex; gap:8px; margin-top:18px; }
+.esp-actions button { flex:1; height:40px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+.esp-cancel { background:#fff; border:1px solid #d9d9d9; color:#555; }
+.esp-verify { background:#208e3d; border:none; color:#fff; }
+</style>
+
+<div class="esp-overlay" id="espOverlay">
+  <div class="esp-modal">
+    <div class="esp-modal__brand">
+      <div class="esp-modal__logo" id="espLogo"></div>
+      <div>
+        <div class="esp-modal__title" id="espTitle">Two-Factor Authentication</div>
+        <div class="esp-modal__sub" id="espSub"></div>
+      </div>
+    </div>
+    <p>Enter the 6-digit verification code from your <span class="esp-modal__acct" id="espAcct"></span> account to authorise this signature.</p>
+    <input class="esp-code" id="espCode" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code">
+    <div class="esp-hint">Demo code: <strong>123456</strong></div>
+    <div class="esp-actions">
+      <button type="button" class="esp-cancel" onclick="EsignProviders._close()">Cancel</button>
+      <button type="button" class="esp-verify" onclick="EsignProviders._verify()">Verify &amp; Sign</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  if (window.EsignProviders) return;  // include-once guard
+
+  var PROVIDERS = {
+    adobe:    { ls:'esign_adobe',    label:'Adobe eSign',  badge:'Adobe Acrobat Sign', logo:'A',  cls:'adobe',    color:'#0b3d91' },
+    docusign: { ls:'esign_docusign', label:'DocuSign',     badge:'DocuSign',           logo:'DS', cls:'docusign', color:'#1b3a5b' }
+  };
+
+  function account(provider) {
+    try { return JSON.parse(localStorage.getItem(PROVIDERS[provider].ls) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  // Render the signatory's name in a signature style + provider attribution.
+  function makeSignature(provider, name) {
+    var p = PROVIDERS[provider];
+    var c = document.createElement('canvas');
+    c.width = 600; c.height = 200;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 600, 200);
+    ctx.fillStyle = p.color;
+    ctx.font = 'italic 58px "Brush Script MT","Segoe Script","Snell Roundhand",cursive';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(name || 'Authorised Signatory', 28, 96);
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(28, 116); ctx.lineTo(440, 116); ctx.stroke();
+    ctx.fillStyle = '#666'; ctx.font = '600 16px Arial';
+    ctx.fillText('Signed with ' + p.badge, 28, 146);
+    var d = new Date();
+    ctx.fillStyle = '#999'; ctx.font = '13px Arial';
+    ctx.fillText('Verified via 2FA · ' + d.toLocaleString(), 28, 168);
+    return c.toDataURL('image/png');
+  }
+
+  var pending = null;
+
+  var EsignProviders = {
+    sign: function (provider, opts) {
+      var p = PROVIDERS[provider];
+      if (!p) return;
+      var acct = account(provider);
+      if (!acct) {
+        if (confirm('Your ' + p.label + ' account is not connected.\n\nConnect it under Integrations to sign with ' + p.label + '?')) {
+          window.location.href = '/ui/integrations/';
+        }
+        return;
+      }
+      pending = { provider: provider, opts: opts || {}, acct: acct };
+      document.getElementById('espLogo').className = 'esp-modal__logo esp-modal__logo--' + p.cls;
+      document.getElementById('espLogo').textContent = p.logo;
+      document.getElementById('espSub').textContent = p.label;
+      document.getElementById('espAcct').textContent = acct.email || p.label;
+      var code = document.getElementById('espCode');
+      code.value = '';
+      document.getElementById('espOverlay').classList.add('open');
+      setTimeout(function () { code.focus(); }, 50);
+    },
+
+    _close: function () {
+      pending = null;
+      document.getElementById('espOverlay').classList.remove('open');
+    },
+
+    _verify: function () {
+      if (!pending) return;
+      var code = (document.getElementById('espCode').value || '').trim();
+      if (!/^\d{6}$/.test(code)) {
+        alert('Enter the 6-digit verification code.');
+        return;
+      }
+      var opts = pending.opts;
+      var sig = makeSignature(pending.provider, pending.acct.name);
+      var input = document.getElementById(opts.inputId);
+      if (input) input.value = sig;
+      var form = document.getElementById(opts.formId);
+      if (!form) { this._close(); return; }
+      if (opts.commentSourceId) {
+        var src = document.getElementById(opts.commentSourceId);
+        var target = form.querySelector('[name=comments]');
+        if (src && target) target.value = src.value;
+      }
+      this._close();
+      form.submit();  // bypasses inline onsubmit/onclick handlers — keeps our signature value
+    }
+  };
+
+  window.EsignProviders = EsignProviders;
+})();
+</script>

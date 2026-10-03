@@ -1,0 +1,137 @@
+{% load i18n %}
+{% load static %}
+{% load fitsfilters %}
+
+{% if data %}
+<div class="oh-sticky-table">
+  <div class="oh-sticky-table__table oh-table--sortable">
+    <div class="oh-sticky-table__thead">
+      <div class="oh-sticky-table__tr">
+        <div class="oh-sticky-table__th">{% trans "Candidate" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Position" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Nationality" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Experience" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Skills" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Project" %}</div>
+        <div class="oh-sticky-table__th">{% trans "Availability" %}</div>
+        <div class="oh-sticky-table__th">{% trans "CV" %}</div>
+      </div>
+    </div>
+
+    {% for cand in data %}
+    <div class="oh-sticky-table__tbody">
+      <div class="oh-sticky-table__tr">
+
+        <div class="oh-sticky-table__td">
+          <a href="{% url 'candidate-view-individual' cand.id %}"
+            style="color: inherit; text-decoration: none;"
+            class="oh-profile oh-profile--md">
+            <div class="oh-profile__avatar mr-1">
+              <img src="{{ cand.get_avatar }}" class="oh-profile__image" alt="{{ cand.name }}" />
+            </div>
+            <span class="oh-profile__name oh-text--dark">{{ cand }}</span>
+          </a>
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {{ cand.job_position_id|default:"—" }}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {{ cand.country|default:"—" }}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {% if cand.experience_years %}
+            {{ cand.experience_years }} {% trans "yr(s)" %}
+          {% else %}
+            —
+          {% endif %}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {% if cand.recruitment_id %}
+            {% for skill in cand.recruitment_id.skills.all %}
+              <span class="oh-badge oh-badge--secondary me-1">{{ skill }}</span>
+            {% empty %}
+              —
+            {% endfor %}
+          {% else %}
+            —
+          {% endif %}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {{ cand.project_id|default:"—" }}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {{ cand.availability_date|default:"—" }}
+        </div>
+
+        <div class="oh-sticky-table__td">
+          {% if cand.resume %}
+          <a href="{{ cand.resume.url }}" target="_blank" rel="noopener noreferrer"
+            class="oh-btn oh-btn--light oh-btn--small" title="{% trans 'View CV' %}">
+            <span class="oh-file-icon oh-file-icon--pdf"></span>&nbsp;{% trans "View" %}
+          </a>
+          {% else %}
+          <span class="oh-text--muted">—</span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="oh-pagination mt-3">
+  <span class="oh-pagination__page">
+    {% trans "Page" %} {{ data.number }} {% trans "of" %} {{ data.paginator.num_pages }}.
+  </span>
+  <nav class="oh-pagination__nav">
+    <div class="oh-pagination__input-container me-3">
+      <span class="oh-pagination__label me-1">{% trans "Page" %}</span>
+      <input type="number" name="page" class="oh-pagination__input" value="{{ data.number }}"
+        hx-get="{% url 'candidate-database-search' %}?{{ pd }}"
+        hx-target="#candidateDbResults" min="1" />
+      <span class="oh-pagination__label">{% trans "of" %} {{ data.paginator.num_pages }}</span>
+    </div>
+    <ul class="oh-pagination__items">
+      {% if data.has_previous %}
+      <li class="oh-pagination__item oh-pagination__item--wide">
+        <a hx-target="#candidateDbResults"
+          hx-get="{% url 'candidate-database-search' %}?{{ pd }}&page=1"
+          class="oh-pagination__link">{% trans "First" %}</a>
+      </li>
+      <li class="oh-pagination__item oh-pagination__item--wide">
+        <a hx-target="#candidateDbResults"
+          hx-get="{% url 'candidate-database-search' %}?{{ pd }}&page={{ data.previous_page_number }}"
+          class="oh-pagination__link">{% trans "Previous" %}</a>
+      </li>
+      {% endif %}
+      {% if data.has_next %}
+      <li class="oh-pagination__item oh-pagination__item--wide">
+        <a hx-target="#candidateDbResults"
+          hx-get="{% url 'candidate-database-search' %}?{{ pd }}&page={{ data.next_page_number }}"
+          class="oh-pagination__link">{% trans "Next" %}</a>
+      </li>
+      <li class="oh-pagination__item oh-pagination__item--wide">
+        <a hx-target="#candidateDbResults"
+          hx-get="{% url 'candidate-database-search' %}?{{ pd }}&page={{ data.paginator.num_pages }}"
+          class="oh-pagination__link">{% trans "Last" %}</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+{% else %}
+<div class="oh-404 mt-4">
+  <img style="width: 150px; height: 150px;"
+    src="{% static 'images/ui/no-results.png' %}"
+    class="oh-404__image mb-4" />
+  <h5 class="oh-404__subtitle">{% trans "No candidates found matching your search criteria." %}</h5>
+</div>
+{% endif %}

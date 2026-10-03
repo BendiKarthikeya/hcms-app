@@ -1,0 +1,175 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .hr-dash-container {
+    padding: 2rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+  }
+  .header-glass {
+    background: hsl(0, 0%, 100%);
+    border: 1px solid hsl(213, 22%, 93%);
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  }
+  .title-gradient {
+    margin: 0;
+    font-weight: 800;
+    font-size: 2.2rem;
+    color: hsl(0, 0%, 26%);
+  }
+  .stats-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .stat-bubble {
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    padding: 2rem;
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .stat-bubble:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+  }
+  .val {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+  .lbl { color: hsl(216, 18%, 64%); font-size: 0.85rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+  .panel {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-dash-container">
+  <div class="header-glass">
+    <div>
+      <h1 class="title-gradient">{% trans "Executive HR Analytics" %}</h1>
+      <p style="color: #6b7280; font-weight: 500; margin-top:0.5rem;">C-Suite Overview | Live Data Feed</p>
+    </div>
+    <div style="font-weight: 600; color: hsl(216, 18%, 64%); background: hsl(213, 22%, 93%); padding: 0.5rem 1rem; border-radius: 8px;">
+      System Healthy
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-bubble">
+      <div class="val">2.8%</div>
+      <div class="lbl">{% trans "Voluntary Attrition" %}</div>
+    </div>
+    <div class="stat-bubble">
+      <div class="val">84</div>
+      <div class="lbl">{% trans "eNPS Score" %}</div>
+    </div>
+    <div class="stat-bubble">
+      <div class="val">$48M</div>
+      <div class="lbl">{% trans "Total HR Spend" %}</div>
+    </div>
+    <div class="stat-bubble">
+      <div class="val">42</div>
+      <div class="lbl">{% trans "Days to Hire" %}</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="panel">
+      <h3 style="color: #374151; margin-top:0; font-size:1.4rem;">{% trans "Employee Growth & Attrition Trend" %}</h3>
+      <div style="height: 350px;">
+        <canvas id="growthChart"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 style="color: #374151; margin-top:0; font-size:1.4rem;">{% trans "Cost of Workforce" %}</h3>
+      <div style="height: 350px;">
+        <canvas id="costChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    new Chart(document.getElementById('growthChart'), {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+        datasets: [{
+          label: 'Total Headcount',
+          data: [1100, 1120, 1150, 1190, 1210, 1225, 1238, 1248],
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.2)',
+          fill: true,
+          tension: 0.4,
+          yAxisID: 'y'
+        }, {
+          label: 'Attrition Rate (%)',
+          data: [3.2, 3.0, 2.8, 2.5, 2.7, 2.4, 2.8, 2.8],
+          type: 'bar',
+          backgroundColor: '#fca5a5',
+          borderRadius: 4,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          y: { type: 'linear', position: 'left' },
+          y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, min: 0, max: 5 }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('costChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Salaries', 'Benefits', 'Training', 'Recruitment', 'Other'],
+        datasets: [{
+          data: [65, 20, 5, 8, 2],
+          backgroundColor: ['#8b5cf6', '#d8b4fe', '#fca5a5', '#fecaca', '#fef08a'],
+          borderWidth: 0,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  });
+</script>
+{% endblock %}

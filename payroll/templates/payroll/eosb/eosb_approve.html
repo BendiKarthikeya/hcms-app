@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Approve EOSB - {{ eosb.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>HR Approval - End of Service Benefits</h1>
+        <p>Review and approve EOSB calculation for {{ eosb.employee.get_name }}</p>
+    </div>
+
+    <div class="employee-card">
+        <div class="avatar">{{ eosb.employee.get_name|slice:":1" }}</div>
+        <div class="details">
+            <h3>{{ eosb.employee.get_name }}</h3>
+            <p><strong>ID:</strong> {{ eosb.employee.employee_id }}</p>
+            <p><strong>Separation Date:</strong> {{ eosb.separation_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+
+    <div class="calculation-box">
+        <h3>Calculated EOSB Amount</h3>
+        
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Years of Service:</strong>
+                <span class="value">{{ eosb.years_of_service }}</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Final Salary:</strong>
+                <span class="value">OMR {{ eosb.final_salary }}</span>
+            </div>
+        </div>
+
+        <div class="calculation-row">
+            <div class="calculation-field">
+                <strong>Gratuity Rate:</strong>
+                <span class="value">{{ eosb.gratuity_rate }} months</span>
+            </div>
+            <div class="calculation-field">
+                <strong>Gross Gratuity:</strong>
+                <span class="value">OMR {{ eosb.gross_gratuity }}</span>
+            </div>
+        </div>
+
+        <div class="total-eosb">
+            <div class="total-amount">
+                <div class="label">Payable Amount</div>
+                <div class="amount">OMR {{ eosb.net_amount }}</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.hr_notes.id_for_label }}">
+                HR Review Comments
+            </label>
+            {{ form.hr_notes }}
+            <small>Add any comments or notes for record</small>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>⚡ Action Required:</strong>
+            <p>Review the EOSB calculation above. If correct, approve to move to Director for final authorization. If there are discrepancies, please contact the Payroll team.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" name="action" value="approve" class="btn btn-success">Approve EOSB</button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger">Reject for Review</button>
+            <a href="{% url 'eosb-detail' eosb.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

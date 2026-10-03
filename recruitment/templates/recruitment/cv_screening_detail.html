@@ -1,0 +1,240 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block title %}Candidate CV Details{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'recruitment/css/cv-screening-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+<div class="oh-wrapper">
+<div class="cv-screening-container">
+    <div class="cv-header">
+        <h1>{{ candidate.name }} - CV Analysis</h1>
+        <p>Parsed CV data and AI ranking details</p>
+    </div>
+
+    <!-- Candidate Summary Card -->
+    <div class="candidate-card" style="margin-bottom: 30px;">
+        <div class="candidate-avatar">
+            {% if candidate.user.profile_pic %}
+                <img src="{{ candidate.user.profile_pic.url }}" alt="{{ candidate.name }}">
+            {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: hsl(213, 22%, 93%); display: flex; align-items: center; justify-content: center; border: 2px solid hsl(213, 22%, 93%);">
+                    <span style="font-size: 32px; color: hsl(216, 18%, 64%);">{{ candidate.name|first }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="candidate-info" style="flex: 1;">
+            <h4>{{ candidate.name }}</h4>
+            <p><strong>Email:</strong> <a href="mailto:{{ parsed_cv.email }}">{{ parsed_cv.email }}</a></p>
+            <p><strong>Phone:</strong> {{ parsed_cv.phone }}</p>
+            <p><strong>Current Location:</strong> {{ parsed_cv.current_location }}</p>
+            <p><strong>Current Position:</strong> {{ parsed_cv.current_designation }}</p>
+        </div>
+
+        <div style="text-align: center; padding: 20px; background: hsl(0, 0%, 97.5%); border-radius: 8px;">
+            <div style="font-size: 48px; font-weight: bold; color: hsl(148, 70%, 40%); line-height: 1;">{{ parsed_cv.matching_score|floatformat:0 }}</div>
+            <div style="font-size: 12px; color: hsl(0, 0%, 45%); margin-top: 5px; text-transform: uppercase;">Match Score</div>
+            <div style="display: flex; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin: 10px 0;">
+                <div style="background: {% if parsed_cv.matching_score >= 85 %}hsl(148, 70%, 40%){% elif parsed_cv.matching_score >= 70 %}hsl(216, 18%, 64%){% elif parsed_cv.matching_score >= 50 %}hsl(37, 90%, 47%){% else %}hsl(1, 64%, 49%){% endif %}; width: {{ parsed_cv.matching_score }}%; height: 100%;"></div>
+            </div>
+            {% if parsed_cv.matching_score >= 85 %}
+                <span class="match-score excellent">✓ Excellent Match</span>
+            {% elif parsed_cv.matching_score >= 70 %}
+                <span class="match-score good">Good Match</span>
+            {% elif parsed_cv.matching_score >= 50 %}
+                <span class="match-score moderate">Moderate Match</span>
+            {% else %}
+                <span class="match-score poor">Poor Match</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Score Breakdown -->
+    <div class="ranking-score" style="margin-bottom: 30px;">
+        <div class="score-box">
+            <div class="score-number">{{ parsed_cv.matching_score|floatformat:0 }}</div>
+            <div class="score-label">Overall Score</div>
+        </div>
+        <div class="score-breakdown">
+            <div class="score-breakdown-item">
+                <label>Required Skills Match:</label>
+                <value>{{ parsed_cv.skills_match_score|floatformat:0 }}%</value>
+            </div>
+            <div class="score-breakdown-item">
+                <label>Experience Score:</label>
+                <value>{{ parsed_cv.experience_score|floatformat:0 }}%</value>
+            </div>
+            <div class="score-breakdown-item">
+                <label>Education Score:</label>
+                <value>{{ parsed_cv.education_score|floatformat:0 }}%</value>
+            </div>
+            <div class="score-breakdown-item">
+                <label>Soft Skills Score:</label>
+                <value>{{ parsed_cv.soft_skills_score|floatformat:0 }}%</value>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="cv-section">
+        <h3>Contact Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div>
+                <strong>Email</strong>
+                <p><a href="mailto:{{ parsed_cv.email }}">{{ parsed_cv.email }}</a></p>
+            </div>
+            <div>
+                <strong>Phone</strong>
+                <p>{{ parsed_cv.phone }}</p>
+            </div>
+            <div>
+                <strong>Location</strong>
+                <p>{{ parsed_cv.current_location }}</p>
+            </div>
+            <div>
+                <strong>LinkedIn Profile</strong>
+                <p>
+                    {% if parsed_cv.linkedin_url %}
+                        <a href="{{ parsed_cv.linkedin_url }}" target="_blank">View Profile</a>
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Summary -->
+    {% if parsed_cv.professional_summary %}
+    <div class="cv-section">
+        <h3>Professional Summary</h3>
+        <p>{{ parsed_cv.professional_summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Skills -->
+    <div class="cv-section">
+        <h3>Skills</h3>
+        <div style="margin-bottom: 15px;">
+            <strong style="display: block; margin-bottom: 10px;">Technical Skills:</strong>
+            <div>
+                {% for skill in parsed_cv.skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                {% empty %}
+                    <p style="color: hsl(0, 0%, 45%); font-size: 13px;">No technical skills identified</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
+            <strong style="display: block; margin-bottom: 10px;">Soft Skills:</strong>
+            <div>
+                {% for skill in parsed_cv.soft_skills %}
+                    <span class="skill-tag" style="background: hsl(48, 100%, 94%); color: hsl(37, 90%, 47%);">{{ skill }}</span>
+                {% empty %}
+                    <p style="color: hsl(0, 0%, 45%); font-size: 13px;">No soft skills identified</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Experience -->
+    <div class="cv-section">
+        <h3>Work Experience</h3>
+        <p><strong>Total Years of Experience:</strong> {{ parsed_cv.years_of_experience }} years</p>
+
+        <div style="margin-top: 20px;">
+            {% for experience in parsed_cv.work_experience %}
+            <div class="experience-item">
+                <h4>{{ experience.job_title }}</h4>
+                <p><strong>{{ experience.company_name }}</strong></p>
+                <p style="font-size: 12px; color: #6b7280;">
+                    {{ experience.start_date|date:"M Y" }} 
+                    {% if experience.end_date %}– {{ experience.end_date|date:"M Y" }}{% else %}– Present{% endif %}
+                    ({{ experience.duration }} months)
+                </p>
+                {% if experience.job_description %}
+                    <p style="margin-top: 8px;">{{ experience.job_description }}</p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p style="color: #6b7280; font-size: 13px;">No work experience found in CV</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Education -->
+    <div class="cv-section">
+        <h3>Education</h3>
+        {% for education in parsed_cv.education %}
+        <div class="education-item">
+            <h4>{{ education.degree }}</h4>
+            <p><strong>{{ education.institution }}</strong></p>
+            <p style="font-size: 12px; color: #6b7280;">
+                {% if education.graduation_year %}Graduated: {{ education.graduation_year }}{% endif %}
+            </p>
+            {% if education.field_of_study %}<p>Field of Study: {{ education.field_of_study }}</p>{% endif %}
+        </div>
+        {% empty %}
+        <p style="color: #6b7280; font-size: 13px;">No education information found in CV</p>
+        {% endfor %}
+    </div>
+
+    <!-- Languages -->
+    {% if parsed_cv.languages %}
+    <div class="cv-section">
+        <h3>Languages</h3>
+        <div>
+            {% for language in parsed_cv.languages %}
+            <div class="skill-item">
+                <strong>{{ language.language }}</strong><br>
+                <span style="font-size: 12px; color: #6b7280;">Proficiency: {{ language.proficiency }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Parsing Metadata -->
+    <div class="cv-section" style="background: #f9fafb;">
+        <h3>CV Parsing Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <strong style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 5px;">Parsed Date</strong>
+                <p>{{ parsed_cv.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+            <div>
+                <strong style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 5px;">Parsing Status</strong>
+                <p>{{ parsed_cv.get_processing_status_display|default:"Completed" }}</p>
+            </div>
+            <div>
+                <strong style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 5px;">Data Quality</strong>
+                <p>{{ parsed_cv.data_quality_score|floatformat:0 }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missing Requirements -->
+    {% if missing_requirements %}
+    <div class="alert alert-warning">
+        <strong>Missing Required Skills:</strong>
+        <p style="margin-top: 10px;">
+            {% for requirement in missing_requirements %}
+                <span class="skill-tag missing">{{ requirement }}</span>
+            {% endfor %}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="form-actions">
+        <a href="{% url 'cv-screening' recruitment.id %}" class="btn btn-secondary">Back to Screening</a>
+        <a href="{% url 'candidate-detail' candidate.id %}" class="btn btn-primary">View Full Profile</a>
+    </div>
+</div>
+{% endblock %}

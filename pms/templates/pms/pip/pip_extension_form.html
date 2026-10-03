@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Request PIP Extension - {{ pip.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'pms/css/pip-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pip-form-container">
+    <div class="pip-form-header">
+        <h1>Request Performance Improvement Plan Extension</h1>
+        <p>Request additional time for {{ pip.employee.get_name }}'s PIP evaluation</p>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Note:</strong> Extending a PIP should only be done when genuine progress is being made but more time is needed to meet all objectives.
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            <strong>Error:</strong>
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <div>
+                    <h3>{{ pip.employee.get_name }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">
+                        {{ pip.designation }}
+                    </p>
+                </div>
+                <span class="status-badge active">ACTIVE</span>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px;">
+                    <div>
+                        <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                            Current End Date
+                        </strong>
+                        <p style="margin: 0; color: #ef4444; font-weight: 600;">{{ pip.end_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div>
+                        <strong style="display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 5px;">
+                            Days Remaining
+                        </strong>
+                        <p style="margin: 0;">{{ pip.days_remaining }} days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group {% if form.extension_days.errors %}error{% endif %}">
+            <label for="{{ form.extension_days.id_for_label }}">
+                Requested Extension (Days) <span class="required">*</span>
+            </label>
+            {{ form.extension_days }}
+            {% if form.extension_days.errors %}
+                <div class="error-message">{{ form.extension_days.errors.0 }}</div>
+            {% endif %}
+            <small>How many additional days are needed? (Recommended: 30-90 days)</small>
+        </div>
+
+        <div class="form-group {% if form.justification.errors %}error{% endif %}">
+            <label for="{{ form.justification.id_for_label }}">
+                Justification for Extension <span class="required">*</span>
+            </label>
+            {{ form.justification }}
+            {% if form.justification.errors %}
+                <div class="error-message">{{ form.justification.errors.0 }}</div>
+            {% endif %}
+            <small>Explain why additional time is needed and what progress has been made so far</small>
+        </div>
+
+        <div class="form-group {% if form.updated_objectives.errors %}error{% endif %}">
+            <label for="{{ form.updated_objectives.id_for_label }}">
+                Updated Objectives (if any)
+            </label>
+            {{ form.updated_objectives }}
+            {% if form.updated_objectives.errors %}
+                <div class="error-message">{{ form.updated_objectives.errors.0 }}</div>
+            {% endif %}
+            <small>Any updates to the objectives or milestones during the extension period</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-warning">
+                <span>Submit Extension Request</span>
+            </button>
+            <a href="{% url 'pip-detail' pip.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

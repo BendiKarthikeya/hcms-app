@@ -1,0 +1,63 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<h1>My Course Enrollments</h1>
+
+<div class="row mt-3 mb-3">
+    <div class="col-12">
+        <a href="{% url 'learning:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="{% url 'learning:course_list' %}" class="btn btn-primary">Browse More Courses</a>
+    </div>
+</div>
+
+{% if enrollments %}
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Status</th>
+            <th>Enrollment Date</th>
+            <th>Progress</th>
+            <th>Score</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for enr in enrollments %}
+        <tr>
+            <td>{{ enr.course.name }}</td>
+            <td><span class="badge bg-{% if enr.status == 'approved' %}success{% elif enr.status == 'pending' %}warning{% else %}danger{% endif %}">{{ enr.get_status_display }}</span></td>
+            <td>{{ enr.enrollment_date }}</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ enr.progress_percentage }}%">{{ enr.progress_percentage }}%</div>
+                </div>
+            </td>
+            <td>{{ enr.final_score|default:"—" }}</td>
+            <td><a href="{% url 'learning:course_detail' enr.course.pk %}" class="btn btn-sm btn-info">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info mt-4">You have no course enrollments yet. <a href="{% url 'learning:course_list' %}">Browse courses</a> to enroll.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <div class="oh-wrapper" style="margin-top: 2rem;">
+        <div class="oh-dashboard row" id="dashboard">
+            <div class="col-12 col-sm-12 col-md-12 col-lg-12 mb-4">
+                <div class="oh-card-dashboard oh-card-dashboard--no-scale" style="min-height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px dashed #d1d5db; background-color: #fcfcfc;">
+                    <div style="text-align: center;">
+                        <span style="font-size: 64px; color: #9ca3af; display: inline-block; margin-bottom: 1rem;">
+                            <ion-icon name="construct-outline"></ion-icon>
+                        </span>
+                        
+                        <h2 class="oh-card-dashboard__title" style="font-size: 24px; color: #1f2937; margin-bottom: 1rem;">
+                            {% trans "Feature in Development" %}
+                        </h2>
+                        
+                        <p class="oh-card-dashboard__count" style="font-size: 16px; font-weight: 500; color: #4b5563; margin-bottom: 0.5rem;">
+                            {% trans "The" %} <strong style="color: #111827;">{{ title|default:"requested" }}</strong> {% trans "module is currently being built." %}
+                        </p>
+                        
+                        <p style="color: #6b7280; margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                            {% trans "Our team is actively working on bringing this functionality to life. It will be available in an upcoming system update." %}
+                        </p>
+                        
+                        <a href="/" class="oh-btn oh-btn--primary oh-btn--shadow">
+                            <ion-icon name="arrow-back-outline" style="font-size: 18px; margin-right: 8px; vertical-align: text-bottom;"></ion-icon>
+                            {% trans "Return to Dashboard" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{{ job.title }}</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;background:#f9fafb;color:#111827}.wrap{max-width:760px;margin:0 auto;padding:32px 16px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:28px}.back{color:#6b7280;text-decoration:none;font-size:13px;}h1{font-size:24px;margin:8px 0 4px}.meta{color:#6b7280;font-size:14px;margin-bottom:20px}.desc{line-height:1.7;font-size:15px}.btn{display:inline-block;margin-top:24px;padding:11px 22px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-size:15px}</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="{% url 'careers-index' %}" class="back">← {% trans "All Positions" %}</a>
+  <div class="card">
+    <h1>{{ job.title|default:job.job_position_id }}</h1>
+    <div class="meta">{{ job.company_id }} · {{ job.start_date|date:"d M Y" }} {% if job.vacancy %}· {{ job.vacancy }} opening(s){% endif %}</div>
+    <div class="desc">{{ job.description|default:""|linebreaksbr }}</div>
+    <a href="{% url 'careers-apply' job.public_slug %}" class="btn">{% trans "Apply Now" %}</a>
+  </div>
+</div>
+</body></html>

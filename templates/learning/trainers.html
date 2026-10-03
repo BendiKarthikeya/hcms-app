@@ -1,0 +1,27 @@
+{% extends 'index.html' %}
+{% load i18n static %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <!-- Titlebar -->
+    <section class="oh-wrapper oh-main__titlebar">
+        <div class="oh-main__titlebar-top">
+            <h1 class="oh-main__titlebar-title">{% trans "Internal & External Trainers" %}</h1>
+            <div class="oh-main__titlebar-button-container">
+                <button class="oh-btn oh-btn--secondary oh-btn--shadow">
+                    <ion-icon name="add-outline" class="me-1"></ion-icon>{% trans "Add New Trainer" %}
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">{% trans "Manage subject matter experts, external facilitators, and coaching ratings." %}</p>
+    </section>
+
+    <div class="oh-wrapper">
+        <div class="oh-card p-5 text-center">
+            <ion-icon name="person-circle-outline" style="font-size: 5rem; color: #ddd;" class="mb-3"></ion-icon>
+            <h4 class="text-muted">{% trans "Trainer Directory" %}</h4>
+            <p class="text-muted mb-4">{% trans "No trainers recorded in the directory. Start by adding your internal subject matter experts." %}</p>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .jb-container {
+    padding: 2.5rem;
+    background: #f4f6f9;
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+  }
+  .jb-header {
+    font-size: 2.3rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  .board-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: 1px solid #f1f5f9;
+  }
+  .board-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  }
+  .brand-logo {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .brand-logo.linkedin { color: #0a66c2; }
+  .brand-logo.indeed { color: #2164f4; }
+  .brand-logo.bayt { color: #ff5722; }
+  
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 60px;
+    height: 30px;
+    background: #e5e7eb;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .toggle-switch.active { background: #10b981; }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 24px; height: 24px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  .toggle-switch.active::after { transform: translateX(30px); }
+  
+  .stat-badge {
+    background: #f8fafc;
+    padding: 0.75rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    border: 1px solid #f1f5f9;
+  }
+  .badge-premium {
+    position: absolute;
+    top: 1.5rem; right: 1.5rem;
+    background: #fef3c7; color: #d97706;
+    font-size: 0.7rem; font-weight: 800;
+    padding: 0.3rem 0.8rem; border-radius: 20px;
+    text-transform: uppercase;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="jb-container">
+  <h1 class="jb-header">{% trans "Global Job Board Publishing" %}</h1>
+  <p style="color:#64748b; font-size:1.15rem; margin-bottom: 2.5rem; max-width: 800px;">
+    {% trans "Extend your reach. Automatically publish to 100+ platforms and manage candidate influx in one central dashboard." %}
+  </p>
+
+  <div class="integration-grid">
+    <div class="board-card">
+      <span class="badge-premium">Enterprise API</span>
+      <div class="brand-logo linkedin">in</div>
+      <h3 style="margin-top:0; font-size:1.4rem; color: #1e293b;">LinkedIn Talent Solutions</h3>
+      <p style="color:#64748b; line-height:1.6; margin-bottom: 1.5rem;">Premium integration for automated job slots and applicant sync.</p>
+      <div style="margin-bottom: 2rem;">
+        <div class="stat-badge"><span>Active Slots:</span> <span style="color:#10b981;">12 / 20</span></div>
+        <div class="stat-badge"><span>Monthly Influx:</span> <span>4,281</span></div>
+      </div>
+      <div class="status-row">
+        <span style="font-weight:700; color:#1e293b; font-size:0.95rem;">Integration: <span style="color:#10b981;">Active</span></span>
+        <div class="toggle-switch active"></div>
+      </div>
+    </div>
+
+    <div class="board-card">
+      <div class="brand-logo indeed">indeed</div>
+      <h3 style="margin-top:0; font-size:1.4rem; color: #1e293b;">Indeed Direct Connect</h3>
+      <p style="color:#64748b; line-height:1.6; margin-bottom: 1.5rem;">Sponsored job sync and direct candidate ingestion via Indeed API.</p>
+      <div style="margin-bottom: 2rem;">
+        <div class="stat-badge"><span>Sponsored:</span> <span style="color:#10b981;">8 Posts</span></div>
+        <div class="stat-badge"><span>Monthly Influx:</span> <span>8,910</span></div>
+      </div>
+      <div class="status-row">
+        <span style="font-weight:700; color:#1e293b; font-size:0.95rem;">Integration: <span style="color:#10b981;">Active</span></span>
+        <div class="toggle-switch active"></div>
+      </div>
+    </div>
+
+    <div class="board-card">
+      <div class="brand-logo bayt">bayt</div>
+      <h3 style="margin-top:0; font-size:1.4rem; color: #1e293b;">Bayt.com Recruitment</h3>
+      <p style="color:#64748b; line-height:1.6; margin-bottom: 1.5rem;">Specialized MENA region sourcing and CV database access.</p>
+      <div style="margin-bottom: 2rem;">
+        <div class="stat-badge"><span>Active Posts:</span> <span>0</span></div>
+        <div class="stat-badge"><span>Credits Remaining:</span> <span>500</span></div>
+      </div>
+      <div class="status-row">
+        <span style="font-weight:700; color:#1e293b; font-size:0.95rem;">Integration: <span style="color:#e94560;">Idle</span></span>
+        <div class="toggle-switch"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

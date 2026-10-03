@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load recruitmentfilters %}
+<ul class="oh-tabs__tablist">
+  {% for dept, dept_recs in dept_groups %}
+    <li class="oh-tabs__tab" onclick="switchTab(event)" data-target="#tab_dept_{{ forloop.counter }}">
+      {{ dept }}
+      <div class="d-flex">
+        <div class="oh-tabs__input-badge-container">
+          <span
+            class="oh-badge oh-badge--secondary oh-badge--small oh-badge--round ms-2 mr-2"
+            title="{{ dept_recs|length }} {% trans 'Job Posting' %}{% if dept_recs|length != 1 %}s{% endif %}"
+            onclick="event.stopPropagation()">
+            {{ dept_recs|length }}
+          </span>
+        </div>
+      </div>
+    </li>
+  {% endfor %}
+</ul>

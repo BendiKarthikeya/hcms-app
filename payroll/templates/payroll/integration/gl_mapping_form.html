@@ -1,0 +1,125 @@
+{% extends 'index.html' %}
+{% load static i18n %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <div class="oh-wrapper">
+        <div class="oh-dashboard row">
+            <div class="col-12">
+                <h1 class="oh-main__titlebar-title">
+                    {% if action == 'edit' %}
+                        {% trans "Edit GL Mapping" %}
+                    {% else %}
+                        {% trans "Add New GL Mapping" %}
+                    {% endif %}
+                </h1>
+                <p class="text-muted">
+                    {% trans "Map payroll components to General Ledger accounts for automated journal entries." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="oh-card mt-4">
+            <div class="oh-card__body">
+                <form method="POST" class="form-horizontal">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-4">
+                        <label for="{{ form.mapping_type.id_for_label }}" class="form-label">
+                            {% trans "Mapping Type" %} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.mapping_type }}
+                        {% if form.mapping_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.mapping_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            {% trans "Select the type of payroll component to map." %}
+                        </small>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="{{ form.component_id.id_for_label }}" class="form-label">
+                            {% trans "Component ID" %}
+                        </label>
+                        {{ form.component_id }}
+                        {% if form.component_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.component_id.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            {% trans "Leave blank for global mappings. Provide specific ID for component-specific mapping." %}
+                        </small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label for="{{ form.debit_account.id_for_label }}" class="form-label">
+                                    {% trans "Debit Account" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.debit_account }}
+                                {% if form.debit_account.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.debit_account.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    {% trans "GL account to debit." %}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label for="{{ form.credit_account.id_for_label }}" class="form-label">
+                                    {% trans "Credit Account" %} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.credit_account }}
+                                {% if form.credit_account.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.credit_account.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    {% trans "GL account to credit." %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="{{ form.company.id_for_label }}" class="form-label">
+                            {% trans "Company" %}
+                        </label>
+                        {{ form.company }}
+                        {% if form.company.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.company.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            {% trans "Select company for this mapping." %}
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'gl-integration' %}" class="oh-btn oh-btn--secondary">
+                            {% trans "Cancel" %}
+                        </a>
+                        <button type="submit" class="oh-btn oh-btn--primary">
+                            {% if action == 'edit' %}
+                                <ion-icon name="checkmark-outline" class="me-2"></ion-icon>{% trans "Update Mapping" %}
+                            {% else %}
+                                <ion-icon name="add-outline" class="me-2"></ion-icon>{% trans "Create Mapping" %}
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

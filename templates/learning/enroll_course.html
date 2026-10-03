@@ -1,0 +1,75 @@
+{% extends "learning/base.html" %}
+
+{% block learning_content %}
+<div class="learning-page-header">
+    <a href="{% url 'learning:course_list' %}" class="back-button">← Back to Courses</a>
+    <h1>Enroll in Course</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 col-md-8 mx-auto">
+        <div class="learning-card">
+            <div class="card-body">
+                <h5 class="learning-card .card-title">Confirm Your Enrollment</h5>
+                <p class="learning-card-text mt-3">Please fill in the details below to enroll in the course.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 6px;">
+                        <p class="mb-0" style="font-weight: 600; color: #212529;">Review Course Information</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_course" class="form-label"><strong>Select Course</strong></label>
+                        {{ form.course }}
+                        {% if form.course.errors %}
+                        <div class="alert alert-danger mt-2 small">{{ form.course.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label"><strong>Notes (Optional)</strong></label>
+                        {{ form.notes }}
+                        <small class="form-text text-muted d-block mt-2">Add any notes about your enrollment, learning goals, or special requests.</small>
+                        {% if form.notes.errors %}
+                        <div class="alert alert-danger mt-2 small">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <strong>Note:</strong> Your enrollment request will be sent for approval. You will receive a notification once it is reviewed by the administrator.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'learning:course_list' %}" class="btn btn-secondary learning-btn">Cancel</a>
+                        <button type="submit" class="btn btn-primary learning-btn">Submit Enrollment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_course, #id_notes {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    #id_course:focus, #id_notes:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+    
+    #id_notes {
+        resize: vertical;
+        min-height: 100px;
+    }
+</style>
+{% endblock %}

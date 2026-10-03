@@ -1,0 +1,154 @@
+{% extends 'index.html' %}
+{% load static i18n %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/pms.css' %}" />
+{% endblock styles %}
+
+{% block content %}
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+  <section class="oh-wrapper oh-main__topbar">
+    <div class="oh-main__titlebar oh-main__titlebar--left">
+      <h1 class="oh-main__titlebar-title fw-bold">{% trans "Performance Rating" %}</h1>
+    </div>
+    <div class="oh-main__titlebar oh-main__titlebar--right">
+      <a href="{% url 'performance-rating-update' rating.id %}" class="oh-btn oh-btn--tertiary">
+        {% trans "Edit" %}
+      </a>
+      <a href="{% url 'performance-rating-view' %}" class="oh-btn oh-btn--secondary">
+        {% trans "Back" %}
+      </a>
+    </div>
+  </section>
+
+  <section class="oh-wrapper">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="oh-card">
+          <div class="oh-card__header">
+            <h5>{% trans "Employee Information" %}</h5>
+          </div>
+          <div class="oh-card__body">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold" style="width: 30%;">{% trans "Employee:" %}</td>
+                <td>{{ rating.employee_id.get_full_name }}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Period:" %}</td>
+                <td>{{ rating.period_id.period_name }}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Manager:" %}</td>
+                <td>{{ rating.manager_id.get_full_name|default:"N/A" }}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Rating Date:" %}</td>
+                <td>{{ rating.rating_date|date:"d M Y" }}</td>
+              </tr>
+              {% if rating.is_finalized %}
+              <tr>
+                <td class="fw-bold">{% trans "Status:" %}</td>
+                <td><span class="badge badge-success">{% trans "Finalized" %}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td class="fw-bold">{% trans "Status:" %}</td>
+                <td><span class="badge badge-warning">{% trans "Draft" %}</span></td>
+              </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+
+        <div class="oh-card mt-3">
+          <div class="oh-card__header">
+            <h5>{% trans "Ratings" %}</h5>
+          </div>
+          <div class="oh-card__body">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold">{% trans "Overall Rating:" %}</td>
+                <td>
+                  {% if rating.overall_rating %}
+                    <span>{{ rating.overall_rating }}/5 - 
+                      {% if rating.overall_rating == 5 %}
+                        {% trans "Outstanding" %}
+                      {% elif rating.overall_rating == 4 %}
+                        {% trans "Exceeds Expectations" %}
+                      {% elif rating.overall_rating == 3 %}
+                        {% trans "Meets Expectations" %}
+                      {% elif rating.overall_rating == 2 %}
+                        {% trans "Below Expectations" %}
+                      {% else %}
+                        {% trans "Unsatisfactory" %}
+                      {% endif %}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">{% trans "Not Rated" %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Competency Rating:" %}</td>
+                <td>{{ rating.competency_rating|default:"—" }}/5</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Collaboration Rating:" %}</td>
+                <td>{{ rating.collaboration_rating|default:"—" }}/5</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Innovation Rating:" %}</td>
+                <td>{{ rating.innovation_rating|default:"—" }}/5</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">{% trans "Customer Focus Rating:" %}</td>
+                <td>{{ rating.customer_focus_rating|default:"—" }}/5</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="oh-card mt-3">
+          <div class="oh-card__header">
+            <h5>{% trans "Feedback" %}</h5>
+          </div>
+          <div class="oh-card__body">
+            {% if rating.comments %}
+            <div class="mb-3">
+              <h6 class="fw-bold">{% trans "Comments:" %}</h6>
+              <p>{{ rating.comments }}</p>
+            </div>
+            {% endif %}
+
+            {% if rating.strengths %}
+            <div class="mb-3">
+              <h6 class="fw-bold">{% trans "Key Strengths:" %}</h6>
+              <p>{{ rating.strengths }}</p>
+            </div>
+            {% endif %}
+
+            {% if rating.improvement_areas %}
+            <div class="mb-3">
+              <h6 class="fw-bold">{% trans "Areas for Improvement:" %}</h6>
+              <p>{{ rating.improvement_areas }}</p>
+            </div>
+            {% endif %}
+
+            {% if rating.development_plan %}
+            <div class="mb-3">
+              <h6 class="fw-bold">{% trans "Development Plan:" %}</h6>
+              <p>{{ rating.development_plan }}</p>
+            </div>
+            {% endif %}
+
+            {% if not rating.comments and not rating.strengths and not rating.improvement_areas and not rating.development_plan %}
+            <p class="text-muted">{% trans "No feedback provided" %}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock content %}

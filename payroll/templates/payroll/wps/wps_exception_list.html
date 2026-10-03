@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}WPS Exceptions{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/wps-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wps-form-container">
+    <div class="wps-header">
+        <h1>WPS File Exceptions</h1>
+        <p>Review and manage exceptions from WPS submissions</p>
+    </div>
+
+    <div class="alert alert-warning">
+        <strong>Active Exceptions:</strong> {{ exceptions_count }} file(s) with exceptions require attention
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">Filter by Status:</h3>
+        <div style="display: flex; gap: 10px;">
+            <a href="?status=unresolved" style="padding: 8px 16px; border-radius: 6px; background: #f0f9ff; color: #1e40af; text-decoration: none; border: 1px solid #bfdbfe;">Unresolved</a>
+            <a href="?status=resolved" style="padding: 8px 16px; border-radius: 6px; background: #f0fdf4; color: #166534; text-decoration: none; border: 1px solid #bbf7d0;">Resolved</a>
+            <a href="" style="padding: 8px 16px; border-radius: 6px; background: white; color: #1f2937; text-decoration: none; border: 1px solid #e5e7eb;">All</a>
+        </div>
+    </div>
+
+    {% for exception in exceptions %}
+    <div class="file-info-card">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <h4>{{ exception.wps_file.file_reference }} - Exception</h4>
+                <p style="font-size: 12px; color: #6b7280; margin: 5px 0 0 0;">{{ exception.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+            <span class="status-badge {% if exception.resolved %}approved{% else %}submitted{% endif %}">
+                {% if exception.resolved %}Resolved{% else %}Pending{% endif %}
+            </span>
+        </div>
+
+        <div class="info-grid" style="margin-top: 15px;">
+            <div class="info-item">
+                <div class="label">Error Code</div>
+                <div class="value">{{ exception.error_code }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Affected Employees</div>
+                <div class="value">{{ exception.affected_employees }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Severity</div>
+                <div class="value">{{ exception.get_severity_display }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">File Reference</div>
+                <div class="value">{{ exception.wps_file.file_reference }}</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+            <strong style="display: block; margin-bottom: 8px;">Error Details:</strong>
+            <p style="margin: 0; font-size: 13px; line-height: 1.5;">{{ exception.error_message }}</p>
+        </div>
+
+        {% if exception.resolution_notes %}
+        <div style="margin-top: 15px; padding: 12px; background: #f0fdf4; border-radius: 6px;">
+            <strong style="display: block; font-size: 12px; color: #166534; margin-bottom: 5px;">Resolution:</strong>
+            <p style="margin: 0; font-size: 13px; color: #166534;">{{ exception.resolution_notes }}</p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 15px;">
+            {% if not exception.resolved %}
+                <a href="{% url 'wps-exception-resolve' exception.id %}" class="btn btn-primary">Resolve Exception</a>
+            {% endif %}
+            <a href="{% url 'wps-detail' exception.wps_file.id %}" class="btn btn-secondary">View File</a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 40px; background: #f9fafb; border-radius: 8px;">
+        <p style="font-size: 14px; color: #6b7280;">✓ No exceptions found</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

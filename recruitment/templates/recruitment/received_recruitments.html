@@ -1,0 +1,1194 @@
+{% extends "index.html" %}
+{% load i18n static %}
+
+{% block content %}
+<style>
+.rr-page { padding: 0 0 40px; }
+
+/* Card header strip */
+.rr-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid #f0f1f3;
+}
+.rr-card-header-left h4 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+.rr-card-header-left p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #9ca3af;
+}
+.rr-count-badge {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+}
+
+/* Table */
+.rr-table { width: 100%; border-collapse: collapse; }
+.rr-table thead th {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+.rr-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+.rr-table tbody tr:last-child { border-bottom: none; }
+.rr-table tbody tr:hover { background: #fafbfc; }
+.rr-table tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  font-size: 13.5px;
+  color: #374151;
+}
+
+/* Title cell */
+.rr-title { font-weight: 600; color: #111827; font-size: 14px; }
+.rr-raised { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+/* HR action buttons group */
+.rr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rr-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rr-actions-divider {
+  border: none;
+  border-top: 1px solid #f0f1f3;
+  margin: 0;
+}
+.rr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s, box-shadow 0.15s;
+}
+.rr-btn:disabled { opacity: 0.55; cursor: default; }
+.rr-btn:not(:disabled):hover { opacity: 0.88; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.rr-btn--careers      { background: #3b82f6; color: #fff; border-color: #2563eb; }
+.rr-btn--linkedin     { background: #0a66c2; color: #fff; border-color: #0a56a8; }
+.rr-btn--bayt         { background: #fff7e6; color: #92400e; border-color: #fcd34d; }
+.rr-btn--naukrigulf   { background: #f0fdf4; color: #166534; border-color: #86efac; }
+.rr-btn--careers-link { background: #f8fafc; color: #475569; border-color: #e2e8f0; font-size: 11px; text-decoration: none; }
+.rr-btn--feedback { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.rr-btn--edit     { background: #f9fafb; color: #374151; border-color: #e5e7eb; }
+.rr-btn--track    { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+
+.rr-published { opacity: 0.65; }
+
+/* Date filter bar */
+.rr-filter-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 24px 12px;
+  border-bottom: 1px solid #f0f1f3;
+  background: #fafbfc;
+}
+.rr-filter-bar label { font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
+.rr-filter-input {
+  border: 1px solid #e5e7eb; border-radius: 7px;
+  padding: 5px 10px; font-size: 12.5px; color: #374151;
+  background: #fff; outline: none;
+}
+.rr-filter-input:focus { border-color: #3b82f6; }
+.rr-filter-clear {
+  font-size: 12px; color: #6b7280; background: none; border: none;
+  cursor: pointer; text-decoration: underline; padding: 0;
+}
+.rr-filter-clear:hover { color: #374151; }
+.rr-no-results {
+  padding: 32px 24px; text-align: center;
+  color: #9ca3af; font-size: 13px; display: none;
+}
+
+/* Modified date label in table */
+.rr-modified { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+</style>
+
+<div class="oh-wrapper rr-page">
+
+  <div class="oh-main__titlebar">
+    <div class="oh-main__titlebar-title fw-bold text-dark">
+      {% trans "Received Recruitments" %}
+    </div>
+  </div>
+
+  {% if pending_recruitments %}
+  <div class="oh-card mt-4">
+    <div class="rr-card-header">
+      <div class="rr-card-header-left">
+        <h4>{% trans "Pending Your Approval" %}</h4>
+        <p>{% trans "Review and approve or reject each recruitment request." %}</p>
+      </div>
+      <span class="rr-count-badge" style="background:#fef3c7;color:#92400e;">
+        {{ pending_recruitments|length }} pending
+      </span>
+    </div>
+    <div class="oh-card__body" style="padding:0;">
+      <table class="rr-table">
+        <thead>
+          <tr>
+            <th>{% trans "Position" %}</th>
+            <th>{% trans "Justification" %}</th>
+            <th>{% trans "Workflow" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rec in pending_recruitments %}
+          {% with my_approval=rec.approvals.all %}
+          {% for approval in my_approval %}
+          {% if approval.approver.employee_user_id == request.user and approval.status == "pending" %}
+          <tr>
+            <td>
+              <div class="rr-title">{{ rec.title }}</div>
+              <div class="rr-raised">{% trans "Raised by" %} {{ rec.raised_by }}</div>
+              {% if rec.grade %}
+              <div style="margin-top:3px;">
+                <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:#eef2ff;color:#3730a3;">
+                  {% trans "Grade" %} {{ rec.grade }}{% if rec.grade_level_label %} &middot; {{ rec.grade_level_label }}{% endif %}
+                </span>
+              </div>
+              {% endif %}
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px;">
+                {{ rec.start_date }} &mdash; {{ rec.end_date }}
+              </div>
+            </td>
+            <td style="max-width:220px;">
+              <div style="font-size:13px;color:#374151;white-space:pre-wrap;">{{ rec.justification|default:"—" }}</div>
+            </td>
+            <td>
+              <button class="rr-btn rr-btn--track" onclick="openPendingWorkflow({{ rec.id }})">
+                {% trans "View Workflow" %}
+              </button>
+            </td>
+            <td>
+              <div style="display:flex;gap:8px;">
+                <form method="post" action="{% url 'approve-employee-recruitment' approval.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="rr-btn" style="background:#d1fae5;color:#065f46;border-color:#6ee7b7;">
+                    ✓ {% trans "Approve" %}
+                  </button>
+                </form>
+                <button type="button" class="rr-btn" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;"
+                  onclick="openRejectModal({{ approval.id }})">
+                  ✕ {% trans "Reject" %}
+                </button>
+                <button type="button" class="rr-btn" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;"
+                  onclick="openQueryModal({{ approval.id }})">
+                  ↩ {% trans "Send Back with Query" %}
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+          {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if acted_recruitments %}
+  <div class="oh-card mt-4">
+    <div class="rr-card-header">
+      <div class="rr-card-header-left">
+        <h4>{% trans "Already Acted" %}</h4>
+        <p>{% trans "Recruitment requests you have already approved or rejected." %}</p>
+      </div>
+      <span class="rr-count-badge" style="background:#e0f2fe;color:#075985;">
+        {{ acted_recruitments|length }} {% trans "recruitment" %}{{ acted_recruitments|length|pluralize }}
+      </span>
+    </div>
+    <div class="oh-card__body" style="padding:0;">
+      <table class="rr-table">
+        <thead>
+          <tr>
+            <th>{% trans "Position" %}</th>
+            <th>{% trans "Justification" %}</th>
+            <th>{% trans "Workflow" %}</th>
+            <th>{% trans "Your Decision" %}</th>
+            <th>{% trans "Overall Status" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rec in acted_recruitments %}
+          <tr>
+            <td>
+              <div class="rr-title">{{ rec.title }}</div>
+              <div class="rr-raised">{% trans "Raised by" %} {{ rec.raised_by }}</div>
+              {% if rec.grade %}
+              <div style="margin-top:3px;">
+                <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:#eef2ff;color:#3730a3;">
+                  {% trans "Grade" %} {{ rec.grade }}{% if rec.grade_level_label %} &middot; {{ rec.grade_level_label }}{% endif %}
+                </span>
+              </div>
+              {% endif %}
+              {% if rec.oman_last_action %}
+              <div class="rr-modified">{% trans "Last action:" %} {{ rec.oman_last_action }}</div>
+              {% endif %}
+            </td>
+            <td style="max-width:220px;">
+              <div style="font-size:13px;color:#374151;white-space:pre-wrap;">{{ rec.justification|default:"—" }}</div>
+            </td>
+            <td>
+              <button class="rr-btn rr-btn--track" onclick="openActedWorkflow({{ rec.id }})">
+                📋 {% trans "Track Status" %}
+              </button>
+            </td>
+            <td>
+              {% if rec.my_action_status == "approved" %}
+                <span class="rr-btn" style="background:#d1fae5;color:#065f46;border-color:#6ee7b7;">
+                  ✓ {% trans "Approved" %}
+                </span>
+              {% elif rec.my_action_status == "rejected" %}
+                <span class="rr-btn" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;">
+                  ✕ {% trans "Rejected" %}
+                </span>
+              {% endif %}
+              {% if rec.my_action_at %}
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px;">{{ rec.my_action_at }}</div>
+              {% endif %}
+              {% if rec.my_action_reason %}
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;white-space:pre-wrap;">{{ rec.my_action_reason }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if rec.approval_status == "approved" %}
+                <span class="rr-btn" style="background:#dbeafe;color:#1e40af;border-color:#93c5fd;">{% trans "Approved" %}</span>
+              {% elif rec.approval_status == "rejected" %}
+                <span class="rr-btn" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5;">{% trans "Rejected" %}</span>
+              {% else %}
+                <span class="rr-btn" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">{% trans "Pending next approver" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_hr %}
+  <div class="oh-card mt-4">
+
+    <div class="rr-card-header">
+      <div class="rr-card-header-left">
+        <h4>{% trans "Approved — Ready to Publish" %}</h4>
+        <p>{% trans "Only fully approved requisitions are shown here." %}</p>
+      </div>
+      {% if ready_recruitments %}
+        <span class="rr-count-badge" id="readyCountBadge">{{ ready_recruitments|length }} recruitment{{ ready_recruitments|length|pluralize }}</span>
+      {% endif %}
+    </div>
+
+    {% if ready_recruitments %}
+    <div class="rr-filter-bar">
+      <label>{% trans "Filter by date:" %}</label>
+      <input type="date" id="rrFilterFrom" class="rr-filter-input" placeholder="From">
+      <span style="font-size:12px;color:#9ca3af;">—</span>
+      <input type="date" id="rrFilterTo" class="rr-filter-input" placeholder="To">
+      <button class="rr-filter-clear" onclick="clearReadyFilter()">{% trans "Clear" %}</button>
+      <span id="rrFilterCount" style="font-size:12px;color:#6b7280;margin-left:4px;"></span>
+    </div>
+    {% endif %}
+
+    <div class="oh-card__body" style="padding:0;">
+
+      {% if ready_recruitments %}
+      <table class="rr-table" id="readyTable">
+        <thead>
+          <tr>
+            <th>{% trans "Position" %}</th>
+            <th>{% trans "Workflow" %}</th>
+            <th>{% trans "HR Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody id="readyTbody">
+          {% for rec in ready_recruitments %}
+          <tr data-date="{{ rec.oman_date_iso }}">
+
+            <td>
+              <div class="rr-title">{{ rec.title }}</div>
+              <div class="rr-raised">{% trans "Raised by" %} {{ rec.raised_by }}</div>
+              {% if rec.grade %}
+              <div style="margin-top:3px;">
+                <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:#eef2ff;color:#3730a3;">
+                  {% trans "Grade" %} {{ rec.grade }}{% if rec.grade_level_label %} &middot; {{ rec.grade_level_label }}{% endif %}
+                </span>
+              </div>
+              {% endif %}
+              {% if rec.oman_last_action %}
+              <div class="rr-modified">{% trans "Last action:" %} {{ rec.oman_last_action }}</div>
+              {% endif %}
+            </td>
+
+            <td>
+              <button class="rr-btn rr-btn--track" onclick="openWorkflow({{ rec.id }})">
+                📋 {% trans "Track Status" %}
+              </button>
+            </td>
+
+            <td>
+              <div class="rr-actions">
+
+                <!-- Publish row -->
+                <div class="rr-actions-row">
+                  <button
+                    id="btn-careers-{{ rec.id }}"
+                    class="rr-btn rr-btn--careers {% if rec.is_published %}rr-published{% endif %}"
+                    {% if rec.is_published %}disabled{% endif %}
+                    onclick="publishChannel({{ rec.id }}, 'careers', '{% url "publish-employee-recruitment" rec.id %}')">
+                    {% if rec.is_published %}✅ Careers{% else %}🌐 {% trans "Careers" %}{% endif %}
+                  </button>
+
+                  <button
+                    id="btn-linkedin-{{ rec.id }}"
+                    class="rr-btn rr-btn--linkedin {% if rec.published_to_linkedin %}rr-published{% endif %}"
+                    {% if rec.published_to_linkedin %}disabled{% endif %}
+                    onclick="publishChannel({{ rec.id }}, 'LinkedIn', '{% url "publish-to-linkedin" rec.id %}')">
+                    {% if rec.published_to_linkedin %}✅ LinkedIn{% else %}🔗 LinkedIn{% endif %}
+                  </button>
+
+                  <button
+                    id="btn-bayt-{{ rec.id }}"
+                    class="rr-btn rr-btn--bayt {% if rec.published_to_bayt %}rr-published{% endif %}"
+                    {% if rec.published_to_bayt %}disabled{% endif %}
+                    onclick="publishChannel({{ rec.id }}, 'Bayt.com', '{% url "publish-to-bayt" rec.id %}')">
+                    {% if rec.published_to_bayt %}✅ Bayt{% else %}🟡 Bayt.com{% endif %}
+                  </button>
+
+                  <button
+                    id="btn-naukrigulf-{{ rec.id }}"
+                    class="rr-btn rr-btn--naukrigulf {% if rec.published_to_naukrigulf %}rr-published{% endif %}"
+                    {% if rec.published_to_naukrigulf %}disabled{% endif %}
+                    onclick="publishChannel({{ rec.id }}, 'NaukriGulf', '{% url "publish-to-naukrigulf" rec.id %}')">
+                    {% if rec.published_to_naukrigulf %}✅ NaukriGulf{% else %}🟢 NaukriGulf{% endif %}
+                  </button>
+                </div>
+
+                <!-- View Careers link -->
+                <div>
+                  <a href="https://hcmspro.net/careers/" target="_blank" class="rr-btn rr-btn--careers-link">
+                    🔗 View Careers Page
+                  </a>
+                </div>
+
+                <hr class="rr-actions-divider">
+
+                <!-- Management row -->
+                <div class="rr-actions-row">
+                  <button class="rr-btn rr-btn--feedback" onclick="openFeedbackModal({{ rec.id }})">
+                    💬 {% trans "Feedback" %}
+                  </button>
+                  <button class="rr-btn rr-btn--edit" onclick="openEditModal({{ rec.id }})">
+                    ✏️ {% trans "Edit" %}
+                  </button>
+                </div>
+
+              </div>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div id="rrNoResults" class="rr-no-results">
+        <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+        <div style="font-weight:500;">{% trans "No recruitments match the selected date range." %}</div>
+      </div>
+
+      {% else %}
+      <div style="padding:48px 24px;text-align:center;color:#9ca3af;">
+        <div style="font-size:36px;margin-bottom:10px;">📭</div>
+        <div style="font-size:14px;font-weight:500;">{% trans "No approved recruitments yet." %}</div>
+        <div style="font-size:12px;margin-top:4px;">{% trans "Recruitments will appear here once all approvers sign off." %}</div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- POST PREVIEW MODAL -->
+<div id="previewModal" onclick="if(event.target===this)closePreview();"
+  style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+         background:rgba(0,0,0,0.65);z-index:99999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:white;border-radius:14px;width:min(580px,96vw);
+              display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:16px 20px;border-bottom:1px solid #f0f1f3;">
+      <div>
+        <div id="previewPlatformName" style="font-weight:700;font-size:15px;color:#111827;"></div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">
+          Review the generated post, then click "Copy &amp; Open" to complete publishing.
+        </div>
+      </div>
+      <button onclick="closePreview()" type="button"
+        style="border:none;background:#f3f4f6;border-radius:50%;width:30px;height:30px;
+               font-size:18px;cursor:pointer;line-height:1;flex-shrink:0;">×</button>
+    </div>
+    <div style="padding:18px 20px;">
+      <textarea id="previewPostContent" rows="14"
+        style="width:100%;font-size:13px;line-height:1.6;border:1px solid #e5e7eb;
+               border-radius:8px;padding:12px;resize:vertical;font-family:inherit;
+               color:#374151;background:#fafafa;box-sizing:border-box;"></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;
+                padding:14px 20px;border-top:1px solid #f0f1f3;">
+      <button onclick="closePreview()" type="button"
+        class="oh-btn oh-btn--light">{% trans "Cancel" %}</button>
+      <button onclick="confirmPublish()" type="button"
+        class="oh-btn oh-btn--primary">📋 {% trans "Copy & Open Portal" %}</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW MODAL -->
+<div id="workflowModal" class="workflow-modal">
+  <div class="workflow-card">
+    <div class="workflow-header">
+      <h5>Workflow</h5>
+      <span onclick="closeWorkflow()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div id="workflowContent" class="raise-recruitment-flowchart"></div>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="feedbackModal" class="workflow-modal">
+  <div class="workflow-card" style="height:auto;min-height:unset;max-width:540px;">
+    <div class="workflow-header">
+      <h5>{% trans "Send HR Feedback" %}</h5>
+      <span onclick="closeFeedbackModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div style="padding-top:20px;">
+      <form id="feedbackForm" method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:14px;">
+          <label>{% trans "Send back to Approver" %}</label>
+          <select name="approver_id" id="feedbackApproverSelect" class="oh-select w-100" required>
+            <option value="">-- {% trans "Select Approver" %} --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>{% trans "Feedback / Comments" %}</label>
+          <textarea name="feedback" id="feedbackText" class="oh-input w-100" rows="5" required
+            placeholder="{% trans 'Describe what needs to be revised...' %}"></textarea>
+        </div>
+        <div style="text-align:right;">
+          <button type="button" class="oh-btn oh-btn--light" onclick="closeFeedbackModal()">{% trans "Cancel" %}</button>
+          <button type="submit" class="oh-btn oh-btn--warning" style="margin-left:8px;">{% trans "Send Feedback" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT DETAILS MODAL -->
+<div id="editModal" class="workflow-modal">
+  <div class="workflow-card" style="height:auto;min-height:unset;max-width:600px;">
+    <div class="workflow-header">
+      <h5>{% trans "Edit Recruitment Details" %}</h5>
+      <span onclick="closeEditModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div style="padding-top:20px;">
+      <form id="editForm" method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:14px;">
+          <label>{% trans "Title" %}</label>
+          <input type="text" name="title" id="editTitle" class="oh-input w-100" maxlength="50" required />
+          <span id="editTitleError" style="color:red;font-size:12px;"></span>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>{% trans "Job Description" %}</label>
+          <textarea name="description" id="editDescription" class="oh-input w-100" rows="8"></textarea>
+          <span id="editDescError" style="color:red;font-size:12px;"></span>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>{% trans "Vacancy" %}</label>
+          <input type="number" name="vacancy" id="editVacancy" class="oh-input w-100" min="0" />
+          <span id="editVacancyError" style="color:red;font-size:12px;"></span>
+        </div>
+        <div style="text-align:right;">
+          <button type="button" class="oh-btn oh-btn--light" onclick="closeEditModal()">{% trans "Cancel" %}</button>
+          <button type="submit" class="oh-btn oh-btn--primary" style="margin-left:8px;">{% trans "Save Changes" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.workflow-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+.workflow-modal.show { display: flex; }
+.workflow-card {
+  width: 80vw; max-width: 860px;
+  height: auto;
+  background: white; border-radius: 16px; padding: 24px 28px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  transform: scale(0.92); opacity: 0;
+  transition: all 0.4s ease;
+}
+.workflow-modal.show .workflow-card { transform: scale(1); opacity: 1; }
+.workflow-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 0;
+}
+#workflowContent {
+  padding: 20px 0 8px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.flow-step {
+  opacity: 0; transform: translateY(15px);
+  padding: 10px 16px; border-radius: 999px;
+  font-weight: 500; border: 2px solid transparent;
+  transition: all 0.6s ease;
+  position: relative;
+}
+.flow-step.approved { background: #d1fae5; border-color: #10b981; }
+.flow-step.current  { background: #fef3c7; border-color: #f59e0b; }
+.flow-step.rejected { background: #fee2e2; border-color: #ef4444; }
+.flow-arrow {
+  opacity: 0; transform: translateY(15px);
+  font-size: 22px; color: #6b7280;
+  transition: all 0.6s ease;
+}
+.flow-step.show, .flow-arrow.show { opacity: 1 !important; transform: translateY(0) !important; }
+.reason-box {
+  display: flex; flex-direction: column; align-items: center;
+  margin-top: 6px; opacity: 0; transform: translateY(-6px);
+  transition: all 0.5s ease;
+}
+.reason-box.show { opacity: 1; transform: translateY(0); }
+.reason-arrow { font-size: 14px; color: #9ca3af; margin-bottom: 2px; }
+.reason-text {
+  background: #fee2e2; color: #991b1b;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: 12px; white-space: nowrap;
+}
+.step-date {
+  font-size: 10px; color: #9ca3af;
+  margin-bottom: 4px; white-space: nowrap; text-align: center;
+}
+.feedback-badge {
+  position: absolute; top: -9px; right: -9px;
+  background: #3b82f6; color: #fff;
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  border: 1.5px solid #fff;
+}
+.feedback-popup {
+  position: absolute; bottom: calc(100% + 10px); right: -10px;
+  background: #1e293b; color: #fff;
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; line-height: 1.4;
+  min-width: 160px; max-width: 240px;
+  white-space: normal; z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+.feedback-popup::after {
+  content: ""; position: absolute;
+  top: 100%; right: 16px;
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+.feedback-popup.hidden { display: none; }
+</style>
+
+<script>
+const readyRecruitments = JSON.parse('{{ ready_recruitments_json|escapejs }}');
+
+function openWorkflow(id) {
+  const modal = document.getElementById("workflowModal");
+  const container = document.getElementById("workflowContent");
+  container.innerHTML = "";
+  modal.style.display = "flex";
+  setTimeout(() => modal.classList.add("show"), 10);
+
+  const rec = readyRecruitments.find(r => r.id === id);
+  const steps = [];
+
+  steps.push({ text: "Raised by: " + (rec.raised_by || "Unknown"), cls: "approved", datetime: rec.created_at || "" });
+
+  rec.approvals.forEach(a => {
+    let cls = "current";
+    if (a.status === "approved") cls = "approved";
+    if (a.status === "rejected") cls = "rejected";
+    steps.push({ text: a.approver + " (" + a.status + ")", cls: cls, reason: a.reason || "", datetime: a.approved_at || "", feedback: a.reason || "" });
+  });
+
+  const allApproved = rec.approvals.length > 0 && rec.approvals.every(a => a.status === "approved");
+  if (allApproved) {
+    steps.push({ text: "Forwarded to HR", cls: "approved" });
+    if (rec.hr_feedback) {
+      steps.push({ text: "HR Feedback: " + rec.hr_feedback, cls: "current" });
+    }
+  }
+
+  steps.forEach((step, i) => {
+    const stepWrapper = document.createElement("div");
+    stepWrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;position:relative;";
+
+    if (step.datetime) {
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "step-date";
+      dateLabel.textContent = step.datetime;
+      stepWrapper.appendChild(dateLabel);
+    }
+
+    const el = document.createElement("div");
+    el.className = "flow-step " + step.cls;
+    el.innerText = step.text;
+
+    if (step.feedback) {
+      const badge = document.createElement("div");
+      badge.className = "feedback-badge";
+      badge.textContent = "1";
+      const popup = document.createElement("div");
+      popup.className = "feedback-popup hidden";
+      popup.textContent = step.feedback;
+      badge.addEventListener("click", e => {
+        e.stopPropagation();
+        document.querySelectorAll(".feedback-popup").forEach(p => { if (p !== popup) p.classList.add("hidden"); });
+        popup.classList.toggle("hidden");
+      });
+      el.appendChild(badge);
+      el.appendChild(popup);
+    }
+
+    stepWrapper.appendChild(el);
+
+    if (step.reason) {
+      const reasonBox = document.createElement("div");
+      reasonBox.className = "reason-box";
+      reasonBox.innerHTML = `<div class="reason-arrow">↓</div><div class="reason-text">${step.text.split(" (")[0]} reason: "${step.reason}"</div>`;
+      stepWrapper.appendChild(reasonBox);
+    }
+
+    container.appendChild(stepWrapper);
+
+    if (i < steps.length - 1) {
+      const arrow = document.createElement("div");
+      arrow.className = "flow-arrow";
+      arrow.innerText = "→";
+      container.appendChild(arrow);
+    }
+  });
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".feedback-popup").forEach(p => p.classList.add("hidden"));
+  }, { once: true });
+
+  container.querySelectorAll(".flow-step, .flow-arrow, .reason-box").forEach((el, index) => {
+    setTimeout(() => el.classList.add("show"), index * 350);
+  });
+}
+
+function closeWorkflow() {
+  const modal = document.getElementById("workflowModal");
+  modal.classList.remove("show");
+  setTimeout(() => { modal.style.display = "none"; }, 300);
+}
+
+// --- FEEDBACK MODAL ---
+function openFeedbackModal(recId) {
+  const rec = readyRecruitments.find(r => r.id === recId);
+  const select = document.getElementById("feedbackApproverSelect");
+  select.innerHTML = '<option value="">-- Select Approver --</option>';
+  rec.approvals.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.approver_id;
+    opt.textContent = a.approver + " (step " + a.sequence + ")";
+    select.appendChild(opt);
+  });
+  document.getElementById("feedbackText").value = "";
+  document.getElementById("feedbackForm").action = "/recruitment/received-recruitments/feedback/" + recId + "/";
+  const modal = document.getElementById("feedbackModal");
+  modal.style.display = "flex";
+  setTimeout(() => modal.classList.add("show"), 10);
+}
+
+function closeFeedbackModal() {
+  const modal = document.getElementById("feedbackModal");
+  modal.classList.remove("show");
+  setTimeout(() => { modal.style.display = "none"; }, 300);
+}
+// feedback form submits normally (full page POST) — browser handles CSRF + redirect
+
+// --- EDIT MODAL ---
+function openEditModal(recId) {
+  ["editTitleError", "editDescError", "editVacancyError"].forEach(id => {
+    document.getElementById(id).textContent = "";
+  });
+  fetch("/recruitment/received-recruitments/edit/" + recId + "/")
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("editTitle").value = data.title;
+      // Strip HTML tags — description may contain Summernote markup
+      const tmp = document.createElement("div");
+      tmp.innerHTML = data.description;
+      document.getElementById("editDescription").value = tmp.textContent || tmp.innerText || "";
+      document.getElementById("editVacancy").value = data.vacancy;
+      document.getElementById("editForm").dataset.url = "/recruitment/received-recruitments/edit/" + recId + "/";
+      const modal = document.getElementById("editModal");
+      modal.style.display = "flex";
+      setTimeout(() => modal.classList.add("show"), 10);
+    })
+    .catch(() => alert("Could not load recruitment data."));
+}
+
+function closeEditModal() {
+  const modal = document.getElementById("editModal");
+  modal.classList.remove("show");
+  setTimeout(() => { modal.style.display = "none"; }, 300);
+}
+
+document.getElementById("editForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const data = new FormData(e.target);
+  fetch(e.target.dataset.url, { method: "POST", body: data })
+    .then(r => r.json())
+    .then(json => {
+      if (json.success) {
+        closeEditModal();
+        window.location.reload();
+      } else if (json.errors) {
+        if (json.errors.title) document.getElementById("editTitleError").textContent = json.errors.title;
+        if (json.errors.description) document.getElementById("editDescError").textContent = json.errors.description;
+        if (json.errors.vacancy) document.getElementById("editVacancyError").textContent = json.errors.vacancy;
+      }
+    })
+    .catch(() => alert("Network error. Please try again."));
+});
+
+// ── Date filter for Ready-to-Publish table ────────────────────────────────
+function applyReadyFilter() {
+  const from = document.getElementById("rrFilterFrom").value;
+  const to   = document.getElementById("rrFilterTo").value;
+  const rows = document.querySelectorAll("#readyTbody tr");
+  let visible = 0;
+
+  rows.forEach(row => {
+    const d = row.dataset.date;
+    const show = (!from || d >= from) && (!to || d <= to);
+    row.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  const noResults = document.getElementById("rrNoResults");
+  if (noResults) noResults.style.display = visible === 0 ? "block" : "none";
+
+  const badge = document.getElementById("readyCountBadge");
+  const countEl = document.getElementById("rrFilterCount");
+  if (from || to) {
+    const total = rows.length;
+    if (countEl) countEl.textContent = visible + " of " + total + " shown";
+    if (badge) badge.textContent = visible + " recruitment" + (visible !== 1 ? "s" : "");
+  } else {
+    if (countEl) countEl.textContent = "";
+    if (badge) {
+      const t = rows.length;
+      badge.textContent = t + " recruitment" + (t !== 1 ? "s" : "");
+    }
+  }
+}
+
+function clearReadyFilter() {
+  document.getElementById("rrFilterFrom").value = "";
+  document.getElementById("rrFilterTo").value = "";
+  applyReadyFilter();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const f = document.getElementById("rrFilterFrom");
+  const t = document.getElementById("rrFilterTo");
+  if (f) f.addEventListener("change", applyReadyFilter);
+  if (t) t.addEventListener("change", applyReadyFilter);
+});
+</script>
+
+<style>
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function getCSRFCookie() {
+  return (document.cookie.split('; ').find(r => r.startsWith('csrftoken=')) || '').split('=')[1];
+}
+
+function showToast(msg, isError) {
+  const t = document.createElement("div");
+  t.style.cssText = `
+    position:fixed;bottom:28px;right:28px;z-index:999999;
+    background:${isError ? "#ef4444" : "#22c55e"};color:white;
+    padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.18);animation:slideIn 0.3s ease;
+  `;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+const _btnMap = {
+  "careers":    "btn-careers-",
+  "LinkedIn":   "btn-linkedin-",
+  "Bayt.com":   "btn-bayt-",
+  "NaukriGulf": "btn-naukrigulf-",
+};
+const _assistedToasts = {
+  "LinkedIn":   "LinkedIn post content copied to clipboard. Complete publishing on LinkedIn.",
+  "Bayt.com":   "Bayt.com posting content copied to clipboard. Complete posting on Bayt.com.",
+  "NaukriGulf": "NaukriGulf posting content copied to clipboard. Complete posting on NaukriGulf.",
+};
+
+let _previewPortalUrl = "", _previewLabel = "", _previewBtn = null;
+
+function publishChannel(recId, label, url) {
+  const btn = document.getElementById((_btnMap[label] || "btn-careers-") + recId);
+  if (btn) { btn.disabled = true; btn.style.opacity = "0.6"; }
+
+  fetch(url, {
+    method: "POST",
+    headers: { "X-CSRFToken": getCSRFCookie(), "X-Requested-With": "XMLHttpRequest" },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      if (data.posted) {
+        // Direct API post succeeded
+        if (btn) { btn.textContent = "✅ " + label; btn.classList.add("rr-published"); }
+        showToast(`Successfully posted to LinkedIn company page!`, false);
+      } else if (data.post_content) {
+        // Assisted publishing — open preview modal
+        _previewPortalUrl = data.portal_url;
+        _previewLabel     = label;
+        _previewBtn       = btn;
+        document.getElementById("previewPlatformName").textContent = label + " — Post Preview";
+        document.getElementById("previewPostContent").value = data.post_content;
+        document.getElementById("previewModal").style.display = "flex";
+      } else {
+        // Careers direct publish
+        if (btn) { btn.textContent = "✅ Careers"; btn.classList.add("rr-published"); }
+        showToast("Published to Careers page successfully!", false);
+      }
+    } else {
+      if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+      showToast(data.error || `Failed to publish to ${label}`, true);
+    }
+  })
+  .catch(() => {
+    if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+    showToast(`Network error publishing to ${label}`, true);
+  });
+}
+
+function closePreview() {
+  document.getElementById("previewModal").style.display = "none";
+}
+
+function confirmPublish() {
+  const content = document.getElementById("previewPostContent").value;
+  try { navigator.clipboard.writeText(content); } catch (_) {}
+  window.open(_previewPortalUrl, "_blank");
+  closePreview();
+  if (_previewBtn) { _previewBtn.textContent = "✅ " + _previewLabel; _previewBtn.classList.add("rr-published"); }
+  showToast(_assistedToasts[_previewLabel] || "Content copied. Complete posting on the portal.", false);
+}
+
+// ── Pending workflow viewer (reuses the same workflow modal) ──────────────
+const allRecruitments = {{ requests_json|default:"[]"|safe }};
+const actedRecruitments = {{ acted_recruitments_json|default:"[]"|safe }};
+
+function openActedWorkflow(id) {
+  const modal = document.getElementById("workflowModal");
+  const container = document.getElementById("workflowContent");
+  container.innerHTML = "";
+  modal.style.display = "flex";
+  setTimeout(() => modal.classList.add("show"), 10);
+
+  const rec = actedRecruitments.find(r => r.id === id);
+  if (!rec) { container.innerHTML = "<p style='padding:16px'>No data.</p>"; return; }
+
+  const steps = [];
+  steps.push({ text: "Raised by: " + (rec.raised_by || "Unknown"), cls: "approved", datetime: rec.created_at || "" });
+  rec.approvals.forEach(a => {
+    let cls = a.status === "approved" ? "approved" : a.status === "rejected" ? "rejected" : "current";
+    steps.push({ text: a.approver + " (" + a.status + ")", cls, reason: a.reason || "", datetime: a.approved_at || "", feedback: a.reason || "" });
+  });
+  const allApproved = rec.approvals.length > 0 && rec.approvals.every(a => a.status === "approved");
+  if (allApproved) {
+    steps.push({ text: "Forwarded to HR", cls: "approved" });
+  }
+
+  steps.forEach((step, i) => {
+    const stepWrapper = document.createElement("div");
+    stepWrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;position:relative;";
+
+    if (step.datetime) {
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "step-date";
+      dateLabel.textContent = step.datetime;
+      stepWrapper.appendChild(dateLabel);
+    }
+
+    const el = document.createElement("div");
+    el.className = "flow-step " + step.cls;
+    el.textContent = step.text;
+
+    if (step.feedback) {
+      const badge = document.createElement("div");
+      badge.className = "feedback-badge";
+      badge.textContent = "1";
+      const popup = document.createElement("div");
+      popup.className = "feedback-popup hidden";
+      popup.textContent = step.feedback;
+      badge.addEventListener("click", e => {
+        e.stopPropagation();
+        document.querySelectorAll(".feedback-popup").forEach(p => { if (p !== popup) p.classList.add("hidden"); });
+        popup.classList.toggle("hidden");
+      });
+      el.appendChild(badge);
+      el.appendChild(popup);
+    }
+
+    stepWrapper.appendChild(el);
+
+    if (i > 0) {
+      const arr = document.createElement("span");
+      arr.className = "flow-arrow";
+      arr.textContent = "→";
+      container.appendChild(arr);
+      setTimeout(() => arr.classList.add("show"), 120 * i);
+    }
+
+    container.appendChild(stepWrapper);
+    setTimeout(() => el.classList.add("show"), 120 * i + 60);
+  });
+}
+
+function openPendingWorkflow(id) {
+  const modal = document.getElementById("workflowModal");
+  const container = document.getElementById("workflowContent");
+  container.innerHTML = "";
+  modal.style.display = "flex";
+  setTimeout(() => modal.classList.add("show"), 10);
+
+  // Try ready_recruitments data first, then fall back to allRecruitments
+  const readySrc = typeof readyRecruitments !== "undefined" ? readyRecruitments : [];
+  const rec = readySrc.find(r => r.id === id) || allRecruitments.find(r => r.id === id);
+  if (!rec) { container.innerHTML = "<p style='padding:16px'>No data.</p>"; return; }
+
+  const steps = [];
+  steps.push({ text: "Raised by: " + (rec.raised_by || "Unknown"), cls: "approved", datetime: rec.created_at || "" });
+  rec.approvals.forEach(a => {
+    let cls = a.status === "approved" ? "approved" : a.status === "rejected" ? "rejected" : "current";
+    steps.push({ text: a.approver + " (" + a.status + ")", cls, reason: a.reason || "", datetime: a.approved_at || "", feedback: a.reason || "" });
+  });
+
+  steps.forEach((step, i) => {
+    const stepWrapper = document.createElement("div");
+    stepWrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;position:relative;";
+
+    if (step.datetime) {
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "step-date";
+      dateLabel.textContent = step.datetime;
+      stepWrapper.appendChild(dateLabel);
+    }
+
+    const el = document.createElement("div");
+    el.className = "flow-step " + step.cls;
+    el.textContent = step.text;
+
+    if (step.feedback) {
+      const badge = document.createElement("div");
+      badge.className = "feedback-badge";
+      badge.textContent = "1";
+      const popup = document.createElement("div");
+      popup.className = "feedback-popup hidden";
+      popup.textContent = step.feedback;
+      badge.addEventListener("click", e => {
+        e.stopPropagation();
+        document.querySelectorAll(".feedback-popup").forEach(p => { if (p !== popup) p.classList.add("hidden"); });
+        popup.classList.toggle("hidden");
+      });
+      el.appendChild(badge);
+      el.appendChild(popup);
+    }
+
+    stepWrapper.appendChild(el);
+
+    if (i > 0) {
+      const arr = document.createElement("span");
+      arr.className = "flow-arrow";
+      arr.textContent = "→";
+      container.appendChild(arr);
+      setTimeout(() => arr.classList.add("show"), 120 * i);
+    }
+
+    container.appendChild(stepWrapper);
+    setTimeout(() => el.classList.add("show"), 120 * i + 60);
+  });
+}
+
+// ── Reject modal ─────────────────────────────────────────────────────────
+let _rejectApprovalId = null;
+function openRejectModal(approvalId) {
+  _rejectApprovalId = approvalId;
+  document.getElementById("pendingRejectModal").classList.add("show");
+}
+function closePendingRejectModal() {
+  document.getElementById("pendingRejectModal").classList.remove("show");
+  _rejectApprovalId = null;
+}
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.getElementById("pendingRejectForm");
+  if (form) {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      if (!_rejectApprovalId) return;
+      this.action = "/recruitment/received-recruitments/reject/" + _rejectApprovalId + "/";
+      this.submit();
+    });
+  }
+  const qForm = document.getElementById("pendingQueryForm");
+  if (qForm) {
+    qForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      if (!_queryApprovalId) return;
+      this.action = "/recruitment/received-recruitments/query/" + _queryApprovalId + "/";
+      this.submit();
+    });
+  }
+});
+
+// ── Query (send back) modal ─────────────────────────────────────────────
+let _queryApprovalId = null;
+function openQueryModal(approvalId) {
+  _queryApprovalId = approvalId;
+  document.getElementById("pendingQueryModal").classList.add("show");
+}
+function closePendingQueryModal() {
+  document.getElementById("pendingQueryModal").classList.remove("show");
+  _queryApprovalId = null;
+}
+</script>
+
+<!-- REJECT MODAL (pending approvals) -->
+<div id="pendingRejectModal" class="workflow-modal">
+  <div class="workflow-card" style="height:auto;min-height:unset;max-width:480px;">
+    <div class="workflow-header">
+      <h5>{% trans "Reject Recruitment Request" %}</h5>
+      <span onclick="closePendingRejectModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div style="padding-top:20px;">
+      <form id="pendingRejectForm" method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+            {% trans "Reason for rejection" %}
+          </label>
+          <textarea name="comments" class="oh-input w-100" rows="4" required
+            placeholder="{% trans 'Explain why this request is being rejected...' %}"></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="oh-btn oh-btn--light" onclick="closePendingRejectModal()">
+            {% trans "Cancel" %}
+          </button>
+          <button type="submit" class="oh-btn"
+            style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">
+            {% trans "Reject" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- QUERY MODAL (send back to requester) -->
+<div id="pendingQueryModal" class="workflow-modal">
+  <div class="workflow-card" style="height:auto;min-height:unset;max-width:480px;">
+    <div class="workflow-header">
+      <h5>{% trans "Send Back with Query" %}</h5>
+      <span onclick="closePendingQueryModal()" style="cursor:pointer;font-size:20px;">×</span>
+    </div>
+    <div style="padding-top:20px;">
+      <form id="pendingQueryForm" method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">
+            {% trans "Your query for the requester" %}
+          </label>
+          <textarea name="comments" class="oh-input w-100" rows="4" required
+            placeholder="{% trans 'What clarification or document do you need from the requester?' %}"></textarea>
+          <p style="font-size:12px;color:#6b7280;margin-top:6px;">
+            {% trans "The request will return to the requester. When they respond, it will come back to you for a decision — your step is not consumed." %}
+          </p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="oh-btn oh-btn--light" onclick="closePendingQueryModal()">
+            {% trans "Cancel" %}
+          </button>
+          <button type="submit" class="oh-btn"
+            style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;">
+            {% trans "Send Back" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

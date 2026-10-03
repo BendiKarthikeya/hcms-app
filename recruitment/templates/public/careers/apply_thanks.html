@@ -1,0 +1,57 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% trans "Application Received" %}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f0fdf4; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #fff; border-radius: 16px; padding: 48px 40px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  .icon { font-size: 56px; margin-bottom: 16px; }
+  h1 { font-size: 24px; color: #111827; margin-bottom: 8px; }
+  .sub { color: #6b7280; font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+  .steps { text-align: left; background: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 28px; }
+  .step { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-text { color: #374151; line-height: 1.5; }
+  .step-text strong { color: #111827; }
+  .btn { display: inline-block; padding: 12px 28px; background: #16a34a; color: #fff; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 500; }
+  .btn-outline { display: inline-block; padding: 12px 28px; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; text-decoration: none; font-size: 15px; margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">✅</div>
+  <h1>{% trans "Application Received!" %}</h1>
+  <p class="sub">
+    {% trans "Thank you" %}{% if candidate_name %}, <strong>{{ candidate_name }}</strong>{% endif %}!
+    {% trans "Your application for" %} <strong>{{ job.title }}</strong> {% trans "has been successfully submitted." %}
+  </p>
+
+  <div class="steps">
+    <div style="font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 14px;">{% trans "What happens next:" %}</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>{% trans "Confirmation sent" %}</strong><br>{% trans "A confirmation email has been sent to your inbox." %}</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>{% trans "CV Review" %}</strong><br>{% trans "Our HR team will review your CV within 5–7 working days." %}</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>{% trans "Interview Invitation" %}</strong><br>{% trans "Shortlisted candidates will be contacted for an interview." %}</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text"><strong>{% trans "Offer" %}</strong><br>{% trans "Successful candidates will receive an offer letter." %}</div>
+    </div>
+  </div>
+
+  <a href="{% url 'careers-index' %}" class="btn">{% trans "View Other Openings" %}</a>
+</div>
+</body>
+</html>

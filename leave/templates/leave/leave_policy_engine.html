@@ -1,0 +1,187 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .policy-container {
+    padding: 2rem;
+    background: hsl(0, 0%, 97.5%);
+    min-height: calc(100vh - 60px);
+  }
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  .page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: hsl(0, 0%, 26%);
+  }
+  .btn-primary {
+    background: hsl(216, 18%, 64%);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(131, 143, 163, 0.25);
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(131, 143, 163, 0.35); }
+
+  .policy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .policy-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .policy-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+  .policy-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: var(--accent, hsl(216, 18%, 64%));
+  }
+  .policy-name { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+  .policy-meta { font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; }
+  .policy-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .tag {
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .tag-blue { background: hsl(213, 22%, 93%); color: hsl(216, 18%, 64%); }
+  .tag-green { background: hsl(137, 78%, 93%); color: hsl(148, 70%, 40%); }
+  .tag-orange { background: hsl(48, 100%, 94%); color: hsl(37, 90%, 47%); }
+  .policy-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .btn-sm {
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-sm-edit { background: #ede9fe; color: #7c3aed; }
+  .btn-sm-clone { background: #f0f9ff; color: #0284c7; }
+
+  .rules-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .rule-item {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 1.2rem;
+    border-left: 4px solid;
+  }
+  .rule-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 0.3rem; }
+  .rule-value { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="policy-container">
+  <div class="page-header">
+    <h1 class="page-title">{% trans "Leave Policy Engine" %}</h1>
+    <button class="btn-primary">+ {% trans "Create Policy" %}</button>
+  </div>
+
+  <div class="policy-grid">
+    <div class="policy-card" style="--accent: linear-gradient(90deg, #4776e6, #8e54e9);">
+      <div class="policy-name">Annual Leave Policy</div>
+      <div class="policy-meta">Applies to: All Employees • Last modified: Mar 2026</div>
+      <div class="policy-tags">
+        <span class="tag tag-blue">21 Days/Year</span>
+        <span class="tag tag-green">Accrual Monthly</span>
+        <span class="tag tag-orange">Carry-Forward: 10 Days</span>
+      </div>
+      <div class="policy-actions">
+        <button class="btn-sm btn-sm-edit">Edit Policy</button>
+        <button class="btn-sm btn-sm-clone">Clone</button>
+      </div>
+    </div>
+    <div class="policy-card" style="--accent: linear-gradient(90deg, #11998e, #38ef7d);">
+      <div class="policy-name">Sick Leave Policy</div>
+      <div class="policy-meta">Applies to: All Employees • Last modified: Jan 2026</div>
+      <div class="policy-tags">
+        <span class="tag tag-blue">14 Days/Year</span>
+        <span class="tag tag-green">No Accrual</span>
+        <span class="tag tag-orange">No Carry-Forward</span>
+      </div>
+      <div class="policy-actions">
+        <button class="btn-sm btn-sm-edit">Edit Policy</button>
+        <button class="btn-sm btn-sm-clone">Clone</button>
+      </div>
+    </div>
+    <div class="policy-card" style="--accent: linear-gradient(90deg, #f093fb, #f5576c);">
+      <div class="policy-name">Maternity Leave Policy</div>
+      <div class="policy-meta">Applies to: Female Employees • Last modified: Feb 2026</div>
+      <div class="policy-tags">
+        <span class="tag tag-blue">90 Days</span>
+        <span class="tag tag-green">Fully Paid</span>
+      </div>
+      <div class="policy-actions">
+        <button class="btn-sm btn-sm-edit">Edit Policy</button>
+        <button class="btn-sm btn-sm-clone">Clone</button>
+      </div>
+    </div>
+    <div class="policy-card" style="--accent: linear-gradient(90deg, #f6d365, #fda085);">
+      <div class="policy-name">Emergency Leave Policy</div>
+      <div class="policy-meta">Applies to: All Employees • Last modified: Mar 2026</div>
+      <div class="policy-tags">
+        <span class="tag tag-blue">5 Days/Year</span>
+        <span class="tag tag-green">No Accrual</span>
+      </div>
+      <div class="policy-actions">
+        <button class="btn-sm btn-sm-edit">Edit Policy</button>
+        <button class="btn-sm btn-sm-clone">Clone</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-panel">
+    <h3 style="color:#1e293b; margin:0 0 0.5rem 0; font-size:1.3rem;">Global Policy Rules</h3>
+    <p style="color:#64748b; margin:0 0 1rem 0;">These settings apply as defaults to all leave types unless overridden.</p>
+    <div class="rules-grid">
+      <div class="rule-item" style="border-color: #4776e6;">
+        <div class="rule-label">Min. Notice Period</div>
+        <div class="rule-value">3 Working Days</div>
+      </div>
+      <div class="rule-item" style="border-color: #8e54e9;">
+        <div class="rule-label">Max Consecutive Days</div>
+        <div class="rule-value">30 Days</div>
+      </div>
+      <div class="rule-item" style="border-color: #11998e;">
+        <div class="rule-label">Encashment Allowed</div>
+        <div class="rule-value">Up to 10 Days/Year</div>
+      </div>
+      <div class="rule-item" style="border-color: #f093fb;">
+        <div class="rule-label">Carryover Expiry</div>
+        <div class="rule-value">March 31st Annually</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

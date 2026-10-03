@@ -1,0 +1,241 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block styles %}
+<style>
+  .cv-screen-container {
+    padding: 2.5rem;
+    background: #f8f9fa;
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+    color: #212529;
+  }
+  .header-ai {
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    color: #326ce5;
+  }
+  @keyframes gradientFlow { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+  
+  .ai-layout {
+    display: flex;
+    gap: 2rem;
+  }
+  .ai-sidebar {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  }
+  .ai-main { flex: 2; }
+  
+  .bot-animation {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(50, 108, 229, 0.25) 0%, rgba(50, 108, 229, 0.05) 60%);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem auto;
+    animation: pulseLock 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  @keyframes pulseLock { 0%, 100% { transform: scale(1); opacity: 0.8;} 50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 20px rgba(50, 108, 229, 0.25); } }
+  
+  .scan-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #326ce5;
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(50, 108, 229, 0.25);
+    transition: transform 0.2s;
+  }
+  .scan-btn:hover { transform: scale(1.02); }
+  
+  .candidate-card {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .candidate-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+  }
+  .match-high::before { background: #10b981; }
+  .match-med::before { background: #f59e0b; }
+  .match-low::before { background: #ef4444; }
+  
+  .match-score {
+    font-size: 2rem;
+    font-weight: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .score-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cv-screen-container">
+  <h1 class="header-ai">{% trans "Project Omega: AI Resume Parser" %}</h1>
+  
+  <div class="ai-layout">
+    <div class="ai-sidebar">
+      <div class="bot-animation"></div>
+      <h3 style="text-align: center; color:#212529; margin-bottom: 0.5rem;">Cortex AI Engine</h3>
+      <p style="text-align: center; color:#6c757d; font-size:0.9rem; margin-bottom: 2rem;">
+        Neural network is active. Extracts skills, matches JD embeddings, and calculates cultural fit.
+      </p>
+      
+      <form id="cv-screening-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color:#6c757d; font-weight:500;">Upload CV (PDF/DOCX)</label>
+          <input type="file" name="cv_file" accept=".pdf,.docx" required style="width: 100%; padding: 0.5rem; border: 1px solid #e9ecef; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color:#6c757d; font-weight:500;">Job Requirements</label>
+          <textarea name="job_requirements" placeholder="Describe the job requirements, skills needed, experience level, etc." required style="width: 100%; height: 120px; padding: 0.5rem; border: 1px solid #e9ecef; border-radius: 8px; resize: vertical;"></textarea>
+        </div>
+        
+        <button type="submit" class="scan-btn" id="scan-btn">Initiate Deep Scan</button>
+      </form>
+      
+      <div id="processing-status" style="display: none; margin-top: 1rem; text-align: center; color:#326ce5;">
+        <div style="animation: pulseLock 1s infinite;">🔄 Processing CV...</div>
+      </div>
+    </div>
+    
+    <div class="ai-main">
+      <h2 style="font-size:1.5rem; margin-top:0; border-bottom:1px solid #e9ecef; padding-bottom:1rem; margin-bottom:1.5rem; color:#212529;">
+        AI Screening Results
+      </h2>
+      
+      <div id="results-container">
+        <div style="text-align: center; color:#6c757d; padding: 3rem;">
+          Upload a CV and enter job requirements to see AI-powered screening results
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('cv-screening-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const scanBtn = document.getElementById('scan-btn');
+    const processingStatus = document.getElementById('processing-status');
+    const resultsContainer = document.getElementById('results-container');
+    
+    // Show processing
+    scanBtn.disabled = true;
+    scanBtn.textContent = 'Processing...';
+    processingStatus.style.display = 'block';
+    resultsContainer.innerHTML = '<div style="text-align: center; color:#6c757d; padding: 3rem;">🔄 Analyzing CV...</div>';
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            resultsContainer.innerHTML = `<div style="text-align: center; color:#ef4444; padding: 3rem;">Error: ${data.error}</div>`;
+            return;
+        }
+        
+        // Determine match level
+        let matchClass = 'match-low';
+        let scoreColor = '#ef4444';
+        if (data.matching_score >= 80) {
+            matchClass = 'match-high';
+            scoreColor = '#10b981';
+        } else if (data.matching_score >= 60) {
+            matchClass = 'match-med';
+            scoreColor = '#f59e0b';
+        }
+        
+        // Build skills HTML
+        const matchingSkillsHtml = data.matching_skills.map(skill => 
+            `<span style="background:#dcfce7; color:#166534; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.8rem;">${skill}</span>`
+        ).join(' ');
+        
+        const missingSkillsHtml = data.missing_skills.map(skill => 
+            `<span style="background:#fee2e2; color:#991b1b; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.8rem;">${skill}</span>`
+        ).join(' ');
+        
+        const educationHtml = data.education.map(edu => 
+            `${edu.degree} in ${edu.field} (${edu.institution})`
+        ).join(', ');
+        
+        resultsContainer.innerHTML = `
+            <div class="candidate-card ${matchClass}">
+                <div>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size:1.4rem;">${data.candidate_name}</h3>
+                    <div style="color:#6c757d; font-size:0.95rem; display:flex; gap:1rem; margin-bottom: 0.5rem;">
+                        <span><i style="color:#6c757d;">Exp:</i> ${data.years_experience} Yrs</span>
+                        <span><i style="color:#6c757d;">Edu:</i> ${educationHtml || 'Not specified'}</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Matching Skills:</strong><br>
+                        <div style="display:flex; gap:0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            ${matchingSkillsHtml}
+                        </div>
+                    </div>
+                    ${data.missing_skills.length > 0 ? `
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Missing Skills:</strong><br>
+                        <div style="display:flex; gap:0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            ${missingSkillsHtml}
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div style="color:#6c757d; font-size:0.9rem;">
+                        <strong>Summary:</strong> ${data.summary}
+                    </div>
+                </div>
+                <div class="match-score">
+                    <span style="color: ${scoreColor};">${data.matching_score}%</span>
+                    <span class="score-label">AI Match</span>
+                </div>
+            </div>
+        `;
+    })
+    .catch(error => {
+        resultsContainer.innerHTML = `<div style="text-align: center; color:#ef4444; padding: 3rem;">Error: ${error.message}</div>`;
+    })
+    .finally(() => {
+        scanBtn.disabled = false;
+        scanBtn.textContent = 'Initiate Deep Scan';
+        processingStatus.style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

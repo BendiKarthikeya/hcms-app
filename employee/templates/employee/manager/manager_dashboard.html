@@ -1,0 +1,368 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Manager Portal" %}{% endblock %}
+
+{% block content %}
+<style>
+  .manager-overview-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .manager-overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+  
+  .card-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+  
+  .card-orange {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+  
+  .card-teal {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+  }
+  
+  .card-green {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+  }
+  
+  .overview-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.9;
+  }
+  
+  .overview-number {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin: 10px 0;
+  }
+  
+  .overview-label {
+    font-size: 0.95rem;
+    opacity: 0.95;
+    letter-spacing: 0.5px;
+  }
+  
+  .feature-card {
+    border: none;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+  
+  .feature-card.card-1 {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-left: 4px solid #667eea;
+  }
+  
+  .feature-card.card-2 {
+    background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+    border-left: 4px solid #f5576c;
+  }
+  
+  .feature-card.card-3 {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+    border-left: 4px solid #4facfe;
+  }
+  
+  .feature-card.card-4 {
+    background: linear-gradient(135deg, rgba(244, 208, 63, 0.1) 0%, rgba(249, 231, 59, 0.1) 100%);
+    border-left: 4px solid #f4d03f;
+  }
+  
+  .feature-card.card-5 {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+    border-left: 4px solid #43e97b;
+  }
+  
+  .feature-card.card-6 {
+    background: linear-gradient(135deg, rgba(255, 159, 64, 0.1) 0%, rgba(255, 112, 67, 0.1) 100%);
+    border-left: 4px solid #ff7043;
+  }
+  
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+  
+  .feature-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+  }
+  
+  .feature-description {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0;
+  }
+</style>
+
+<div class="container-fluid px-4" style="padding-top: 2rem; padding-bottom: 2rem;">
+  <!-- Page Header -->
+  <div style="margin-bottom: 2.5rem;">
+    <h1 class="h2 font-weight-bold" style="color: #2c3e50; margin-bottom: 0.5rem;">{% trans "Manager Portal" %}</h1>
+    <p class="text-muted" style="font-size: 1.05rem; margin-bottom: 0;">{% trans "Manage your team and view all manager features in one place" %}</p>
+  </div>
+
+  <!-- Manager Overview Cards -->
+  <div class="row g-4" style="margin-bottom: 2.5rem;">
+    <!-- Team Members Card -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card manager-overview-card card-blue">
+        <div class="card-body text-center" style="padding: 2rem 1.5rem;">
+          <div class="overview-icon">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div class="overview-number">{{ team_count }}</div>
+          <div class="overview-label">{% trans "Active Team Members" %}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Leave Requests -->
+    <div class="col-lg-3 col-md-6">
+      <a href="{% url 'request-view' %}" style="text-decoration: none; color: inherit;">
+        <div class="card manager-overview-card card-orange">
+          <div class="card-body text-center" style="padding: 2rem 1.5rem;">
+            <div class="overview-icon">
+              <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="overview-number">{{ pending_leaves }}</div>
+            <div class="overview-label">{% trans "Pending Leaves" %}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Pending Attendance Requests -->
+    <div class="col-lg-3 col-md-6">
+      <a href="{% url 'request-attendance-view' %}" style="text-decoration: none; color: inherit;">
+        <div class="card manager-overview-card card-teal">
+          <div class="card-body text-center" style="padding: 2rem 1.5rem;">
+            <div class="overview-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="overview-number">{{ pending_attendance }}</div>
+            <div class="overview-label">{% trans "Attendance Requests" %}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Assigned Tasks -->
+    <div class="col-lg-3 col-md-6">
+      <a href="{% url 'project-view' %}" style="text-decoration: none; color: inherit;">
+        <div class="card manager-overview-card card-green">
+          <div class="card-body text-center" style="padding: 2rem 1.5rem;">
+            <div class="overview-icon">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="overview-number">{{ assigned_tasks }}</div>
+            <div class="overview-label">{% trans "Active Tasks" %}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Manager Features Grid -->
+  <div style="margin-bottom: 2.5rem;">
+    <h4 style="color: #2c3e50; font-weight: 700; margin-bottom: 1.5rem;">{% trans "Manager Features" %}</h4>
+    <div class="row g-4">
+      <!-- Leave Management -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'request-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-1">
+            <div class="feature-icon" style="color: #667eea;">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="feature-title">{% trans "Leave Management" %}</div>
+            <p class="feature-description">{% trans "Approve team leave requests" %}</p>
+            {% if pending_leaves > 0 %}
+              <div style="margin-top: 12px;">
+                <span class="badge bg-warning">{{ pending_leaves }} {% trans "pending" %}</span>
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+
+      <!-- Attendance Tracking -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'request-attendance-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-2">
+            <div class="feature-icon" style="color: #f5576c;">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="feature-title">{% trans "Attendance Management" %}</div>
+            <p class="feature-description">{% trans "Manage team attendance requests" %}</p>
+            {% if pending_attendance > 0 %}
+              <div style="margin-top: 12px;">
+                <span class="badge bg-danger">{{ pending_attendance }} {% trans "pending" %}</span>
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+
+      <!-- Shift Requests -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'shift-request-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-3">
+            <div class="feature-icon" style="color: #4facfe;">
+              <i class="bi bi-stopwatch"></i>
+            </div>
+            <div class="feature-title">{% trans "Shift Requests" %}</div>
+            <p class="feature-description">{% trans "Approve shift change requests" %}</p>
+            {% if pending_shift_requests > 0 %}
+              <div style="margin-top: 12px;">
+                <span class="badge bg-warning">{{ pending_shift_requests }} {% trans "pending" %}</span>
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+
+      <!-- Project Management -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'project-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-4">
+            <div class="feature-icon" style="color: #f4d03f;">
+              <i class="bi bi-kanban"></i>
+            </div>
+            <div class="feature-title">{% trans "Project Management" %}</div>
+            <p class="feature-description">{% trans "Manage team projects and tasks" %}</p>
+            {% if assigned_tasks > 0 %}
+              <div style="margin-top: 12px;">
+                <span class="badge bg-success">{{ assigned_tasks }} {% trans "tasks" %}</span>
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+
+      <!-- Performance Management -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'feedback-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-5">
+            <div class="feature-icon" style="color: #43e97b;">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="feature-title">{% trans "Performance & Feedback" %}</div>
+            <p class="feature-description">{% trans "Manage team performance reviews" %}</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Team Directory -->
+      <div class="col-lg-4 col-md-6">
+        <a href="{% url 'employee-view' %}" style="text-decoration: none; color: inherit;">
+          <div class="feature-card card-6">
+            <div class="feature-icon" style="color: #ff7043;">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="feature-title">{% trans "Team Directory" %}</div>
+            <p class="feature-description">{% trans "View team member profiles" %}</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Members Table -->
+  <div class="card" style="border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);">
+    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px 12px 0 0; border: none; padding: 1.5rem;">
+      <h5 class="mb-0" style="font-weight: 600; font-size: 1.2rem;">{% trans "My Team" %}</h5>
+    </div>
+    <div class="card-body p-0">
+      {% if team_members %}
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0" style="border-collapse: collapse;">
+            <thead style="background-color: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+              <tr>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Name" %}</th>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Email" %}</th>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Department" %}</th>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Job Position" %}</th>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Status" %}</th>
+                <th style="padding: 1rem; font-weight: 600; color: #2c3e50;">{% trans "Actions" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for member in team_members|slice:":10" %}
+                <tr style="border-bottom: 1px solid #e9ecef; transition: background-color 0.2s ease;">
+                  <td style="padding: 1rem;">
+                    <strong style="color: #2c3e50;">{{ member.employee_first_name }} {{ member.employee_last_name }}</strong>
+                  </td>
+                  <td style="padding: 1rem; color: #555;">{{ member.email }}</td>
+                  <td style="padding: 1rem; color: #555;">{{ member.employee_work_info.department.dept_name|default:"-" }}</td>
+                  <td style="padding: 1rem; color: #555;">{{ member.employee_work_info.job_position.job_position|default:"-" }}</td>
+                  <td style="padding: 1rem;">
+                    {% if member.is_active %}
+                      <span class="badge" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 500;">{% trans "Active" %}</span>
+                    {% else %}
+                      <span class="badge" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 500;">{% trans "Inactive" %}</span>
+                    {% endif %}
+                  </td>
+                  <td style="padding: 1rem;">
+                    <a href="{% url 'employee-view-individual' member.id %}" class="btn btn-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                      {% trans "View" %}
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if team_members|length > 10 %}
+          <div style="padding: 1.5rem; text-align: center; border-top: 1px solid #e9ecef; background-color: #f8f9fa;">
+            <a href="{% url 'employee-view' %}" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 500; border: none; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+              {% trans "View All Team Members" %} ({{ team_members|length }})
+            </a>
+          </div>
+        {% endif %}
+      {% else %}
+        <div style="padding: 3rem 1.5rem; text-align: center; color: #999;">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc; display: block; margin-bottom: 1rem;"></i>
+          <p style="font-size: 1.05rem;">{% trans "No team members assigned" %}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Show main content area -->
+<script type="text/javascript">
+  document.addEventListener('DOMContentLoaded', function() {
+    const mainSectionData = document.getElementById('main-section-data');
+    if (mainSectionData) {
+      mainSectionData.style.display = 'block';
+    }
+  });
+</script>
+{% endblock %}

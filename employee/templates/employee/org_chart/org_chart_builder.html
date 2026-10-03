@@ -1,0 +1,1018 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load material_design_icons %}
+
+{% block title %}{% trans "Organization Chart Builder" %}{% endblock %}
+
+{% block head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://unpkg.com/htmx.org"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        background-color: #f5f5f5;
+    }
+    
+    .org-chart-container {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        height: calc(100vh - 120px);
+        overflow: hidden;
+    }
+    
+    /* Sidebar */
+    .chart-sidebar {
+        width: 300px;
+        background: white;
+        border-right: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 4px;
+    }
+    
+    .sidebar-header {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+    
+    .search-box {
+        margin-bottom: 15px;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+    
+    .position-list {
+        list-style: none;
+    }
+    
+    .position-item {
+        padding: 10px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        cursor: move;
+        transition: all 0.2s;
+    }
+    
+    .position-item:hover {
+        background: #e8f4f8;
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    }
+    
+    .position-item.dragging {
+        opacity: 0.5;
+        background: #667eea;
+        color: white;
+    }
+    
+    .position-name {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+    
+    .position-title {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 3px;
+    }
+    
+    .position-department {
+        font-size: 11px;
+        color: #999;
+    }
+    
+    /* Main Chart Area */
+    .chart-main {
+        flex: 1;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .chart-toolbar {
+        padding: 15px;
+        background: #f9f9f9;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .toolbar-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .toolbar-actions button,
+    .toolbar-actions a {
+        padding: 8px 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .toolbar-actions button:hover,
+    .toolbar-actions a:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .toolbar-stats {
+        display: flex;
+        gap: 30px;
+        font-size: 13px;
+    }
+    
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .stat-label {
+        color: #999;
+        margin-bottom: 3px;
+    }
+    
+    .stat-value {
+        font-weight: 600;
+        font-size: 16px;
+        color: #333;
+    }
+    
+    /* Chart Canvas */
+    .chart-canvas {
+        flex: 1;
+        overflow: auto;
+        position: relative;
+        background: linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
+                    linear-gradient(135deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+        background-color: white;
+    }
+    
+    .chart-tree {
+        padding: 40px;
+        display: inline-block;
+        min-width: 100%;
+    }
+    
+    /* Position Node */
+    .position-node {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px;
+        cursor: pointer;
+    }
+    
+    .position-card {
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        padding: 15px;
+        min-width: 200px;
+        text-align: center;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    
+    .position-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        border-color: #764ba2;
+    }
+    
+    .position-card.selected {
+        background: #f0f7ff;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+    
+    .position-card.dragging-over {
+        background: #e8f4f8;
+        border-color: #667eea;
+    }
+    
+    .card-name {
+        font-weight: 700;
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 4px;
+    }
+    
+    .card-title {
+        font-size: 12px;
+        color: #667eea;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .card-meta {
+        font-size: 11px;
+        color: #999;
+        margin-bottom: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+    
+    .card-actions button {
+        padding: 4px 8px;
+        font-size: 11px;
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .card-actions button:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .card-actions button.delete {
+        color: #e74c3c;
+    }
+    
+    .card-actions button.delete:hover {
+        background: #e74c3c;
+        color: white;
+        border-color: #e74c3c;
+    }
+    
+    /* Connection Lines */
+    .connection-line {
+        position: absolute;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    /* Edit Modal */
+    .edit-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .edit-modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: slideUp 0.3s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #999;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 13px;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .form-actions button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .form-actions .save {
+        background: #667eea;
+        color: white;
+    }
+    
+    .form-actions .save:hover {
+        background: #764ba2;
+    }
+    
+    .form-actions .cancel {
+        background: #f0f0f0;
+        color: #333;
+    }
+    
+    .form-actions .cancel:hover {
+        background: #e0e0e0;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 5px;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-draft {
+        background: #e7e6ff;
+        color: #667eea;
+    }
+    
+    /* Loading & Errors */
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+    
+    .loading.active {
+        display: block;
+    }
+    
+    .error-message {
+        padding: 15px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        color: #721c24;
+        margin-bottom: 15px;
+        display: none;
+    }
+    
+    .error-message.active {
+        display: block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .org-chart-container {
+            flex-direction: column;
+            height: auto;
+        }
+        
+        .chart-sidebar {
+            width: 100%;
+            height: 250px;
+        }
+        
+        .chart-canvas {
+            height: calc(100vh - 350px);
+        }
+        
+        .toolbar-stats {
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+    }
+    
+    /* Context Menu */
+    .context-menu {
+        position: fixed;
+        display: none;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 999;
+        min-width: 150px;
+    }
+    
+    .context-menu.active {
+        display: block;
+    }
+    
+    .context-menu-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+    }
+    
+    .context-menu-item:last-child {
+        border-bottom: none;
+    }
+    
+    .context-menu-item:hover {
+        background: #f5f5f5;
+        color: #667eea;
+    }
+    
+    .context-menu-item.danger:hover {
+        background: #f8d7da;
+        color: #e74c3c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="org-chart-container">
+    <!-- Sidebar: Position List -->
+    <div class="chart-sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-sitemap"></i> {% trans "Positions" %}
+        </div>
+        <div class="sidebar-content">
+            <div class="search-box">
+                <input type="text" id="positionSearch" placeholder="{% trans 'Search positions...' %}">
+            </div>
+            <ul class="position-list" id="positionList">
+                <!-- Populated by JavaScript -->
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Main Chart Area -->
+    <div class="chart-main">
+        <!-- Toolbar -->
+        <div class="chart-toolbar">
+            <div class="toolbar-actions">
+                <button id="refreshBtn" title="{% trans 'Refresh chart' %}">
+                    <i class="fas fa-sync-alt"></i> {% trans "Refresh" %}
+                </button>
+                <button id="validateBtn" title="{% trans 'Validate hierarchy' %}">
+                    <i class="fas fa-check-circle"></i> {% trans "Validate" %}
+                </button>
+                <button id="exportBtn" title="{% trans 'Export as PNG' %}">
+                    <i class="fas fa-download"></i> {% trans "Export" %}
+                </button>
+                <a href="{% url 'employee:org_chart_management' %}" class="btn-link" title="{% trans 'Full management' %}">
+                    <i class="fas fa-cog"></i> {% trans "Settings" %}
+                </a>
+            </div>
+            
+            <div class="toolbar-stats">
+                <div class="stat-item">
+                    <div class="stat-label">{% trans "Employees" %}</div>
+                    <div class="stat-value" id="totalEmployees">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">{% trans "Managers" %}</div>
+                    <div class="stat-value" id="totalManagers">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">{% trans "Levels" %}</div>
+                    <div class="stat-value" id="hierarchyDepth">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+        
+        <!-- Loading Indicator -->
+        <div class="loading" id="loadingIndicator">
+            <i class="fas fa-spinner fa-spin"></i> {% trans "Loading organization chart..." %}
+        </div>
+        
+        <!-- Chart Canvas -->
+        <div class="chart-canvas" id="chartCanvas">
+            <div class="chart-tree" id="chartTree">
+                <!-- Chart rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Position Modal -->
+<div class="edit-modal" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span id="editModalTitle">{% trans "Edit Position" %}</span>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        
+        <form id="editForm" onsubmit="savePositionChanges(event)">
+            {% csrf_token %}
+            <input type="hidden" id="editEmployeeId">
+            
+            <div class="form-group">
+                <label for="editEmployeeName">{% trans "Employee Name" %}</label>
+                <input type="text" id="editEmployeeName" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="editJobTitle">{% trans "Job Title" %}</label>
+                <input type="text" id="editJobTitle" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editDepartment">{% trans "Department" %}</label>
+                <select id="editDepartment" required>
+                    <option value="">-- {% trans "Select Department" %} --</option>
+                    <!-- Populated by JavaScript -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editCostCenter">{% trans "Cost Center" %}</label>
+                <input type="text" id="editCostCenter">
+            </div>
+            
+            <div class="form-group">
+                <label for="editReportingManager">{% trans "Reporting Manager" %}</label>
+                <select id="editReportingManager">
+                    <option value="">-- {% trans "No Manager (Root)" %} --</option>
+                    <!-- Populated by JavaScript -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editDescription">{% trans "Description" %}</label>
+                <textarea id="editDescription" rows="4"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="save">{% trans "Save Changes" %}</button>
+                <button type="button" class="cancel" onclick="closeEditModal()">{% trans "Cancel" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" onclick="editPosition(currentPositionId)">
+        <i class="fas fa-edit"></i> {% trans "Edit" %}
+    </div>
+    <div class="context-menu-item" onclick="viewDetails(currentPositionId)">
+        <i class="fas fa-eye"></i> {% trans "View Details" %}
+    </div>
+    <div class="context-menu-item" onclick="viewTeam(currentPositionId)">
+        <i class="fas fa-users"></i> {% trans "View Team" %}
+    </div>
+    <div class="context-menu-item danger" onclick="deletePosition(currentPositionId)">
+        <i class="fas fa-trash"></i> {% trans "Delete" %}
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api/employee/org-chart';
+    let currentPositionId = null;
+    let chartData = {};
+    
+    // Initialize chart on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOrgChart();
+        setupEventListeners();
+    });
+    
+    function setupEventListeners() {
+        document.getElementById('refreshBtn').addEventListener('click', loadOrgChart);
+        document.getElementById('validateBtn').addEventListener('click', validateHierarchy);
+        document.getElementById('exportBtn').addEventListener('click', exportChart);
+        document.getElementById('positionSearch').addEventListener('input', filterPositions);
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.context-menu') === null) {
+                hideContextMenu();
+            }
+        });
+    }
+    
+    function loadOrgChart() {
+        showLoading(true);
+        hideError();
+        
+        fetch(`${API_BASE}/hierarchy/`)
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to load hierarchy');
+                return response.json();
+            })
+            .then(data => {
+                chartData = data.data;
+                renderChart(data.data);
+                updateStats(data.data);
+                loadPositionList(data.data);
+                showLoading(false);
+            })
+            .catch(error => {
+                showError(error.message);
+                showLoading(false);
+            });
+    }
+    
+    function renderChart(data) {
+        const chartTree = document.getElementById('chartTree');
+        chartTree.innerHTML = '';
+        
+        if (!data || Object.keys(data).length === 0) {
+            chartTree.innerHTML = '<p style="padding: 40px; text-align: center; color: #999;">{% trans "No positions found" %}</p>';
+            return;
+        }
+        
+        // Render root nodes
+        for (const [key, node] of Object.entries(data)) {
+            if (!node.reporting_manager) {
+                renderNode(chartTree, node);
+            }
+        }
+    }
+    
+    function renderNode(parent, node) {
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'position-node';
+        
+        const card = document.createElement('div');
+        card.className = 'position-card';
+        card.draggable = true;
+        card.dataset.employeeId = node.employee_id;
+        card.innerHTML = `
+            <div class="card-name">${node.employee_name}</div>
+            <div class="card-title">${node.position_title}</div>
+            <div class="card-meta">
+                <div>${node.department}</div>
+                <div>${node.cost_center || '---'}</div>
+            </div>
+            <div class="status-badge status-${node.status}">${capitalizeFirst(node.status)}</div>
+            <div class="card-actions">
+                <button onclick="editPosition(${node.employee_id})" title="{% trans 'Edit' %}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="viewTeam(${node.employee_id})" title="{% trans 'View Team' %}">
+                    <i class="fas fa-users"></i>
+                </button>
+                <button class="delete" onclick="deletePosition(${node.employee_id})" title="{% trans 'Delete' %}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('contextmenu', (e) => showContextMenu(e, node.employee_id));
+        
+        nodeDiv.appendChild(card);
+        parent.appendChild(nodeDiv);
+        
+        // Render child nodes
+        if (node.children && node.children.length > 0) {
+            const childrenDiv =document.createElement('div');
+            childrenDiv.className = 'position-children';
+            for (const child of node.children) {
+                renderNode(childrenDiv, child);
+            }
+            nodeDiv.appendChild(childrenDiv);
+        }
+    }
+    
+    function editPosition(employeeId) {
+        // Open modal and populate with position data
+        document.getElementById('editEmployeeId').value = employeeId;
+        // Fetch position data and populate form
+        document.getElementById('editModal').classList.add('active');
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+    }
+    
+    function savePositionChanges(event) {
+        event.preventDefault();
+        
+        const employeeId = document.getElementById('editEmployeeId').value;
+        const data = {
+            employee_id: employeeId,
+            job_position_id: document.getElementById('editJobTitle').value,
+            department_id: document.getElementById('editDepartment').value,
+            cost_center: document.getElementById('editCostCenter').value
+        };
+        
+        fetch(`${API_BASE}/position/update/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                closeEditModal();
+                loadOrgChart();
+            } else {
+                showError(result.error);
+            }
+        })
+        .catch(error => showError(error.message));
+    }
+    
+    function deletePosition(employeeId) {
+        if (confirm('{% trans "Are you sure you want to delete this position?" %}')) {
+            // DELETE request
+            loadOrgChart();
+        }
+    }
+    
+    function filterPositions(event) {
+        const query = event.target.value.toLowerCase();
+        const items = document.querySelectorAll('.position-item');
+        
+        items.forEach(item => {
+            const name = item.querySelector('.position-name').textContent.toLowerCase();
+            const title = item.querySelector('.position-title').textContent.toLowerCase();
+            
+            if (name.includes(query) || title.includes(query)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    function loadPositionList(data) {
+        const list = document.getElementById('positionList');
+        list.innerHTML = '';
+        
+        for (const [key, node] of Object.entries(data)) {
+            const item = document.createElement('li');
+            item.className = 'position-item';
+            item.innerHTML = `
+                <div class="position-name">${node.employee_name}</div>
+                <div class="position-title">${node.position_title}</div>
+                <div class="position-department">${node.department}</div>
+            `;
+            item.addEventListener('click', () => editPosition(node.employee_id));
+            list.appendChild(item);
+        }
+    }
+    
+    function updateStats(data) {
+        // Calculate stats
+        const totalEmployees = Object.keys(data).length;
+        const totalManagers = Object.values(data).filter(n => n.children && n.children.length > 0).length;
+        let maxDepth = 0;
+        
+        function getDepth(node, current = 1) {
+            maxDepth = Math.max(maxDepth, current);
+            if (node.children) {
+                node.children.forEach(child => getDepth(chartData[child.employee_id], current + 1));
+            }
+        }
+        
+        Object.values(data).forEach(node => getDepth(node));
+        
+        document.getElementById('totalEmployees').textContent = totalEmployees;
+        document.getElementById('totalManagers').textContent = totalManagers;
+        document.getElementById('hierarchyDepth').textContent = maxDepth;
+    }
+    
+    function validateHierarchy() {
+        fetch(`${API_BASE}/validate/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.summary.total_issues === 0) {
+                    alert('{% trans "Hierarchy is valid!" %}');
+                } else {
+                    alert(`{% trans "Found" %} ${data.summary.total_issues} {% trans "issues" %}`);
+                }
+            })
+            .catch(error => showError(error.message));
+    }
+    
+    function exportChart() {
+        // Export as PNG or CSV
+        const link = document.createElement('a');
+        link.href = `${API_BASE}/flat-structure/`;
+        link.download = 'org_chart.csv';
+        link.click();
+    }
+    
+    // Drag-drop handlers
+    function handleDragStart(e) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('employeeId', this.dataset.employeeId);
+        this.classList.add('dragging');
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('dragging-over');
+        return false;
+    }
+    
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const employeeId = e.dataTransfer.getData('employeeId');
+        const newManagerId = this.dataset.employeeId;
+        
+        if (employeeId !== newManagerId) {
+            reorganizePosition(employeeId, newManagerId);
+        }
+        
+        this.classList.remove('dragging-over');
+        return false;
+    }
+    
+    function reorganizePosition(employeeId, newManagerId) {
+        fetch(`${API_BASE}/reorganize/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                employee_id: employeeId,
+                new_manager_id: newManagerId,
+                reason: 'Drag-drop reorganization'
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                loadOrgChart();
+            } else {
+                showError(result.error);
+            }
+        })
+        .catch(error => showError(error.message));
+    }
+    
+    // Context Menu
+    function showContextMenu(event, employeeId) {
+        event.preventDefault();
+        currentPositionId = employeeId;
+        
+        const menu = document.getElementById('contextMenu');
+        menu.style.left = event.clientX + 'px';
+        menu.style.top = event.clientY + 'px';
+        menu.classList.add('active');
+    }
+    
+    function hideContextMenu() {
+        document.getElementById('contextMenu').classList.remove('active');
+    }
+    
+    // Utility functions
+    function showError(message) {
+        const error = document.getElementById('errorMessage');
+        error.textContent = message;
+        error.classList.add('active');
+    }
+    
+    function hideError() {
+        const error = document.getElementById('errorMessage');
+        error.classList.remove('active');
+    }
+    
+    function showLoading(show) {
+        const loading = document.getElementById('loadingIndicator');
+        if (show) {
+            loading.classList.add('active');
+        } else {
+            loading.classList.remove('active');
+        }
+    }
+    
+    function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    function viewDetails(employeeId) {
+        window.location.href = `/employee/employee-view/${employeeId}/`;
+    }
+    
+    function viewTeam(employeeId) {
+        // Show modal with team members
+        alert('View team for employee ' + employeeId);
+    }
+</script>
+{% endblock %}

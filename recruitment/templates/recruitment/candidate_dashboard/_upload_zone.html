@@ -1,0 +1,38 @@
+{% load i18n %}
+<form method="post" action="{% url 'cv-upload-bulk' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <label for="cd-file-input" id="cd-drop" class="cd-drop">
+        <div style="font-size:28px;">⬆️</div>
+        <div><strong>{% trans "Drop CVs here" %}</strong> {% trans "or click to browse" %}</div>
+        <div class="hint">{% trans "PDF only. Multiple files supported. One candidate is created per file." %}</div>
+        <input id="cd-file-input" type="file" name="files" multiple accept=".pdf,application/pdf" required>
+        <div id="cd-file-list"></div>
+    </label>
+
+    <div class="cd-fields">
+        <div>
+            <label style="font-size:12px; color:#6b7280;">{% trans "Recruitment (optional)" %}</label>
+            <select name="recruitment_id">
+                <option value="">{% trans "— None —" %}</option>
+                {% for rec in open_recruitments %}
+                    <option value="{{ rec.id }}">{{ rec.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="font-size:12px; color:#6b7280;">{% trans "Default Stage (optional)" %}</label>
+            <select name="stage_id">
+                <option value="">{% trans "— Auto (Initial) —" %}</option>
+                {% for s in stages %}
+                    <option value="{{ s.id }}">{{ s.stage }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="cd-actions">
+        <a href="{% url 'cv-upload-single' %}" class="cd-btn cd-btn--secondary">{% trans "Single Upload" %}</a>
+        <button type="submit" class="cd-btn cd-btn--primary">{% trans "Upload" %}</button>
+    </div>
+</form>

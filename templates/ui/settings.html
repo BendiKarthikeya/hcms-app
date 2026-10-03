@@ -1,0 +1,74 @@
+{% extends "ui/base.html" %}
+{% block title %}Settings — HCMS{% endblock %}
+
+{% block content %}
+<style>
+.st-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.st-card { background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:18px 20px; }
+.st-card__icon { width:36px; height:36px; border-radius:8px; background:#E8F0EA; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+.st-card__icon .material-symbols-outlined { font-size:18px; color:#1F5F2F; }
+.st-card__title { font-size:13px; font-weight:600; color:#111; margin-bottom:4px; }
+.st-card__desc { font-size:11px; color:#888; margin-bottom:12px; line-height:1.45; }
+.st-card a { font-size:11px; color:#278E53; font-weight:600; }
+</style>
+
+<div class="ui-page-header">
+  <div>
+    <div class="ui-page-title">Settings</div>
+    <div class="ui-page-subtitle">Account, preferences, and system configuration</div>
+  </div>
+</div>
+
+<div class="st-grid">
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">person</span></div>
+    <div class="st-card__title">My Profile</div>
+    <div class="st-card__desc">View and update your personal information.</div>
+    <a href="/ui/profile/">Open Profile →</a>
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">lock</span></div>
+    <div class="st-card__title">Password</div>
+    <div class="st-card__desc">Change your account password.</div>
+    <a href="/change-password">Change Password →</a>
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">language</span></div>
+    <div class="st-card__title">Language</div>
+    <div class="st-card__desc">Pick the interface language.</div>
+    <a href="/i18n/setlang/">Change Language →</a>
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">notifications</span></div>
+    <div class="st-card__title">Notifications</div>
+    <div class="st-card__desc">Review recent alerts and activity.</div>
+    <a href="/ui/notifications/">View Notifications →</a>
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">extension</span></div>
+    <div class="st-card__title">Integrations</div>
+    <div class="st-card__desc">Connect Gmail, Tawteen, LinkedIn Learning, ICBS, and more.</div>
+    <a href="/ui/integrations/">Manage Integrations →</a>
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+    <div class="st-card__title">Admin Panel</div>
+    <div class="st-card__desc">System administration (superusers only).</div>
+    {% if request.user.is_superuser %}<a href="/admin/">Open Admin →</a>{% else %}<span style="font-size:11px;color:#999">Not available</span>{% endif %}
+  </div>
+
+  <div class="st-card">
+    <div class="st-card__icon"><span class="material-symbols-outlined">logout</span></div>
+    <div class="st-card__title">Sign out</div>
+    <div class="st-card__desc">End your session on this device.</div>
+    <form action="/logout" method="post" style="margin:0;">{% csrf_token %}
+      <button type="submit" style="background:none;border:none;padding:0;font-size:11px;color:#C04730;font-weight:600;cursor:pointer;">Logout →</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

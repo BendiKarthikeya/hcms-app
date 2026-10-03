@@ -1,0 +1,170 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Performance Improvement Plans Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                {% trans "PIP Dashboard" %}
+            </h1>
+            <p class="text-muted">{% trans "Monitor and manage performance improvement plans" %}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pip-create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% trans "New PIP" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-primary font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Total PIPs" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.total_pips }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small><a href="{% url 'pip-list' %}" class="text-primary">{% trans "View All" %} →</a></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="text-info font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Active" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.active_pips }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small>{% trans "Currently ongoing" %}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="text-success font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Successful" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.completed_successful }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small>{% trans "Completed successfully" %}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-danger">
+                <div class="card-body">
+                    <div class="text-danger font-weight-bold text-uppercase mb-1">
+                        <small>{% trans "Overdue" %}</small>
+                    </div>
+                    <h3 class="mb-0">{{ stats.overdue_pips }}</h3>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <small><a href="{% url 'pip-list' %}?status=active" class="text-danger">{% trans "View Details" %} →</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent PIPs -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Recent Performance Improvement Plans" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_pips %}
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Employee" %}</th>
+                                <th>{% trans "Title" %}</th>
+                                <th>{% trans "Start Date" %}</th>
+                                <th>{% trans "End Date" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pip in recent_pips %}
+                            <tr>
+                                <td>
+                                    <strong>{{ pip.employee.employee_first_name }} {{ pip.employee.employee_last_name }}</strong>
+                                </td>
+                                <td>{{ pip.title }}</td>
+                                <td>{{ pip.start_date|date:"d M Y" }}</td>
+                                <td>{{ pip.end_date|date:"d M Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if pip.status == 'active' %}info{% elif pip.status == 'successful' %}success{% elif pip.status == 'unsuccessful' %}danger{% else %}secondary{% endif %}">
+                                        {{ pip.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'pip-detail' pip.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-3 text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>{% trans "No performance improvement plans created yet" %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <small><a href="{% url 'pip-list' %}">{% trans "View all PIPs" %} →</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .card-body {
+        min-height: 60px;
+    }
+
+    .border-left-primary {
+        border-left: 0.25rem solid #326ce5;
+    }
+
+    .border-left-info {
+        border-left: 0.25rem solid #11cdef;
+    }
+
+    .border-left-success {
+        border-left: 0.25rem solid #2dce89;
+    }
+
+    .border-left-danger {
+        border-left: 0.25rem solid #f5365c;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

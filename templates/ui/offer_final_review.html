@@ -1,0 +1,567 @@
+{% extends "ui/base.html" %}
+{% block title %}Review Offer and Documents — HCMS{% endblock %}
+{% block active_offers %}active{% endblock %}
+
+{% block content %}
+<style>
+/* ── Layout ────────────────────────────────────────────────────────────── */
+.ofr-breadcrumb { display:flex; align-items:center; gap:6px; font-size:12px; color:#888; margin-bottom:14px; }
+.ofr-breadcrumb a { color:#888; text-decoration:none; }
+.ofr-breadcrumb a:hover { color:#1F5F2F; }
+.ofr-breadcrumb .material-symbols-outlined { font-size:14px; }
+
+.ofr-header { margin-bottom:20px; }
+.ofr-header h1 { font-size:20px; font-weight:700; color:#111; margin:0 0 4px; }
+.ofr-header p { font-size:13px; color:#888; margin:0; }
+
+.ofr-grid {
+  display: grid;
+  grid-template-columns: 32% 30% 36%;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.ofr-card {
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ofr-card__head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #F3F3F3;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ofr-card__head .material-symbols-outlined { font-size:16px; color:#1F5F2F; }
+.ofr-card__body { padding: 14px 16px; }
+
+/* ── Offer info rows ──────────────────────────────────────────────────── */
+.ofr-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F9F9F9;
+}
+.ofr-info-row:last-child { border-bottom: none; }
+.ofr-info-row__icon {
+  width: 28px; height: 28px;
+  background: #F4FAF6;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ofr-info-row__icon .material-symbols-outlined { font-size:14px; color:#1F5F2F; }
+.ofr-info-row__label { font-size:10px; color:#AAA; margin-bottom:2px; }
+.ofr-info-row__value { font-size:12px; font-weight:600; color:#222; }
+
+/* ── Compensation ──────────────────────────────────────────────────────── */
+.ofr-comp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #F9F9F9;
+}
+.ofr-comp-row:last-child { border-bottom: none; }
+.ofr-comp-row__label { font-size:12px; color:#555; }
+.ofr-comp-row__value { font-size:13px; font-weight:700; color:#111; }
+.ofr-comp-total .ofr-comp-row__value { color:#1F5F2F; font-size:15px; }
+.ofr-comp-total .ofr-comp-row__label { font-weight:600; color:#111; }
+
+/* ── Benefits checklist ──────────────────────────────────────────────── */
+.ofr-benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  font-size: 12px;
+  color: #333;
+}
+.ofr-benefit-item .material-symbols-outlined { font-size:16px; color:#278E53; }
+
+/* ── Document rows (center) ──────────────────────────────────────────── */
+.ofr-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #F9F9F9;
+}
+.ofr-doc-row:last-child { border-bottom: none; }
+.ofr-doc-icon {
+  width: 30px; height: 30px;
+  background: #F0F8F3;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ofr-doc-icon .material-symbols-outlined { font-size:16px; color:#1F5F2F; }
+.ofr-doc-name { font-size:12px; font-weight:600; color:#222; flex:1; }
+.pill-uploaded {
+  font-size:10px; font-weight:700; color:#278E53;
+  background:#E8F5ED; border-radius:4px; padding:3px 8px; white-space:nowrap;
+}
+.pill-pending {
+  font-size:10px; font-weight:700; color:#888;
+  background:#F3F3F3; border-radius:4px; padding:3px 8px; white-space:nowrap;
+}
+.ofr-doc-download {
+  font-size:11px; color:#1F5F2F; text-decoration:none; display:flex; align-items:center; gap:3px;
+}
+.ofr-doc-download:hover { text-decoration:underline; }
+.btn-upload-sm {
+  height:26px; padding:0 10px;
+  background:#fff; border:1px solid #D0D0D0; border-radius:6px;
+  font-size:11px; color:#555; cursor:pointer; white-space:nowrap;
+}
+.btn-upload-sm:hover { background:#F5F5F5; }
+
+/* ── Approval chain ──────────────────────────────────────────────────── */
+.ofr-chain-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+.ofr-chain-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ofr-chain-avatar {
+  position: relative;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #D0E8D8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #1F5F2F;
+  border: 2px solid #C8E0CE;
+}
+.ofr-chain-avatar.signed { border-color: #278E53; background:#E8F5ED; }
+.ofr-chain-avatar.pending { border-color: #E0E0E0; background:#F5F5F5; color:#999; }
+.ofr-chain-avatar.candidate { background:#E3F2FD; color:#1565C0; border-color:#BBDEFB; }
+.ofr-chain-badge {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid #fff;
+}
+.ofr-chain-badge.green { background:#278E53; }
+.ofr-chain-badge.grey { background:#BDBDBD; }
+.ofr-chain-badge .material-symbols-outlined { font-size:9px; color:#fff; font-variation-settings:'wght' 700; }
+.ofr-chain-name { font-size:10px; color:#555; text-align:center; max-width:52px; line-height:1.2; }
+.ofr-chain-role { font-size:9px; color:#AAA; text-align:center; max-width:52px; line-height:1.2; }
+.ofr-chain-arrow { color:#CCC; font-size:14px; margin-top:-16px; }
+
+/* ── Visa / Create Form section ──────────────────────────────────────── */
+.ofr-visa-section { padding: 14px 16px; border-top: 1px solid #F3F3F3; }
+.ofr-visa-label { font-size:11px; font-weight:700; color:#444; margin-bottom:10px; letter-spacing:.3px; }
+.ofr-visa-actions { display:flex; align-items:center; gap:8px; }
+
+/* ── Right column doc upload ─────────────────────────────────────────── */
+.ofr-rdoc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F9F9F9;
+}
+.ofr-rdoc-row:last-child { border-bottom: none; }
+.ofr-rdoc-name { font-size:12px; color:#333; flex:1; }
+.ofr-rdoc-status { font-size:10px; color:#AAA; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="ofr-breadcrumb">
+  <a href="/ui/offers/"><span class="material-symbols-outlined">arrow_back</span> Back to Offers</a>
+  <span class="material-symbols-outlined" style="font-size:12px;color:#CCC;">chevron_right</span>
+  <span style="color:#333;">Review Offer and Documents</span>
+</div>
+
+<!-- Page header -->
+<div class="ofr-header">
+  <h1>Review Offer and Documents</h1>
+  <p>Review offer details and manage a sign approval workflow.</p>
+</div>
+
+<!-- Three-column grid -->
+<div class="ofr-grid">
+
+  <!-- ═══════════════════════════════ LEFT COLUMN ═══════════════════════════════ -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Offer Information -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">description</span>
+        Offer Information
+      </div>
+      <div class="ofr-card__body" style="padding-top:6px;padding-bottom:6px;">
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">person</span></div>
+          <div>
+            <div class="ofr-info-row__label">Candidate</div>
+            <div class="ofr-info-row__value">
+              {% if offer.candidate_id %}{{ offer.candidate_id.name }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">tag</span></div>
+          <div>
+            <div class="ofr-info-row__label">Offer ID</div>
+            <div class="ofr-info-row__value">OFR-{{ offer.id|stringformat:"04d" }}</div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">work</span></div>
+          <div>
+            <div class="ofr-info-row__label">Job Title</div>
+            <div class="ofr-info-row__value">
+              {% if offer.position %}{{ offer.position }}{% elif offer.candidate_id.recruitment_id %}{{ offer.candidate_id.recruitment_id.title|default:"—" }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">apartment</span></div>
+          <div>
+            <div class="ofr-info-row__label">Department</div>
+            <div class="ofr-info-row__value">
+              {% if offer.department %}{{ offer.department }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">badge</span></div>
+          <div>
+            <div class="ofr-info-row__label">Employment Type</div>
+            <div class="ofr-info-row__value">
+              {% if offer.role_type %}{{ offer.role_type }}{% else %}Full-Time{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">location_on</span></div>
+          <div>
+            <div class="ofr-info-row__label">Work Location</div>
+            <div class="ofr-info-row__value">
+              {% if offer.work_location %}{{ offer.work_location }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">event</span></div>
+          <div>
+            <div class="ofr-info-row__label">Date of Joining</div>
+            <div class="ofr-info-row__value">
+              {% if offer.joining_date %}{{ offer.joining_date|date:"M d, Y" }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">event_busy</span></div>
+          <div>
+            <div class="ofr-info-row__label">Offer Expiry Date</div>
+            <div class="ofr-info-row__value">
+              {% if offer.expiry_date %}{{ offer.expiry_date|date:"M d, Y" }}{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ofr-info-row">
+          <div class="ofr-info-row__icon"><span class="material-symbols-outlined">hourglass_empty</span></div>
+          <div>
+            <div class="ofr-info-row__label">Probation Period</div>
+            <div class="ofr-info-row__value">
+              {% if offer.probation_period %}{{ offer.probation_period }}{% else %}3 Months{% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Compensation & Benefits -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">payments</span>
+        Compensation &amp; Benefits
+      </div>
+      <div class="ofr-card__body" style="padding-top:6px;padding-bottom:6px;">
+
+        <div class="ofr-comp-row ofr-comp-total">
+          <span class="ofr-comp-row__label">Annual CTC</span>
+          <span class="ofr-comp-row__value">
+            {% if offer.gross_salary %}OMR {{ offer.gross_salary|floatformat:0 }}{% else %}—{% endif %}
+          </span>
+        </div>
+
+        <div class="ofr-comp-row">
+          <span class="ofr-comp-row__label">Base Salary</span>
+          <span class="ofr-comp-row__value">
+            {% if offer.basic_salary %}OMR {{ offer.basic_salary|floatformat:0 }}{% else %}—{% endif %}
+          </span>
+        </div>
+
+        <div class="ofr-comp-row">
+          <span class="ofr-comp-row__label">Allowance</span>
+          <span class="ofr-comp-row__value">
+            {% if offer.allowance %}OMR {{ offer.allowance|floatformat:0 }}{% else %}—{% endif %}
+          </span>
+        </div>
+
+        <div class="ofr-comp-row">
+          <span class="ofr-comp-row__label">Bonus</span>
+          <span class="ofr-comp-row__value">
+            {% if offer.bonus %}OMR {{ offer.bonus|floatformat:0 }}{% else %}—{% endif %}
+          </span>
+        </div>
+
+        <div class="ofr-comp-row">
+          <span class="ofr-comp-row__label">Payment Frequency</span>
+          <span class="ofr-comp-row__value">
+            {% if offer.payment_frequency %}{{ offer.payment_frequency }}{% else %}Monthly{% endif %}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /LEFT -->
+
+  <!-- ══════════════════════════════ CENTER COLUMN ══════════════════════════════ -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Benefits & Perks -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">star</span>
+        Benefits &amp; Perks
+      </div>
+      <div class="ofr-card__body" style="padding:10px 16px;">
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Health Insurance</div>
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Annual Leave — 30 days</div>
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Performance Bonus</div>
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Flexible Working</div>
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Professional Development</div>
+        <div class="ofr-benefit-item"><span class="material-symbols-outlined">check_circle</span> Employee Wellness Program</div>
+      </div>
+    </div>
+
+    <!-- Documents (center) -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">folder_open</span>
+        Documents
+      </div>
+      <div class="ofr-card__body" style="padding-top:6px;padding-bottom:6px;">
+
+        {% for doc_num in "1234" %}
+        {% with doc_label="Document "|add:doc_num %}
+        <div class="ofr-doc-row">
+          <div class="ofr-doc-icon"><span class="material-symbols-outlined">draft</span></div>
+          <span class="ofr-doc-name">{{ doc_label }}</span>
+          <span class="pill-uploaded">Uploaded</span>
+          <a href="#" class="ofr-doc-download">
+            <span class="material-symbols-outlined" style="font-size:13px;">download</span> Download
+          </a>
+        </div>
+        {% endwith %}
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div><!-- /CENTER -->
+
+  <!-- ═══════════════════════════════ RIGHT COLUMN ══════════════════════════════ -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Approval Chain -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">account_tree</span>
+        Approval Chain
+      </div>
+      <div class="ofr-card__body" style="padding:12px 16px;">
+        <div class="ofr-chain-wrap">
+
+          {% if approvals %}
+            {% for appr in approvals %}
+              <div class="ofr-chain-node">
+                <div class="ofr-chain-avatar {% if appr.status == 'approved' %}signed{% else %}pending{% endif %}">
+                  {% if appr.approver %}
+                    {{ appr.approver.first_name|first|upper }}{{ appr.approver.last_name|first|upper }}
+                  {% else %}?{% endif %}
+                  <div class="ofr-chain-badge {% if appr.status == 'approved' %}green{% else %}grey{% endif %}">
+                    <span class="material-symbols-outlined">{% if appr.status == 'approved' %}check{% else %}schedule{% endif %}</span>
+                  </div>
+                </div>
+                <div class="ofr-chain-name">
+                  {% if appr.approver %}{{ appr.approver.get_full_name|truncatechars:12 }}{% else %}—{% endif %}
+                </div>
+                <div class="ofr-chain-role">{{ appr.role|default:"Approver" }}</div>
+              </div>
+              {% if not forloop.last %}
+                <span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>
+              {% endif %}
+            {% endfor %}
+
+            <!-- Candidate as final node -->
+            <span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar candidate {% if offer.status == 'accepted' %}signed{% else %}pending{% endif %}">
+                {% if offer.candidate %}{{ offer.candidate.name|first|upper }}{% else %}C{% endif %}
+                <div class="ofr-chain-badge {% if offer.status == 'accepted' %}green{% else %}grey{% endif %}">
+                  <span class="material-symbols-outlined">{% if offer.status == 'accepted' %}check{% else %}schedule{% endif %}</span>
+                </div>
+              </div>
+              <div class="ofr-chain-name">
+                {% if offer.candidate %}{{ offer.candidate.name|truncatechars:12 }}{% else %}Candidate{% endif %}
+              </div>
+              <div class="ofr-chain-role">Candidate</div>
+            </div>
+
+          {% else %}
+            <!-- Static fallback chain -->
+            {% for node in chain_nodes %}
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar {{ node.css }}">
+                {{ node.initials }}
+                <div class="ofr-chain-badge {{ node.badge }}">
+                  <span class="material-symbols-outlined">{{ node.icon }}</span>
+                </div>
+              </div>
+              <div class="ofr-chain-name">{{ node.name }}</div>
+              <div class="ofr-chain-role">{{ node.role }}</div>
+            </div>
+            {% if not forloop.last %}<span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>{% endif %}
+            {% empty %}
+            <!-- Default static chain -->
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar signed">HM
+                <div class="ofr-chain-badge green"><span class="material-symbols-outlined">check</span></div>
+              </div>
+              <div class="ofr-chain-name">Hiring Mgr</div>
+              <div class="ofr-chain-role">Hiring Manager</div>
+            </div>
+            <span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar pending">HR
+                <div class="ofr-chain-badge grey"><span class="material-symbols-outlined">schedule</span></div>
+              </div>
+              <div class="ofr-chain-name">HR Manager</div>
+              <div class="ofr-chain-role">HR Manager</div>
+            </div>
+            <span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar pending">CE
+                <div class="ofr-chain-badge grey"><span class="material-symbols-outlined">schedule</span></div>
+              </div>
+              <div class="ofr-chain-name">Company CEO</div>
+              <div class="ofr-chain-role">CEO</div>
+            </div>
+            <span class="ofr-chain-arrow material-symbols-outlined">arrow_forward</span>
+            <div class="ofr-chain-node">
+              <div class="ofr-chain-avatar candidate pending">CA
+                <div class="ofr-chain-badge grey"><span class="material-symbols-outlined">schedule</span></div>
+              </div>
+              <div class="ofr-chain-name">Candidate</div>
+              <div class="ofr-chain-role">Candidate</div>
+            </div>
+            {% endfor %}
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents upload (right) -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">upload_file</span>
+        Documents
+      </div>
+      <div class="ofr-card__body" style="padding-top:6px;padding-bottom:6px;">
+
+        <div class="ofr-rdoc-row">
+          <div class="ofr-doc-icon"><span class="material-symbols-outlined">draft</span></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#222;">Document 1</div>
+            <div class="ofr-rdoc-status">Offer Letter PDF</div>
+          </div>
+          <span class="pill-uploaded">Uploaded</span>
+        </div>
+
+        <div class="ofr-rdoc-row">
+          <div class="ofr-doc-icon"><span class="material-symbols-outlined">draft</span></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#222;">Document 2</div>
+            <div class="ofr-rdoc-status">ID / Passport Copy</div>
+          </div>
+          <button class="btn-upload-sm">Upload</button>
+        </div>
+
+        <div class="ofr-rdoc-row">
+          <div class="ofr-doc-icon"><span class="material-symbols-outlined">draft</span></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#222;">Document 3</div>
+            <div class="ofr-rdoc-status">Educational Certificates</div>
+          </div>
+          <button class="btn-upload-sm">Upload</button>
+        </div>
+
+        <div class="ofr-rdoc-row">
+          <div class="ofr-doc-icon"><span class="material-symbols-outlined">draft</span></div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#222;">Document 4</div>
+            <div class="ofr-rdoc-status">Medical Certificate</div>
+          </div>
+          <span class="pill-uploaded">Uploaded</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Visa / Create Form -->
+    <div class="ofr-card">
+      <div class="ofr-card__head">
+        <span class="material-symbols-outlined">flight_takeoff</span>
+        Create a Visa Form
+      </div>
+      <div class="ofr-visa-section">
+        <div class="ofr-visa-label">VISA Details</div>
+        <div class="ofr-visa-actions">
+          <button class="ui-btn-outlined" style="gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:15px;">upload</span> Upload
+          </button>
+          <button class="ui-btn-primary" style="background:#1F5F2F;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:15px;">add</span> Create Form
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /RIGHT -->
+
+</div><!-- /ofr-grid -->
+{% endblock %}

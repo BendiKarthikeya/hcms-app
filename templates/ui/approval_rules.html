@@ -1,0 +1,288 @@
+{% extends "ui/base.html" %}
+{% block title %}Approval Rules — HCMS{% endblock %}
+{% block active_approvals %}active{% endblock %}
+
+{% block content %}
+<style>
+/* ── Header ────────────────────────────────────────────────────────────── */
+.arl-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
+.arl-header-right { display:flex; gap:8px; align-items:center; }
+
+/* ── Filter bar ───────────────────────────────────────────────────────── */
+.arl-filter-bar {
+  display:flex; align-items:center; gap:8px;
+  padding:14px 16px; border-bottom:1px solid #F3F3F3; flex-wrap:wrap;
+}
+.arl-filter-bar .search-wrap {
+  position:relative; flex:1; min-width:220px; max-width:320px;
+}
+.arl-filter-bar .search-wrap .material-symbols-outlined {
+  position:absolute; left:9px; top:50%; transform:translateY(-50%);
+  font-size:15px; color:#BBB; pointer-events:none;
+}
+.arl-filter-bar input[type=text] {
+  width:100%; height:34px; border:1px solid #E0E0E0; border-radius:8px;
+  padding:0 10px 0 32px; font-size:12px; font-family:inherit; color:#333;
+  outline:none; background:#FAFAFA;
+}
+.arl-filter-bar input[type=text]:focus { border-color:#1F5F2F; background:#fff; }
+.arl-filter-select {
+  height:34px; border:1px solid #E0E0E0; border-radius:8px;
+  padding:0 10px; font-size:12px; font-family:inherit; color:#555;
+  background:#FAFAFA; outline:none; cursor:pointer; min-width:130px;
+}
+.arl-filter-select:focus { border-color:#1F5F2F; }
+.btn-filter {
+  height:34px; padding:0 14px; border:1px solid #E0E0E0; border-radius:8px;
+  font-size:12px; font-weight:500; color:#555; background:#fff; cursor:pointer;
+  display:flex; align-items:center; gap:5px;
+}
+.btn-filter:hover { background:#F5F5F5; }
+.btn-filter .material-symbols-outlined { font-size:15px; }
+
+/* ── Table card ───────────────────────────────────────────────────────── */
+.arl-table-card {
+  background:#fff; border:1px solid #EFEFEF; border-radius:12px; overflow:hidden;
+}
+
+/* ── Approval chain flow ──────────────────────────────────────────────── */
+.arl-chain {
+  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+}
+.arl-chain-pill {
+  font-size:10px; font-weight:600; background:#F0F8F3; color:#1F5F2F;
+  border:1px solid #C8E0CE; border-radius:6px; padding:3px 9px; white-space:nowrap;
+}
+.arl-chain-arrow { font-size:13px; color:#C0C0C0; }
+
+/* ── Status badge ──────────────────────────────────────────────────────── */
+.badge-active {
+  font-size:10px; font-weight:700; color:#278E53;
+  background:#E8F5ED; border-radius:5px; padding:3px 9px; letter-spacing:.3px;
+}
+.badge-inactive {
+  font-size:10px; font-weight:700; color:#888;
+  background:#F3F3F3; border-radius:5px; padding:3px 9px; letter-spacing:.3px;
+}
+
+/* ── Updated by ───────────────────────────────────────────────────────── */
+.arl-updater { display:flex; align-items:center; gap:7px; }
+.arl-updater-name { font-size:12px; font-weight:600; color:#222; }
+.arl-updater-role { font-size:10px; color:#ABABAB; }
+
+/* ── More btn ─────────────────────────────────────────────────────────── */
+.btn-more-sm {
+  width:28px; height:28px; border:1px solid #E8E8E8; border-radius:6px;
+  background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.btn-more-sm .material-symbols-outlined { font-size:14px; color:#666; }
+.btn-more-sm:hover { background:#F5F5F5; }
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+.arl-empty {
+  padding:48px 24px; text-align:center; color:#999;
+}
+.arl-empty .material-symbols-outlined { font-size:40px; color:#DDD; display:block; margin-bottom:10px; }
+.arl-empty-title { font-size:14px; font-weight:600; color:#555; margin-bottom:4px; }
+.arl-empty-sub { font-size:12px; color:#AAA; }
+</style>
+
+<!-- Header -->
+<div class="arl-header">
+  <div>
+    <div class="ui-page-title">Approvals Rules</div>
+    <div class="ui-page-subtitle">Configure approval hierarchy for recruitment and HR Processes.</div>
+  </div>
+  <div class="arl-header-right">
+    <button class="ui-btn-outlined" style="gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:15px;">menu_book</span> Read Approval Documentation
+    </button>
+    <button class="ui-btn-outlined" style="gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:15px;">upload</span> Export
+    </button>
+    <a href="/recruitment/approvals/rules/create/" class="ui-btn-primary" style="background:#1F5F2F;height:36px;padding:0 16px;border-radius:8px;gap:6px;text-decoration:none;display:inline-flex;align-items:center;">
+      <span class="material-symbols-outlined" style="font-size:16px;">add</span> Create Requisition
+    </a>
+  </div>
+</div>
+
+<!-- Table card -->
+<div class="arl-table-card">
+
+  <!-- Filter bar -->
+  <div class="arl-filter-bar">
+    <div class="search-wrap">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" placeholder="Search, requisitions by title, or department..." value="{{ request.GET.q|default:'' }}">
+    </div>
+    <select class="arl-filter-select">
+      <option>All Status</option>
+      <option>Active</option>
+      <option>Inactive</option>
+    </select>
+    <select class="arl-filter-select">
+      <option>All Department</option>
+    </select>
+    <select class="arl-filter-select">
+      <option>All Requisition Types</option>
+      <option>Manpower Request</option>
+      <option>Job Requisition</option>
+      <option>Promotion Request</option>
+    </select>
+    <button class="btn-filter">
+      <span class="material-symbols-outlined">tune</span> Filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  {% if rules %}
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th>PROCESS</th>
+        <th>DEPARTMENT</th>
+        <th>APPROVAL CHAIN</th>
+        <th>STATUS</th>
+        <th>UPDATED BY</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rule in rules %}
+      <tr>
+
+        <!-- Process -->
+        <td>
+          <div style="font-size:13px;font-weight:700;color:#222;">{{ rule.name|default:"Manpower Request" }}</div>
+          {% if rule.description %}
+          <div style="font-size:10px;color:#ABABAB;margin-top:2px;">{{ rule.description|truncatechars:50 }}</div>
+          {% endif %}
+        </td>
+
+        <!-- Department -->
+        <td style="font-size:12px;color:#555;">
+          {{ rule.department|default:"All Departments" }}
+        </td>
+
+        <!-- Approval chain as flow pills -->
+        <td>
+          <div class="arl-chain">
+            {% if rule.steps.all %}
+              {% for step in rule.steps.all %}
+                <span class="arl-chain-pill">{{ step.approver_user|default:step.approver_type|default:"—" }}</span>
+                {% if not forloop.last %}
+                  <span class="arl-chain-arrow material-symbols-outlined">arrow_forward</span>
+                {% endif %}
+              {% endfor %}
+            {% elif rule.approval_chain %}
+              {% for step_name in rule.approval_chain %}
+                <span class="arl-chain-pill">{{ step_name }}</span>
+                {% if not forloop.last %}
+                  <span class="arl-chain-arrow material-symbols-outlined">arrow_forward</span>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <span style="font-size:11px;color:#CCC;">No steps defined</span>
+            {% endif %}
+          </div>
+        </td>
+
+        <!-- Status -->
+        <td>
+          {% if rule.is_active %}
+            <span class="badge-active">ACTIVE</span>
+          {% else %}
+            <span class="badge-inactive">INACTIVE</span>
+          {% endif %}
+        </td>
+
+        <!-- Updated by -->
+        <td>
+          {% if rule.modified_by %}
+          <div class="arl-updater">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#D0E8D8;color:#1F5F2F;">
+              {{ rule.modified_by.first_name|first|upper }}{{ rule.modified_by.last_name|first|upper }}
+            </div>
+            <div>
+              <div class="arl-updater-name">{{ rule.modified_by.get_full_name|default:rule.modified_by.username }}</div>
+              <div class="arl-updater-role">
+                {% if rule.modified_at %}{{ rule.modified_at|date:"M d, Y" }}{% endif %}
+              </div>
+            </div>
+          </div>
+          {% elif rule.created_by %}
+          <div class="arl-updater">
+            <div class="ui-avatar" style="width:28px;height:28px;font-size:10px;background:#D0E8D8;color:#1F5F2F;">
+              {{ rule.created_by.first_name|first|upper }}{{ rule.created_by.last_name|first|upper }}
+            </div>
+            <div>
+              <div class="arl-updater-name">{{ rule.created_by.get_full_name|default:rule.created_by.username }}</div>
+              <div class="arl-updater-role">
+                {% if rule.created_at %}{{ rule.created_at|date:"M d, Y" }}{% endif %}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <span style="font-size:11px;color:#CCC;">—</span>
+          {% endif %}
+        </td>
+
+        <!-- Actions -->
+        <td>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div class="btn-more-sm" onclick="toggleRuleMenu({{ rule.id }})">
+              <span class="material-symbols-outlined">more_vert</span>
+            </div>
+            <!-- Dropdown -->
+            <div id="rule-menu-{{ rule.id }}" style="display:none;position:absolute;background:#fff;border:1px solid #E8E8E8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);z-index:100;min-width:130px;padding:4px 0;">
+              <a href="/recruitment/approvals/rules/{{ rule.id }}/edit/" style="display:block;padding:8px 14px;font-size:12px;color:#333;text-decoration:none;" onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''">
+                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:6px;">edit</span> Edit Rule
+              </a>
+              <a href="/recruitment/approvals/rules/{{ rule.id }}/duplicate/" style="display:block;padding:8px 14px;font-size:12px;color:#333;text-decoration:none;" onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background=''">
+                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:6px;">content_copy</span> Duplicate
+              </a>
+              <div style="border-top:1px solid #F3F3F3;margin:4px 0;"></div>
+              <a href="/recruitment/approvals/rules/{{ rule.id }}/delete/" style="display:block;padding:8px 14px;font-size:12px;color:#C62828;text-decoration:none;" onmouseover="this.style.background='#FFF5F5'" onmouseout="this.style.background=''">
+                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:6px;">delete</span> Delete
+              </a>
+            </div>
+          </div>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="arl-empty">
+    <span class="material-symbols-outlined">rule</span>
+    <div class="arl-empty-title">No rules configured</div>
+    <div class="arl-empty-sub">
+      Create your first approval rule to define routing chains for recruitment and HR processes.
+    </div>
+    <div style="margin-top:16px;">
+      <a href="/recruitment/approvals/rules/create/" class="ui-btn-primary" style="background:#1F5F2F;gap:6px;text-decoration:none;display:inline-flex;align-items:center;">
+        <span class="material-symbols-outlined" style="font-size:16px;">add</span> Create Rule
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- /arl-table-card -->
+
+<script>
+function toggleRuleMenu(id) {
+  const menu = document.getElementById('rule-menu-' + id);
+  const allMenus = document.querySelectorAll('[id^="rule-menu-"]');
+  allMenus.forEach(m => { if (m !== menu) m.style.display = 'none'; });
+  menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.btn-more-sm') && !e.target.closest('[id^="rule-menu-"]')) {
+    document.querySelectorAll('[id^="rule-menu-"]').forEach(m => m.style.display = 'none');
+  }
+});
+</script>
+{% endblock %}

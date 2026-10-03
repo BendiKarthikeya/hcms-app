@@ -1,0 +1,645 @@
+{% extends "ui/base.html" %}
+{% block title %}Offer Details — {{ offer.candidate_id.name|default:"Candidate" }} — HCMS{% endblock %}
+
+{% block content %}
+<style>
+/* ── Offer info row (label + value, horizontal) ─────────────────── */
+.od-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 25px; border-bottom:1px solid #f5f5f5;
+  min-height:37px;
+}
+.od-row:last-child { border-bottom:none; }
+.od-row-icon {
+  width:36px; height:37px; background:#f0f0f0; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.od-row-icon .material-symbols-outlined { font-size:18px; color:#555; }
+.od-row-label { flex:1; font-size:13px; color:#303030; }
+.od-row-value { font-size:13px; color:#303030; }
+
+/* ── Benefits checklist ─────────────────────────────────────────── */
+.od-benefit {
+  display:flex; align-items:center; gap:10px;
+  padding:6px 20px; font-size:13px; color:#5c5656;
+}
+.od-benefit-icon { font-size:18px; color:#278E53; flex-shrink:0; }
+
+/* ── Document rows ───────────────────────────────────────────────── */
+.od-doc-row {
+  display:flex; flex-direction:column;
+  padding:8px 28px; border-top:1px solid #f5f5f5;
+}
+.od-doc-row:first-of-type { border-top:none; }
+.od-doc-name { font-size:13px; font-weight:500; color:#212020; }
+.od-doc-file { font-size:12px; color:#606060; margin-top:2px; }
+.od-doc-dl-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 20px; border-top:1px solid #f5f5f5;
+}
+.od-doc-dl-row:first-child { border-top:none; }
+.od-doc-left { display:flex; flex-direction:column; }
+.od-doc-left-name { font-size:13px; font-weight:500; color:#212020; }
+.od-doc-left-file { font-size:12px; color:#606060; margin-top:2px; }
+.od-doc-dl-btn {
+  width:30px; height:30px; border:none; background:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:#555; border-radius:6px; flex-shrink:0;
+  text-decoration:none;
+}
+.od-doc-dl-btn:hover { background:#f5f5f5; }
+.od-doc-dl-btn .material-symbols-outlined { font-size:18px; color:#555; }
+
+/* ── Compensation section ────────────────────────────────────────── */
+.od-comp-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 25px; border-bottom:1px solid #f5f5f5;
+}
+.od-comp-row:last-child { border-bottom:none; }
+.od-comp-icon {
+  width:36px; height:37px; background:#f0f0f0; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.od-comp-icon .material-symbols-outlined { font-size:18px; color:#555; }
+.od-comp-label { flex:1; font-size:13px; color:#303030; }
+.od-comp-value { font-size:13px; font-weight:600; color:#222; }
+
+/* ── Small card ──────────────────────────────────────────────────── */
+.od-small-card {
+  background:#fff; border:1px solid #d1d1d1; border-radius:11px;
+  overflow:hidden;
+}
+.od-small-title {
+  font-size:14px; font-weight:600; color:#000;
+  padding:16px 20px 12px;
+}
+
+/* ── E-Sign chain ────────────────────────────────────────────────── */
+.od-chain-step { display:flex; gap:14px; padding:0; position:relative; }
+.od-chain-connector {
+  position:absolute; left:17px; top:42px; bottom:0;
+  width:2px; background:#d1d1d1; z-index:0;
+}
+.od-chain-connector.done { background:#278E53; }
+
+.od-step-circle {
+  flex-shrink:0; width:35px; height:35px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; color:#fff;
+  background:#d2d2d2; z-index:1; position:relative; margin-top:0;
+}
+.od-step-circle.signed { background:#278E53; }
+.od-step-circle.active { background:#278E53; box-shadow:0 0 0 4px #E8F5ED; }
+.od-step-circle.rejected { background:#C62828; }
+.od-step-circle.sla-warning { background:#F59E0B; box-shadow:0 0 0 4px #FEF3C7; }
+.od-step-circle.sla-overdue { background:#EF4444; box-shadow:0 0 0 4px #FEE2E2; }
+.od-step-circle.sla-late    { background:#F97316; }
+.od-step-circle img { width:35px; height:35px; border-radius:50%; display:block; }
+
+.od-step-body {
+  flex:1; border-bottom:1px solid #ccc; padding-bottom:18px;
+  padding-top:4px; min-width:0;
+}
+.od-chain-step:last-child .od-step-body { border-bottom:none; }
+.od-step-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.od-step-title { font-size:13px; font-weight:600; color:#202020; }
+.od-step-name { font-size:12px; color:#606060; margin-top:4px; }
+.od-step-timestamp { font-size:12px; color:#8E8D8D; margin-top:4px; }
+
+/* Status badges */
+.od-badge {
+  height:22px; padding:0 10px; border-radius:4px;
+  font-size:11px; font-weight:500; display:inline-flex; align-items:center;
+  flex-shrink:0; margin-top:4px;
+}
+.od-badge--signed  { background:#e2ece8; color:#0f752f; }
+.od-badge--pending { background:#f5f0ed; color:#e0812e; }
+.od-badge--active  { background:#e2ece8; color:#0f752f; }
+.od-badge--rejected{ background:#fff0f0; color:#c62828; }
+
+/* Signature area for active approver */
+.od-sig-area {
+  margin-top:14px;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+}
+.od-sig-comment {
+  border:1px solid #a7a7a7; border-radius:20px;
+  padding:14px 24px; font-size:13px; font-family:inherit;
+  resize:none; outline:none; color:#8e8d8d; width:100%;
+  box-sizing:border-box; background:#fff; min-height:141px;
+}
+.od-sig-comment:focus { border-color:#76b590; }
+.od-sig-canvas-wrap {
+  border:1px solid #a7a7a7; border-radius:20px;
+  overflow:hidden; position:relative; min-height:141px;
+  background:#fff;
+}
+.od-sig-canvas {
+  cursor:crosshair; width:100%; display:block; touch-action:none;
+}
+.od-sig-watermark {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  color:#D5D5D5; font-size:12px; pointer-events:none; user-select:none;
+}
+
+.od-sig-action-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.od-btn-reject {
+  height:38px; border:1px solid #d70d0d; border-radius:8px;
+  background:#fff; font-size:13px; font-weight:600; color:#e33f3f;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.od-btn-reject:hover { background:#fff5f5; }
+.od-btn-approve {
+  height:38px; border:none; border-radius:8px;
+  background:#208e3d; font-size:13px; font-weight:600; color:#fff;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.od-btn-approve:hover { background:#1a7533; }
+
+/* Signature image (approved step) */
+.od-sig-img-wrap {
+  margin-top:10px; padding:6px 10px;
+  border:1px solid #E0EAE5; border-radius:8px;
+  background:#FAFCFA; display:inline-block; max-width:180px;
+}
+.od-sig-img-wrap img { max-height:40px; max-width:160px; display:block; }
+
+/* Feedback block */
+.od-feedback-block {
+  font-size:12px; color:#A02929; margin-top:8px;
+  padding:8px 12px; background:#FFF1EF;
+  border-left:3px solid #C04730; border-radius:4px;
+}
+.od-feedback-label {
+  font-weight:700; font-size:10px; text-transform:uppercase;
+  letter-spacing:.05em; color:#C04730; margin-bottom:3px;
+}
+
+/* Notification bar */
+.od-notify-bar {
+  background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2);
+  border-radius:8px; padding:12px 16px;
+  display:flex; align-items:center; gap:10px;
+  font-size:13px; color:#374151; margin-top:16px;
+}
+.od-notify-bar .material-symbols-outlined { font-size:22px; color:#278E53; flex-shrink:0; }
+
+/* Chain builder (empty state) */
+.cstep { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #E0E0E0; border-radius:7px; background:#FAFAFA; }
+.copt:hover { background:#F0F8F3; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="ui-breadcrumb" style="margin-bottom:8px">
+  <span class="material-symbols-outlined" style="transform:rotate(-90deg);font-size:18px">keyboard_arrow_up</span>
+  <a href="/ui/offers/">Back to Approvals</a>
+</div>
+
+<!-- Page title -->
+<div style="margin-bottom:22px">
+  <div style="font-size:22px;font-weight:700;color:#111;line-height:1.2">Offer Details</div>
+  <div style="font-size:13px;color:#8E8D8D;margin-top:4px">Review offer details and manage e-sign approval workflow</div>
+</div>
+
+<!-- THREE-column grid -->
+<div style="display:grid;grid-template-columns:35fr 23fr 42fr;gap:18px;align-items:start">
+
+  <!-- ════════ LEFT: Offer Information ════════ -->
+  <div>
+    <div style="background:#fff;border:1px solid #d8d8d8;border-radius:14px;overflow:hidden">
+      <div style="font-size:14px;font-weight:600;color:#333;padding:16px 20px 12px">Offer Information</div>
+
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">person</span></div>
+        <span class="od-row-label">Candidate</span>
+        <span class="od-row-value">{{ offer.candidate_id.name|default:"—" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">badge</span></div>
+        <span class="od-row-label">Offer ID</span>
+        <span class="od-row-value">{{ offer.offer_no|default:"—" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">work</span></div>
+        <span class="od-row-label">Job Title</span>
+        <span class="od-row-value">{{ offer.position|default:"—" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">business</span></div>
+        <span class="od-row-label">Department</span>
+        <span class="od-row-value">{{ offer.department|default:"—" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">category</span></div>
+        <span class="od-row-label">Employment Type</span>
+        <span class="od-row-value">{{ offer.get_role_type_display|default:"Full Time" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">location_on</span></div>
+        <span class="od-row-label">Work Location</span>
+        <span class="od-row-value">{{ offer.location|default:"—" }}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">event</span></div>
+        <span class="od-row-label">Date of Joining</span>
+        <span class="od-row-value">{% if offer.joining_date %}{{ offer.joining_date|date:"M d, Y" }}{% else %}—{% endif %}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">schedule</span></div>
+        <span class="od-row-label">Offer Expiry Date</span>
+        <span class="od-row-value">{% if offer.expiry_date %}{{ offer.expiry_date|date:"M d, Y" }}{% else %}—{% endif %}</span>
+      </div>
+      <div class="od-row">
+        <div class="od-row-icon"><span class="material-symbols-outlined">timer</span></div>
+        <span class="od-row-label">Probation Period</span>
+        <span class="od-row-value">{{ offer.probation_period|default:"6 months" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MIDDLE: Benefits + Documents ════════ -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Benefits & Perks -->
+    <div class="od-small-card">
+      <div class="od-small-title">Benefits &amp; Perks</div>
+      <div class="od-benefit"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Health Insurance</div>
+      <div class="od-benefit"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Annual Leave (30 days)</div>
+      <div class="od-benefit"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Performance Bonus</div>
+      <div class="od-benefit"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Flexible Working</div>
+      <div class="od-benefit"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Professional Development</div>
+      <div class="od-benefit" style="padding-bottom:14px"><span class="od-benefit-icon material-symbols-outlined">check_circle</span> Employee Wellness Program</div>
+    </div>
+
+    <!-- Documents -->
+    <div class="od-small-card">
+      <div class="od-small-title">Documents</div>
+      <div class="od-doc-dl-row">
+        <div class="od-doc-left">
+          <div class="od-doc-left-name">Offer Letter</div>
+          <div class="od-doc-left-file">Offer-letter-{{ offer.candidate_id.name|lower|slugify }}.pdf</div>
+        </div>
+        <a class="od-doc-dl-btn" href="{% url 'ui:offer-download-letter' offer.id %}" title="Download"><span class="material-symbols-outlined">download</span></a>
+      </div>
+      <div class="od-doc-dl-row">
+        <div class="od-doc-left">
+          <div class="od-doc-left-name">CTC Breakup</div>
+          <div class="od-doc-left-file">CTC-breakup.pdf</div>
+        </div>
+        <a class="od-doc-dl-btn" href="{% url 'ui:offer-download-ctc' offer.id %}" title="Download"><span class="material-symbols-outlined">download</span></a>
+      </div>
+      <div class="od-doc-dl-row">
+        <div class="od-doc-left">
+          <div class="od-doc-left-name">Company Policy</div>
+          <div class="od-doc-left-file">company-policy.pdf</div>
+        </div>
+        <a class="od-doc-dl-btn" href="{% url 'ui:offer-download-policy' offer.id %}" title="Download"><span class="material-symbols-outlined">download</span></a>
+      </div>
+      <div class="od-doc-dl-row" style="padding-bottom:14px">
+        <div class="od-doc-left">
+          <div class="od-doc-left-name">Terms &amp; Conditions</div>
+          <div class="od-doc-left-file">terms-condition.pdf</div>
+        </div>
+        <a class="od-doc-dl-btn" href="{% url 'ui:offer-download-terms' offer.id %}" title="Download"><span class="material-symbols-outlined">download</span></a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════ RIGHT: E-Sign Chain ════════ -->
+  <div style="background:#fff;border:1px solid #d1d1d1;border-radius:15px;overflow:hidden;padding:24px 25px 24px">
+
+    <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:4px">E-Sign Chain</div>
+    <div style="font-size:12px;color:#8E8D8D;margin-bottom:16px">Sequential approval and e-sign process</div>
+
+    {% if approvals %}
+      {% for a in approvals %}
+      <div class="od-chain-step" style="gap:14px;padding-bottom:{% if not forloop.last %}0{% else %}0{% endif %}">
+
+        <!-- Connector line -->
+        {% if not forloop.last %}
+        <div class="od-chain-connector {% if a.display_status == 'approved' %}done{% endif %}"></div>
+        {% endif %}
+
+        <!-- Circle icon -->
+        <div class="od-step-circle {% if a.display_status == 'approved' %}{% if a.sla_status == 'late' %}sla-late{% else %}signed{% endif %}{% elif a.display_status == 'active' %}{% if a.sla_status == 'warning' %}sla-warning{% elif a.sla_status == 'overdue' %}sla-overdue{% else %}active{% endif %}{% elif a.display_status == 'rejected' %}rejected{% endif %}">
+          {% if a.display_status == "approved" %}
+            <span class="material-symbols-outlined" style="font-size:20px">check</span>
+          {% elif a.display_status == "rejected" %}
+            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+          {% elif a.display_status == "active" %}
+            <span class="material-symbols-outlined" style="font-size:16px">draw</span>
+          {% else %}
+            {{ a.sequence }}
+          {% endif %}
+        </div>
+
+        <!-- Step body -->
+        <div class="od-step-body">
+          <div class="od-step-header">
+            <div class="od-step-title">
+              {% if a.display_status == 'candidate' %}Candidate Signature{% else %}{{ a.approver }}{% endif %}
+            </div>
+            <span class="od-badge od-badge--{% if a.display_status == 'approved' %}signed{% elif a.display_status == 'rejected' %}rejected{% elif a.display_status == 'active' %}active{% else %}pending{% endif %}">
+              {% if a.display_status == "approved" %}Signed
+              {% elif a.display_status == "rejected" %}Rejected
+              {% elif a.display_status == "active" %}Active
+              {% else %}Pending{% endif %}
+            </span>
+          </div>
+
+          <div class="od-step-name">{{ a.approver }}</div>
+
+          <!-- Timestamps -->
+          {% if a.requested_at and a.display_status != 'waiting' %}
+            <div class="od-step-timestamp">Received on {{ a.requested_at|date:"M d, Y g:i A" }}</div>
+          {% endif %}
+          {% if a.display_status == "approved" and a.acted_at %}
+            <div class="od-step-timestamp">Signed on {{ a.acted_at|date:"M d, Y g:i A" }}</div>
+            {% if a.sla_status == 'late' %}<div class="od-step-timestamp" style="color:#F97316">Signed after SLA deadline (48h)</div>{% endif %}
+            {% if a.signature_image %}
+            <div class="od-sig-img-wrap" style="margin-top:8px">
+              <img src="{{ a.signature_image }}" alt="signature">
+            </div>
+            {% endif %}
+          {% elif a.display_status == "rejected" and a.acted_at %}
+            <div class="od-step-timestamp">Rejected on {{ a.acted_at|date:"M d, Y g:i A" }}</div>
+          {% elif a.display_status == "active" %}
+            <div class="od-step-timestamp">Please review the offer details and sign</div>
+            {% if a.sla_status == 'warning' %}<div class="od-step-timestamp" style="color:#F59E0B">Approaching SLA deadline (48h)</div>
+            {% elif a.sla_status == 'overdue' %}<div class="od-step-timestamp" style="color:#EF4444">SLA deadline exceeded (48h)</div>{% endif %}
+          {% endif %}
+
+          <!-- Feedback note -->
+          {% if a.feedback %}
+          <div class="od-feedback-block">
+            <div class="od-feedback-label">Feedback</div>
+            {{ a.feedback }}
+          </div>
+          {% endif %}
+
+          <!-- Active approver: sign area -->
+          {% if my_active and a.display_status == "active" %}
+          <div class="od-sig-area" id="inlineSigArea">
+            <textarea id="inlineComment" class="od-sig-comment" rows="5"
+              placeholder="Comment your feedback and reviews here"></textarea>
+
+            <div class="od-sig-canvas-wrap">
+              <canvas id="inlineSigPad" class="od-sig-canvas" height="141"></canvas>
+              <div class="od-sig-watermark">Sign here</div>
+            </div>
+
+            <div class="esp-row">
+              <span class="esp-or">or e-sign with a connected account</span>
+              <a class="esp-btn esp-btn--adobe" href="{% url 'ui:esign-pick' provider='adobesign' kind='offer' obj_id=offer.id %}">
+                <span class="material-symbols-outlined">draw</span> Adobe eSign
+              </a>
+              <a class="esp-btn esp-btn--docusign" href="{% url 'ui:esign-pick' provider='docusign' kind='offer' obj_id=offer.id %}">
+                <span class="material-symbols-outlined">draw</span> DocuSign
+              </a>
+            </div>
+          </div>
+
+          <div class="od-sig-action-row">
+            <button type="button"
+                    class="od-btn-reject"
+                    onclick="document.getElementById('rejectModal').classList.add('open')">
+              <span class="material-symbols-outlined" style="font-size:16px">dangerous</span>
+              Reject
+            </button>
+            <form id="inlineEsignForm" method="post" action="{% url 'ui:offer-esign' offer.id %}" style="display:contents">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="esign">
+              <input type="hidden" name="signature_data" id="inlineSigData">
+              <button type="submit" onclick="captureInlineSig()" class="od-btn-approve">
+                Sign &amp; Approve
+              </button>
+            </form>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:6px">
+            <button type="button" onclick="clearInlineSig()"
+                    style="height:28px;padding:0 14px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:12px;cursor:pointer">
+              Clear signature
+            </button>
+          </div>
+          {% endif %}
+
+        </div><!-- /step body -->
+      </div><!-- /chain step -->
+      {% endfor %}
+
+    {% else %}
+    <!-- Empty state: chain builder -->
+    <div>
+      <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:4px">No approval chain set up</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px">
+        Add approvers in order below. Each person must sign before the next is notified.
+      </div>
+      <form method="post" action="{% url 'ui:offer-setup-chain' offer.id %}">
+        {% csrf_token %}
+        <div id="chainList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="position:relative" id="chainWidget">
+          <div style="display:flex;align-items:center;gap:6px;height:38px;border:1px solid #e5e7eb;border-radius:8px;padding:0 13px;background:#fff;cursor:text"
+               onclick="document.getElementById('chainInput').focus()">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#AAA">search</span>
+            <input id="chainInput" type="text" placeholder="Search and add approver…"
+                   style="border:none;outline:none;font-size:14px;flex:1;background:transparent">
+          </div>
+          <div id="chainDrop"
+               style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;z-index:999">
+            {% for emp in employees %}
+            <div class="copt" data-id="{{ emp.id }}" data-name="{{ emp }}"
+                 style="padding:9px 14px;font-size:13px;cursor:pointer;color:#1f2937">{{ emp }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="submit"
+                style="margin-top:12px;width:100%;height:40px;background:#208e3d;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">
+          Save Approval Chain
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Notification bar -->
+    <div class="od-notify-bar">
+      <span class="material-symbols-outlined">check_circle_outline</span>
+      Approval notification will be sent to the approval chain members
+    </div>
+
+  </div><!-- /E-Sign Chain -->
+
+</div><!-- /3-column grid -->
+
+<!-- Compensation & Benefits (below left two columns) -->
+<div style="display:grid;grid-template-columns:35fr 23fr 42fr;gap:18px;margin-top:18px">
+  <div style="grid-column:1/3;background:#fff;border:1px solid #d8d8d8;border-radius:14px;overflow:hidden">
+    <div style="font-size:14px;font-weight:600;color:#333;padding:16px 25px 12px">Compensation &amp; Benefits</div>
+
+    {% if offer.gross_salary %}
+    <div class="od-comp-row">
+      <div class="od-comp-icon"><span class="material-symbols-outlined">person</span></div>
+      <span class="od-comp-label">Annual CTC</span>
+      <span class="od-comp-value">{{ offer.currency }} {{ offer.gross_salary }}</span>
+    </div>
+    {% endif %}
+
+    {% if offer.basic_salary %}
+    <div class="od-comp-row">
+      <div class="od-comp-icon"><span class="material-symbols-outlined">person</span></div>
+      <span class="od-comp-label">Base Salary</span>
+      <span class="od-comp-value">OMR {{ offer.basic_salary }}</span>
+    </div>
+    {% endif %}
+
+    {% if offer.housing_allowance or offer.hra_allowance %}
+    <div class="od-comp-row">
+      <div class="od-comp-icon"><span class="material-symbols-outlined">person</span></div>
+      <span class="od-comp-label">Allowance</span>
+      <span class="od-comp-value">OMR {{ offer.housing_allowance|default:offer.hra_allowance }}</span>
+    </div>
+    {% endif %}
+
+    {% if offer.performance_bonus %}
+    <div class="od-comp-row">
+      <div class="od-comp-icon"><span class="material-symbols-outlined">person</span></div>
+      <span class="od-comp-label">Bonus</span>
+      <span class="od-comp-value">OMR {{ offer.performance_bonus }}</span>
+    </div>
+    {% endif %}
+
+    <div class="od-comp-row">
+      <div class="od-comp-icon"><span class="material-symbols-outlined">person</span></div>
+      <span class="od-comp-label">Payment Frequency</span>
+      <span class="od-comp-value">Monthly</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════
+     Reject Modal
+════════════════════ -->
+<div id="rejectModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center"
+     onclick="if(event.target===this)this.classList.remove('open')">
+  <form method="post" action="{% url 'ui:offer-esign' offer.id %}"
+        style="background:#fff;border-radius:12px;padding:28px 32px;max-width:440px;width:90%">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="feedback">
+    <div style="font-size:16px;font-weight:700;margin-bottom:12px">Reject Offer</div>
+    <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Reason / Feedback</label>
+    <textarea name="feedback" rows="4"
+              style="width:100%;border:1px solid #E0E0E0;border-radius:6px;padding:8px;font-size:13px;font-family:inherit;resize:vertical"
+              placeholder="Explain reason for rejection…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button type="button"
+              onclick="document.getElementById('rejectModal').classList.remove('open')"
+              style="padding:8px 16px;border:1px solid #D0D0D0;border-radius:6px;background:#fff;font-size:13px;cursor:pointer">
+        Cancel
+      </button>
+      <button type="submit"
+              style="padding:8px 20px;border:none;border-radius:6px;background:#C62828;color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+        Confirm Reject
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+#rejectModal.open { display: flex; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>
+<script>
+/* ── Chain builder (empty state) ── */
+(function () {
+  var list   = document.getElementById('chainList');
+  if (!list) return;
+  var input  = document.getElementById('chainInput');
+  var drop   = document.getElementById('chainDrop');
+  var widget = document.getElementById('chainWidget');
+  if (!input || !drop || !widget) return;
+  var opts  = Array.from(drop.querySelectorAll('.copt'));
+  var added = new Set();
+
+  function renumber() {
+    list.querySelectorAll('.cstep').forEach(function (s, i) {
+      s.querySelector('.cnum').textContent = i + 1;
+    });
+  }
+
+  function addStep(id, name) {
+    if (added.has(id)) return;
+    added.add(id);
+    var d = document.createElement('div');
+    d.className = 'cstep';
+    d.dataset.id = id;
+    d.innerHTML =
+      '<span class="cnum" style="width:20px;height:20px;background:#278E53;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0"></span>'
+      + '<span style="flex:1;font-size:13px;color:#222">' + name + '</span>'
+      + '<input type="hidden" name="chain_approver[]" value="' + id + '">'
+      + '<button type="button" style="border:none;background:none;color:#C62828;cursor:pointer;font-size:18px;line-height:1" '
+      + 'onclick="(function(btn){var s=btn.closest(\'.cstep\');added.delete(s.dataset.id);s.remove();renumber();})(this)">×</button>';
+    list.appendChild(d);
+    renumber();
+    input.value = '';
+    filterOpts('');
+    drop.style.display = 'none';
+  }
+
+  function filterOpts(q) {
+    q = q.toLowerCase();
+    var v = 0;
+    opts.forEach(function (o) {
+      var show = o.dataset.name.toLowerCase().includes(q) && !added.has(o.dataset.id);
+      o.style.display = show ? '' : 'none';
+      if (show) v++;
+    });
+    drop.style.display = (v && input === document.activeElement) ? '' : 'none';
+  }
+
+  input.addEventListener('input',  function () { filterOpts(input.value); });
+  input.addEventListener('focus',  function () { filterOpts(input.value); });
+  document.addEventListener('click', function (e) {
+    if (!widget.contains(e.target)) drop.style.display = 'none';
+  });
+  opts.forEach(function (o) {
+    o.addEventListener('click', function () { addStep(o.dataset.id, o.dataset.name); });
+  });
+})();
+
+/* ── Inline signature pad (active approver) ── */
+(function () {
+  var canvas = document.getElementById('inlineSigPad');
+  if (!canvas) return;
+
+  var pad = new SignaturePad(canvas, {
+    minWidth: 1,
+    maxWidth: 2.5,
+    penColor: '#111'
+  });
+
+  function resizeCanvas() {
+    var ratio = Math.max(window.devicePixelRatio || 1, 1);
+    var w = canvas.offsetWidth;
+    var h = canvas.offsetHeight || 141;
+    canvas.width  = w * ratio;
+    canvas.height = h * ratio;
+    canvas.getContext('2d').scale(ratio, ratio);
+    pad.clear();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  window.clearInlineSig = function () { pad.clear(); };
+
+  window.captureInlineSig = function () {
+    var el = document.getElementById('inlineSigData');
+    if (el) el.value = pad.isEmpty() ? '' : pad.toDataURL('image/png');
+  };
+})();
+</script>
+{% include "ui/_esign_providers.html" %}
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+<main>
+    <div class="oh-wrapper">
+        <div class="oh-list-container">
+            <div class="oh-list-header row">
+                <div class="col-12">
+                    <a href="{% url 'learning:course_list' %}" class="oh-btn oh-btn--secondary oh-btn--shadow mb-3">
+                        <ion-icon name="chevron-back-outline" class="mr-1"></ion-icon>{% trans "Back to Courses" %}
+                    </a>
+                    <h1 class="oh-page-title">{{ course.name }}</h1>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="oh-card" style="border-radius: 8px;">
+                        <div class="oh-card__header" style="padding: 1.5rem; border-bottom: 1px solid #e0e0e0;">
+                            <h5 class="oh-card__title" style="margin: 0; font-weight: 600;">{% trans "Course Details" %}</h5>
+                        </div>
+                        <div class="oh-card__body" style="padding: 1.5rem;">
+                
+                <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                    {% if course.description %}
+                    <div class="meta-item">
+                        <span class="meta-label">Description:</span>
+                    </div>
+                    <p style="margin-top: 0.5rem; color: #555;">{{ course.description }}</p>
+                    {% endif %}
+                    
+                    {% if course.category %}
+                    <div class="meta-item">
+                        <span class="meta-label">Category:</span>
+                        <span class="meta-value">{{ course.category.name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.level %}
+                    <div class="meta-item">
+                        <span class="meta-label">Level:</span>
+                        <span class="meta-value">{{ course.get_level_display }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.get_format_display %}
+                    <div class="meta-item">
+                        <span class="meta-label">Format:</span>
+                        <span class="meta-value">{{ course.get_format_display }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.duration_hours %}
+                    <div class="meta-item">
+                        <span class="meta-label">Duration:</span>
+                        <span class="meta-value">{{ course.duration_hours }} hours</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.cost %}
+                    <div class="meta-item">
+                        <span class="meta-label">Cost:</span>
+                        <span class="meta-value">OMR {{ course.cost }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if course.instructor %}
+                    <div class="meta-item">
+                        <span class="meta-label">Instructor:</span>
+                        <span class="meta-value">{{ course.instructor }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="meta-item">
+                        <span class="meta-label">Status:</span>
+                        <span class="meta-value">
+                            {% if course.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inactive</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mt-extra">
+                    <a href="{% url 'learning:enroll_course' course.id %}" class="btn btn-primary learning-btn btn-lg">Enroll in Course</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="learning-card">
+            <div class="card-body">
+                <h5 class="learning-card .card-title">Course Summary</h5>
+                <p class="learning-card-text mt-3">{{ course.description|truncatewords:20 }}</p>
+                <hr>
+                <p class="small text-muted mb-0">
+                    Enroll now to start your learning journey and gain valuable skills in {{ course.category.name }}.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends "ui/base.html" %}
+{% block title %}Offers — HCMS{% endblock %}
+{% block active_offers %}active{% endblock %}
+
+{% block content %}
+<style>
+/* ── Offers page local styles ── */
+.off-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
+.off-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+.off-kpi { background:#fff; border:1px solid #EFEFEF; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:14px; }
+.off-kpi__icon { width:40px; height:40px; background:#1F5F2F; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.off-kpi__icon .material-symbols-outlined { font-size:20px; color:#fff; }
+.off-kpi__value { font-size:22px; font-weight:700; color:#111; line-height:1; margin-bottom:2px; }
+.off-kpi__label { font-size:11px; color:#888; }
+.off-kpi__trend { font-size:10px; color:#278E53; margin-top:2px; }
+
+/* Filter bar */
+.off-filter-bar { display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid #F3F3F3; flex-wrap:wrap; }
+.off-filter-bar input { flex:1; min-width:220px; max-width:320px; height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 10px; font-size:12px; font-family:inherit; color:#333; outline:none; background:#FAFAFA; }
+.off-filter-bar input:focus { border-color:#A8D4B4; background:#fff; }
+.off-select { height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 8px; font-size:12px; font-family:inherit; color:#444; background:#fff; outline:none; cursor:pointer; }
+.off-filter-btn { height:32px; border:1px solid #E0E0E0; border-radius:7px; padding:0 10px; font-size:12px; font-family:inherit; color:#444; background:#fff; display:flex; align-items:center; gap:4px; cursor:pointer; }
+.off-filter-btn .material-symbols-outlined { font-size:15px; }
+.off-filter-btn:hover { background:#F5F5F5; }
+
+/* Stage pill variants */
+.stage-pill { display:inline-block; font-size:10px; font-weight:600; border-radius:4px; padding:3px 8px; }
+.stage-pending { background:#FFF8EC; color:#B07600; }
+.stage-sent    { background:#EBF4FF; color:#1565C0; }
+.stage-accepted{ background:#E8F5ED; color:#1F5F2F; }
+.stage-rejected{ background:#FFEBEE; color:#C62828; }
+.stage-draft   { background:#F5F5F5; color:#666; }
+
+/* Action buttons */
+.act-view-cv  { height:28px; padding:0 12px; background:#fff; border:1px solid #D0D0D0; border-radius:6px; font-size:11px; font-weight:500; color:#333; cursor:pointer; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
+.act-view-cv:hover { background:#F5F5F5; }
+.act-approve  { height:28px; padding:0 12px; background:#1F5F2F; border:none; border-radius:6px; font-size:11px; font-weight:600; color:#fff; cursor:pointer; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
+.act-approve:hover { background:#194f27; }
+.act-more     { height:28px; padding:0 12px; border:1px solid #D0D0D0; border-radius:6px; background:#fff; display:inline-flex; align-items:center; gap:5px; cursor:pointer; text-decoration:none; font-size:11px; font-weight:500; color:#333; }
+.act-more .material-symbols-outlined { font-size:15px; color:#666; }
+.act-more:hover { background:#F5F5F5; }
+</style>
+
+<!-- Header -->
+<div class="off-header">
+  <div>
+    <div class="ui-page-title">Offers Tracking</div>
+    <div class="ui-page-subtitle">Track and manage all offer letters, clearances, and joining status</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="ui-btn-outlined">
+      <span class="material-symbols-outlined" style="font-size:15px">upload</span> Export
+    </button>
+    <a href="/ui/offer-creator/" class="ui-btn-primary" style="height:36px;padding:0 16px;border-radius:8px;gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span> Create Offer
+    </a>
+  </div>
+</div>
+
+<!-- KPI cards -->
+<div class="off-kpi-row">
+  <div class="off-kpi">
+    <div class="off-kpi__icon"><span class="material-symbols-outlined">description</span></div>
+    <div>
+      <div class="off-kpi__value">{{ kpi_total_offers|default:page.paginator.count|default:"0" }}</div>
+      <div class="off-kpi__label">Total Offers</div>
+      <div class="off-kpi__trend">↑ 20% from last month</div>
+    </div>
+  </div>
+  <div class="off-kpi">
+    <div class="off-kpi__icon"><span class="material-symbols-outlined">check_circle</span></div>
+    <div>
+      <div class="off-kpi__value">{{ kpi_accepted|default:"0" }}</div>
+      <div class="off-kpi__label">Accepted</div>
+      <div class="off-kpi__trend">↑ 13% from last month</div>
+    </div>
+  </div>
+  <div class="off-kpi">
+    <div class="off-kpi__icon"><span class="material-symbols-outlined">pending</span></div>
+    <div>
+      <div class="off-kpi__value">{{ kpi_in_progress|default:"0" }}</div>
+      <div class="off-kpi__label">In Progress</div>
+      <div class="off-kpi__trend">↑ 20% from last month</div>
+    </div>
+  </div>
+  <div class="off-kpi">
+    <div class="off-kpi__icon"><span class="material-symbols-outlined">task_alt</span></div>
+    <div>
+      <div class="off-kpi__value">{{ kpi_completed|default:"0" }}</div>
+      <div class="off-kpi__label">Completed</div>
+      <div class="off-kpi__trend">↑ 13% from last month</div>
+    </div>
+  </div>
+  <div class="off-kpi">
+    <div class="off-kpi__icon" style="background:#E07B00;"><span class="material-symbols-outlined">schedule</span></div>
+    <div>
+      <div class="off-kpi__value">{{ kpi_delayed|default:"0" }}</div>
+      <div class="off-kpi__label">Delayed</div>
+      <div class="off-kpi__trend" style="color:#E07B00">↑ 5% from last month</div>
+    </div>
+  </div>
+</div>
+
+<!-- Table card -->
+<div class="ui-table-card">
+  <form class="off-filter-bar" method="get" action="">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by Requisition ID, Job title...">
+    <select class="off-select" name="status" onchange="this.form.submit()">
+      <option value="">All Status</option>
+      <option value="pending_approval" {% if status == 'pending_approval' %}selected{% endif %}>Pending Approval</option>
+      <option value="sent"             {% if status == 'sent'             %}selected{% endif %}>Sent</option>
+      <option value="accepted"         {% if status == 'accepted'         %}selected{% endif %}>Accepted</option>
+      <option value="rejected"         {% if status == 'rejected'         %}selected{% endif %}>Rejected</option>
+      <option value="draft"            {% if status == 'draft'            %}selected{% endif %}>Draft</option>
+    </select>
+    <select class="off-select" name="department" onchange="this.form.submit()">
+      <option value="">All Department</option>
+    </select>
+    <select class="off-select" name="req_type" onchange="this.form.submit()">
+      <option value="">All Requisition Types</option>
+      <option value="permanent">Permanent</option>
+      <option value="contractual">Contractual</option>
+    </select>
+    <button type="submit" class="off-filter-btn">
+      <span class="material-symbols-outlined">tune</span> Filters
+    </button>
+  </form>
+
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th>Offer ID</th>
+        <th>Candidate</th>
+        <th>Job Title</th>
+        <th>Medical</th>
+        <th>Visa</th>
+        <th>Labour Clearance</th>
+        <th>Status</th>
+        <th>Days to Join</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in page %}
+      <tr>
+        <td style="font-size:12px;font-weight:600;color:#333">{{ o.offer_no|default:"OFF-—" }}</td>
+        <td>
+          <div class="ui-avatar-chip">
+            <div class="ui-avatar">{{ o.candidate_id.name|slice:":2"|upper|default:"—" }}</div>
+            <div>
+              <div class="name">{{ o.candidate_id.name|default:"—" }}</div>
+              <div class="sub">{{ o.candidate_id.email|default:"" }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-size:12px;font-weight:500;color:#222">
+            {% if o.position %}{{ o.position }}{% elif o.candidate_id.recruitment_id %}{{ o.candidate_id.recruitment_id.title|default:"—" }}{% else %}—{% endif %}
+          </div>
+        </td>
+        <td>
+          {% if o.medical_status == "cleared" %}<span class="stage-pill stage-accepted">Cleared</span>
+          {% elif o.medical_status == "pending" %}<span class="stage-pill stage-pending">Pending</span>
+          {% else %}<span style="color:#ABABAB;font-size:12px">—</span>{% endif %}
+        </td>
+        <td>
+          {% if o.visa_status == "cleared" %}<span class="stage-pill stage-accepted">Cleared</span>
+          {% elif o.visa_status == "pending" %}<span class="stage-pill stage-pending">Pending</span>
+          {% else %}<span style="color:#ABABAB;font-size:12px">—</span>{% endif %}
+        </td>
+        <td>
+          {% if o.labour_clearance_status == "cleared" %}<span class="stage-pill stage-accepted">Cleared</span>
+          {% elif o.labour_clearance_status == "pending" %}<span class="stage-pill stage-pending">Pending</span>
+          {% else %}<span style="color:#ABABAB;font-size:12px">—</span>{% endif %}
+        </td>
+        <td>
+          {% if o.status == "accepted" %}<span class="stage-pill stage-accepted">Accepted</span>
+          {% elif o.status == "rejected" %}<span class="stage-pill stage-rejected">Rejected</span>
+          {% elif o.status == "sent" %}<span class="stage-pill stage-sent">Sent</span>
+          {% elif o.status == "pending_approval" %}<span class="stage-pill stage-pending">Pending Approval</span>
+          {% else %}<span class="stage-pill stage-draft">{{ o.get_status_display }}</span>{% endif %}
+        </td>
+        <td style="font-size:12px;color:#555">
+          {% if o.joining_date %}{{ o.joining_date|timeuntil }}{% else %}—{% endif %}
+        </td>
+        <td>
+          <a class="act-more" href="/ui/offer/{{ o.id }}/" title="View offer details">
+            <span class="material-symbols-outlined">open_in_new</span>
+            View &amp; Edit
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" style="text-align:center;color:#999;padding:28px;">No offers found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="ui-pagination-row">
+    <div style="display:flex;align-items:center;gap:24px">
+      <span class="ui-pagination-view-all">View All</span>
+      {% if page.paginator %}
+        <span class="ui-pagination-label">Showing {{ page.number }} of {{ page.paginator.num_pages }} pages</span>
+      {% else %}
+        <span class="ui-pagination-label">Showing 1 of 12 pages</span>
+      {% endif %}
+    </div>
+    <div class="ui-pagination-btns">
+      {% if page.has_previous %}
+        <a class="ui-pagination-btn" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}">‹</a>
+      {% else %}
+        <button class="ui-pagination-btn" disabled>‹</button>
+      {% endif %}
+      {% if page.paginator %}
+        {% for num in page.paginator.page_range %}
+          {% if num == page.number %}
+            <button class="ui-pagination-btn active">{{ num }}</button>
+          {% elif num <= 6 %}
+            <a class="ui-pagination-btn" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <button class="ui-pagination-btn">1</button>
+        <button class="ui-pagination-btn active">2</button>
+        <button class="ui-pagination-btn">3</button>
+        <button class="ui-pagination-btn">4</button>
+        <button class="ui-pagination-btn">5</button>
+        <button class="ui-pagination-btn">6</button>
+      {% endif %}
+      {% if page.has_next %}
+        <a class="ui-pagination-btn" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.next_page_number }}">›</a>
+      {% else %}
+        <button class="ui-pagination-btn" disabled>›</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

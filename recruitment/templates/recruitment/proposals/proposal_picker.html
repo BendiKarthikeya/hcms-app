@@ -1,0 +1,51 @@
+{% load i18n %}
+<div style="padding:14px 4px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f3f4f6;margin-bottom:16px;">
+  <div style="width:32px;height:32px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;">
+    <ion-icon name="document-text-outline" style="font-size:18px;color:#2563eb;"></ion-icon>
+  </div>
+  <span style="font-size:16px;font-weight:700;color:#1f2937;">{% trans "Choose Proposal Template" %}</span>
+</div>
+
+<p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+  {% trans "Pick the ONEIC Employment Proposal Form that matches this hire." %}
+</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+  <a href="{% url 'proposal-create' interview.id %}?template=permanent"
+     style="display:block;border:2px solid #16a34a;border-radius:10px;padding:18px;background:#f0fdf4;text-decoration:none;color:inherit;transition:.15s;"
+     onmouseover="this.style.background='#dcfce7'"
+     onmouseout="this.style.background='#f0fdf4'">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <ion-icon name="briefcase-outline" style="font-size:22px;color:#16a34a;"></ion-icon>
+      <strong style="font-size:14px;color:#166534;">{% trans "Permanent (Full-Time)" %}</strong>
+    </div>
+    <div style="font-size:12px;color:#374151;line-height:1.5;">
+      {% trans "HR&A/EPF/V3 — non-contractual proposal." %}<br>
+      {% trans "Routes through Project Director → HOD → COO → Legal Advisor → GM HR&A → CFO → CEO." %}
+    </div>
+  </a>
+
+  <a href="{% url 'proposal-create' interview.id %}?template=contractual"
+     style="display:block;border:2px solid #2563eb;border-radius:10px;padding:18px;background:#eff6ff;text-decoration:none;color:inherit;transition:.15s;"
+     onmouseover="this.style.background='#dbeafe'"
+     onmouseout="this.style.background='#eff6ff'">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <ion-icon name="document-attach-outline" style="font-size:22px;color:#2563eb;"></ion-icon>
+      <strong style="font-size:14px;color:#1d4ed8;">{% trans "Contractual — S-O-M Grade" %}</strong>
+    </div>
+    <div style="font-size:12px;color:#374151;line-height:1.5;">
+      {% trans "HR&A/EPF-S/V4 — contractual proposal." %}<br>
+      {% trans "Routes through HOD → COO → GM HR&A." %}
+    </div>
+  </a>
+
+</div>
+
+<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:14px;margin-top:14px;border-top:1px solid #f3f4f6;">
+  <button type="button"
+          onclick="$('#createModal').removeClass('oh-modal--show')"
+          style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;cursor:pointer;color:#374151;font-size:13px;">
+    {% trans "Cancel" %}
+  </button>
+</div>

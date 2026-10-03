@@ -1,0 +1,22 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="oh-wrapper">
+    <div class="oh-card">
+        <div class="oh-card__header">
+            <h2 class="oh-card__title">{% trans "Expense Categories" %}</h2>
+        </div>
+        <div class="oh-card__body">
+            <div class="oh-empty">
+                <div class="oh-empty__icon">
+                    <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                </div>
+                <h5 class="oh-empty__title">{% trans "No expense categories found" %}</h5>
+                <p class="oh-empty__subtitle">{% trans "There are no expense categories available at the moment." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

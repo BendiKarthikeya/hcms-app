@@ -1,0 +1,122 @@
+{% extends 'index.html' %}
+{% block styles %}
+<style>
+    .oh-empty__icon img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load static i18n %}
+
+<!-- End of Navigation -->
+<main :class="sidebarOpen ? 'oh-main__sidebar-visible' : ''">
+    <div class="oh-wrapper">
+        <div class="oh-dashboard row" id="dashboard">
+            <div class="oh-dashboard__left col-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="oh-dashboard__cards row">
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3 filter" id="totalProfiles">
+                        <div class="oh-card-dashboard oh-card-dashboard oh-card-dashboard--success">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Total Profiles" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ total_profiles|default:0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3 filter" id="successionPlans">
+                        <div class="oh-card-dashboard oh-card-dashboard--neutral">
+                            <div class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Succession Plans" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <span class="oh-card-dashboard__count">{{ succession_plans|default:0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3 filter" id="criticalRoles">
+                        <div class="oh-card-dashboard oh-card-dashboard--warning">
+                            <div style="text-decoration: none;" class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Critical Roles" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <a style="text-decoration: none;" class="oh-card-dashboard__counts">
+                                    <span class="oh-card-dashboard__count">{{ critical_roles|default:0 }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-6 col-lg-3 filter" id="readySuccessors">
+                        <div class="oh-card-dashboard oh-card-dashboard--danger">
+                            <div style="text-decoration: none;" class="oh-card-dashboard__header">
+                                <span class="oh-card-dashboard__title">{% trans "Ready Successors" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <a style="text-decoration: none;" class="oh-card-dashboard__counts">
+                                    <span class="oh-card-dashboard__count">{{ ready_successors|default:0 }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="oh-dashboard__movable-cards row mt-4">
+                    <div class="col-12 col-sm-12 col-md-12 col-lg-6 mb-4">
+                        <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
+                            <div class="oh-card-dashboard__header oh-card-dashboard__header--divider" style="cursor: default;">
+                                <span class="oh-card-dashboard__title">{% trans "Talent Pipeline" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <div class="oh-empty">
+                                    <div class="oh-empty__icon">
+                                        <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                                    </div>
+                                    <h5 class="oh-empty__title">{% trans "No pipeline data available" %}</h5>
+                                    <p class="oh-empty__subtitle">{% trans "Talent pipeline statistics will be displayed here." %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+                        <div class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent" style="cursor: default;">
+                            <div class="oh-card-dashboard__header oh-card-dashboard__header--divider">
+                                <span class="oh-card-dashboard__title">{% trans "Development Needs" %}</span>
+                            </div>
+                            <div class="oh-card-dashboard__body">
+                                <div class="oh-empty">
+                                    <div class="oh-empty__icon">
+                                        <img src="{% static 'images/ui/no_records.svg' %}" alt="No records" />
+                                    </div>
+                                    <h5 class="oh-empty__title">{% trans "No development needs identified" %}</h5>
+                                    <p class="oh-empty__subtitle">{% trans "Development needs analysis will be displayed here." %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    $(document).ready(function() {
+        $("#totalProfiles").on("click", function(){
+            window.location.href='{% url "talent:profile_list" %}'
+        })
+        $("#successionPlans").on("click", function(){
+            window.location.href='{% url "talent:succession_plan_list" %}'
+        })
+        $("#criticalRoles").on("click", function(){
+            window.location.href='{% url "talent:critical_role_list" %}'
+        })
+        $("#readySuccessors").on("click", function(){
+            window.location.href='{% url "talent:succession_plan_list" %}?readiness=ready'
+        })
+    })
+</script>
+{% endblock content %}

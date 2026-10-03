@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mark Paid - EOSB for {{ eosb.employee.get_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'payroll/css/eosb-forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="eosb-form-container">
+    <div class="eosb-header">
+        <h1>Record EOSB Payment</h1>
+        <p>Mark the EOSB payment as completed for {{ eosb.employee.get_name }}</p>
+    </div>
+
+    <div class="employee-card">
+        <div class="avatar">{{ eosb.employee.get_name|slice:":1" }}</div>
+        <div class="details">
+            <h3>{{ eosb.employee.get_name }}</h3>
+            <p><strong>EOSB Amount Due:</strong> OMR {{ eosb.net_amount }}</p>
+            <p><strong>Director Approved:</strong> {{ eosb.director_approved_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.payment_date.id_for_label }}">
+                    Payment Date <span class="required">*</span>
+                </label>
+                {{ form.payment_date }}
+                {% if form.payment_date.errors %}<div class="error-message">{{ form.payment_date.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.payment_method.id_for_label }}">
+                    Payment Method
+                </label>
+                {{ form.payment_method }}
+                {% if form.payment_method.errors %}<div class="error-message">{{ form.payment_method.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.payment_reference.id_for_label }}">
+                Payment Reference
+            </label>
+            {{ form.payment_reference }}
+            {% if form.payment_reference.errors %}<div class="error-message">{{ form.payment_reference.errors.0 }}</div>{% endif %}
+            <small>Check number, bank transfer receipt, or payment reference</small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.payment_notes.id_for_label }}">
+                Payment Notes
+            </label>
+            {{ form.payment_notes }}
+            {% if form.payment_notes.errors %}<div class="error-message">{{ form.payment_notes.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="calculation-box" style="margin-top: 20px;">
+            <h3>Payment Summary</h3>
+            <div class="total-eosb">
+                <div class="total-amount">
+                    <div class="label">Amount to Be Paid</div>
+                    <div class="amount">OMR {{ eosb.net_amount }}</div>
+                </div>
+                <div class="total-amount">
+                    <div class="label">Payroll Period</div>
+                    <div style="font-size: 14px; font-weight: 500; margin-top: 10px;">{{ eosb.separation_date|date:"F Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>✓ Confirmed:</strong> All approvals are complete. This payment will finalize the employee's separation.
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">Confirm Payment</button>
+            <a href="{% url 'eosb-detail' eosb.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

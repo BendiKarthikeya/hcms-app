@@ -1,0 +1,423 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% block title %}Dashboard — HCMS{% endblock %}
+{% block active_dashboard %}active{% endblock %}
+
+{% block content %}
+<style>
+/* ── No-scroll: dashboard fills the viewport ── */
+.ui-main   { height:100vh !important; overflow:hidden !important; }
+.ui-content { height:calc(100vh - 86px); overflow:hidden; padding:14px 20px 10px; display:flex; flex-direction:column; }
+
+/* ── Page header ── */
+.db-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; flex-shrink:0; }
+.db-header-left .ui-page-title { font-size:22px; font-weight:700; color:#111; margin-bottom:2px; }
+.db-header-left .ui-page-subtitle { font-size:13px; color:#8E8D8D; font-weight:400; }
+.db-new-req-btn {
+  background:#0F752F; color:#fff; border:none; border-radius:8px;
+  height:38px; padding:0 16px; font-weight:600; font-size:13px;
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap; text-decoration:none;
+}
+.db-new-req-btn:hover { background:#0a5c24; color:#fff; }
+
+/* ── KPI row (5 equal columns) ── */
+.db-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:10px; flex-shrink:0; }
+.db-kpi {
+  background:#fff; border:1px solid #D9D9D9; border-radius:12px;
+  padding:12px 14px; display:flex; flex-direction:column; gap:6px;
+}
+.db-kpi__label { font-size:13px; font-weight:500; color:#606060; }
+.db-kpi__body  { display:flex; align-items:center; gap:12px; }
+.db-kpi__icon  {
+  width:44px; height:44px; background:#0F752F; border-radius:9px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.db-kpi__icon img  { width:26px; height:26px; object-fit:contain; }
+.db-kpi__value     { font-size:34px; font-weight:700; color:#111; line-height:1; }
+.db-kpi__trend     { display:flex; align-items:center; gap:4px; font-size:12px; color:#8E8D8D; }
+.db-kpi__trend-up  { color:#0F752F; font-weight:600; }
+
+/* ── Outer body: KPI + pipeline + main grid ── */
+.db-body { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; gap:10px; }
+
+/* ── Pipeline ── */
+.db-pipeline {
+  background:#fff; border:1px solid #D9D9D9; border-radius:12px;
+  padding:10px 16px 12px; flex-shrink:0;
+}
+.db-pipeline__title { font-size:14px; font-weight:600; color:#333; margin-bottom:10px; }
+.db-pipeline__steps { display:flex; align-items:flex-start; }
+.db-pipeline__step  { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
+.db-pipeline__step:not(:last-child)::after {
+  content:''; position:absolute; top:19px; left:50%; right:-50%;
+  border-top:1.5px dashed #9DC9AF; z-index:0;
+}
+.db-pipeline__icon-wrap {
+  width:40px; height:40px; border-radius:50%; background:#fff; border:1.5px solid #9DC9AF;
+  display:flex; align-items:center; justify-content:center; position:relative; z-index:1; margin-bottom:4px;
+}
+.db-pipeline__icon-wrap img { width:22px; height:22px; object-fit:contain; }
+.db-pipeline__step-label { font-size:10px; color:#8E8D8D; font-weight:500; margin-bottom:1px; text-align:center; }
+.db-pipeline__step-count { font-size:13px; font-weight:700; color:#333; text-align:center; }
+
+/* ── Main grid ── */
+.db-main-grid { display:grid; grid-template-columns:1fr 300px; gap:10px; flex:1; min-height:0; overflow:hidden; }
+
+/* Left column */
+.db-left { display:flex; flex-direction:column; gap:10px; overflow:hidden; min-height:0; }
+.db-mid-row { display:grid; grid-template-columns:1.4fr 1fr; gap:10px; flex:1; min-height:0; overflow:hidden; }
+.db-mid-row .db-panel { overflow:hidden; display:flex; flex-direction:column; }
+
+/* Right column */
+.db-right { display:flex; flex-direction:column; gap:10px; overflow:hidden; min-height:0; }
+
+/* ── Panel ── */
+.db-panel { background:#fff; border:1px solid #D9D9D9; border-radius:12px; overflow:hidden; flex-shrink:0; }
+.db-panel--flex { display:flex; flex-direction:column; flex:1; min-height:0; }
+.db-panel__head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px 8px; border-bottom:1px solid #F0F0F0; flex-shrink:0;
+}
+.db-panel__title { font-size:14px; font-weight:600; color:#333; }
+.db-panel__link  { font-size:12px; color:#4F8FE8; font-weight:500; }
+
+/* ── Approvals table ── */
+.db-approvals-table { width:100%; border-collapse:collapse; font-size:12px; }
+.db-approvals-table th {
+  padding:6px 12px; text-align:left; font-size:10px; font-weight:600;
+  color:#8E8D8D; text-transform:uppercase; letter-spacing:0.05em;
+  border-bottom:1px solid #E8E8E8; white-space:nowrap;
+}
+.db-approvals-table td { padding:8px 12px; border-bottom:1px solid #F5F5F5; color:#606060; vertical-align:middle; }
+.db-approvals-table tr:last-child td { border-bottom:none; }
+.db-approvals-table .req-id   { font-family:monospace; font-size:11px; color:#8E8D8D; }
+.db-approvals-table .req-name { font-weight:600; color:#333; font-size:12px; }
+.db-approvals-table .req-by   { color:#333; font-size:12px; }
+.pill-pending { font-size:11px; font-weight:500; color:#E0812E; border:1px solid #E8D4C0; border-radius:4px; padding:2px 8px; display:inline-block; }
+
+/* ── Recent Activities ── */
+.db-activity-item {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding:8px 14px; border-bottom:1px solid #F5F5F5;
+}
+.db-activity-item:last-child { border-bottom:none; }
+.db-activity-name { font-size:12px; font-weight:600; color:#111; line-height:1.4; }
+.db-activity-sub  { font-size:11px; color:#8E8D8D; margin-top:1px; }
+.db-activity-time { font-size:10px; color:#8E8D8D; white-space:nowrap; padding-top:2px; flex-shrink:0; margin-left:8px; }
+
+/* ── Quick Actions ── */
+.db-quick { padding:10px 14px; }
+.db-quick__row { display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; }
+.db-quick__btn {
+  display:flex; align-items:center; gap:7px; padding:8px 13px;
+  border:1px solid #D9D9D9; border-radius:6px; background:#fff;
+  font-size:12px; color:#333; font-weight:500; cursor:pointer;
+  white-space:nowrap; text-decoration:none; flex-shrink:0;
+}
+.db-quick__btn:hover { background:#F0F8F3; border-color:#9DC9AF; color:#0F752F; }
+.db-quick__btn img { width:15px; height:15px; opacity:0.55; }
+.db-quick__btn:hover img { opacity:1; }
+
+/* ── Calendar ── */
+.db-cal-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 6px; }
+.db-cal-month  { font-size:14px; font-weight:600; color:#333; }
+.db-cal-arrows { display:flex; gap:4px; }
+.db-cal-arrow  {
+  width:22px; height:22px; border:1px solid #D9D9D9; border-radius:4px;
+  background:#F9F9F9; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.db-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding:0 10px 6px; }
+.db-cal-dow  { font-size:10px; font-weight:600; color:#8E8D8D; padding:2px 0 4px; }
+.db-cal-day  {
+  font-size:11px; color:#606060; font-weight:500;
+  width:24px; height:24px; display:flex; align-items:center;
+  justify-content:center; margin:1px auto; border-radius:50%; cursor:pointer; position:relative;
+}
+.db-cal-day:hover { background:#F0F0F0; }
+.db-cal-day.other { color:#D1D1D1; }
+.db-cal-day.has-event { background:#E2ECE8; }
+.db-cal-day.today { background:#0F752F; color:#fff; font-weight:700; }
+.db-cal-dot {
+  width:4px; height:4px; border-radius:50%; background:#0F752F;
+  position:absolute; bottom:-3px; left:50%; transform:translateX(-50%);
+}
+.db-cal-day.today .db-cal-dot { background:#fff; }
+
+/* ── Today's Schedule ── */
+.db-schedule { border-top:1px solid #F0F0F0; padding:8px 14px 10px; }
+.db-schedule__label { font-size:11px; font-weight:500; color:#606060; margin-bottom:5px; }
+.db-schedule__item {
+  display:grid; grid-template-columns:54px 1fr auto; gap:6px; align-items:center;
+  padding:5px 0; border-bottom:1px solid #F5F5F5;
+}
+.db-schedule__item:last-child { border-bottom:none; }
+.db-schedule__time { font-size:10px; font-weight:600; color:#333; }
+.db-schedule__name { font-size:11px; font-weight:600; color:#111; }
+.db-schedule__cand { font-size:11px; color:#8E8D8D; }
+.db-schedule__tag-hr   { font-size:10px; color:#0F752F; border:1px solid #C4DFD0; border-radius:4px; padding:2px 7px; white-space:nowrap; }
+.db-schedule__tag-tech { font-size:10px; color:#4F8FE8; border:1px solid #BEDAFE; border-radius:4px; padding:2px 7px; white-space:nowrap; }
+
+/* ── AI Shortlists ── */
+.db-ai { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; gap:8px; }
+.db-ai__text { font-size:13px; color:#8E8D8D; }
+.db-ai__btn  { font-size:12px; font-weight:500; color:#4F8FE8; border:1px solid #D9D9D9; border-radius:4px; padding:4px 10px; background:#fff; cursor:pointer; white-space:nowrap; }
+.db-ai__btn:hover { background:#EBF4FF; }
+</style>
+
+<!-- ── Page header ── -->
+<div class="db-header">
+  <div class="db-header-left">
+    <div class="ui-page-title">Recruitment Dashboard</div>
+    <div class="ui-page-subtitle">Overview of hiring pipeline and recruitment activites</div>
+  </div>
+  <a href="/ui/manpower-request/" class="db-new-req-btn">
+    <span style="font-size:18px;font-weight:300;line-height:1;">+</span> New Recruitment Request
+  </a>
+</div>
+
+<!-- ── KPI cards ── -->
+<div class="db-kpi-row">
+  {% for kpi in kpis %}
+  <div class="db-kpi">
+    <div class="db-kpi__label">{{ kpi.label }}</div>
+    <div class="db-kpi__body">
+      <div class="db-kpi__icon"><img src="{% static kpi.icon_path %}" alt="" /></div>
+      <div class="db-kpi__value">{{ kpi.value }}{% if kpi.suffix %}<span style="font-size:18px;font-weight:400;color:#8E8D8D">{{ kpi.suffix }}</span>{% endif %}</div>
+    </div>
+    <div class="db-kpi__trend">
+      {% if kpi.trend %}<span style="color:#0F752F;">↑</span><span class="db-kpi__trend-up">{{ kpi.trend }}</span><span>from last month</span>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── Body ── -->
+<div class="db-body">
+
+  <!-- Pipeline -->
+  <div class="db-pipeline">
+    <div class="db-pipeline__title">Recruitment pipeline</div>
+    <div class="db-pipeline__steps">
+      {% for step in pipeline %}
+      <div class="db-pipeline__step">
+        <div class="db-pipeline__icon-wrap"><img src="{% static step.icon_path %}" alt="{{ step.label }}" /></div>
+        <div class="db-pipeline__step-label">{{ step.label }}</div>
+        <div class="db-pipeline__step-count">{{ step.count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Main grid: left + right -->
+  <div class="db-main-grid">
+
+    <!-- LEFT column -->
+    <div class="db-left">
+
+      <!-- Approvals + Activities side by side -->
+      <div class="db-mid-row">
+
+        <!-- Pending Approvals -->
+        <div class="db-panel db-panel--flex">
+          <div class="db-panel__head"><div class="db-panel__title">Pending Approvals</div></div>
+          <div style="overflow-y:auto;flex:1;">
+            <table class="db-approvals-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th><th>Task Detail</th><th>Requested By</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for appr in pending_approvals %}
+                <tr style="cursor:pointer;" onclick="window.location='{{ appr.url }}'">
+                  <td><span class="req-id">{{ appr.req_id }}</span></td>
+                  <td><span class="req-name">{{ appr.title }}</span></td>
+                  <td><span class="req-by">{{ appr.requested_by }}</span></td>
+                  <td><span class="pill-pending">Pending</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="padding:16px;text-align:center;color:#8E8D8D;font-size:12px;">No pending approvals</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="db-panel db-panel--flex">
+          <div class="db-panel__head"><div class="db-panel__title">Recent Activities</div></div>
+          <div style="overflow-y:auto;flex:1;">
+            {% for act in recent_activities %}
+            <div class="db-activity-item">
+              <div>
+                <div class="db-activity-name">{{ act.recruitment.title|default:"Job Description Approval" }} — {{ act.get_status_display }}</div>
+                <div class="db-activity-sub">{{ act.approver|default:"UI/UX Design job" }}</div>
+              </div>
+              <div class="db-activity-time">{{ act.approved_at|timesince }} ago</div>
+            </div>
+            {% empty %}
+            <div style="padding:16px;text-align:center;color:#8E8D8D;font-size:12px;">No recent activities</div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div><!-- /db-mid-row -->
+
+      <!-- Quick Actions -->
+      <div class="db-panel">
+        <div class="db-panel__head"><div class="db-panel__title">Quick Actions</div></div>
+        <div class="db-quick">
+          <div class="db-quick__row">
+            <a href="/ui/manpower-request/" class="db-quick__btn"><img src="{% static 'images/figma/quick_action_icon.svg' %}" alt="" />Raise Manpower Request</a>
+            <a href="/ui/jd-creator/"       class="db-quick__btn"><img src="{% static 'images/figma/quick_action_icon.svg' %}" alt="" />Create Job Description</a>
+            <a href="/ui/candidate-create/" class="db-quick__btn"><img src="{% static 'images/figma/quick_action_icon.svg' %}" alt="" />Add Candidate</a>
+            <a href="/ui/interview-creator/" class="db-quick__btn"><img src="{% static 'images/figma/quick_action_icon.svg' %}" alt="" />Schedule Interview</a>
+            <a href="/ui/offer-creator/"    class="db-quick__btn"><img src="{% static 'images/figma/quick_action_icon.svg' %}" alt="" />Create Offer</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /db-left -->
+
+    <!-- RIGHT column -->
+    <div class="db-right">
+
+      <!-- Upcoming Interviews + Today's Schedule -->
+      <div class="db-panel db-panel--flex">
+        <div class="db-panel__head">
+          <div class="db-panel__title">Upcoming Interviews</div>
+          <a href="/ui/interview/" class="db-panel__link">View All</a>
+        </div>
+        <!-- Month + nav -->
+        <div class="db-cal-header">
+          <div class="db-cal-month" id="db-cal-month-label">{{ calendar_month_label }}</div>
+          <div class="db-cal-arrows">
+            <button class="db-cal-arrow" id="db-cal-prev"><span class="material-symbols-outlined" style="font-size:13px;color:#666;">chevron_left</span></button>
+            <button class="db-cal-arrow" id="db-cal-next"><span class="material-symbols-outlined" style="font-size:13px;color:#666;">chevron_right</span></button>
+          </div>
+        </div>
+        <!-- Calendar grid -->
+        <div class="db-cal-grid" id="db-cal-grid">
+          <div class="db-cal-dow">Sun</div><div class="db-cal-dow">Mon</div><div class="db-cal-dow">Tue</div>
+          <div class="db-cal-dow">Wed</div><div class="db-cal-dow">Thu</div><div class="db-cal-dow">Fri</div><div class="db-cal-dow">Sat</div>
+          {% for week in calendar_weeks %}{% for d in week %}
+          <div class="db-cal-day{% if not d.in_month %} other{% endif %}{% if d.has_event %} has-event{% endif %}{% if d.is_today %} today{% endif %}">
+            {{ d.day }}{% if d.has_event and not d.is_today %}<span class="db-cal-dot"></span>{% endif %}
+          </div>
+          {% endfor %}{% endfor %}
+        </div>
+        <!-- Upcoming schedule -->
+        <div class="db-schedule" id="db-schedule-list">
+          <div class="db-schedule__label">Upcoming Schedule</div>
+          {% for iv in upcoming_interviews %}
+          <div class="db-schedule__item">
+            <div class="db-schedule__time">
+              {{ iv.interview_date|date:"d M" }}<br>
+              <span style="font-weight:400;color:#8E8D8D;">{{ iv.interview_time|time:"g:i A"|default:"—" }}</span>
+            </div>
+            <div>
+              <div class="db-schedule__name">{{ iv.candidate_id.recruitment_id.title|default:"Interview" }}</div>
+              <div class="db-schedule__cand">{{ iv.candidate_id.name|default:iv.candidate_id }}</div>
+            </div>
+            <span class="db-schedule__tag-tech">Interview</span>
+          </div>
+          {% empty %}
+          <div class="db-schedule-empty" style="padding:12px 0;text-align:center;color:#8E8D8D;font-size:12px;">No upcoming interviews scheduled</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- AI Shortlists -->
+      <div class="db-panel">
+        <div class="db-panel__head">
+          <div class="db-panel__title" style="display:flex;align-items:center;gap:5px;">
+            AI Shortlists
+            <img src="{% static 'images/figma/ai_shortlists_icon.svg' %}" alt="" style="width:16px;height:16px;" />
+          </div>
+        </div>
+        <div class="db-ai">
+          <div class="db-ai__text"><strong style="color:#111;">{{ shortlisted_count|default:"32" }}</strong> shortlisted candidates ready for review</div>
+          <button class="db-ai__btn">Review Now</button>
+        </div>
+      </div>
+
+    </div><!-- /db-right -->
+
+  </div><!-- /db-main-grid -->
+</div><!-- /db-body -->
+
+<script>
+(function () {
+  var curYear  = {{ today.year }};
+  var curMonth = {{ today.month }};
+
+  function renderCalendar(data) {
+    document.getElementById('db-cal-month-label').textContent = data.month_label;
+
+    var grid = document.getElementById('db-cal-grid');
+    var days = grid.querySelectorAll('.db-cal-day');
+    for (var i = 0; i < days.length; i++) { days[i].parentNode.removeChild(days[i]); }
+    data.weeks.forEach(function (week) {
+      week.forEach(function (d) {
+        var el = document.createElement('div');
+        el.className = 'db-cal-day' +
+          (!d.in_month ? ' other'     : '') +
+          (d.has_event ? ' has-event' : '') +
+          (d.is_today  ? ' today'     : '');
+        el.textContent = d.day;
+        if (d.has_event && !d.is_today) {
+          var dot = document.createElement('span');
+          dot.className = 'db-cal-dot';
+          el.appendChild(dot);
+        }
+        grid.appendChild(el);
+      });
+    });
+
+    var sched = document.getElementById('db-schedule-list');
+    if (sched && data.schedule !== undefined) {
+      var existing = sched.querySelectorAll('.db-schedule__item, .db-schedule-empty');
+      for (var j = 0; j < existing.length; j++) { existing[j].parentNode.removeChild(existing[j]); }
+      if (data.schedule.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'db-schedule-empty';
+        empty.style.cssText = 'padding:12px 0;text-align:center;color:#8E8D8D;font-size:12px;';
+        empty.textContent = 'No interviews scheduled this month';
+        sched.appendChild(empty);
+      } else {
+        data.schedule.forEach(function (iv) {
+          var item = document.createElement('div');
+          item.className = 'db-schedule__item';
+          item.innerHTML =
+            '<div class="db-schedule__time">' + iv.date + '<br>' +
+              '<span style="font-weight:400;color:#8E8D8D;">' + iv.time + '</span></div>' +
+            '<div><div class="db-schedule__name">' + iv.title + '</div>' +
+              '<div class="db-schedule__cand">' + iv.candidate + '</div></div>' +
+            '<span class="db-schedule__tag-tech">Interview</span>';
+          sched.appendChild(item);
+        });
+      }
+    }
+  }
+
+  function fetchMonth(year, month) {
+    fetch('/ui/dashboard/calendar-events/?year=' + year + '&month=' + month, {credentials: 'same-origin'})
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(renderCalendar)
+      .catch(function (e) { console.warn('Calendar fetch failed:', e); });
+  }
+
+  var prevBtn = document.getElementById('db-cal-prev');
+  var nextBtn = document.getElementById('db-cal-next');
+  if (prevBtn) prevBtn.addEventListener('click', function () {
+    curMonth--; if (curMonth < 1) { curMonth = 12; curYear--; }
+    fetchMonth(curYear, curMonth);
+  });
+  if (nextBtn) nextBtn.addEventListener('click', function () {
+    curMonth++; if (curMonth > 12) { curMonth = 1; curYear++; }
+    fetchMonth(curYear, curMonth);
+  });
+})();
+</script>
+
+{% endblock %}
