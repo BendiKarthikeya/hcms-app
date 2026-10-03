@@ -5,9 +5,8 @@ It exposes the WSGI callable as a module-level variable named ``application``.
 """
 
 import os
-import shutil
+import sqlite3
 from pathlib import Path
-from django.core.wsgi import get_wsgi_application
 from fits.settings_selector import resolve_settings_module
 
 os.environ["VERCEL"] = "1"
@@ -17,21 +16,18 @@ tmp_db = Path("/tmp/db.sqlite3")
 if os.environ.get("VERCEL"):
     try:
         tmp_db.parent.mkdir(parents=True, exist_ok=True)
-        if not tmp_db.exists():
-            tmp_db.touch()
+        with sqlite3.connect(str(tmp_db)) as conn:
+            conn.execute("PRAGMA journal_mode = OFF;")
+            conn.execute("PRAGMA synchronous = OFF;")
     except Exception as e:
-        print(f"Error touching /tmp/db.sqlite3: {e}")
+        print(f"Error initializing /tmp/db.sqlite3: {e}")
 
 import django
 django.setup()
 
 if os.environ.get("VERCEL"):
     try:
-        if tmp_db.exists() and tmp_db.stat().st_size == 0:
-            from django.db import connection
-            with connection.cursor() as cursor:
-                cursor.execute("PRAGMA journal_mode = OFF;")
-                cursor.execute("PRAGMA synchronous = OFF;")
+        if tmp_db.exists() and tmp_db.stat().st_size <= 1024:
             from django.core.management import call_command
             call_command("migrate", interactive=False, verbosity=0)
     except Exception as e:
