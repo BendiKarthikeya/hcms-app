@@ -1,4 +1,5 @@
 import calendar
+import os
 import sys
 from datetime import date, datetime, timedelta
 
@@ -497,5 +498,8 @@ if not any(
     except:
         pass
 
-    scheduler.add_job(recurring_holiday, "interval", hours=4)
-    scheduler.start()
+    if not os.environ.get("VERCEL"):
+        try:
+            scheduler.start()
+        except Exception:
+            pass

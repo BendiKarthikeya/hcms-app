@@ -127,7 +127,9 @@ def block_unblock_disciplinary():
     return
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
@@ -137,4 +139,7 @@ if not any(
     scheduler = BackgroundScheduler()
     scheduler.add_job(update_experience, "interval", hours=4)
     scheduler.add_job(block_unblock_disciplinary, "interval", seconds=25)
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass

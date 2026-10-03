@@ -254,8 +254,11 @@ def start_gdrive_backup_job():
             )
 
         # Start the scheduler if it's not already running
-        if not scheduler.running:
-            scheduler.start()
+        if not os.environ.get("VERCEL") and not scheduler.running:
+            try:
+                scheduler.start()
+            except Exception:
+                pass
     else:
         stop_gdrive_backup_job()
 

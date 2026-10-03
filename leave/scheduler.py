@@ -43,7 +43,9 @@ def leave_reset():
             leave_type.save()
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
@@ -53,4 +55,7 @@ if not any(
     scheduler = BackgroundScheduler()
     scheduler.add_job(leave_reset, "interval", seconds=20)
 
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass

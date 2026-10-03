@@ -28,7 +28,9 @@ def refresh_outlook_auth_token():
             logger.error(e)
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
@@ -39,4 +41,7 @@ if not any(
         minutes=50,
         id="refresh_outlook_auth_token",
     )
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass

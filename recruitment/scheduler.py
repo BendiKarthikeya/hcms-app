@@ -96,7 +96,9 @@ def escalate_overdue_approvals():
         pass
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
@@ -108,4 +110,7 @@ if not any(
     scheduler.add_job(recruitment_close, "interval", hours=1)
     scheduler.add_job(escalate_overdue_approvals, "interval", hours=1)
 
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass

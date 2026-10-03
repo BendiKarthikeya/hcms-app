@@ -92,11 +92,16 @@ def notify_expiring_documents():
                 document.is_active = False
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
     scheduler = BackgroundScheduler()
     scheduler.add_job(notify_expiring_assets, "interval", days=1)
     scheduler.add_job(notify_expiring_documents, "interval", hours=4)
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass

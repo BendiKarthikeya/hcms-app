@@ -47,7 +47,9 @@ def create_work_record():
         print(f"No new work records to create for {date}.")
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
@@ -69,4 +71,7 @@ if not any(
         replace_existing=True,
     )
 
-    scheduler.start()
+    try:
+        scheduler.start()
+    except Exception:
+        pass
