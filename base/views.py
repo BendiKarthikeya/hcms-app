@@ -15,7 +15,10 @@ from email.mime.image import MIMEImage
 from os import path
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from dateutil import parser
 from django import forms
 from django.apps import apps

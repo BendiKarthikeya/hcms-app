@@ -21,7 +21,10 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import parse_qs
 
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
