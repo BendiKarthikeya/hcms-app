@@ -6,6 +6,7 @@ node_modules
 .ruff_cache
 .claude
 .playwright-mcp
+db.sqlite3
 staticfiles
 media
 *.pyc
