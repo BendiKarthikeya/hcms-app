@@ -5,8 +5,15 @@ import os
 import random
 from datetime import date, datetime, time, timedelta
 
-import pandas as pd
-import pdfkit
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import pdfkit
+except ImportError:
+    pdfkit = None
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group
