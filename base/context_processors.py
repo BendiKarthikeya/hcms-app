@@ -223,10 +223,14 @@ def timerunner_enabled(request):
     first = None
     enabled_timerunner = True
     if apps.is_installed("attendance"):
-        AttendanceGeneralSetting = get_fits_model_class(
-            app_label="attendance", model="attendancegeneralsetting"
-        )
-        first = AttendanceGeneralSetting.objects.first()
+        try:
+            AttendanceGeneralSetting = get_fits_model_class(
+                app_label="attendance", model="attendancegeneralsetting"
+            )
+            if AttendanceGeneralSetting:
+                first = AttendanceGeneralSetting.objects.first()
+        except Exception:
+            first = None
     if first:
         enabled_timerunner = first.time_runner
     result = {"enabled_timerunner": enabled_timerunner}
