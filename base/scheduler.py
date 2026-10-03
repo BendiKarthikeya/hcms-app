@@ -435,67 +435,76 @@ def recurring_holiday():
         recurring_holiday.save()
 
 
-if not any(
+import os
+
+if not os.environ.get("VERCEL") and not any(
     cmd in sys.argv
     for cmd in ["makemigrations", "migrate", "compilemessages", "flush", "shell"]
 ):
-    scheduler = BackgroundScheduler()
-
-    # Add jobs with next_run_time set to the end of the previous job
     try:
-        scheduler.add_job(rotate_shift, "interval", hours=4, id="job1")
-    except:
-        pass
+        scheduler = BackgroundScheduler()
 
-    try:
-        scheduler.add_job(
-            rotate_work_type,
-            "interval",
-            hours=4,
-            id="job2",
-        )
-    except:
-        pass
+        # Add jobs with next_run_time set to the end of the previous job
+        try:
+            scheduler.add_job(rotate_shift, "interval", hours=4, id="job1")
+        except Exception:
+            pass
 
-    try:
-        scheduler.add_job(
-            undo_shift,
-            "interval",
-            hours=4,
-            id="job3",
-        )
-    except:
-        pass
+        try:
+            scheduler.add_job(
+                rotate_work_type,
+                "interval",
+                hours=4,
+                id="job2",
+            )
+        except Exception:
+            pass
 
-    try:
-        scheduler.add_job(
-            switch_shift,
-            "interval",
-            hours=4,
-            id="job4",
-        )
-    except:
-        pass
+        try:
+            scheduler.add_job(
+                undo_shift,
+                "interval",
+                hours=4,
+                id="job3",
+            )
+        except Exception:
+            pass
 
-    try:
-        scheduler.add_job(
-            undo_work_type,
-            "interval",
-            hours=4,
-            id="job6",
-        )
-    except:
-        pass
+        try:
+            scheduler.add_job(
+                switch_shift,
+                "interval",
+                hours=4,
+                id="job4",
+            )
+        except Exception:
+            pass
 
-    try:
-        scheduler.add_job(
-            switch_work_type,
-            "interval",
-            hours=4,
-            id="job5",
-        )
-    except:
-        pass
+        try:
+            scheduler.add_job(
+                undo_work_type,
+                "interval",
+                hours=4,
+                id="job6",
+            )
+        except Exception:
+            pass
 
-    scheduler.add_job(recurring_holiday, "interval", hours=4)
-    scheduler.start()
+        try:
+            scheduler.add_job(
+                switch_work_type,
+                "interval",
+                hours=4,
+                id="job5",
+            )
+        except Exception:
+            pass
+
+        try:
+            scheduler.add_job(recurring_holiday, "interval", hours=4)
+        except Exception:
+            pass
+
+        scheduler.start()
+    except Exception as e:
+        print("Scheduler initialization skipped:", e)
