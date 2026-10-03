@@ -21,4 +21,4 @@ services:
 databases:
   - name: fits-db
     databaseName: fits
-    user: postgres
+    user: fitsuser
