@@ -27,6 +27,8 @@
   },
   "dependencies": {
     "@docuseal/react": "^1.0.75",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "alpinejs": "^3.10.5",
     "ionicons": "^7.1.0",
     "jquery": "^3.6.3",
