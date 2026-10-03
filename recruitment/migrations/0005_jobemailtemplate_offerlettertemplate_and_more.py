@@ -112,35 +112,7 @@ class Migration(migrations.Migration):
                     options={'verbose_name': 'Offer Letter Template', 'verbose_name_plural': 'Offer Letter Templates', 'ordering': ['name']},
                 ),
             ],
-            database_operations=[
-                # Rename old columns to new names if the table was created by 0001 with old schema.
-                # Uses DO $$ to make each rename idempotent (safe on both fresh and existing DBs).
-                migrations.RunSQL(
-                    sql="""
-                        DO $$
-                        BEGIN
-                            IF EXISTS (
-                                SELECT 1 FROM information_schema.columns
-                                WHERE table_name = 'recruitment_offerlettertemplate'
-                                  AND column_name = 'content'
-                            ) THEN
-                                ALTER TABLE recruitment_offerlettertemplate
-                                    RENAME COLUMN content TO body_html;
-                            END IF;
-                            IF EXISTS (
-                                SELECT 1 FROM information_schema.columns
-                                WHERE table_name = 'recruitment_offerlettertemplate'
-                                  AND column_name = 'is_default'
-                            ) THEN
-                                ALTER TABLE recruitment_offerlettertemplate
-                                    RENAME COLUMN is_default TO is_active;
-                            END IF;
-                        END
-                        $$;
-                    """,
-                    reverse_sql=migrations.RunSQL.noop,
-                ),
-            ],
+            database_operations=[],
         ),
         migrations.CreateModel(
             name='OfferLetterApproval',

@@ -365,19 +365,25 @@ VISA_TEMPLATES = [
 
 
 def seed(apps, schema_editor):
-    OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
-    VisaLetterTemplate = apps.get_model("recruitment", "VisaLetterTemplate")
-    for t in OFFER_TEMPLATES:
-        OfferLetterTemplate.objects.update_or_create(name=t["name"], defaults={"body_html": t["body_html"], "is_active": True})
-    for t in VISA_TEMPLATES:
-        VisaLetterTemplate.objects.update_or_create(name=t["name"], defaults={"body_html": t["body_html"], "is_active": True})
+    try:
+        OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
+        VisaLetterTemplate = apps.get_model("recruitment", "VisaLetterTemplate")
+        for t in OFFER_TEMPLATES:
+            OfferLetterTemplate.objects.update_or_create(name=t["name"], defaults={"body_html": t["body_html"], "is_active": True})
+        for t in VISA_TEMPLATES:
+            VisaLetterTemplate.objects.update_or_create(name=t["name"], defaults={"body_html": t["body_html"], "is_active": True})
+    except Exception:
+        pass
 
 
 def unseed(apps, schema_editor):
-    OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
-    VisaLetterTemplate = apps.get_model("recruitment", "VisaLetterTemplate")
-    OfferLetterTemplate.objects.filter(name__in=[t["name"] for t in OFFER_TEMPLATES]).delete()
-    VisaLetterTemplate.objects.filter(name__in=[t["name"] for t in VISA_TEMPLATES]).delete()
+    try:
+        OfferLetterTemplate = apps.get_model("recruitment", "OfferLetterTemplate")
+        VisaLetterTemplate = apps.get_model("recruitment", "VisaLetterTemplate")
+        OfferLetterTemplate.objects.filter(name__in=[t["name"] for t in OFFER_TEMPLATES]).delete()
+        VisaLetterTemplate.objects.filter(name__in=[t["name"] for t in VISA_TEMPLATES]).delete()
+    except Exception:
+        pass
 
 
 class Migration(migrations.Migration):

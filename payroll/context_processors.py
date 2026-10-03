@@ -19,12 +19,18 @@ def default_currency(request):
     """
     cached_settings = cache.get("ctx_payroll_settings")
     if cached_settings is None:
-        obj = models.PayrollSettings.objects.first()
-        if obj is None:
-            obj = models.PayrollSettings(currency_symbol="$")
-            obj.save()
-        cached_settings = {"symbol": obj.currency_symbol, "position": obj.position}
-        cache.set("ctx_payroll_settings", cached_settings, 120)
+        try:
+            obj = models.PayrollSettings.objects.first()
+            if obj is None:
+                obj = models.PayrollSettings(currency_symbol="$", position="prefix")
+                try:
+                    obj.save()
+                except Exception:
+                    pass
+            cached_settings = {"symbol": getattr(obj, "currency_symbol", "$"), "position": getattr(obj, "position", "prefix")}
+            cache.set("ctx_payroll_settings", cached_settings, 120)
+        except Exception:
+            cached_settings = {"symbol": "$", "position": "prefix"}
     symbol = cached_settings["symbol"]
     position = cached_settings["position"]
     return {

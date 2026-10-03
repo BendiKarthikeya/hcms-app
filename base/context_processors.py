@@ -244,10 +244,13 @@ def intial_notice_period(request):
     initial = 30
     first = None
     if apps.is_installed("payroll"):
-        PayrollGeneralSetting = get_fits_model_class(
-            app_label="payroll", model="payrollgeneralsetting"
-        )
-        first = PayrollGeneralSetting.objects.first()
+        try:
+            PayrollGeneralSetting = get_fits_model_class(
+                app_label="payroll", model="payrollgeneralsetting"
+            )
+            first = PayrollGeneralSetting.objects.first()
+        except Exception:
+            first = None
     if first:
         initial = first.notice_period
     result = {"get_initial_notice_period": initial}
