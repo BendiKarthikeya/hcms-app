@@ -2,9 +2,11 @@ import json
 import logging
 import os
 from datetime import datetime
-from distutils.util import strtobool
 from operator import itemgetter
 from urllib.parse import parse_qs
+
+def strtobool(val):
+    return str(val).lower() in ("true", "1", "yes")
 
 from django.conf import settings
 from django.contrib import messages
