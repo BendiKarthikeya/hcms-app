@@ -2,6 +2,7 @@ services:
   - type: web
     name: fits-backend
     env: python
+    plan: free
     buildCommand: "./render_build.sh"
     startCommand: "gunicorn fits.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
@@ -22,3 +23,4 @@ databases:
   - name: fits-db
     databaseName: fits
     user: fitsuser
+    plan: free
