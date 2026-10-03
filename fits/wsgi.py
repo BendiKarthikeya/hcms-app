@@ -46,7 +46,7 @@ if os.environ.get("VERCEL"):
                     conn.execute("PRAGMA synchronous = OFF;")
                 from django.core.management import call_command
 
-                call_command("migrate", run_syncdb=True, interactive=False, verbosity=0)
+                call_command("migrate", interactive=False, verbosity=0)
             except Exception as e:
                 print(f"Auto-migration error on /tmp/db.sqlite3: {e}")
 
