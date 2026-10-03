@@ -8,8 +8,8 @@
     },
     "ionicons": {
       "root": "static/images/ionicons",
-      "buildCommand": null,
-      "installCommand": null
+      "buildCommand": "echo 'no build'",
+      "installCommand": "echo 'no install'"
     }
   },
   "rewrites": [
