@@ -132,7 +132,7 @@ WSGI_APPLICATION = "fits.wsgi.application"
 
 DEFAULT_DB_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres.iaahzdewzqzkrcqacosn:06nO7j8ENcpvI9vJ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
+    "postgresql://postgres.iaahzdewzqzkrcqacosn:06nO7j8ENcpvI9vJ@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres"
 )
 
 DATABASES = {
@@ -140,7 +140,8 @@ DATABASES = {
 }
 
 if DATABASES["default"]["ENGINE"] != "django.db.backends.sqlite3":
-    DATABASES["default"]["CONN_MAX_AGE"] = 600
+    is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+    DATABASES["default"]["CONN_MAX_AGE"] = 0 if is_serverless else 600
     DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
     DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
     DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
